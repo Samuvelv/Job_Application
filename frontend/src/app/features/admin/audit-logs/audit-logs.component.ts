@@ -1,0 +1,260 @@
+// src/app/features/admin/audit-logs/audit-logs.component.ts
+import { Component, OnInit } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { ReactiveFormsModule, FormBuilder, FormGroup } from '@angular/forms';
+import { debounceTime, distinctUntilChanged } from 'rxjs';
+import { AuditLogService, PaginatedAuditLogs } from '../../../core/services/audit-log.service';
+import { AuditLog } from '../../../core/models/audit-log.model';
+import { PageHeaderComponent } from '../../../shared/components/page-header/page-header.component';
+
+@Component({
+  selector: 'app-audit-logs',
+  standalone: true,
+  imports: [CommonModule, ReactiveFormsModule, PageHeaderComponent],
+  template: `
+    <!-- Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+      <app-page-header
+        title="Audit Logs"
+        [subtitle]="pagination.total + ' total entries'"
+        icon="bi-shield-check"
+        class="flex-grow-1"
+      />
+      <button class="btn btn-sm btn-outline-secondary ms-3" (click)="clearFilters()">
+        <i class="bi bi-x-circle me-1"></i>Clear Filters
+      </button>
+    </div>
+
+        <!-- Filters -->
+        <div class="card p-3 mb-4">
+          <form [formGroup]="filterForm" class="row g-2 align-items-end">
+            <div class="col-md-3">
+              <label class="form-label small mb-1">Action</label>
+              <select class="form-select form-select-sm" formControlName="action">
+                <option value="">All actions</option>
+                @for (a of knownActions; track a) {
+                  <option [value]="a">{{ a }}</option>
+                }
+              </select>
+            </div>
+            <div class="col-md-2">
+              <label class="form-label small mb-1">Resource</label>
+              <input type="text" class="form-control form-control-sm"
+                formControlName="resource" placeholder="e.g. employee">
+            </div>
+            <div class="col-md-3">
+              <label class="form-label small mb-1">User Email / ID</label>
+              <input type="text" class="form-control form-control-sm"
+                formControlName="userSearch" placeholder="Paste user UUID…">
+            </div>
+            <div class="col-md-2">
+              <label class="form-label small mb-1">From</label>
+              <input type="date" class="form-control form-control-sm" formControlName="from">
+            </div>
+            <div class="col-md-2">
+              <label class="form-label small mb-1">To</label>
+              <input type="date" class="form-control form-control-sm" formControlName="to">
+            </div>
+          </form>
+        </div>
+
+        <!-- Loading -->
+        @if (loading) {
+          <div class="text-center py-5">
+            <div class="spinner-border text-primary"></div>
+            <p class="text-muted mt-2">Loading logs…</p>
+          </div>
+        }
+
+        <!-- Empty -->
+        @if (!loading && logs.length === 0) {
+          <div class="text-center py-5 text-muted">
+            <i class="bi bi-clipboard-x" style="font-size:2.5rem;opacity:.4"></i>
+            <h6 class="mt-2">No audit log entries found</h6>
+          </div>
+        }
+
+        <!-- Table -->
+        @if (!loading && logs.length > 0) {
+          <div class="card">
+            <div class="table-responsive">
+              <table class="table table-hover align-middle mb-0 small">
+                <thead class="table-light">
+                  <tr>
+                    <th>Timestamp</th>
+                    <th>User</th>
+                    <th>Action</th>
+                    <th>Resource</th>
+                    <th>Resource ID</th>
+                    <th>IP Address</th>
+                    <th>Metadata</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  @for (log of logs; track log.id) {
+                    <tr>
+                      <td class="text-nowrap text-muted" style="font-size:.75rem">
+                        {{ log.created_at | date:'dd MMM yyyy, HH:mm:ss' }}
+                      </td>
+                      <td>
+                        @if (log.user_email) {
+                          <span class="d-block fw-semibold">{{ log.user_email }}</span>
+                          <span class="text-muted" style="font-size:.7rem">{{ log.user_id }}</span>
+                        } @else {
+                          <span class="text-muted">—</span>
+                        }
+                      </td>
+                      <td>
+                        <span class="badge rounded-pill"
+                          [class]="actionBadgeClass(log.action)">
+                          {{ log.action }}
+                        </span>
+                      </td>
+                      <td>{{ log.resource || '—' }}</td>
+                      <td class="text-muted" style="font-size:.7rem;max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">
+                        {{ log.resource_id || '—' }}
+                      </td>
+                      <td class="text-muted" style="font-size:.75rem">
+                        {{ log.ip_address || '—' }}
+                      </td>
+                      <td style="max-width:220px">
+                        @if (log.metadata) {
+                          <button class="btn btn-link btn-sm p-0 text-decoration-none"
+                            (click)="toggleMeta(log.id)">
+                            {{ expandedId === log.id ? 'Hide' : 'Show' }}
+                          </button>
+                          @if (expandedId === log.id) {
+                            <pre class="mt-1 bg-light rounded p-2 small mb-0"
+                              style="max-height:120px;overflow:auto;font-size:.7rem">{{ log.metadata | json }}</pre>
+                          }
+                        } @else {
+                          <span class="text-muted">—</span>
+                        }
+                      </td>
+                    </tr>
+                  }
+                </tbody>
+              </table>
+            </div>
+
+            <!-- Pagination -->
+            @if (pagination.pages > 1) {
+              <div class="d-flex justify-content-between align-items-center px-3 py-2 border-top">
+                <small class="text-muted">
+                  Page {{ pagination.page }} of {{ pagination.pages }}
+                  ({{ pagination.total }} entries)
+                </small>
+                <div class="d-flex gap-1">
+                  <button class="btn btn-sm btn-outline-secondary"
+                    [disabled]="pagination.page === 1"
+                    (click)="goToPage(pagination.page - 1)">&laquo;</button>
+                  @for (pg of pageRange(); track pg) {
+                    <button class="btn btn-sm"
+                      [class.btn-primary]="pg === pagination.page"
+                      [class.btn-outline-secondary]="pg !== pagination.page"
+                      (click)="goToPage(pg)">{{ pg }}</button>
+                  }
+                  <button class="btn btn-sm btn-outline-secondary"
+                    [disabled]="pagination.page === pagination.pages"
+                    (click)="goToPage(pagination.page + 1)">&raquo;</button>
+                </div>
+              </div>
+            }
+          </div>
+        }
+  `,
+})
+export class AuditLogsComponent implements OnInit {
+  logs: AuditLog[]   = [];
+  knownActions: string[] = [];
+  pagination = { page: 1, limit: 50, total: 0, pages: 1 };
+  loading    = true;
+  expandedId: string | null = null;
+
+  filterForm!: FormGroup;
+
+  constructor(
+    private auditSvc: AuditLogService,
+    private fb: FormBuilder,
+  ) {}
+
+  ngOnInit(): void {
+    this.filterForm = this.fb.group({
+      action:     [''],
+      resource:   [''],
+      userSearch: [''],
+      from:       [''],
+      to:         [''],
+    });
+
+    // Load distinct actions for the dropdown
+    this.auditSvc.getDistinctActions().subscribe({
+      next: (res) => (this.knownActions = res.actions),
+    });
+
+    // Debounce filter changes
+    this.filterForm.valueChanges.pipe(
+      debounceTime(400),
+      distinctUntilChanged(),
+    ).subscribe(() => {
+      this.pagination.page = 1;
+      this.load();
+    });
+
+    this.load();
+  }
+
+  load(): void {
+    this.loading = true;
+    const v = this.filterForm.value;
+    const filters: Record<string, unknown> = {
+      page:  this.pagination.page,
+      limit: this.pagination.limit,
+    };
+    if (v.action)     filters['action']   = v.action;
+    if (v.resource)   filters['resource'] = v.resource;
+    if (v.userSearch) filters['userId']   = v.userSearch;
+    if (v.from)       filters['from']     = v.from;
+    if (v.to)         filters['to']       = v.to;
+
+    this.auditSvc.list(filters).subscribe({
+      next: (res) => {
+        this.logs       = res.data;
+        this.pagination = res.pagination;
+        this.loading    = false;
+      },
+      error: () => (this.loading = false),
+    });
+  }
+
+  clearFilters(): void {
+    this.filterForm.reset({ action: '', resource: '', userSearch: '', from: '', to: '' });
+    this.pagination.page = 1;
+    this.load();
+  }
+
+  goToPage(page: number): void {
+    if (page < 1 || page > this.pagination.pages) return;
+    this.pagination.page = page;
+    this.load();
+  }
+
+  pageRange(): number[] {
+    const { page, pages } = this.pagination;
+    const start = Math.max(1, page - 2);
+    const end   = Math.min(pages, page + 2);
+    return Array.from({ length: end - start + 1 }, (_, i) => start + i);
+  }
+
+  toggleMeta(id: string): void {
+    this.expandedId = this.expandedId === id ? null : id;
+  }
+
+  actionBadgeClass(action: string): string {
+    if (action.startsWith('login'))    return 'bg-info text-dark';
+    if (action.includes('delete'))     return 'bg-danger';
+    if (action.includes('create') || action.includes('register')) return 'bg-success';
+    if (action.includes('update') || action.includes('approve') || action.includes('reject')) return 'bg-warning text-dark';
+    return 'bg-secondary';
+  }
+}

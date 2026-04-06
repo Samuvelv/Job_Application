@@ -1,0 +1,386 @@
+<!-- src/app/features/admin/employee-register/employee-register.component.html -->
+
+<!-- Header -->
+<div class="d-flex align-items-center gap-3 mb-4">
+  <a routerLink="/admin/employees" class="btn btn-sm btn-outline-secondary">
+    <i class="bi bi-arrow-left me-1"></i> Back
+  </a>
+  <div>
+    <h1 class="h4 fw-bold mb-0">Register New Employee</h1>
+    <p class="text-muted small mb-0">Fill all steps to create an employee profile</p>
+  </div>
+</div>
+
+<!-- Alerts -->
+@if (successMsg) {
+  <div class="alert alert-success d-flex align-items-center gap-2">
+    <i class="bi bi-check-circle-fill"></i> {{ successMsg }}
+  </div>
+}
+@if (errorMsg) {
+  <div class="alert alert-danger d-flex align-items-center gap-2">
+    <i class="bi bi-exclamation-triangle-fill"></i> {{ errorMsg }}
+  </div>
+}
+
+<!-- Step Progress -->
+<div class="step-indicator mb-4">
+  @for (step of STEPS; track step.num) {
+    <button type="button"
+      class="step-item"
+      [class.active]="currentStep === step.num"
+      [class.completed]="currentStep > step.num"
+      (click)="goToStep(step.num)">
+      <span class="step-number">
+        @if (currentStep > step.num) {
+          <i class="bi bi-check"></i>
+        } @else {
+          {{ step.num }}
+        }
+      </span>
+      <span class="step-label">{{ step.label }}</span>
+    </button>
+  }
+</div>
+<div class="progress mb-4" style="height:4px">
+  <div class="progress-bar bg-primary" [style.width.%]="(currentStep / totalSteps) * 100"></div>
+</div>
+
+<form [formGroup]="form" (ngSubmit)="onSubmit()" novalidate>
+  <div class="card p-4">
+
+    <!-- ══════════════════ STEP 1: Personal ══════════════════ -->
+    @if (currentStep === 1) {
+      <h5 class="fw-bold mb-4 border-bottom pb-2">Personal Information</h5>
+      <div class="row g-3">
+        <div class="col-md-6">
+          <label class="form-label">First Name <span class="text-danger">*</span></label>
+          <input type="text" class="form-control" formControlName="first_name"
+            [class.is-invalid]="ctrl('first_name').invalid && ctrl('first_name').touched">
+          <div class="invalid-feedback">First name is required.</div>
+        </div>
+        <div class="col-md-6">
+          <label class="form-label">Last Name <span class="text-danger">*</span></label>
+          <input type="text" class="form-control" formControlName="last_name"
+            [class.is-invalid]="ctrl('last_name').invalid && ctrl('last_name').touched">
+          <div class="invalid-feedback">Last name is required.</div>
+        </div>
+        <div class="col-md-4">
+          <label class="form-label">Date of Birth</label>
+          <input type="date" class="form-control" formControlName="date_of_birth">
+        </div>
+        <div class="col-md-4">
+          <label class="form-label">Gender</label>
+          <select class="form-select" formControlName="gender">
+            <option value="">Select…</option>
+            @for (g of GENDERS; track g) {
+              <option [value]="g">{{ g | titlecase }}</option>
+            }
+          </select>
+        </div>
+        <div class="col-md-4">
+          <label class="form-label">Phone</label>
+          <input type="tel" class="form-control" formControlName="phone" placeholder="+1 234 567 8900">
+        </div>
+        <div class="col-12">
+          <label class="form-label">Bio / Self Introduction</label>
+          <textarea class="form-control" formControlName="bio" rows="3"
+            placeholder="Brief introduction about the candidate…"></textarea>
+        </div>
+        <div class="col-md-6">
+          <label class="form-label">Profile Photo</label>
+          <input type="file" class="form-control" accept="image/jpeg,image/png,image/webp"
+            (change)="onPhotoSelected($event)">
+          <div class="form-text">JPG, PNG, WEBP — max 5MB</div>
+        </div>
+      </div>
+    }
+
+    <!-- ══════════════════ STEP 2: Professional ══════════════════ -->
+    @if (currentStep === 2) {
+      <h5 class="fw-bold mb-4 border-bottom pb-2">Professional Details</h5>
+      <div class="row g-3">
+        <div class="col-md-6">
+          <label class="form-label">Job Title</label>
+          <input type="text" class="form-control" formControlName="job_title" placeholder="e.g. Senior Developer">
+        </div>
+        <div class="col-md-6">
+          <label class="form-label">Occupation</label>
+          <input type="text" class="form-control" formControlName="occupation" placeholder="e.g. Software Engineer">
+        </div>
+        <div class="col-md-6">
+          <label class="form-label">Industry</label>
+          <input type="text" class="form-control" formControlName="industry" placeholder="e.g. Technology">
+        </div>
+        <div class="col-md-3">
+          <label class="form-label">Years of Experience</label>
+          <input type="number" class="form-control" formControlName="years_experience" min="0" max="60">
+        </div>
+        <div class="col-md-3">
+          <label class="form-label">LinkedIn URL</label>
+          <input type="url" class="form-control" formControlName="linkedin_url" placeholder="https://linkedin.com/in/…">
+        </div>
+        <div class="col-12 mt-2">
+          <label class="form-label fw-semibold">Salary Expectations</label>
+        </div>
+        <div class="col-md-3">
+          <label class="form-label">Min</label>
+          <input type="number" class="form-control" formControlName="salary_min" placeholder="0">
+        </div>
+        <div class="col-md-3">
+          <label class="form-label">Max</label>
+          <input type="number" class="form-control" formControlName="salary_max" placeholder="0">
+        </div>
+        <div class="col-md-3">
+          <label class="form-label">Currency</label>
+          <select class="form-select" formControlName="salary_currency">
+            @for (c of CURRENCIES; track c) { <option [value]="c">{{ c }}</option> }
+          </select>
+        </div>
+        <div class="col-md-3">
+          <label class="form-label">Type</label>
+          <select class="form-select" formControlName="salary_type">
+            @for (t of SALARY_TYPES; track t) { <option [value]="t">{{ t | titlecase }}</option> }
+          </select>
+        </div>
+
+        <!-- Skills -->
+        <div class="col-12 mt-3">
+          <div class="d-flex justify-content-between align-items-center mb-2">
+            <label class="form-label fw-semibold mb-0">Skills</label>
+            <button type="button" class="btn btn-sm btn-outline-primary" (click)="addSkill()">
+              <i class="bi bi-plus-lg me-1"></i> Add Skill
+            </button>
+          </div>
+          <div formArrayName="skills">
+            @for (skill of skills.controls; track $index) {
+              <div [formGroupName]="$index" class="row g-2 mb-2 align-items-center">
+                <div class="col-md-6">
+                  <input type="text" class="form-control form-control-sm" formControlName="skill_name" placeholder="Skill name">
+                </div>
+                <div class="col-md-4">
+                  <select class="form-select form-select-sm" formControlName="proficiency">
+                    <option value="">Proficiency</option>
+                    @for (p of PROFICIENCY_SKILL; track p) { <option [value]="p">{{ p | titlecase }}</option> }
+                  </select>
+                </div>
+                <div class="col-md-2">
+                  <button type="button" class="btn btn-sm btn-outline-danger w-100"
+                    (click)="removeSkill($index)" [disabled]="skills.length === 1">
+                    <i class="bi bi-x"></i>
+                  </button>
+                </div>
+              </div>
+            }
+          </div>
+        </div>
+
+        <!-- Languages -->
+        <div class="col-12 mt-2">
+          <div class="d-flex justify-content-between align-items-center mb-2">
+            <label class="form-label fw-semibold mb-0">Languages</label>
+            <button type="button" class="btn btn-sm btn-outline-primary" (click)="addLanguage()">
+              <i class="bi bi-plus-lg me-1"></i> Add Language
+            </button>
+          </div>
+          <div formArrayName="languages">
+            @for (lang of languages.controls; track $index) {
+              <div [formGroupName]="$index" class="row g-2 mb-2 align-items-center">
+                <div class="col-md-6">
+                  <input type="text" class="form-control form-control-sm" formControlName="language" placeholder="Language">
+                </div>
+                <div class="col-md-4">
+                  <select class="form-select form-select-sm" formControlName="proficiency">
+                    <option value="">Proficiency</option>
+                    @for (p of PROFICIENCY_LANG; track p) { <option [value]="p">{{ p | titlecase }}</option> }
+                  </select>
+                </div>
+                <div class="col-md-2">
+                  <button type="button" class="btn btn-sm btn-outline-danger w-100"
+                    (click)="removeLanguage($index)" [disabled]="languages.length === 1">
+                    <i class="bi bi-x"></i>
+                  </button>
+                </div>
+              </div>
+            }
+          </div>
+        </div>
+
+        <!-- Resume & Video -->
+        <div class="col-md-6">
+          <label class="form-label fw-semibold">CV / Resume</label>
+          <input type="file" class="form-control" accept=".pdf,.doc,.docx" (change)="onResumeSelected($event)">
+          <div class="form-text">PDF, DOC, DOCX — max 10MB</div>
+        </div>
+        <div class="col-md-6">
+          <label class="form-label fw-semibold">Self-Introduction Video</label>
+          <input type="file" class="form-control" accept="video/mp4,video/webm,video/quicktime" (change)="onVideoSelected($event)">
+          <div class="form-text">MP4, WEBM — max 50MB</div>
+        </div>
+      </div>
+    }
+
+    <!-- ══════════════════ STEP 3: Location ══════════════════ -->
+    @if (currentStep === 3) {
+      <h5 class="fw-bold mb-4 border-bottom pb-2">Location Details</h5>
+      <div class="row g-3">
+        <div class="col-md-6">
+          <label class="form-label">Current Country</label>
+          <input type="text" class="form-control" formControlName="current_country" placeholder="e.g. United States">
+        </div>
+        <div class="col-md-6">
+          <label class="form-label">Current City</label>
+          <input type="text" class="form-control" formControlName="current_city" placeholder="e.g. New York">
+        </div>
+        <div class="col-md-6">
+          <label class="form-label">Nationality</label>
+          <input type="text" class="form-control" formControlName="nationality" placeholder="e.g. American">
+        </div>
+        <div class="col-md-6">
+          <label class="form-label">Target Locations</label>
+          <input type="text" class="form-control" formControlName="target_locations"
+            placeholder="e.g. USA, Canada, UK (comma separated)">
+          <div class="form-text">Enter countries separated by commas</div>
+        </div>
+      </div>
+    }
+
+    <!-- ══════════════════ STEP 4: Education & Experience ══════════════════ -->
+    @if (currentStep === 4) {
+      <div class="d-flex justify-content-between align-items-center mb-3">
+        <h5 class="fw-bold mb-0">Work Experience</h5>
+        <button type="button" class="btn btn-sm btn-outline-primary" (click)="addExperience()">
+          <i class="bi bi-plus-lg me-1"></i> Add
+        </button>
+      </div>
+      <div formArrayName="experience">
+        @for (exp of experience.controls; track $index) {
+          <div [formGroupName]="$index" class="border rounded p-3 mb-3" style="background:var(--th-bg-secondary)">
+            <div class="d-flex justify-content-between mb-2">
+              <span class="fw-semibold small text-muted">Experience #{{ $index + 1 }}</span>
+              <button type="button" class="btn btn-sm btn-outline-danger"
+                (click)="removeExperience($index)">Remove</button>
+            </div>
+            <div class="row g-2">
+              <div class="col-md-6"><input class="form-control form-control-sm" formControlName="company_name" placeholder="Company name"></div>
+              <div class="col-md-6"><input class="form-control form-control-sm" formControlName="job_title" placeholder="Job title"></div>
+              <div class="col-md-3"><input type="date" class="form-control form-control-sm" formControlName="start_date"></div>
+              <div class="col-md-3"><input type="date" class="form-control form-control-sm" formControlName="end_date" placeholder="Leave blank if current"></div>
+              <div class="col-md-6"><input class="form-control form-control-sm" formControlName="location" placeholder="Location"></div>
+              <div class="col-12"><textarea class="form-control form-control-sm" formControlName="description" rows="2" placeholder="Description"></textarea></div>
+            </div>
+          </div>
+        }
+      </div>
+
+      <div class="d-flex justify-content-between align-items-center mb-3 mt-4">
+        <h5 class="fw-bold mb-0">Education</h5>
+        <button type="button" class="btn btn-sm btn-outline-primary" (click)="addEducation()">
+          <i class="bi bi-plus-lg me-1"></i> Add
+        </button>
+      </div>
+      <div formArrayName="education">
+        @for (edu of education.controls; track $index) {
+          <div [formGroupName]="$index" class="border rounded p-3 mb-3" style="background:var(--th-bg-secondary)">
+            <div class="d-flex justify-content-between mb-2">
+              <span class="fw-semibold small text-muted">Education #{{ $index + 1 }}</span>
+              <button type="button" class="btn btn-sm btn-outline-danger"
+                (click)="removeEducation($index)">Remove</button>
+            </div>
+            <div class="row g-2">
+              <div class="col-md-6"><input class="form-control form-control-sm" formControlName="institution" placeholder="Institution name"></div>
+              <div class="col-md-6"><input class="form-control form-control-sm" formControlName="degree" placeholder="Degree (e.g. B.Sc.)"></div>
+              <div class="col-md-6"><input class="form-control form-control-sm" formControlName="field_of_study" placeholder="Field of study"></div>
+              <div class="col-md-6"><input class="form-control form-control-sm" formControlName="location" placeholder="Location"></div>
+              <div class="col-md-3"><input type="number" class="form-control form-control-sm" formControlName="start_year" placeholder="Start year"></div>
+              <div class="col-md-3"><input type="number" class="form-control form-control-sm" formControlName="end_year" placeholder="End year"></div>
+            </div>
+          </div>
+        }
+      </div>
+
+      <!-- Certificates -->
+      <div class="d-flex justify-content-between align-items-center mb-3 mt-4">
+        <h5 class="fw-bold mb-0">Certificates</h5>
+        <label class="btn btn-sm btn-outline-primary mb-0" style="cursor:pointer">
+          <i class="bi bi-upload me-1"></i> Upload
+          <input type="file" class="d-none" accept=".pdf,image/*" (change)="onCertSelected($event)">
+        </label>
+      </div>
+      @if (pendingCerts.length === 0) {
+        <p class="text-muted small">No certificates added yet.</p>
+      }
+      @for (cert of pendingCerts; track $index) {
+        <div class="d-flex align-items-center gap-2 mb-2 border rounded p-2">
+          <i class="bi bi-file-earmark-text text-muted"></i>
+          <span class="text-muted small flex-grow-1">{{ cert.name }}</span>
+          <button type="button" class="btn btn-sm btn-outline-danger" (click)="removeCert($index)">
+            <i class="bi bi-x"></i>
+          </button>
+        </div>
+      }
+    }
+
+    <!-- ══════════════════ STEP 5: Credentials ══════════════════ -->
+    @if (currentStep === 5) {
+      <h5 class="fw-bold mb-4 border-bottom pb-2">Login Credentials</h5>
+      <p class="text-muted small mb-4">These credentials will be emailed to the employee after registration.</p>
+      <div class="row g-3">
+        <div class="col-md-6">
+          <label class="form-label">Email Address <span class="text-danger">*</span></label>
+          <input type="email" class="form-control" formControlName="email"
+            [class.is-invalid]="submitted && ctrl('email').invalid">
+          <div class="invalid-feedback">Valid email is required.</div>
+        </div>
+        <div class="col-md-6">
+          <label class="form-label">Temporary Password <span class="text-danger">*</span></label>
+          <input type="text" class="form-control" formControlName="password"
+            [class.is-invalid]="submitted && ctrl('password').invalid"
+            placeholder="Min 8 characters">
+          <div class="invalid-feedback">Password must be at least 8 characters.</div>
+        </div>
+      </div>
+
+      <!-- Summary -->
+      <div class="alert alert-info mt-4 small">
+        <strong>Summary:</strong>
+        {{ ctrl('first_name').value }} {{ ctrl('last_name').value }}
+        &nbsp;|&nbsp; {{ ctrl('industry').value || 'No industry' }}
+        &nbsp;|&nbsp; {{ ctrl('current_country').value || 'No location' }}
+        &nbsp;|&nbsp; {{ skills.length }} skill(s)
+        &nbsp;|&nbsp; {{ experience.length }} experience(s)
+      </div>
+
+      <!-- Draft saved indicator -->
+      @if (draftSaved) {
+        <div class="d-flex align-items-center gap-1 text-muted small mt-2">
+          <i class="bi bi-cloud-check"></i> Draft auto-saved
+        </div>
+      }
+    }
+
+  </div><!-- /card -->
+
+  <!-- Navigation buttons -->
+  <div class="d-flex justify-content-between mt-4">
+    <button type="button" class="btn btn-outline-secondary"
+      [disabled]="currentStep === 1" (click)="prevStep()">
+      <i class="bi bi-arrow-left me-1"></i> Previous
+    </button>
+
+    @if (currentStep < totalSteps) {
+      <button type="button" class="btn btn-primary" (click)="nextStep()">
+        Next <i class="bi bi-arrow-right ms-1"></i>
+      </button>
+    } @else {
+      <button type="submit" class="btn btn-success px-4" [disabled]="loading">
+        @if (loading) {
+          <span class="spinner-border spinner-border-sm me-2"></span> Registering…
+        } @else {
+          <i class="bi bi-check-lg me-1"></i> Register Employee
+        }
+      </button>
+    }
+  </div>
+
+</form>

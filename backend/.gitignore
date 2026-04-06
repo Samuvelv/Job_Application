@@ -1,0 +1,30 @@
+# Dependencies
+node_modules/
+dist/
+
+# Environment
+.env
+.env.local
+.env.production
+
+# Uploads (user files — not committed)
+uploads/profiles/*
+uploads/resumes/*
+uploads/certificates/*
+uploads/videos/*
+!uploads/profiles/.gitkeep
+!uploads/resumes/.gitkeep
+!uploads/certificates/.gitkeep
+!uploads/videos/.gitkeep
+
+# TypeScript build
+*.js.map
+*.d.ts.map
+
+# Logs
+*.log
+npm-debug.log*
+
+# OS
+.DS_Store
+Thumbs.db

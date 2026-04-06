@@ -1,0 +1,118 @@
+// src/modules/recruiters/recruiters.controller.ts
+import { Request, Response, NextFunction } from 'express';
+import * as svc from './recruiters.service';
+import {
+  CreateRecruiterSchema,
+  GenerateTokenSchema,
+  RecruiterFilterSchema,
+} from './recruiters.dto';
+import { logAudit } from '../../services/audit.service';
+
+const p = (v: string | string[]): string => (Array.isArray(v) ? v[0] : v);
+
+// ── Admin: CRUD ───────────────────────────────────────────────────────────────
+
+export async function create(req: Request, res: Response, next: NextFunction): Promise<void> {
+  try {
+    const dto = CreateRecruiterSchema.parse(req.body);
+    const result = await svc.createRecruiter(dto, req.user!.sub);
+    await logAudit({
+      userId: req.user!.sub, action: 'CREATE_RECRUITER',
+      resource: 'recruiter', resourceId: result.recruiter.id, ipAddress: req.ip,
+    });
+    res.status(201).json(result);
+  } catch (err) { next(err); }
+}
+
+export async function list(req: Request, res: Response, next: NextFunction): Promise<void> {
+  try {
+    const filters = RecruiterFilterSchema.parse(req.query);
+    const result  = await svc.listRecruiters(filters);
+    res.json(result);
+  } catch (err) { next(err); }
+}
+
+export async function getOne(req: Request, res: Response, next: NextFunction): Promise<void> {
+  try {
+    const id = p(req.params['id']);
+    const recruiter = await svc.getRecruiterById(id);
+    res.json({ recruiter });
+  } catch (err) { next(err); }
+}
+
+export async function remove(req: Request, res: Response, next: NextFunction): Promise<void> {
+  try {
+    const id = p(req.params['id']);
+    await svc.deleteRecruiter(id);
+    await logAudit({
+      userId: req.user!.sub, action: 'DELETE_RECRUITER',
+      resource: 'recruiter', resourceId: id, ipAddress: req.ip,
+    });
+    res.json({ message: 'Recruiter deleted' });
+  } catch (err) { next(err); }
+}
+
+// ── Admin: Token management ───────────────────────────────────────────────────
+
+export async function generateToken(req: Request, res: Response, next: NextFunction): Promise<void> {
+  try {
+    const id  = p(req.params['id']);
+    const dto = GenerateTokenSchema.parse(req.body);
+    const token = await svc.generateToken(id, dto);
+    await logAudit({
+      userId: req.user!.sub, action: 'GENERATE_RECRUITER_TOKEN',
+      resource: 'recruiter', resourceId: id, ipAddress: req.ip,
+    });
+    res.json({ token });
+  } catch (err) { next(err); }
+}
+
+export async function revokeToken(req: Request, res: Response, next: NextFunction): Promise<void> {
+  try {
+    const id = p(req.params['id']);
+    await svc.revokeToken(id);
+    await logAudit({
+      userId: req.user!.sub, action: 'REVOKE_RECRUITER_TOKEN',
+      resource: 'recruiter', resourceId: id, ipAddress: req.ip,
+    });
+    res.json({ message: 'Token revoked' });
+  } catch (err) { next(err); }
+}
+
+// ── Recruiter: self ───────────────────────────────────────────────────────────
+
+export async function getMyProfile(req: Request, res: Response, next: NextFunction): Promise<void> {
+  try {
+    const recruiter = await svc.getRecruiterByUserId(req.user!.sub);
+    res.json({ recruiter });
+  } catch (err) { next(err); }
+}
+
+// ── Recruiter: shortlist ──────────────────────────────────────────────────────
+
+export async function getShortlist(req: Request, res: Response, next: NextFunction): Promise<void> {
+  try {
+    const recruiter = await svc.getRecruiterByUserId(req.user!.sub);
+    const shortlist = await svc.getShortlist(recruiter.id);
+    res.json({ shortlist });
+  } catch (err) { next(err); }
+}
+
+export async function addShortlist(req: Request, res: Response, next: NextFunction): Promise<void> {
+  try {
+    const recruiter  = await svc.getRecruiterByUserId(req.user!.sub);
+    const employeeId = p(req.params['employeeId']);
+    const { notes }  = req.body as { notes?: string };
+    const entry = await svc.addToShortlist(recruiter.id, employeeId, notes);
+    res.status(201).json({ entry });
+  } catch (err) { next(err); }
+}
+
+export async function removeShortlist(req: Request, res: Response, next: NextFunction): Promise<void> {
+  try {
+    const recruiter  = await svc.getRecruiterByUserId(req.user!.sub);
+    const employeeId = p(req.params['employeeId']);
+    await svc.removeFromShortlist(recruiter.id, employeeId);
+    res.json({ message: 'Removed from shortlist' });
+  } catch (err) { next(err); }
+}

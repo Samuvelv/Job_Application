@@ -1,0 +1,80 @@
+# docker-compose.yml — TalentHub full-stack deployment
+# Usage:
+#   1. Copy backend/.env.example to backend/.env and fill in real secrets.
+#   2. docker compose up --build
+#   Migrations + seeds run automatically on backend startup.
+
+version: '3.9'
+
+services:
+
+  # ── PostgreSQL ───────────────────────────────────────────────────────────────
+  db:
+    image: postgres:15-alpine
+    container_name: talenthub_db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB:       talentdb
+      POSTGRES_USER:     postgres
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-yourpassword}
+    ports:
+      - '5432:5432'
+    volumes:
+      - pg_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U postgres']
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ── Backend ──────────────────────────────────────────────────────────────────
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: talenthub_backend
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      NODE_ENV:               ${NODE_ENV:-production}
+      PORT:                   3000
+      DB_HOST:                db
+      DB_PORT:                5432
+      DB_NAME:                talentdb
+      DB_USER:                postgres
+      DB_PASSWORD:            ${DB_PASSWORD:-yourpassword}
+      JWT_SECRET:             ${JWT_SECRET:-change_this_to_a_very_long_random_secret_string_at_least_64_chars}
+      JWT_REFRESH_SECRET:     ${JWT_REFRESH_SECRET:-change_this_to_another_very_long_random_secret_string_64_chars}
+      JWT_ACCESS_EXPIRES_IN:  ${JWT_ACCESS_EXPIRES_IN:-15m}
+      JWT_REFRESH_EXPIRES_IN: ${JWT_REFRESH_EXPIRES_IN:-7d}
+      CORS_ORIGIN:            ${CORS_ORIGIN:-http://localhost:4200}
+      SMTP_HOST:              ${SMTP_HOST:-smtp.gmail.com}
+      SMTP_PORT:              ${SMTP_PORT:-587}
+      SMTP_SECURE:            ${SMTP_SECURE:-false}
+      SMTP_USER:              ${SMTP_USER:-your_email@gmail.com}
+      SMTP_PASS:              ${SMTP_PASS:-your_app_password}
+      EMAIL_FROM:             ${EMAIL_FROM:-TalentHub <your_email@gmail.com>}
+      APP_URL:                ${APP_URL:-http://localhost:3000}
+      FRONTEND_URL:           ${FRONTEND_URL:-http://localhost:4200}
+    ports:
+      - '3000:3000'
+    volumes:
+      - uploads_data:/app/uploads
+
+  # ── Frontend (Nginx serving Angular build + reverse proxy to backend) ────────
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: talenthub_frontend
+    restart: unless-stopped
+    depends_on:
+      - backend
+    ports:
+      - '4200:80'
+
+volumes:
+  pg_data:
+  uploads_data:
