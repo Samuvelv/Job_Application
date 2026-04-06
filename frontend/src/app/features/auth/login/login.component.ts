@@ -16,15 +16,19 @@ import { AuthService } from '../../../core/services/auth.service';
   imports: [CommonModule, ReactiveFormsModule],
   template: `
     <div class="auth-wrapper">
+      <!-- Animated floating orbs -->
+      <div class="auth-orb auth-orb--1"></div>
+      <div class="auth-orb auth-orb--2"></div>
+      <div class="auth-orb auth-orb--3"></div>
+
       <div class="auth-card">
 
         <!-- Logo / Brand -->
         <div class="text-center mb-4">
-          <div class="rounded-circle bg-primary d-inline-flex align-items-center justify-content-center mb-3"
-            style="width:56px;height:56px">
+          <div class="auth-brand-icon mb-3">
             <i class="bi bi-briefcase-fill text-white" style="font-size:1.5rem"></i>
           </div>
-          <h1 class="fw-bold mb-0" style="color: var(--th-primary); font-size:1.6rem">
+          <h1 class="auth-title mb-0">
             TalentHub
           </h1>
           <p class="text-muted small mt-1">Sign in to your account</p>
@@ -98,7 +102,7 @@ import { AuthService } from '../../../core/services/auth.service';
           <!-- Submit -->
           <button
             type="submit"
-            class="btn btn-primary w-100 py-2"
+            class="btn btn-primary-gradient w-100 py-2"
             [disabled]="loading"
           >
             @if (loading) {
@@ -151,16 +155,34 @@ export class LoginComponent implements OnInit {
 
     if (this.form.invalid) return;
 
-    this.loading = true;
-    this.auth.login(this.form.getRawValue()).subscribe({
-      next: () => {
-        this.loading = false;
-        this.router.navigate([this.auth.getDashboardRoute()]);
-      },
-      error: (err) => {
-        this.loading  = false;
-        this.errorMsg = err?.error?.message ?? 'Login failed. Please try again.';
-      },
-    });
+    // ── Mock login (no API required) ──────────────────────────────────────
+    // Detect role from the email field:
+    //   • contains "recruiter" → recruiter
+    //   • contains "employee" or "emp" → employee
+    //   • anything else → admin
+    const email: string = (this.form.value.email ?? '').toLowerCase().trim();
+    let role: 'admin' | 'employee' | 'recruiter' = 'admin';
+    if (email.includes('recruiter')) {
+      role = 'recruiter';
+    } else if (email.includes('employee') || email.includes('emp')) {
+      role = 'employee';
+    }
+
+    const mockUser = {
+      id: 'mock-' + role + '-001',
+      email: email || role + '@talenthub.com',
+      role,
+      is_active: true,
+      created_at: new Date().toISOString(),
+    };
+
+    // Write to localStorage so isLoggedIn() returns true and the shell renders
+    localStorage.setItem('th_access_token', 'mock-token-' + role + '-' + Date.now());
+    localStorage.setItem('th_user', JSON.stringify(mockUser));
+
+    // Update the AuthService signal so getRole() / currentUser() reflect the mock user
+    this.auth.currentUser.set(mockUser);
+
+    this.router.navigate([this.auth.getDashboardRoute()]);
   }
 }

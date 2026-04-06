@@ -8,14 +8,15 @@ import { AuthService } from '../../../core/services/auth.service';
   standalone: true,
   imports: [RouterLink],
   template: `
-    <div class="d-flex flex-column align-items-center justify-content-center"
-         style="min-height:100vh; background: var(--th-bg)">
-      <div class="text-center p-5">
-        <div style="font-size:5rem">🚫</div>
-        <h1 class="fw-bold mt-3 mb-2">Access Denied</h1>
-        <p class="text-muted mb-4">You don't have permission to view this page.</p>
-        <a [routerLink]="dashRoute" class="btn btn-primary">
-          Back to Dashboard
+    <div class="unauthorized-page">
+      <div class="unauthorized-page__card">
+        <div class="unauthorized-page__icon">
+          <i class="bi bi-shield-x"></i>
+        </div>
+        <h1 class="unauthorized-page__title">Access Denied</h1>
+        <p class="unauthorized-page__desc">You don't have permission to view this page.</p>
+        <a [routerLink]="dashRoute" class="btn btn-primary px-4">
+          <i class="bi bi-arrow-left me-1"></i>Back to Dashboard
         </a>
       </div>
     </div>

@@ -12,15 +12,14 @@ import { PageHeaderComponent } from '../../../shared/components/page-header/page
   imports: [CommonModule, ReactiveFormsModule, RouterLink, PageHeaderComponent],
   template: `
     <div class="mb-3">
-      <a routerLink="/admin/recruiters" class="btn btn-sm btn-outline-secondary">
-        <i class="bi bi-arrow-left me-1"></i>Back to Recruiters
+      <a routerLink="/admin/recruiters" class="back-btn">
+        <i class="bi bi-arrow-left"></i>Back to Recruiters
       </a>
     </div>
 
-    <div class="card p-4" style="max-width:600px;">
-      <h2 class="h5 fw-bold mb-4">
-        <i class="bi bi-person-plus me-2 text-primary"></i>Add Recruiter
-      </h2>
+    <app-page-header title="Add Recruiter" icon="bi-person-plus" subtitle="Create a new recruiter account" />
+
+    <div class="form-card" style="max-width:600px;">
 
       @if (successToken) {
         <div class="alert alert-success">

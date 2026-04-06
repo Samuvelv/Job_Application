@@ -17,20 +17,19 @@ import { EmptyStateComponent } from '../../../shared/components/empty-state/empt
   imports: [CommonModule, ReactiveFormsModule, RouterLink, PageHeaderComponent, EmptyStateComponent],
   template: `
     <!-- Header -->
-    <div class="d-flex justify-content-between align-items-start mb-4">
-      <app-page-header
-        title="Recruiters"
-        [subtitle]="pagination.total + ' total recruiters'"
-        icon="bi-people"
-        class="flex-grow-1"
-      />
-      <a routerLink="/admin/recruiters/create" class="btn btn-primary ms-3 mt-1">
+    <app-page-header
+      title="Recruiters"
+      [subtitle]="pagination.total + ' total recruiters'"
+      icon="bi-people"
+    >
+      <a routerLink="/admin/recruiters/create" class="btn btn-primary btn-sm">
         <i class="bi bi-person-plus me-1"></i>Add Recruiter
       </a>
-    </div>
+    </app-page-header>
 
     <!-- Filters -->
-    <div class="card p-3 mb-4" [formGroup]="filterForm">
+    <div class="filter-card" [formGroup]="filterForm">
+      <div class="filter-card__title"><i class="bi bi-search"></i> Search</div>
       <div class="row g-2">
         <div class="col-md-6">
           <div class="input-group">
@@ -44,7 +43,10 @@ import { EmptyStateComponent } from '../../../shared/components/empty-state/empt
 
     <!-- Table -->
     @if (loading) {
-      <div class="text-center py-5"><div class="spinner-border text-primary"></div></div>
+      <div class="loading-state">
+        <div class="spinner-border"></div>
+        <div class="loading-state__text">Loading recruiters…</div>
+      </div>
     } @else if (recruiters.length === 0) {
       <app-empty-state
         icon="bi-people"

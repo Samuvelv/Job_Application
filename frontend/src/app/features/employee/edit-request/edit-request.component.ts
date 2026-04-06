@@ -25,36 +25,48 @@ import { PageHeaderComponent } from '../../../shared/components/page-header/page
 
         <!-- Existing request status banner -->
         @if (existingRequest) {
-          <div class="alert mb-4"
-            [class.alert-warning]="existingRequest.status === 'pending'"
-            [class.alert-success]="existingRequest.status === 'approved'"
-            [class.alert-danger]="existingRequest.status === 'rejected'">
-            <strong>
-              @if (existingRequest.status === 'pending') { Pending Review }
-              @if (existingRequest.status === 'approved') { Approved }
-              @if (existingRequest.status === 'rejected') { Rejected }
-            </strong>
-            — submitted {{ existingRequest.created_at | date:'dd MMM yyyy' }}
-            @if (existingRequest.reviewed_at) {
-              · reviewed {{ existingRequest.reviewed_at | date:'dd MMM yyyy' }}
-            }
-            @if (existingRequest.admin_note) {
-              <div class="mt-1 small"><strong>Admin note:</strong> {{ existingRequest.admin_note }}</div>
-            }
-            @if (existingRequest.status === 'pending') {
-              <div class="mt-2 small text-muted">You cannot submit a new request while one is pending.</div>
-            }
+          <div class="status-banner mb-4"
+            [class.status-banner--pending]="existingRequest.status === 'pending'"
+            [class.status-banner--approved]="existingRequest.status === 'approved'"
+            [class.status-banner--rejected]="existingRequest.status === 'rejected'">
+            <div class="status-banner__icon">
+              @if (existingRequest.status === 'pending') { <i class="bi bi-hourglass-split"></i> }
+              @if (existingRequest.status === 'approved') { <i class="bi bi-check-circle"></i> }
+              @if (existingRequest.status === 'rejected') { <i class="bi bi-x-circle"></i> }
+            </div>
+            <div class="status-banner__body">
+              <div class="status-banner__title">
+                @if (existingRequest.status === 'pending') { Pending Review }
+                @if (existingRequest.status === 'approved') { Approved }
+                @if (existingRequest.status === 'rejected') { Rejected }
+              </div>
+              <div class="status-banner__text">
+                Submitted {{ existingRequest.created_at | date:'dd MMM yyyy' }}
+                @if (existingRequest.reviewed_at) {
+                  · reviewed {{ existingRequest.reviewed_at | date:'dd MMM yyyy' }}
+                }
+              </div>
+              @if (existingRequest.admin_note) {
+                <div class="mt-1 small"><strong>Admin note:</strong> {{ existingRequest.admin_note }}</div>
+              }
+              @if (existingRequest.status === 'pending') {
+                <div class="mt-2 small text-muted">You cannot submit a new request while one is pending.</div>
+              }
+            </div>
           </div>
         }
 
         @if (loadingProfile) {
-          <div class="text-center py-5"><div class="spinner-border text-primary"></div></div>
+          <div class="loading-state">
+            <div class="spinner-border"></div>
+            <div class="loading-state__text">Loading profile…</div>
+          </div>
         } @else if (form) {
           <form [formGroup]="form" (ngSubmit)="submit()">
 
             <!-- ── Personal ─────────────────────────────────────────────── -->
             <div class="card p-4 mb-4">
-              <h5 class="fw-bold mb-3">Personal Information</h5>
+              <h5 class="card-section-header"><i class="bi bi-person"></i> Personal Information</h5>
               <div class="row g-3">
                 <div class="col-md-6">
                   <label class="form-label small fw-semibold">First Name</label>
@@ -96,7 +108,7 @@ import { PageHeaderComponent } from '../../../shared/components/page-header/page
 
             <!-- ── Professional ────────────────────────────────────────── -->
             <div class="card p-4 mb-4">
-              <h5 class="fw-bold mb-3">Professional</h5>
+              <h5 class="card-section-header card-section-header--info"><i class="bi bi-briefcase"></i> Professional</h5>
               <div class="row g-3">
                 <div class="col-md-4">
                   <label class="form-label small fw-semibold">Job Title</label>
@@ -120,7 +132,7 @@ import { PageHeaderComponent } from '../../../shared/components/page-header/page
 
             <!-- ── Location ─────────────────────────────────────────────── -->
             <div class="card p-4 mb-4">
-              <h5 class="fw-bold mb-3">Location</h5>
+              <h5 class="card-section-header card-section-header--success"><i class="bi bi-geo-alt"></i> Location</h5>
               <div class="row g-3">
                 <div class="col-md-4">
                   <label class="form-label small fw-semibold">Current Country</label>
@@ -139,7 +151,7 @@ import { PageHeaderComponent } from '../../../shared/components/page-header/page
 
             <!-- ── Salary ───────────────────────────────────────────────── -->
             <div class="card p-4 mb-4">
-              <h5 class="fw-bold mb-3">Salary Expectation</h5>
+              <h5 class="card-section-header card-section-header--warning"><i class="bi bi-cash-coin"></i> Salary Expectation</h5>
               <div class="row g-3">
                 <div class="col-md-3">
                   <label class="form-label small fw-semibold">Min</label>
@@ -168,7 +180,7 @@ import { PageHeaderComponent } from '../../../shared/components/page-header/page
             <!-- ── Skills ───────────────────────────────────────────────── -->
             <div class="card p-4 mb-4">
               <div class="d-flex justify-content-between align-items-center mb-3">
-                <h5 class="fw-bold mb-0">Skills</h5>
+                <h5 class="card-section-header card-section-header--purple mb-0"><i class="bi bi-tools"></i> Skills</h5>
                 <button type="button" class="btn btn-sm btn-outline-primary" (click)="addSkill()">+ Add</button>
               </div>
               @for (ctrl of skillsArray.controls; track $index) {
@@ -195,7 +207,7 @@ import { PageHeaderComponent } from '../../../shared/components/page-header/page
             <!-- ── Languages ────────────────────────────────────────────── -->
             <div class="card p-4 mb-4">
               <div class="d-flex justify-content-between align-items-center mb-3">
-                <h5 class="fw-bold mb-0">Languages</h5>
+                <h5 class="card-section-header card-section-header--teal mb-0"><i class="bi bi-translate"></i> Languages</h5>
                 <button type="button" class="btn btn-sm btn-outline-primary" (click)="addLanguage()">+ Add</button>
               </div>
               @for (ctrl of languagesArray.controls; track $index) {
@@ -223,7 +235,7 @@ import { PageHeaderComponent } from '../../../shared/components/page-header/page
             <!-- ── Experience ────────────────────────────────────────────── -->
             <div class="card p-4 mb-4">
               <div class="d-flex justify-content-between align-items-center mb-3">
-                <h5 class="fw-bold mb-0">Work Experience</h5>
+                <h5 class="card-section-header card-section-header--orange mb-0"><i class="bi bi-building"></i> Work Experience</h5>
                 <button type="button" class="btn btn-sm btn-outline-primary" (click)="addExperience()">+ Add</button>
               </div>
               @for (ctrl of experienceArray.controls; track $index) {
@@ -259,7 +271,7 @@ import { PageHeaderComponent } from '../../../shared/components/page-header/page
             <!-- ── Education ─────────────────────────────────────────────── -->
             <div class="card p-4 mb-4">
               <div class="d-flex justify-content-between align-items-center mb-3">
-                <h5 class="fw-bold mb-0">Education</h5>
+                <h5 class="card-section-header card-section-header--success mb-0"><i class="bi bi-mortarboard"></i> Education</h5>
                 <button type="button" class="btn btn-sm btn-outline-primary" (click)="addEducation()">+ Add</button>
               </div>
               @for (ctrl of educationArray.controls; track $index) {

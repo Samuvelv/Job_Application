@@ -8,17 +8,23 @@ import { ToastService } from '../../../core/services/toast.service';
   standalone: true,
   imports: [CommonModule],
   template: `
-    <div class="position-fixed top-0 end-0 p-3" style="z-index:2000;min-width:280px">
+    <div class="position-fixed top-0 end-0 p-3" style="z-index:2000;min-width:300px">
       @for (toast of toastSvc.toasts(); track toast.id) {
-        <div class="toast show align-items-center mb-2"
-          [class.text-bg-success]="toast.type === 'success'"
-          [class.text-bg-danger]="toast.type === 'error'"
-          [class.text-bg-warning]="toast.type === 'warning'"
-          [class.text-bg-info]="toast.type === 'info'"
+        <div class="toast show align-items-center mb-2 toast-custom"
+          [class.toast-custom--success]="toast.type === 'success'"
+          [class.toast-custom--error]="toast.type === 'error'"
+          [class.toast-custom--warning]="toast.type === 'warning'"
+          [class.toast-custom--info]="toast.type === 'info'"
           role="alert">
-          <div class="d-flex">
-            <div class="toast-body small">{{ toast.message }}</div>
-            <button type="button" class="btn-close me-2 m-auto btn-close-white"
+          <div class="d-flex align-items-center gap-2 px-3 py-2">
+            <div class="toast-icon">
+              @if (toast.type === 'success') { <i class="bi bi-check-lg"></i> }
+              @if (toast.type === 'error') { <i class="bi bi-x-lg"></i> }
+              @if (toast.type === 'warning') { <i class="bi bi-exclamation-triangle"></i> }
+              @if (toast.type === 'info') { <i class="bi bi-info-circle"></i> }
+            </div>
+            <div class="toast-body small flex-grow-1 p-0">{{ toast.message }}</div>
+            <button type="button" class="btn-close ms-2"
               (click)="toastSvc.dismiss(toast.id)"></button>
           </div>
         </div>

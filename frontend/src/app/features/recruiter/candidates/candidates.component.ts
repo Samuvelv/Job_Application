@@ -15,17 +15,15 @@ import { EmptyStateComponent } from '../../../shared/components/empty-state/empt
   standalone: true,
   imports: [CommonModule, ReactiveFormsModule, PageHeaderComponent, EmptyStateComponent],
   template: `
-    <div class="d-flex justify-content-between align-items-start mb-4">
-      <app-page-header
-        title="Search Talent"
-        [subtitle]="pagination.total + ' candidates available'"
-        icon="bi-person-search"
-        class="flex-grow-1"
-      />
-    </div>
+    <app-page-header
+      title="Search Talent"
+      [subtitle]="pagination.total + ' candidates available'"
+      icon="bi-person-search"
+    />
 
     <!-- Filters -->
-    <div class="card p-3 mb-4" [formGroup]="filterForm">
+    <div class="filter-card" [formGroup]="filterForm">
+      <div class="filter-card__title"><i class="bi bi-funnel"></i> Filters</div>
       <div class="row g-2">
         <div class="col-md-4">
           <div class="input-group">
@@ -55,7 +53,10 @@ import { EmptyStateComponent } from '../../../shared/components/empty-state/empt
 
     <!-- Cards grid -->
     @if (loading) {
-      <div class="text-center py-5"><div class="spinner-border text-primary"></div></div>
+      <div class="loading-state">
+        <div class="spinner-border"></div>
+        <div class="loading-state__text">Searching candidates…</div>
+      </div>
     } @else if (employees.length === 0) {
       <app-empty-state
         icon="bi-person-search"
@@ -66,24 +67,22 @@ import { EmptyStateComponent } from '../../../shared/components/empty-state/empt
       <div class="row g-3">
         @for (emp of employees; track emp.id) {
           <div class="col-md-6 col-lg-4">
-            <div class="card h-100 p-3 d-flex flex-column">
+            <div class="candidate-card">
 
               <!-- Avatar + name -->
-              <div class="d-flex align-items-center gap-3 mb-3">
+              <div class="candidate-card__header">
                 @if (emp.profile_photo_url) {
                   <img [src]="emp.profile_photo_url" alt="photo"
                     class="rounded-circle flex-shrink-0"
                     style="width:52px;height:52px;object-fit:cover;">
                 } @else {
-                  <div class="rounded-circle bg-primary text-white d-flex align-items-center
-                    justify-content-center fw-bold flex-shrink-0"
-                    style="width:52px;height:52px;font-size:1.1rem">
+                  <div class="candidate-card__avatar-placeholder">
                     {{ emp.first_name[0] }}{{ emp.last_name[0] }}
                   </div>
                 }
                 <div class="overflow-hidden">
-                  <div class="fw-semibold text-truncate">{{ emp.first_name }} {{ emp.last_name }}</div>
-                  <div class="text-muted small text-truncate">{{ emp.job_title || emp.occupation || '—' }}</div>
+                  <div class="candidate-card__name">{{ emp.first_name }} {{ emp.last_name }}</div>
+                  <div class="candidate-card__title">{{ emp.job_title || emp.occupation || '—' }}</div>
                 </div>
               </div>
 
@@ -107,9 +106,9 @@ import { EmptyStateComponent } from '../../../shared/components/empty-state/empt
 
               <!-- Skills preview -->
               @if (emp.skills?.length) {
-                <div class="d-flex flex-wrap gap-1 mb-3">
+                <div class="candidate-card__skills">
                   @for (s of emp.skills!.slice(0,4); track s.skill_name) {
-                    <span class="badge bg-light text-dark border small">{{ s.skill_name }}</span>
+                    <span class="tag-chip tag-chip--skill small">{{ s.skill_name }}</span>
                   }
                   @if (emp.skills!.length > 4) {
                     <span class="badge bg-light text-muted border small">+{{ emp.skills!.length - 4 }}</span>
@@ -117,7 +116,7 @@ import { EmptyStateComponent } from '../../../shared/components/empty-state/empt
                 </div>
               }
 
-              <div class="mt-auto d-flex gap-2">
+              <div class="candidate-card__footer">
                 <button class="btn btn-sm btn-outline-primary flex-grow-1"
                   (click)="viewProfile(emp)">
                   <i class="bi bi-eye me-1"></i>View Profile
@@ -127,7 +126,7 @@ import { EmptyStateComponent } from '../../../shared/components/empty-state/empt
                     <i class="bi bi-bookmark-star-fill"></i>
                   </button>
                 } @else {
-                  <button class="btn btn-sm btn-outline-secondary"
+                  <button class="btn btn-sm btn-outline-secondary candidate-card__shortlist-btn"
                     (click)="shortlist(emp)" [disabled]="shortlisting === emp.id"
                     title="Add to shortlist">
                     @if (shortlisting === emp.id) {
@@ -167,7 +166,7 @@ import { EmptyStateComponent } from '../../../shared/components/empty-state/empt
     <!-- Profile modal -->
     @if (selectedEmployee) {
       <div class="modal d-block" tabindex="-1" style="background:rgba(0,0,0,.5)">
-        <div class="modal-dialog modal-xl modal-dialog-scrollable">
+        <div class="modal-dialog modal-xl modal-dialog-scrollable profile-modal">
           <div class="modal-content">
             <div class="modal-header">
               <h5 class="modal-title">
@@ -214,15 +213,15 @@ import { EmptyStateComponent } from '../../../shared/components/empty-state/empt
                     <p class="small lh-lg mb-3">{{ selectedEmployee.bio }}</p>
                   }
                   @if (selectedEmployee.skills?.length) {
-                    <h6 class="small fw-bold text-muted text-uppercase mb-2">Skills</h6>
+                    <h6 class="profile-modal__section-title">Skills</h6>
                     <div class="d-flex flex-wrap gap-1 mb-3">
                       @for (s of selectedEmployee.skills; track s.skill_name) {
-                        <span class="badge bg-light text-dark border">{{ s.skill_name }}</span>
+                        <span class="tag-chip tag-chip--skill small">{{ s.skill_name }}</span>
                       }
                     </div>
                   }
                   @if (selectedEmployee.experience?.length) {
-                    <h6 class="small fw-bold text-muted text-uppercase mb-2">Experience</h6>
+                    <h6 class="profile-modal__section-title">Experience</h6>
                     @for (exp of selectedEmployee.experience; track $index) {
                       <div class="border-start border-primary ps-3 mb-3">
                         <div class="fw-semibold small">{{ exp.job_title }}</div>
@@ -234,7 +233,7 @@ import { EmptyStateComponent } from '../../../shared/components/empty-state/empt
                     }
                   }
                   @if (selectedEmployee.education?.length) {
-                    <h6 class="small fw-bold text-muted text-uppercase mb-2">Education</h6>
+                    <h6 class="profile-modal__section-title">Education</h6>
                     @for (edu of selectedEmployee.education; track $index) {
                       <div class="border-start border-success ps-3 mb-2">
                         <div class="fw-semibold small">{{ edu.degree }} @if (edu.field_of_study) { in {{ edu.field_of_study }} }</div>

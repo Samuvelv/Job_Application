@@ -9,7 +9,9 @@ import { RouterLink } from '@angular/router';
   imports: [CommonModule, RouterLink],
   template: `
     <div class="empty-state">
-      <i class="bi {{ icon }} empty-state-icon"></i>
+      <div class="empty-state__icon">
+        <i class="bi {{ icon }}"></i>
+      </div>
       <h5 class="empty-state-title">{{ title }}</h5>
       @if (subtitle || message) {
         <p class="empty-state-message">{{ subtitle || message }}</p>

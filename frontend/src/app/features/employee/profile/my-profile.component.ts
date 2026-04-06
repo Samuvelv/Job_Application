@@ -20,8 +20,9 @@ import { PageHeaderComponent } from '../../../shared/components/page-header/page
     @if (error) {
       <div class="alert alert-danger">{{ error }}</div>
     } @else if (!employee) {
-      <div class="text-center py-5">
-        <div class="spinner-border text-primary"></div>
+      <div class="loading-state">
+        <div class="spinner-border"></div>
+        <div class="loading-state__text">Loading your profile…</div>
       </div>
     } @else {
       <app-employee-profile [employee]="employee" />

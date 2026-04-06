@@ -24,7 +24,8 @@ import { ConfirmDialogService } from '../../../core/services/confirm-dialog.serv
     </app-page-header>
 
     <!-- Filters -->
-    <div class="card p-3 mb-4">
+    <div class="filter-card">
+      <div class="filter-card__title"><i class="bi bi-funnel"></i> Filters</div>
       <form [formGroup]="filterForm" class="row g-2">
         <div class="col-md-3">
           <input type="text" class="form-control form-control-sm" formControlName="search"
@@ -55,9 +56,9 @@ import { ConfirmDialogService } from '../../../core/services/confirm-dialog.serv
 
     <!-- Loading -->
     @if (loading) {
-      <div class="text-center py-5">
-        <div class="spinner-border text-primary"></div>
-        <p class="text-muted mt-2">Loading employees…</p>
+      <div class="loading-state">
+        <div class="spinner-border"></div>
+        <div class="loading-state__text">Loading employees…</div>
       </div>
     }
 
@@ -105,10 +106,9 @@ import { ConfirmDialogService } from '../../../core/services/confirm-dialog.serv
                   <td class="small">{{ emp.years_experience != null ? emp.years_experience + ' yrs' : '—' }}</td>
                   <td>
                     <span class="badge rounded-pill"
-                      [class.bg-success]="emp.profile_status === 'active'"
-                      [class.bg-warning]="emp.profile_status === 'pending_edit'"
-                      [class.text-dark]="emp.profile_status === 'pending_edit'"
-                      [class.bg-secondary]="emp.profile_status === 'inactive'">
+                      [class.badge-status-active]="emp.profile_status === 'active'"
+                      [class.badge-status-pending]="emp.profile_status === 'pending_edit'"
+                      [class.badge-status-inactive]="emp.profile_status === 'inactive'">
                       {{ emp.profile_status | titlecase }}
                     </span>
                   </td>
@@ -145,10 +145,9 @@ import { ConfirmDialogService } from '../../../core/services/confirm-dialog.serv
                   <div class="text-muted small text-truncate">{{ emp.email }}</div>
                 </div>
                 <span class="badge rounded-pill flex-shrink-0"
-                  [class.bg-success]="emp.profile_status === 'active'"
-                  [class.bg-warning]="emp.profile_status === 'pending_edit'"
-                  [class.text-dark]="emp.profile_status === 'pending_edit'"
-                  [class.bg-secondary]="emp.profile_status === 'inactive'">
+                  [class.badge-status-active]="emp.profile_status === 'active'"
+                  [class.badge-status-pending]="emp.profile_status === 'pending_edit'"
+                  [class.badge-status-inactive]="emp.profile_status === 'inactive'">
                   {{ emp.profile_status | titlecase }}
                 </span>
               </div>

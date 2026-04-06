@@ -2,8 +2,8 @@
 
 <!-- Header -->
 <div class="d-flex align-items-center gap-3 mb-4">
-  <a routerLink="/admin/employees" class="btn btn-sm btn-outline-secondary">
-    <i class="bi bi-arrow-left me-1"></i> Back
+  <a routerLink="/admin/employees" class="back-btn">
+    <i class="bi bi-arrow-left"></i> Back
   </a>
   <div>
     <h1 class="h4 fw-bold mb-0">Register New Employee</h1>
@@ -42,16 +42,16 @@
     </button>
   }
 </div>
-<div class="progress mb-4" style="height:4px">
-  <div class="progress-bar bg-primary" [style.width.%]="(currentStep / totalSteps) * 100"></div>
+<div class="progress progress-gradient mb-4" style="height:4px">
+  <div class="progress-bar" [style.width.%]="(currentStep / totalSteps) * 100"></div>
 </div>
 
 <form [formGroup]="form" (ngSubmit)="onSubmit()" novalidate>
-  <div class="card p-4">
+  <div class="form-card">
 
     <!-- ══════════════════ STEP 1: Personal ══════════════════ -->
     @if (currentStep === 1) {
-      <h5 class="fw-bold mb-4 border-bottom pb-2">Personal Information</h5>
+      <h5 class="card-section-header mb-4"><i class="bi bi-person"></i> Personal Information</h5>
       <div class="row g-3">
         <div class="col-md-6">
           <label class="form-label">First Name <span class="text-danger">*</span></label>
@@ -98,7 +98,7 @@
 
     <!-- ══════════════════ STEP 2: Professional ══════════════════ -->
     @if (currentStep === 2) {
-      <h5 class="fw-bold mb-4 border-bottom pb-2">Professional Details</h5>
+      <h5 class="card-section-header card-section-header--info mb-4"><i class="bi bi-briefcase"></i> Professional Details</h5>
       <div class="row g-3">
         <div class="col-md-6">
           <label class="form-label">Job Title</label>
@@ -222,7 +222,7 @@
 
     <!-- ══════════════════ STEP 3: Location ══════════════════ -->
     @if (currentStep === 3) {
-      <h5 class="fw-bold mb-4 border-bottom pb-2">Location Details</h5>
+      <h5 class="card-section-header card-section-header--success mb-4"><i class="bi bi-geo-alt"></i> Location Details</h5>
       <div class="row g-3">
         <div class="col-md-6">
           <label class="form-label">Current Country</label>
@@ -323,7 +323,7 @@
 
     <!-- ══════════════════ STEP 5: Credentials ══════════════════ -->
     @if (currentStep === 5) {
-      <h5 class="fw-bold mb-4 border-bottom pb-2">Login Credentials</h5>
+      <h5 class="card-section-header card-section-header--purple mb-4"><i class="bi bi-key"></i> Login Credentials</h5>
       <p class="text-muted small mb-4">These credentials will be emailed to the employee after registration.</p>
       <div class="row g-3">
         <div class="col-md-6">

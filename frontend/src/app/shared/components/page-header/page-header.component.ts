@@ -9,15 +9,21 @@ import { CommonModule } from '@angular/common';
   template: `
     <div class="page-header">
       <div>
-        <h1 class="page-title">
-          @if (icon) { <i class="bi {{ icon }} me-2"></i> }
-          {{ title }}
-        </h1>
-        @if (subtitle) {
-          <p class="page-subtitle">{{ subtitle }}</p>
-        }
+        <div class="page-header__title-row">
+          @if (icon) {
+            <div class="page-header__icon-wrap">
+              <i class="bi {{ icon }}"></i>
+            </div>
+          }
+          <div>
+            <h1 class="page-header__title">{{ title }}</h1>
+            @if (subtitle) {
+              <p class="page-header__subtitle">{{ subtitle }}</p>
+            }
+          </div>
+        </div>
       </div>
-      <div class="page-header-actions">
+      <div class="page-header__actions">
         <ng-content />
       </div>
     </div>

@@ -13,20 +13,21 @@ import { EmptyStateComponent } from '../../../shared/components/empty-state/empt
   standalone: true,
   imports: [CommonModule, RouterLink, PageHeaderComponent, EmptyStateComponent],
   template: `
-    <div class="d-flex justify-content-between align-items-start mb-4">
-      <app-page-header
-        title="My Shortlist"
-        [subtitle]="entries.length + ' candidate(s) shortlisted'"
-        icon="bi-bookmark-star"
-        class="flex-grow-1"
-      />
-      <a routerLink="/recruiter/candidates" class="btn btn-outline-primary btn-sm mt-1 ms-3">
+    <app-page-header
+      title="My Shortlist"
+      [subtitle]="entries.length + ' candidate(s) shortlisted'"
+      icon="bi-bookmark-star"
+    >
+      <a routerLink="/recruiter/candidates" class="btn btn-outline-primary btn-sm">
         <i class="bi bi-search me-1"></i>Browse Candidates
       </a>
-    </div>
+    </app-page-header>
 
     @if (loading) {
-      <div class="text-center py-5"><div class="spinner-border text-primary"></div></div>
+      <div class="loading-state">
+        <div class="spinner-border"></div>
+        <div class="loading-state__text">Loading shortlist…</div>
+      </div>
     } @else if (entries.length === 0) {
       <app-empty-state
         icon="bi-bookmark"
@@ -39,24 +40,22 @@ import { EmptyStateComponent } from '../../../shared/components/empty-state/empt
       <div class="row g-3">
         @for (entry of entries; track entry.shortlist_id) {
           <div class="col-md-6 col-lg-4">
-            <div class="card h-100 p-3 d-flex flex-column">
+            <div class="candidate-card">
 
               <!-- Avatar + name -->
-              <div class="d-flex align-items-center gap-3 mb-3">
+              <div class="candidate-card__header">
                 @if (entry.profile_photo_url) {
                   <img [src]="entry.profile_photo_url" alt="photo"
                     class="rounded-circle flex-shrink-0"
                     style="width:52px;height:52px;object-fit:cover;">
                 } @else {
-                  <div class="rounded-circle bg-primary text-white d-flex align-items-center
-                    justify-content-center fw-bold flex-shrink-0"
-                    style="width:52px;height:52px;font-size:1.1rem">
+                  <div class="candidate-card__avatar-placeholder">
                     {{ entry.first_name[0] }}{{ entry.last_name[0] }}
                   </div>
                 }
                 <div class="overflow-hidden">
-                  <div class="fw-semibold text-truncate">{{ entry.first_name }} {{ entry.last_name }}</div>
-                  <div class="text-muted small text-truncate">{{ entry.job_title || entry.occupation || '—' }}</div>
+                  <div class="candidate-card__name">{{ entry.first_name }} {{ entry.last_name }}</div>
+                  <div class="candidate-card__title">{{ entry.job_title || entry.occupation || '—' }}</div>
                 </div>
               </div>
 
@@ -88,8 +87,8 @@ import { EmptyStateComponent } from '../../../shared/components/empty-state/empt
                 <i class="bi bi-calendar3 me-1"></i>Added {{ entry.shortlisted_at | date:'dd MMM yyyy' }}
               </div>
 
-              <div class="mt-auto">
-                <button class="btn btn-sm btn-outline-danger w-100"
+              <div class="candidate-card__footer">
+                <button class="btn btn-sm btn-outline-danger flex-grow-1"
                   (click)="remove(entry)" [disabled]="removing === entry.employee_id">
                   @if (removing === entry.employee_id) {
                     <span class="spinner-border spinner-border-sm me-1"></span>Removing…

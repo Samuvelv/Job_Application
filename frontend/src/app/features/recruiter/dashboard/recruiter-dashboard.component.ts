@@ -23,6 +23,7 @@ import { PageHeaderComponent } from '../../../shared/components/page-header/page
           label="My Shortlist"
           [value]="stats()?.shortlistCount ?? '—'"
           icon="bi-bookmark-star-fill"
+          color="purple"
           [loading]="loading()" />
       </div>
       <div class="col-6">
@@ -30,6 +31,7 @@ import { PageHeaderComponent } from '../../../shared/components/page-header/page
           label="Candidates Available"
           [value]="stats()?.candidatesAvailable ?? '—'"
           icon="bi-people-fill"
+          color="info"
           [loading]="loading()" />
       </div>
     </div>
@@ -37,9 +39,9 @@ import { PageHeaderComponent } from '../../../shared/components/page-header/page
     <!-- Quick actions -->
     <div class="row g-3">
       <div class="col-sm-6">
-        <div class="card h-100 p-4 d-flex flex-column">
-          <div class="mb-3">
-            <i class="bi bi-search fs-3 text-primary"></i>
+        <div class="action-card action-card--info">
+          <div class="action-card__icon">
+            <i class="bi bi-search"></i>
           </div>
           <h5 class="fw-semibold mb-1">Search Talent</h5>
           <p class="text-muted small flex-grow-1">Filter candidates by skills, location, and more.</p>
@@ -49,9 +51,9 @@ import { PageHeaderComponent } from '../../../shared/components/page-header/page
         </div>
       </div>
       <div class="col-sm-6">
-        <div class="card h-100 p-4 d-flex flex-column">
-          <div class="mb-3">
-            <i class="bi bi-bookmark-star-fill fs-3 text-primary"></i>
+        <div class="action-card action-card--purple">
+          <div class="action-card__icon">
+            <i class="bi bi-bookmark-star-fill"></i>
           </div>
           <h5 class="fw-semibold mb-1">My Shortlist</h5>
           <p class="text-muted small flex-grow-1">View and manage your saved candidates.</p>

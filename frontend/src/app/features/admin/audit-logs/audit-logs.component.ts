@@ -13,20 +13,19 @@ import { PageHeaderComponent } from '../../../shared/components/page-header/page
   imports: [CommonModule, ReactiveFormsModule, PageHeaderComponent],
   template: `
     <!-- Header -->
-    <div class="d-flex justify-content-between align-items-center mb-4">
-      <app-page-header
-        title="Audit Logs"
-        [subtitle]="pagination.total + ' total entries'"
-        icon="bi-shield-check"
-        class="flex-grow-1"
-      />
-      <button class="btn btn-sm btn-outline-secondary ms-3" (click)="clearFilters()">
+    <app-page-header
+      title="Audit Logs"
+      [subtitle]="pagination.total + ' total entries'"
+      icon="bi-shield-check"
+    >
+      <button class="btn btn-sm btn-outline-secondary" (click)="clearFilters()">
         <i class="bi bi-x-circle me-1"></i>Clear Filters
       </button>
-    </div>
+    </app-page-header>
 
         <!-- Filters -->
-        <div class="card p-3 mb-4">
+        <div class="filter-card">
+          <div class="filter-card__title"><i class="bi bi-funnel"></i> Filters</div>
           <form [formGroup]="filterForm" class="row g-2 align-items-end">
             <div class="col-md-3">
               <label class="form-label small mb-1">Action</label>
@@ -60,17 +59,20 @@ import { PageHeaderComponent } from '../../../shared/components/page-header/page
 
         <!-- Loading -->
         @if (loading) {
-          <div class="text-center py-5">
-            <div class="spinner-border text-primary"></div>
-            <p class="text-muted mt-2">Loading logs…</p>
+          <div class="loading-state">
+            <div class="spinner-border"></div>
+            <div class="loading-state__text">Loading logs…</div>
           </div>
         }
 
         <!-- Empty -->
         @if (!loading && logs.length === 0) {
-          <div class="text-center py-5 text-muted">
-            <i class="bi bi-clipboard-x" style="font-size:2.5rem;opacity:.4"></i>
-            <h6 class="mt-2">No audit log entries found</h6>
+          <div class="empty-state">
+            <div class="empty-state__icon">
+              <i class="bi bi-clipboard-x"></i>
+            </div>
+            <h5 class="empty-state-title">No audit log entries found</h5>
+            <p class="empty-state-message">Try adjusting your filters.</p>
           </div>
         }
 
@@ -251,10 +253,10 @@ export class AuditLogsComponent implements OnInit {
   }
 
   actionBadgeClass(action: string): string {
-    if (action.startsWith('login'))    return 'bg-info text-dark';
-    if (action.includes('delete'))     return 'bg-danger';
-    if (action.includes('create') || action.includes('register')) return 'bg-success';
-    if (action.includes('update') || action.includes('approve') || action.includes('reject')) return 'bg-warning text-dark';
-    return 'bg-secondary';
+    if (action.startsWith('login'))    return 'badge-action badge-action--login';
+    if (action.includes('delete'))     return 'badge-action badge-action--delete';
+    if (action.includes('create') || action.includes('register')) return 'badge-action badge-action--create';
+    if (action.includes('update') || action.includes('approve') || action.includes('reject')) return 'badge-action badge-action--update';
+    return 'badge-action badge-action--default';
   }
 }

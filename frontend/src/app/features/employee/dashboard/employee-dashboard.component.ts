@@ -23,6 +23,7 @@ import { PageHeaderComponent } from '../../../shared/components/page-header/page
           label="Profile Completeness"
           [value]="(stats()?.profileCompleteness ?? 0) + '%'"
           icon="bi-person-check-fill"
+          color="success"
           [loading]="loading()" />
       </div>
       <div class="col-6">
@@ -30,6 +31,7 @@ import { PageHeaderComponent } from '../../../shared/components/page-header/page
           label="Pending Request"
           [value]="stats()?.pendingRequest ? 'Yes' : 'None'"
           icon="bi-pencil-square"
+          color="warning"
           [loading]="loading()" />
       </div>
     </div>
@@ -39,7 +41,7 @@ import { PageHeaderComponent } from '../../../shared/components/page-header/page
       <div class="card p-4 mb-3">
         <div class="d-flex justify-content-between align-items-center mb-2">
           <span class="fw-semibold small">Profile Completeness</span>
-          <span class="small text-muted">{{ stats()!.profileCompleteness }}%</span>
+          <span class="small text-gradient fw-semibold">{{ stats()!.profileCompleteness }}%</span>
         </div>
         <div class="progress" style="height:8px">
           <div class="progress-bar"
@@ -60,9 +62,9 @@ import { PageHeaderComponent } from '../../../shared/components/page-header/page
     <!-- Quick actions -->
     <div class="row g-3">
       <div class="col-sm-6">
-        <div class="card h-100 p-4 d-flex flex-column">
-          <div class="mb-3">
-            <i class="bi bi-person-circle fs-3 text-primary"></i>
+        <div class="action-card action-card--primary">
+          <div class="action-card__icon">
+            <i class="bi bi-person-circle"></i>
           </div>
           <h5 class="fw-semibold mb-1">My Profile</h5>
           <p class="text-muted small flex-grow-1">View and manage your profile details.</p>
@@ -72,9 +74,9 @@ import { PageHeaderComponent } from '../../../shared/components/page-header/page
         </div>
       </div>
       <div class="col-sm-6">
-        <div class="card h-100 p-4 d-flex flex-column">
-          <div class="mb-3">
-            <i class="bi bi-pencil fs-3 text-primary"></i>
+        <div class="action-card action-card--warning">
+          <div class="action-card__icon">
+            <i class="bi bi-pencil"></i>
           </div>
           <h5 class="fw-semibold mb-1">Request Edit</h5>
           <p class="text-muted small flex-grow-1">Submit changes to your profile for admin approval.</p>

@@ -13,30 +13,28 @@ import { EmptyStateComponent } from '../../../shared/components/empty-state/empt
   standalone: true,
   imports: [CommonModule, ReactiveFormsModule, PageHeaderComponent, EmptyStateComponent],
   template: `
-    <div class="d-flex justify-content-between align-items-start mb-4">
-      <app-page-header
-        title="Edit Requests"
-        [subtitle]="pagination.total + ' total requests'"
-        icon="bi-pencil-square"
-        class="flex-grow-1"
-      />
-    </div>
+    <app-page-header
+      title="Edit Requests"
+      [subtitle]="pagination.total + ' total requests'"
+      icon="bi-pencil-square"
+    />
 
     <!-- Status filter tabs -->
-    <ul class="nav nav-pills mb-4">
+    <div class="nav-pills-custom mb-4">
       @for (tab of tabs; track tab.value) {
-        <li class="nav-item">
-          <button class="nav-link me-1"
-            [class.active]="activeStatus === tab.value"
-            (click)="setStatus(tab.value)">
-            {{ tab.label }}
-          </button>
-        </li>
+        <button class="nav-pill"
+          [class.active]="activeStatus === tab.value"
+          (click)="setStatus(tab.value)">
+          {{ tab.label }}
+        </button>
       }
-    </ul>
+    </div>
 
     @if (loading) {
-      <div class="text-center py-5"><div class="spinner-border text-primary"></div></div>
+      <div class="loading-state">
+        <div class="spinner-border"></div>
+        <div class="loading-state__text">Loading requests…</div>
+      </div>
     } @else if (requests.length === 0) {
       <app-empty-state
         icon="bi-inbox"
@@ -46,7 +44,10 @@ import { EmptyStateComponent } from '../../../shared/components/empty-state/empt
     } @else {
       <div class="d-flex flex-column gap-3">
         @for (req of requests; track req.id) {
-          <div class="card p-4">
+          <div class="request-card"
+            [class.request-card--pending]="req.status === 'pending'"
+            [class.request-card--approved]="req.status === 'approved'"
+            [class.request-card--rejected]="req.status === 'rejected'">
             <!-- Header row -->
             <div class="d-flex justify-content-between align-items-start mb-3">
               <div>
@@ -58,9 +59,8 @@ import { EmptyStateComponent } from '../../../shared/components/empty-state/empt
                 </div>
               </div>
               <span class="badge rounded-pill px-3 py-2"
-                [class.bg-warning]="req.status === 'pending'"
-                [class.text-dark]="req.status === 'pending'"
-                [class.bg-success]="req.status === 'approved'"
+                [class.badge-status-pending]="req.status === 'pending'"
+                [class.badge-status-active]="req.status === 'approved'"
                 [class.bg-danger]="req.status === 'rejected'">
                 {{ req.status | titlecase }}
               </span>
@@ -69,7 +69,7 @@ import { EmptyStateComponent } from '../../../shared/components/empty-state/empt
             <!-- Requested changes diff -->
             <div class="mb-3">
               <h6 class="small fw-bold text-muted text-uppercase mb-2">Requested Changes</h6>
-              <div class="bg-light rounded p-3 small" style="max-height:280px;overflow-y:auto">
+              <div class="request-card__changes">
                 <table class="table table-sm table-borderless mb-0">
                   <tbody>
                     @for (entry of getChanges(req); track entry.key) {
@@ -93,7 +93,7 @@ import { EmptyStateComponent } from '../../../shared/components/empty-state/empt
             <!-- Review panel — only for pending -->
             @if (req.status === 'pending') {
               @if (reviewingId === req.id) {
-                <div class="border rounded p-3 bg-light" [formGroup]="reviewForm">
+                <div class="request-card__review" [formGroup]="reviewForm">
                   <div class="mb-3">
                     <label class="form-label small fw-semibold">Admin Note (optional)</label>
                     <textarea formControlName="admin_note" class="form-control form-control-sm"

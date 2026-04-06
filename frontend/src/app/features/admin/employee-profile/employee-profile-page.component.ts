@@ -13,16 +13,17 @@ import { EmployeeProfileComponent } from '../../../shared/components/employee-pr
   template: `
     <!-- Back link -->
     <div class="mb-3">
-      <a routerLink="/admin/employees" class="btn btn-sm btn-outline-secondary">
-        <i class="bi bi-arrow-left me-1"></i>Back to Employees
+      <a routerLink="/admin/employees" class="back-btn">
+        <i class="bi bi-arrow-left"></i>Back to Employees
       </a>
     </div>
 
     @if (error) {
       <div class="alert alert-danger">{{ error }}</div>
     } @else if (!employee) {
-      <div class="text-center py-5">
-        <div class="spinner-border text-primary"></div>
+      <div class="loading-state">
+        <div class="spinner-border"></div>
+        <div class="loading-state__text">Loading profile…</div>
       </div>
     } @else {
       <app-employee-profile [employee]="employee" />

@@ -11,35 +11,38 @@ type Tab = 'overview' | 'experience' | 'education' | 'documents';
   imports: [CommonModule],
   template: `
     @if (!employee) {
-      <div class="text-center py-5">
-        <div class="spinner-border text-primary"></div>
+      <div class="loading-state">
+        <div class="spinner-border"></div>
+        <div class="loading-state__text">Loading profile…</div>
       </div>
     } @else {
       <!-- ── Hero Band ───────────────────────────────────────────────── -->
       <div class="profile-hero mb-4">
-        <div class="profile-hero-body d-flex align-items-end gap-4 flex-wrap">
+        <div class="profile-hero__cover"></div>
+        <div class="profile-hero__body d-flex align-items-end gap-4 flex-wrap">
 
           <!-- Avatar -->
-          @if (employee.profile_photo_url) {
-            <img [src]="employee.profile_photo_url" alt="Profile photo"
-              class="profile-avatar rounded-circle border border-3 border-white shadow">
-          } @else {
-            <div class="profile-avatar rounded-circle bg-primary text-white d-flex
-              align-items-center justify-content-center fw-bold border border-3 border-white shadow">
-              {{ employee.first_name[0] }}{{ employee.last_name[0] }}
-            </div>
-          }
+          <div class="profile-hero__avatar-wrap">
+            @if (employee.profile_photo_url) {
+              <img [src]="employee.profile_photo_url" alt="Profile photo"
+                class="profile-hero__avatar">
+            } @else {
+              <div class="profile-hero__avatar-placeholder">
+                {{ employee.first_name[0] }}{{ employee.last_name[0] }}
+              </div>
+            }
+          </div>
 
           <!-- Name + meta -->
-          <div class="flex-grow-1 pb-2">
+          <div class="profile-hero__info flex-grow-1 pb-2">
             <div class="d-flex align-items-center flex-wrap gap-2 mb-1">
-              <h2 class="fw-bold mb-0 text-white" style="text-shadow:0 1px 3px rgba(0,0,0,.4)">
+              <h2 class="profile-hero__name mb-0">
                 {{ employee.first_name }} {{ employee.last_name }}
               </h2>
               <span class="badge rounded-pill px-3 py-2"
-                [class.bg-success]="employee.profile_status === 'active'"
-                [class.bg-warning]="employee.profile_status === 'pending_edit'"
-                [class.bg-secondary]="employee.profile_status === 'inactive'">
+                [class.badge-status-active]="employee.profile_status === 'active'"
+                [class.badge-status-pending]="employee.profile_status === 'pending_edit'"
+                [class.badge-status-inactive]="employee.profile_status === 'inactive'">
                 {{ employee.profile_status | titlecase }}
               </span>
             </div>
@@ -86,16 +89,14 @@ type Tab = 'overview' | 'experience' | 'education' | 'documents';
       </div>
 
       <!-- ── Tab Nav ────────────────────────────────────────────────── -->
-      <ul class="nav nav-tabs mb-4">
+      <div class="profile-tabs">
         @for (tab of tabs; track tab.id) {
-          <li class="nav-item">
-            <button class="nav-link" [class.active]="activeTab() === tab.id"
-              (click)="activeTab.set(tab.id)">
-              <i [class]="'bi ' + tab.icon + ' me-1'"></i>{{ tab.label }}
-            </button>
-          </li>
+          <button class="profile-tab" [class.active]="activeTab() === tab.id"
+            (click)="activeTab.set(tab.id)">
+            <i [class]="'bi ' + tab.icon"></i>{{ tab.label }}
+          </button>
         }
-      </ul>
+      </div>
 
       <!-- ── TAB: Overview ─────────────────────────────────────────── -->
       @if (activeTab() === 'overview') {
@@ -106,8 +107,8 @@ type Tab = 'overview' | 'experience' | 'education' | 'documents';
 
             <!-- Contact -->
             <div class="card p-3 mb-3">
-              <h6 class="fw-bold text-muted mb-3 text-uppercase small">
-                <i class="bi bi-person-lines-fill me-1"></i>Contact
+              <h6 class="card-section-header">
+                <i class="bi bi-person-lines-fill"></i>Contact
               </h6>
               @if (employee.phone) {
                 <div class="d-flex gap-2 mb-2 small">
@@ -132,9 +133,9 @@ type Tab = 'overview' | 'experience' | 'education' | 'documents';
             <!-- Target Locations -->
             @if (employee.target_locations?.length) {
               <div class="card p-3 mb-3">
-                <h6 class="fw-bold text-muted mb-2 text-uppercase small">
-                  <i class="bi bi-pin-map me-1"></i>Target Locations
-                </h6>
+              <h6 class="card-section-header card-section-header--success">
+                <i class="bi bi-pin-map"></i>Target Locations
+              </h6>
                 <div class="d-flex flex-wrap gap-1">
                   @for (loc of employee.target_locations; track loc) {
                     <span class="badge bg-light text-dark border">{{ loc }}</span>
@@ -146,9 +147,9 @@ type Tab = 'overview' | 'experience' | 'education' | 'documents';
             <!-- Salary -->
             @if (employee.salary_min || employee.salary_max) {
               <div class="card p-3 mb-3">
-                <h6 class="fw-bold text-muted mb-2 text-uppercase small">
-                  <i class="bi bi-cash-coin me-1"></i>Salary Expectation
-                </h6>
+              <h6 class="card-section-header card-section-header--warning">
+                <i class="bi bi-cash-coin"></i>Salary Expectation
+              </h6>
                 <div class="fw-semibold small">
                   {{ employee.salary_currency }}
                   {{ employee.salary_min | number }}
@@ -161,9 +162,9 @@ type Tab = 'overview' | 'experience' | 'education' | 'documents';
             <!-- Languages -->
             @if (employee.languages?.length) {
               <div class="card p-3">
-                <h6 class="fw-bold text-muted mb-3 text-uppercase small">
-                  <i class="bi bi-translate me-1"></i>Languages
-                </h6>
+              <h6 class="card-section-header card-section-header--info">
+                <i class="bi bi-translate"></i>Languages
+              </h6>
                 @for (lang of employee.languages; track lang.language) {
                   <div class="d-flex justify-content-between small mb-1">
                     <span>{{ lang.language }}</span>
@@ -180,17 +181,17 @@ type Tab = 'overview' | 'experience' | 'education' | 'documents';
             <!-- Bio -->
             @if (employee.bio) {
               <div class="card p-4 mb-3">
-                <h6 class="fw-bold text-muted mb-2 text-uppercase small">
-                  <i class="bi bi-chat-quote me-1"></i>Bio
-                </h6>
+              <h6 class="card-section-header card-section-header--purple">
+                <i class="bi bi-chat-quote"></i>Bio
+              </h6>
                 <p class="mb-0 small lh-lg">{{ employee.bio }}</p>
               </div>
             }
 
             <!-- Professional -->
             <div class="card p-4 mb-3">
-              <h6 class="fw-bold text-muted mb-3 text-uppercase small">
-                <i class="bi bi-briefcase me-1"></i>Professional
+              <h6 class="card-section-header card-section-header--info">
+                <i class="bi bi-briefcase"></i>Professional
               </h6>
               <div class="row g-3 small">
                 <div class="col-md-6">
@@ -215,17 +216,17 @@ type Tab = 'overview' | 'experience' | 'education' | 'documents';
             <!-- Skills -->
             @if (employee.skills?.length) {
               <div class="card p-4">
-                <h6 class="fw-bold text-muted mb-3 text-uppercase small">
-                  <i class="bi bi-tools me-1"></i>Skills
-                </h6>
-                <div class="d-flex flex-wrap gap-2">
-                  @for (skill of employee.skills; track skill.skill_name) {
-                    <span class="badge border text-dark bg-light px-3 py-2">
-                      {{ skill.skill_name }}
-                      @if (skill.proficiency) {
-                        <span class="ms-1 text-muted small">· {{ skill.proficiency }}</span>
-                      }
-                    </span>
+              <h6 class="card-section-header card-section-header--teal">
+                <i class="bi bi-tools"></i>Skills
+              </h6>
+              <div class="d-flex flex-wrap gap-2">
+                @for (skill of employee.skills; track skill.skill_name) {
+                  <span class="tag-chip tag-chip--skill">
+                    {{ skill.skill_name }}
+                    @if (skill.proficiency) {
+                      <span class="ms-1 opacity-75 small">· {{ skill.proficiency }}</span>
+                    }
+                  </span>
                   }
                 </div>
               </div>
@@ -281,8 +282,8 @@ type Tab = 'overview' | 'experience' | 'education' | 'documents';
         } @else {
           @if (employee.education?.length) {
             <div class="card p-4 mb-4">
-              <h6 class="fw-bold text-muted mb-3 text-uppercase small">
-                <i class="bi bi-mortarboard me-1"></i>Education
+              <h6 class="card-section-header card-section-header--success">
+                <i class="bi bi-mortarboard"></i>Education
               </h6>
               @for (edu of employee.education; track $index) {
                 <div class="d-flex gap-3 mb-3" [class.pb-3]="!$last" [class.border-bottom]="!$last">
@@ -313,8 +314,8 @@ type Tab = 'overview' | 'experience' | 'education' | 'documents';
 
           @if (employee.certificates?.length) {
             <div class="card p-4">
-              <h6 class="fw-bold text-muted mb-3 text-uppercase small">
-                <i class="bi bi-patch-check me-1"></i>Certificates
+              <h6 class="card-section-header card-section-header--warning">
+                <i class="bi bi-patch-check"></i>Certificates
               </h6>
               <div class="row g-2">
                 @for (cert of employee.certificates; track $index) {
@@ -380,24 +381,7 @@ type Tab = 'overview' | 'experience' | 'education' | 'documents';
       }
     }
   `,
-  styles: [`
-    .profile-hero {
-      background: linear-gradient(135deg, var(--th-primary) 0%, var(--th-primary-dark, #1a3a8f) 100%);
-      border-radius: var(--th-radius-lg);
-      padding: 2rem 2rem 1.5rem;
-    }
-    .profile-avatar {
-      width: 90px;
-      height: 90px;
-      object-fit: cover;
-      font-size: 1.8rem;
-      flex-shrink: 0;
-    }
-    @media (max-width: 576px) {
-      .profile-hero { padding: 1.25rem; }
-      .profile-hero-body { flex-direction: column; align-items: flex-start !important; gap: 1rem !important; }
-    }
-  `],
+  styles: [],
 })
 export class EmployeeProfileComponent {
   @Input() employee: Employee | null = null;

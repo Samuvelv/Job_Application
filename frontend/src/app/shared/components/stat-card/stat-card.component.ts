@@ -7,7 +7,7 @@ import { CommonModule } from '@angular/common';
   standalone: true,
   imports: [CommonModule],
   template: `
-    <div class="stat-card">
+    <div class="stat-card" [ngClass]="'stat-card--' + color">
       <div class="stat-icon">
         <i class="bi {{ icon }}"></i>
       </div>
@@ -29,4 +29,5 @@ export class StatCardComponent {
   @Input() value: string | number = '—';
   @Input() icon    = 'bi-bar-chart-fill';
   @Input() loading = false;
+  @Input() color: 'primary' | 'success' | 'warning' | 'info' | 'purple' | 'pink' | 'danger' | 'teal' | 'orange' = 'primary';
 }

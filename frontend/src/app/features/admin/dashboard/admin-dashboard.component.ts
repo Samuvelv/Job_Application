@@ -23,6 +23,7 @@ import { PageHeaderComponent } from '../../../shared/components/page-header/page
           label="Employees"
           [value]="stats()?.employees ?? '—'"
           icon="bi-people-fill"
+          color="primary"
           [loading]="loading()" />
       </div>
       <div class="col-6 col-lg-3">
@@ -30,6 +31,7 @@ import { PageHeaderComponent } from '../../../shared/components/page-header/page
           label="Recruiters"
           [value]="stats()?.recruiters ?? '—'"
           icon="bi-person-badge-fill"
+          color="success"
           [loading]="loading()" />
       </div>
       <div class="col-6 col-lg-3">
@@ -37,6 +39,7 @@ import { PageHeaderComponent } from '../../../shared/components/page-header/page
           label="Pending Edits"
           [value]="stats()?.pendingEdits ?? '—'"
           icon="bi-pencil-square"
+          color="warning"
           [loading]="loading()" />
       </div>
       <div class="col-6 col-lg-3">
@@ -44,6 +47,7 @@ import { PageHeaderComponent } from '../../../shared/components/page-header/page
           label="Audit Logs Today"
           [value]="stats()?.auditLogsToday ?? '—'"
           icon="bi-journal-text"
+          color="info"
           [loading]="loading()" />
       </div>
     </div>
@@ -51,9 +55,9 @@ import { PageHeaderComponent } from '../../../shared/components/page-header/page
     <!-- Quick-action cards -->
     <div class="row g-3">
       <div class="col-sm-6 col-lg-4">
-        <div class="card h-100 p-4 d-flex flex-column">
-          <div class="mb-3">
-            <i class="bi bi-people-fill fs-3 text-primary"></i>
+        <div class="action-card action-card--primary">
+          <div class="action-card__icon">
+            <i class="bi bi-people-fill"></i>
           </div>
           <h5 class="fw-semibold mb-1">Employees</h5>
           <p class="text-muted small flex-grow-1">Manage all employee profiles and records.</p>
@@ -63,9 +67,9 @@ import { PageHeaderComponent } from '../../../shared/components/page-header/page
         </div>
       </div>
       <div class="col-sm-6 col-lg-4">
-        <div class="card h-100 p-4 d-flex flex-column">
-          <div class="mb-3">
-            <i class="bi bi-person-badge-fill fs-3 text-primary"></i>
+        <div class="action-card action-card--success">
+          <div class="action-card__icon">
+            <i class="bi bi-person-badge-fill"></i>
           </div>
           <h5 class="fw-semibold mb-1">Recruiters</h5>
           <p class="text-muted small flex-grow-1">Create and manage recruiter access.</p>
@@ -75,9 +79,9 @@ import { PageHeaderComponent } from '../../../shared/components/page-header/page
         </div>
       </div>
       <div class="col-sm-6 col-lg-4">
-        <div class="card h-100 p-4 d-flex flex-column">
-          <div class="mb-3">
-            <i class="bi bi-pencil-square fs-3 text-primary"></i>
+        <div class="action-card action-card--warning">
+          <div class="action-card__icon">
+            <i class="bi bi-pencil-square"></i>
           </div>
           <h5 class="fw-semibold mb-1">Edit Requests</h5>
           <p class="text-muted small flex-grow-1">Review and approve pending profile changes.</p>
@@ -87,13 +91,13 @@ import { PageHeaderComponent } from '../../../shared/components/page-header/page
         </div>
       </div>
       <div class="col-sm-6 col-lg-4">
-        <div class="card h-100 p-4 d-flex flex-column">
-          <div class="mb-3">
-            <i class="bi bi-journal-text fs-3 text-primary"></i>
+        <div class="action-card action-card--purple">
+          <div class="action-card__icon">
+            <i class="bi bi-journal-text"></i>
           </div>
           <h5 class="fw-semibold mb-1">Audit Logs</h5>
           <p class="text-muted small flex-grow-1">Track all actions across the platform.</p>
-          <a routerLink="/admin/audit-logs" class="btn btn-outline-secondary btn-sm mt-2 align-self-start">
+          <a routerLink="/admin/audit-logs" class="btn btn-outline-primary btn-sm mt-2 align-self-start">
             View Logs
           </a>
         </div>

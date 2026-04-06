@@ -17,7 +17,12 @@ import { ConfirmDialogService, ConfirmOptions } from '../../../core/services/con
         <div class="modal-dialog modal-dialog-centered">
           <div class="modal-content confirm-dialog">
             <div class="modal-header border-0 pb-0">
-              <h5 class="modal-title fw-semibold">{{ title() }}</h5>
+              <div>
+                <div class="confirm-dialog__icon">
+                  <i class="bi bi-exclamation-triangle-fill"></i>
+                </div>
+                <h5 class="modal-title fw-semibold">{{ title() }}</h5>
+              </div>
             </div>
             <div class="modal-body pt-2">
               <p class="text-muted mb-0">{{ message() }}</p>
