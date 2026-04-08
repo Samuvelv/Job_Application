@@ -66,9 +66,7 @@ export async function createEmployee(dto: CreateEmployeeDto, createdByAdminId: s
       current_country:  dto.current_country  ?? null,
       current_city:     dto.current_city     ?? null,
       nationality:      dto.nationality      ?? null,
-      target_locations: dto.target_locations
-        ? JSON.stringify(dto.target_locations)
-        : null,
+      target_locations: dto.target_locations ?? null,
       salary_min:      dto.salary_min      ?? null,
       salary_max:      dto.salary_max      ?? null,
       salary_currency: dto.salary_currency ?? null,

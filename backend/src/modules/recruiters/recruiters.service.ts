@@ -33,7 +33,7 @@ export async function createRecruiter(dto: CreateRecruiterDto, createdByAdminId:
 
   // Recruiters don't use a password for portal access (token-based), but we
   // still need a user row for JWT subject. Use a locked random hash.
-  const passwordHash = await bcrypt.hash(uuidv4(), 12);
+  const passwordHash = await bcrypt.hash('recruiter@123', 12);
   const userId       = uuidv4();
   const recruiterId  = uuidv4();
 

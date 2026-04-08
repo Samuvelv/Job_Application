@@ -54,7 +54,7 @@ import { EmptyStateComponent } from '../../../shared/components/empty-state/empt
         subtitle="Add your first recruiter to get started."
       />
     } @else {
-      <div class="card">
+      <div class="section-card">
         <div class="table-responsive">
           <table class="table table-hover align-middle mb-0">
             <thead class="table-light">
@@ -113,8 +113,6 @@ import { EmptyStateComponent } from '../../../shared/components/empty-state/empt
           </table>
         </div>
       </div>
-
-      <!-- Pagination -->
       @if (pagination.pages > 1) {
         <nav class="mt-3 d-flex justify-content-center">
           <ul class="pagination pagination-sm mb-0">

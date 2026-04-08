@@ -31,7 +31,7 @@
       [class.active]="currentStep === step.num"
       [class.completed]="currentStep > step.num"
       (click)="goToStep(step.num)">
-      <span class="step-number">
+      <span class="step-dot">
         @if (currentStep > step.num) {
           <i class="bi bi-check"></i>
         } @else {
@@ -255,7 +255,7 @@
       </div>
       <div formArrayName="experience">
         @for (exp of experience.controls; track $index) {
-          <div [formGroupName]="$index" class="border rounded p-3 mb-3" style="background:var(--th-bg-secondary)">
+          <div [formGroupName]="$index" class="glass-card p-3 mb-3">
             <div class="d-flex justify-content-between mb-2">
               <span class="fw-semibold small text-muted">Experience #{{ $index + 1 }}</span>
               <button type="button" class="btn btn-sm btn-outline-danger"
@@ -281,7 +281,7 @@
       </div>
       <div formArrayName="education">
         @for (edu of education.controls; track $index) {
-          <div [formGroupName]="$index" class="border rounded p-3 mb-3" style="background:var(--th-bg-secondary)">
+          <div [formGroupName]="$index" class="glass-card p-3 mb-3">
             <div class="d-flex justify-content-between mb-2">
               <span class="fw-semibold small text-muted">Education #{{ $index + 1 }}</span>
               <button type="button" class="btn btn-sm btn-outline-danger"

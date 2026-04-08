@@ -78,7 +78,7 @@ import { PageHeaderComponent } from '../../../shared/components/page-header/page
 
         <!-- Table -->
         @if (!loading && logs.length > 0) {
-          <div class="card">
+          <div class="section-card">
             <div class="table-responsive">
               <table class="table table-hover align-middle mb-0 small">
                 <thead class="table-light">

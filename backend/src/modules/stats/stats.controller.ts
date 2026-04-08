@@ -13,7 +13,7 @@ export async function adminStats(req: Request, res: Response, next: NextFunction
 
 export async function employeeStats(req: Request, res: Response, next: NextFunction) {
   try {
-    const userId = (req as any).user.id as string;
+    const userId = (req as any).user.sub as string;
     const data = await statsService.getEmployeeStats(userId);
     res.json(data);
   } catch (err) {
@@ -23,7 +23,7 @@ export async function employeeStats(req: Request, res: Response, next: NextFunct
 
 export async function recruiterStats(req: Request, res: Response, next: NextFunction) {
   try {
-    const userId = (req as any).user.id as string;
+    const userId = (req as any).user.sub as string;
     const data = await statsService.getRecruiterStats(userId);
     res.json(data);
   } catch (err) {

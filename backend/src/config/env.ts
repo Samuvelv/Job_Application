@@ -1,7 +1,8 @@
 // src/config/env.ts
 import { z } from 'zod';
 import dotenv from 'dotenv';
-dotenv.config();
+import path from 'path';
+dotenv.config({ path: path.resolve(__dirname, '../../.env') });
 
 const envSchema = z.object({
   PORT: z.string().default('3000'),
@@ -11,7 +12,7 @@ const envSchema = z.object({
   DB_PORT: z.string().default('5432'),
   DB_NAME: z.string(),
   DB_USER: z.string(),
-  DB_PASSWORD: z.string(),
+  DB_PASSWORD: z.string().default('Dhinesh@2002'),
 
   JWT_SECRET: z.string().min(32),
   JWT_ACCESS_EXPIRES_IN: z.string().default('15m'),

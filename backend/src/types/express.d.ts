@@ -1,10 +1,13 @@
 // src/types/express.d.ts
-import { JwtPayload } from '../middleware/authenticate';
-
-declare global {
-  namespace Express {
-    interface Request {
-      user?: JwtPayload;
-    }
+declare namespace Express {
+  interface Request {
+    user?: {
+      sub: string;
+      role: string;
+      recruiterId?: string;
+      jti?: string;
+      iat?: number;
+      exp?: number;
+    };
   }
 }

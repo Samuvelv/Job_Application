@@ -65,7 +65,7 @@ import { PageHeaderComponent } from '../../../shared/components/page-header/page
           <form [formGroup]="form" (ngSubmit)="submit()">
 
             <!-- ── Personal ─────────────────────────────────────────────── -->
-            <div class="card p-4 mb-4">
+            <div class="form-card mb-4">
               <h5 class="card-section-header"><i class="bi bi-person"></i> Personal Information</h5>
               <div class="row g-3">
                 <div class="col-md-6">
@@ -107,7 +107,7 @@ import { PageHeaderComponent } from '../../../shared/components/page-header/page
             </div>
 
             <!-- ── Professional ────────────────────────────────────────── -->
-            <div class="card p-4 mb-4">
+            <div class="form-card mb-4">
               <h5 class="card-section-header card-section-header--info"><i class="bi bi-briefcase"></i> Professional</h5>
               <div class="row g-3">
                 <div class="col-md-4">
@@ -131,7 +131,7 @@ import { PageHeaderComponent } from '../../../shared/components/page-header/page
             </div>
 
             <!-- ── Location ─────────────────────────────────────────────── -->
-            <div class="card p-4 mb-4">
+            <div class="form-card mb-4">
               <h5 class="card-section-header card-section-header--success"><i class="bi bi-geo-alt"></i> Location</h5>
               <div class="row g-3">
                 <div class="col-md-4">
@@ -150,7 +150,7 @@ import { PageHeaderComponent } from '../../../shared/components/page-header/page
             </div>
 
             <!-- ── Salary ───────────────────────────────────────────────── -->
-            <div class="card p-4 mb-4">
+            <div class="form-card mb-4">
               <h5 class="card-section-header card-section-header--warning"><i class="bi bi-cash-coin"></i> Salary Expectation</h5>
               <div class="row g-3">
                 <div class="col-md-3">
@@ -178,7 +178,7 @@ import { PageHeaderComponent } from '../../../shared/components/page-header/page
             </div>
 
             <!-- ── Skills ───────────────────────────────────────────────── -->
-            <div class="card p-4 mb-4">
+            <div class="form-card mb-4">
               <div class="d-flex justify-content-between align-items-center mb-3">
                 <h5 class="card-section-header card-section-header--purple mb-0"><i class="bi bi-tools"></i> Skills</h5>
                 <button type="button" class="btn btn-sm btn-outline-primary" (click)="addSkill()">+ Add</button>
@@ -205,7 +205,7 @@ import { PageHeaderComponent } from '../../../shared/components/page-header/page
             </div>
 
             <!-- ── Languages ────────────────────────────────────────────── -->
-            <div class="card p-4 mb-4">
+            <div class="form-card mb-4">
               <div class="d-flex justify-content-between align-items-center mb-3">
                 <h5 class="card-section-header card-section-header--teal mb-0"><i class="bi bi-translate"></i> Languages</h5>
                 <button type="button" class="btn btn-sm btn-outline-primary" (click)="addLanguage()">+ Add</button>
@@ -233,13 +233,13 @@ import { PageHeaderComponent } from '../../../shared/components/page-header/page
             </div>
 
             <!-- ── Experience ────────────────────────────────────────────── -->
-            <div class="card p-4 mb-4">
+            <div class="form-card mb-4">
               <div class="d-flex justify-content-between align-items-center mb-3">
                 <h5 class="card-section-header card-section-header--orange mb-0"><i class="bi bi-building"></i> Work Experience</h5>
                 <button type="button" class="btn btn-sm btn-outline-primary" (click)="addExperience()">+ Add</button>
               </div>
               @for (ctrl of experienceArray.controls; track $index) {
-                <div [formGroup]="asGroup(ctrl)" class="card border p-3 mb-3">
+                <div [formGroup]="asGroup(ctrl)" class="glass-card p-3 mb-3">
                   <div class="row g-2">
                     <div class="col-md-6">
                       <input formControlName="job_title" class="form-control form-control-sm" placeholder="Job Title">
@@ -269,13 +269,13 @@ import { PageHeaderComponent } from '../../../shared/components/page-header/page
             </div>
 
             <!-- ── Education ─────────────────────────────────────────────── -->
-            <div class="card p-4 mb-4">
+            <div class="form-card mb-4">
               <div class="d-flex justify-content-between align-items-center mb-3">
                 <h5 class="card-section-header card-section-header--success mb-0"><i class="bi bi-mortarboard"></i> Education</h5>
                 <button type="button" class="btn btn-sm btn-outline-primary" (click)="addEducation()">+ Add</button>
               </div>
               @for (ctrl of educationArray.controls; track $index) {
-                <div [formGroup]="asGroup(ctrl)" class="card border p-3 mb-3">
+                <div [formGroup]="asGroup(ctrl)" class="glass-card p-3 mb-3">
                   <div class="row g-2">
                     <div class="col-md-6">
                       <input formControlName="institution" class="form-control form-control-sm" placeholder="Institution">

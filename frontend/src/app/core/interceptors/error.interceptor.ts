@@ -20,7 +20,7 @@ export const errorInterceptor: HttpInterceptorFn = (
         case 401:
           // Only hard-logout if not a token-expiry (handled by jwtInterceptor)
           if (err.error?.code !== 'TOKEN_EXPIRED') {
-            auth.logout();
+            // auth.logout();
           }
           break;
         case 403:

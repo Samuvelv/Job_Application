@@ -28,7 +28,7 @@ import { PageHeaderComponent } from '../../../shared/components/page-header/page
             <p class="mb-0 mt-1 small">Access link has been emailed to the recruiter.</p>
           } @else {
             <p class="mt-2 mb-1 small fw-semibold">Copy this token now — it will not be shown again:</p>
-            <code class="d-block p-2 bg-light rounded small" style="word-break:break-all">{{ successToken }}</code>
+            <div class="token-box mt-2">{{ successToken }}</div>
           }
           <div class="mt-3">
             <a routerLink="/admin/recruiters" class="btn btn-sm btn-primary me-2">View Recruiters</a>
