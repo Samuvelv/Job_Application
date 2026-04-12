@@ -18,6 +18,11 @@ export const recruiterRoutes: Routes = [
       import('./candidates/candidates.component').then((m) => m.CandidatesComponent),
   },
   {
+    path: 'candidates/:id',
+    loadComponent: () =>
+      import('./candidates/candidate-profile.component').then((m) => m.CandidateProfileComponent),
+  },
+  {
     path: 'shortlist',
     loadComponent: () =>
       import('./shortlist/shortlist.component').then((m) => m.ShortlistComponent),

@@ -3,9 +3,9 @@ import bcrypt from 'bcryptjs';
 import { v4 as uuidv4 } from 'uuid';
 import { db } from '../../config/db';
 import { AppError } from '../../middleware/errorHandler';
-import { issueRecruiterAccessToken, revokeRecruiterToken } from '../../services/token.service';
-import { sendRecruiterAccessLink } from '../../services/email.service';
-import type { CreateRecruiterDto, GenerateTokenDto, RecruiterFilterDto } from './recruiters.dto';
+import { revokeRecruiterToken } from '../../services/token.service';
+import { sendRecruiterCredentials } from '../../services/email.service';
+import type { CreateRecruiterDto, UpdateRecruiterDto, RecruiterFilterDto } from './recruiters.dto';
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -13,14 +13,6 @@ async function getRoleId(roleName: string): Promise<number> {
   const role = await db('roles').where({ name: roleName }).first();
   if (!role) throw new AppError(500, `Role "${roleName}" not found. Run seeds first.`);
   return role.id;
-}
-
-async function fetchActiveToken(recruiterId: string) {
-  return db('recruiter_access_tokens')
-    .where({ recruiter_id: recruiterId, revoked: false })
-    .where('expires_at', '>', new Date())
-    .orderBy('created_at', 'desc')
-    .first();
 }
 
 // ── Create recruiter ──────────────────────────────────────────────────────────
@@ -31,13 +23,12 @@ export async function createRecruiter(dto: CreateRecruiterDto, createdByAdminId:
 
   const recruiterRoleId = await getRoleId('recruiter');
 
-  // Recruiters don't use a password for portal access (token-based), but we
-  // still need a user row for JWT subject. Use a locked random hash.
-  const passwordHash = await bcrypt.hash('recruiter@123', 12);
-  const userId       = uuidv4();
-  const recruiterId  = uuidv4();
+  // Generate a random temporary password (same pattern as employees)
+  const tempPassword = Math.random().toString(36).slice(-10) + 'R1!';
+  const passwordHash = await bcrypt.hash(tempPassword, 12);
 
-  const accessExpiresAt = new Date(Date.now() + dto.access_duration_seconds * 1000);
+  const userId      = uuidv4();
+  const recruiterId = uuidv4();
 
   await db.transaction(async (trx) => {
     await trx('users').insert({
@@ -49,29 +40,22 @@ export async function createRecruiter(dto: CreateRecruiterDto, createdByAdminId:
     });
 
     await trx('recruiters').insert({
-      id:                recruiterId,
-      user_id:           userId,
-      company_name:      dto.company_name   ?? null,
-      contact_name:      dto.contact_name,
-      created_by:        createdByAdminId,
-      access_expires_at: accessExpiresAt,
+      id:           recruiterId,
+      user_id:      userId,
+      company_name: dto.company_name ?? null,
+      contact_name: dto.contact_name,
+      created_by:   createdByAdminId,
+      // access_expires_at required by schema — set far future as placeholder
+      access_expires_at: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000),
     });
   });
 
-  // Issue initial access token
-  const token = await issueRecruiterAccessToken(recruiterId, dto.access_duration_seconds);
-
-  if (dto.send_email) {
-    await sendRecruiterAccessLink(
-      dto.email.toLowerCase(),
-      dto.contact_name,
-      token,
-      accessExpiresAt,
-    ).catch(() => { /* non-fatal */ });
-  }
+  // Send credentials email (non-blocking)
+  sendRecruiterCredentials(dto.email.toLowerCase(), dto.contact_name, tempPassword)
+    .catch((err) => console.error('[EMAIL] Failed to send recruiter credentials:', err));
 
   const recruiter = await getRecruiterById(recruiterId);
-  return { recruiter, token };
+  return { recruiter };
 }
 
 // ── List recruiters ───────────────────────────────────────────────────────────
@@ -129,6 +113,17 @@ export async function listRecruiters(filters: RecruiterFilterDto) {
 
 // ── Get single recruiter ──────────────────────────────────────────────────────
 
+export async function updateRecruiter(id: string, dto: UpdateRecruiterDto) {
+  await getRecruiterById(id); // throws 404 if not found
+  const patch: Record<string, unknown> = {};
+  if (dto.contact_name !== undefined) patch['contact_name'] = dto.contact_name;
+  if (dto.company_name !== undefined) patch['company_name'] = dto.company_name ?? null;
+  if (Object.keys(patch).length > 0) {
+    await db('recruiters').where({ id }).update({ ...patch, updated_at: new Date() });
+  }
+  return getRecruiterById(id);
+}
+
 export async function getRecruiterById(id: string) {
   const recruiter = await db('recruiters as r')
     .join('users as u', 'u.id', 'r.user_id')
@@ -147,8 +142,7 @@ export async function getRecruiterById(id: string) {
 
   if (!recruiter) throw new AppError(404, 'Recruiter not found');
 
-  const activeToken = await fetchActiveToken(id);
-  return { ...recruiter, has_active_token: !!activeToken, token_expires_at: activeToken?.expires_at ?? null };
+  return recruiter;
 }
 
 export async function getRecruiterByUserId(userId: string) {
@@ -168,41 +162,23 @@ export async function deleteRecruiter(id: string) {
   await db('users').where({ id: recruiter.user_id }).delete();
 }
 
-// ── Generate / revoke token ───────────────────────────────────────────────────
+// ── Resend credentials ────────────────────────────────────────────────────────
 
-export async function generateToken(recruiterId: string, dto: GenerateTokenDto): Promise<string> {
+export async function resendCredentials(recruiterId: string): Promise<void> {
   const recruiter = await db('recruiters as r')
     .join('users as u', 'u.id', 'r.user_id')
-    .select('r.id', 'r.contact_name', 'u.email', 'r.access_expires_at')
+    .select('r.id', 'r.contact_name', 'u.email', 'u.id as userId')
     .where('r.id', recruiterId)
     .first();
   if (!recruiter) throw new AppError(404, 'Recruiter not found');
 
-  // Revoke old tokens first
-  await revokeRecruiterToken(recruiterId);
+  const tempPassword = Math.random().toString(36).slice(-10) + 'R1!';
+  const passwordHash = await bcrypt.hash(tempPassword, 12);
 
-  // Update the access_expires_at on the recruiter record
-  const newExpiresAt = new Date(Date.now() + dto.access_duration_seconds * 1000);
-  await db('recruiters').where({ id: recruiterId }).update({ access_expires_at: newExpiresAt });
+  await db('users').where({ id: recruiter.userId }).update({ password_hash: passwordHash });
 
-  const token = await issueRecruiterAccessToken(recruiterId, dto.access_duration_seconds);
-
-  if (dto.send_email) {
-    await sendRecruiterAccessLink(
-      recruiter.email,
-      recruiter.contact_name,
-      token,
-      newExpiresAt,
-    ).catch(() => { /* non-fatal */ });
-  }
-
-  return token;
-}
-
-export async function revokeToken(recruiterId: string): Promise<void> {
-  const exists = await db('recruiters').where({ id: recruiterId }).first();
-  if (!exists) throw new AppError(404, 'Recruiter not found');
-  await revokeRecruiterToken(recruiterId);
+  sendRecruiterCredentials(recruiter.email, recruiter.contact_name, tempPassword)
+    .catch((err) => console.error('[EMAIL] Failed to resend recruiter credentials:', err));
 }
 
 // ── Shortlist ─────────────────────────────────────────────────────────────────

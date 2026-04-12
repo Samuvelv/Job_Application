@@ -14,10 +14,10 @@ import { SidebarService } from '../../../core/services/sidebar.service';
     <header class="app-topbar">
       <!-- Left: hamburger + brand -->
       <div class="d-flex align-items-center gap-2">
-        <button class="topbar-hamburger d-lg-none"
+        <button class="topbar-icon-btn d-lg-none"
                 (click)="sidebar.toggle()"
                 aria-label="Toggle sidebar">
-          <i class="bi bi-list fs-4"></i>
+          <i class="bi bi-list fs-5"></i>
         </button>
         <a [routerLink]="dashboardRoute()" class="topbar-brand">
           TalentHub

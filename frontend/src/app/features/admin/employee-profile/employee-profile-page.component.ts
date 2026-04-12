@@ -11,11 +11,17 @@ import { EmployeeProfileComponent } from '../../../shared/components/employee-pr
   standalone: true,
   imports: [CommonModule, RouterLink, EmployeeProfileComponent],
   template: `
-    <!-- Back link -->
-    <div class="mb-3">
+    <!-- Header row: back + edit -->
+    <div class="d-flex align-items-center justify-content-between mb-3 gap-2">
       <a routerLink="/admin/employees" class="back-btn">
         <i class="bi bi-arrow-left"></i>Back to Employees
       </a>
+      @if (employee) {
+        <a [routerLink]="['/admin/employees', employee.id, 'edit']"
+          class="btn btn-primary btn-sm">
+          <i class="bi bi-pencil me-1"></i>Edit Employee
+        </a>
+      }
     </div>
 
     @if (error) {

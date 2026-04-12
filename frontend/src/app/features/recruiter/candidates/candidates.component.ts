@@ -2,6 +2,7 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, FormGroup } from '@angular/forms';
+import { Router } from '@angular/router';
 import { debounceTime, distinctUntilChanged, catchError, of } from 'rxjs';
 import { EmployeeService, PaginatedEmployees } from '../../../core/services/employee.service';
 import { RecruiterService } from '../../../core/services/recruiter.service';
@@ -22,7 +23,7 @@ import { EmptyStateComponent } from '../../../shared/components/empty-state/empt
     />
 
     <!-- Filters -->
-    <div class="filter-card" [formGroup]="filterForm">
+    <div class="filter-card mb-4" [formGroup]="filterForm">
       <div class="filter-card__title"><i class="bi bi-funnel"></i> Filters</div>
       <div class="row g-2">
         <div class="col-md-4">
@@ -66,66 +67,77 @@ import { EmptyStateComponent } from '../../../shared/components/empty-state/empt
     } @else {
       <div class="row g-3">
         @for (emp of employees; track emp.id) {
-          <div class="col-md-6 col-lg-4">
-            <div class="candidate-card">
+          <div class="col-md-6 col-xl-4">
+            <div class="candidate-card" [class.candidate-card--shortlisted]="shortlistedIds.has(emp.id)">
+
+              <!-- Always-visible gradient top band -->
+              <div class="candidate-card__band"></div>
 
               <!-- Avatar + name -->
               <div class="candidate-card__header">
                 @if (emp.profile_photo_url) {
-                  <img [src]="emp.profile_photo_url" alt="photo"
-                    class="rounded-circle flex-shrink-0"
-                    style="width:52px;height:52px;object-fit:cover;">
+                  <img [src]="emp.profile_photo_url" alt="photo" class="candidate-card__avatar">
                 } @else {
                   <div class="candidate-card__avatar-placeholder">
                     {{ emp.first_name[0] }}{{ emp.last_name[0] }}
                   </div>
                 }
-                <div class="overflow-hidden">
+                <div class="overflow-hidden flex-grow-1">
                   <div class="candidate-card__name">{{ emp.first_name }} {{ emp.last_name }}</div>
                   <div class="candidate-card__title">{{ emp.job_title || emp.occupation || '—' }}</div>
+                  @if (emp.current_city || emp.current_country) {
+                    <div class="candidate-card__location">
+                      <i class="bi bi-geo-alt"></i>
+                      {{ emp.current_city }}{{ emp.current_city && emp.current_country ? ', ' : '' }}{{ emp.current_country }}
+                    </div>
+                  }
                 </div>
-              </div>
-
-              <!-- Meta -->
-              <div class="small text-muted mb-2">
-                @if (emp.industry) {
-                  <span class="badge bg-light text-dark border me-1">{{ emp.industry }}</span>
-                }
-                @if (emp.current_city || emp.current_country) {
-                  <span>
-                    <i class="bi bi-geo-alt me-1"></i>{{ emp.current_city }}{{ emp.current_city && emp.current_country ? ', ' : '' }}{{ emp.current_country }}
+                @if (shortlistedIds.has(emp.id)) {
+                  <span class="candidate-card__bookmark candidate-card__bookmark--active" title="Shortlisted">
+                    <i class="bi bi-bookmark-star-fill"></i>
                   </span>
                 }
               </div>
 
-              @if (emp.years_experience != null) {
-                <div class="small text-muted mb-2">
-                  <i class="bi bi-briefcase me-1"></i>{{ emp.years_experience }} yrs experience
-                </div>
-              }
+              <!-- Meta badges -->
+              <div class="candidate-card__meta">
+                @if (emp.industry) {
+                  <span class="cand-badge cand-badge--industry">
+                    <i class="bi bi-building"></i> {{ emp.industry }}
+                  </span>
+                }
+                @if (emp.years_experience != null) {
+                  <span class="cand-badge cand-badge--exp">
+                    <i class="bi bi-briefcase"></i> {{ emp.years_experience }} yrs
+                  </span>
+                }
+                @if (emp.salary_min || emp.salary_max) {
+                  <span class="cand-badge cand-badge--salary">
+                    <i class="bi bi-cash-coin"></i>
+                    {{ emp.salary_currency || '' }}
+                    {{ emp.salary_min | number }}{{ emp.salary_max ? ('–' + (emp.salary_max | number)) : '' }}
+                  </span>
+                }
+              </div>
 
               <!-- Skills preview -->
               @if (emp.skills?.length) {
                 <div class="candidate-card__skills">
-                  @for (s of emp.skills!.slice(0,4); track s.skill_name) {
+                  @for (s of emp.skills!.slice(0, 3); track s.skill_name) {
                     <span class="tag-chip tag-chip--skill small">{{ s.skill_name }}</span>
                   }
-                  @if (emp.skills!.length > 4) {
-                    <span class="badge bg-light text-muted border small">+{{ emp.skills!.length - 4 }}</span>
+                  @if (emp.skills!.length > 3) {
+                    <span class="cand-badge cand-badge--more">+{{ emp.skills!.length - 3 }}</span>
                   }
                 </div>
               }
 
               <div class="candidate-card__footer">
-                <button class="btn btn-sm btn-outline-primary flex-grow-1"
+                <button class="btn btn-sm btn-primary flex-grow-1 cand-view-btn"
                   (click)="viewProfile(emp)">
-                  <i class="bi bi-eye me-1"></i>View Profile
+                  <i class="bi bi-person-lines-fill me-1"></i>View Profile
                 </button>
-                @if (shortlistedIds.has(emp.id)) {
-                  <button class="btn btn-sm btn-success" disabled title="Shortlisted">
-                    <i class="bi bi-bookmark-star-fill"></i>
-                  </button>
-                } @else {
+                @if (!shortlistedIds.has(emp.id)) {
                   <button class="btn btn-sm btn-outline-secondary candidate-card__shortlist-btn"
                     (click)="shortlist(emp)" [disabled]="shortlisting === emp.id"
                     title="Add to shortlist">
@@ -162,109 +174,6 @@ import { EmptyStateComponent } from '../../../shared/components/empty-state/empt
         </nav>
       }
     }
-
-    <!-- Profile modal -->
-    @if (selectedEmployee) {
-      <div class="modal d-block" tabindex="-1" style="background:rgba(0,0,0,.5)">
-        <div class="modal-dialog modal-xl modal-dialog-scrollable profile-modal">
-          <div class="modal-content">
-            <div class="modal-header">
-              <h5 class="modal-title">
-                <i class="bi bi-person-circle me-2"></i>
-                {{ selectedEmployee.first_name }} {{ selectedEmployee.last_name }}
-              </h5>
-              <button type="button" class="btn-close" (click)="selectedEmployee = null"></button>
-            </div>
-            <div class="modal-body">
-              <div class="row g-3">
-                <div class="col-md-4">
-                  @if (selectedEmployee.profile_photo_url) {
-                    <img [src]="selectedEmployee.profile_photo_url" class="img-fluid rounded mb-3" alt="photo">
-                  }
-                  @if (selectedEmployee.email) {
-                    <p class="mb-1 small"><i class="bi bi-envelope me-1 text-muted"></i>{{ selectedEmployee.email }}</p>
-                  }
-                  @if (selectedEmployee.phone) {
-                    <p class="mb-1 small"><i class="bi bi-telephone me-1 text-muted"></i>{{ selectedEmployee.phone }}</p>
-                  }
-                  <p class="mb-1 small">
-                    <i class="bi bi-geo-alt me-1 text-muted"></i>
-                    {{ selectedEmployee.current_city }}{{ selectedEmployee.current_city && selectedEmployee.current_country ? ', ' : '' }}{{ selectedEmployee.current_country || '—' }}
-                  </p>
-                  @if (selectedEmployee.nationality) {
-                    <p class="mb-1 small"><i class="bi bi-flag me-1 text-muted"></i>{{ selectedEmployee.nationality }}</p>
-                  }
-                  @if (selectedEmployee.salary_min || selectedEmployee.salary_max) {
-                    <p class="mb-1 small">
-                      <i class="bi bi-cash-coin me-1 text-muted"></i>
-                      {{ selectedEmployee.salary_currency }} {{ selectedEmployee.salary_min | number }}
-                      @if (selectedEmployee.salary_max) { – {{ selectedEmployee.salary_max | number }} }
-                      / {{ selectedEmployee.salary_type }}
-                    </p>
-                  }
-                  @if (selectedEmployee.resume_url) {
-                    <a [href]="selectedEmployee.resume_url" target="_blank" class="btn btn-sm btn-outline-primary mt-2 w-100">
-                      <i class="bi bi-file-earmark-person me-1"></i>Download CV
-                    </a>
-                  }
-                </div>
-                <div class="col-md-8">
-                  @if (selectedEmployee.bio) {
-                    <p class="small lh-lg mb-3">{{ selectedEmployee.bio }}</p>
-                  }
-                  @if (selectedEmployee.skills?.length) {
-                    <h6 class="profile-modal__section-title">Skills</h6>
-                    <div class="d-flex flex-wrap gap-1 mb-3">
-                      @for (s of selectedEmployee.skills; track s.skill_name) {
-                        <span class="tag-chip tag-chip--skill small">{{ s.skill_name }}</span>
-                      }
-                    </div>
-                  }
-                  @if (selectedEmployee.experience?.length) {
-                    <h6 class="profile-modal__section-title">Experience</h6>
-                    @for (exp of selectedEmployee.experience; track $index) {
-                      <div class="border-start border-primary ps-3 mb-3">
-                        <div class="fw-semibold small">{{ exp.job_title }}</div>
-                        <div class="text-muted small">{{ exp.company_name }}</div>
-                        <div class="text-muted small">
-                          {{ exp.start_date | date:'MMM yyyy' }} — {{ exp.end_date ? (exp.end_date | date:'MMM yyyy') : 'Present' }}
-                        </div>
-                      </div>
-                    }
-                  }
-                  @if (selectedEmployee.education?.length) {
-                    <h6 class="profile-modal__section-title">Education</h6>
-                    @for (edu of selectedEmployee.education; track $index) {
-                      <div class="border-start border-success ps-3 mb-2">
-                        <div class="fw-semibold small">{{ edu.degree }} @if (edu.field_of_study) { in {{ edu.field_of_study }} }</div>
-                        <div class="text-muted small">{{ edu.institution }}</div>
-                      </div>
-                    }
-                  }
-                </div>
-              </div>
-            </div>
-            <div class="modal-footer">
-              @if (shortlistedIds.has(selectedEmployee.id)) {
-                <span class="text-success me-auto small fw-semibold">
-                  <i class="bi bi-bookmark-star-fill me-1"></i>Shortlisted
-                </span>
-              } @else {
-                <button class="btn btn-primary" (click)="shortlist(selectedEmployee!)"
-                  [disabled]="shortlisting === selectedEmployee.id">
-                  @if (shortlisting === selectedEmployee.id) {
-                    <span class="spinner-border spinner-border-sm me-1"></span>Adding…
-                  } @else {
-                    <i class="bi bi-bookmark-plus me-1"></i>Add to Shortlist
-                  }
-                </button>
-              }
-              <button class="btn btn-outline-secondary" (click)="selectedEmployee = null">Close</button>
-            </div>
-          </div>
-        </div>
-      </div>
-    }
   `,
 })
 export class CandidatesComponent implements OnInit {
@@ -273,12 +182,12 @@ export class CandidatesComponent implements OnInit {
   loading = false;
   shortlistedIds = new Set<string>();
   shortlisting: string | null = null;
-  selectedEmployee: Employee | null = null;
 
   filterForm: FormGroup;
 
   constructor(
     private fb: FormBuilder,
+    private router: Router,
     private employeeService: EmployeeService,
     private recruiterService: RecruiterService,
     private toast: ToastService,
@@ -345,7 +254,7 @@ export class CandidatesComponent implements OnInit {
   }
 
   viewProfile(emp: Employee): void {
-    this.selectedEmployee = emp;
+    this.router.navigate(['/recruiter/candidates', emp.id]);
   }
 
   shortlist(emp: Employee): void {

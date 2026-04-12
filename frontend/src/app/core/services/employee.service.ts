@@ -71,4 +71,72 @@ export class EmployeeService {
       form,
     );
   }
+
+  // ── File delete ───────────────────────────────────────────────────────────
+  deleteFile(
+    employeeId: string,
+    type: 'profiles' | 'resumes' | 'videos',
+  ): Observable<{ message: string }> {
+    return this.http.delete<{ message: string }>(
+      `${environment.apiUrl}/employees/${employeeId}/files/${type}`,
+    );
+  }
+
+  deleteCertificate(
+    employeeId: string,
+    certId: number,
+  ): Observable<{ message: string }> {
+    return this.http.delete<{ message: string }>(
+      `${environment.apiUrl}/employees/${employeeId}/certificates/${certId}`,
+    );
+  }
+
+  // ── Self-service file helpers (employee uploading to own profile) ──────────
+
+  /** Stage a file for an edit-request: stores on disk, returns relativePath only.
+   *  Does NOT update the employee row — include relativePath in the edit-request payload. */
+  stageMyFile(
+    type: 'profiles' | 'resumes' | 'videos',
+    file: File,
+  ): Observable<{ relativePath: string; url: string; message: string }> {
+    const form = new FormData();
+    form.append('file', file);
+    return this.http.post<{ relativePath: string; url: string; message: string }>(
+      `${environment.apiUrl}/employees/me/stage-file/${type}`,
+      form,
+    );
+  }
+
+  uploadMyFile(
+    employeeId: string,
+    type: 'profiles' | 'resumes' | 'videos' | 'certificates',
+    file: File,
+    name?: string,
+  ): Observable<{ url: string; filename: string; message: string }> {
+    const form = new FormData();
+    form.append('file', file);
+    if (name) form.append('name', name);
+    return this.http.post<{ url: string; filename: string; message: string }>(
+      `${environment.apiUrl}/employees/${employeeId}/files/${type}`,
+      form,
+    );
+  }
+
+  deleteMyFile(
+    employeeId: string,
+    type: 'profiles' | 'resumes' | 'videos',
+  ): Observable<{ message: string }> {
+    return this.http.delete<{ message: string }>(
+      `${environment.apiUrl}/employees/${employeeId}/files/${type}`,
+    );
+  }
+
+  deleteMyCertificate(
+    employeeId: string,
+    certId: number,
+  ): Observable<{ message: string }> {
+    return this.http.delete<{ message: string }>(
+      `${environment.apiUrl}/employees/${employeeId}/certificates/${certId}`,
+    );
+  }
 }

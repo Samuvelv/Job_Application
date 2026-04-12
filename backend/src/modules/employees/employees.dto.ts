@@ -80,9 +80,15 @@ export const CreateEmployeeSchema = z.object({
 });
 
 // ── Update Employee ───────────────────────────────────────────────────────────
+// Also allows file URL fields so they can flow through the edit-request approval flow.
 
 export const UpdateEmployeeSchema = CreateEmployeeSchema
   .omit({ email: true, password: true })
+  .extend({
+    profile_photo_url: z.string().optional().nullable(),
+    resume_url:        z.string().optional().nullable(),
+    intro_video_url:   z.string().optional().nullable(),
+  })
   .partial();
 
 // ── Filter/Query ──────────────────────────────────────────────────────────────

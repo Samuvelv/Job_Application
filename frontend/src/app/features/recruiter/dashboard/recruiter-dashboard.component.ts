@@ -55,25 +55,25 @@ import { StatsService, RecruiterStats } from '../../../core/services/stats.servi
       <!-- Shortlist — wide card with saved count emphasis -->
       <div class="bento-6">
         <div class="stat-card-xl stat-card-xl--purple h-100">
-          <div class="d-flex align-items-start justify-content-between">
+          <div class="stat-card-xl__header">
             <div class="stat-card-xl__icon">
               <i class="bi bi-bookmark-star-fill"></i>
             </div>
             <a routerLink="/recruiter/shortlist"
-              style="font-size:.75rem;color:var(--th-violet);font-weight:600;text-decoration:none;
-                background:var(--th-violet-soft);padding:.2rem .625rem;border-radius:999px;border:1px solid rgba(139,92,246,.2)">
+              style="font-size:.72rem;color:#5b21b6;font-weight:600;text-decoration:none;
+                background:rgba(139,92,246,.10);padding:.2rem .625rem;border-radius:999px;border:1px solid rgba(139,92,246,.2)">
               View all <i class="bi bi-arrow-right ms-1"></i>
             </a>
           </div>
-          <div class="stat-card-xl__value mt-2">
+          <div class="stat-card-xl__value">
             @if (loading()) {
-              <span class="skeleton" style="width:80px;height:36px;display:block"></span>
+              <span class="skeleton" style="width:80px;height:40px;display:block"></span>
             } @else {
               {{ stats()?.shortlistCount ?? 0 }}
             }
           </div>
           <div class="stat-card-xl__label">Saved in Shortlist</div>
-          <div class="stat-card-xl__trend" style="background:var(--th-violet-soft);color:var(--th-violet)">
+          <div class="stat-card-xl__trend" style="background:rgba(139,92,246,.10);color:#5b21b6">
             <i class="bi bi-bookmark-check-fill"></i>Candidates saved
           </div>
         </div>
@@ -82,25 +82,25 @@ import { StatsService, RecruiterStats } from '../../../core/services/stats.servi
       <!-- Candidates Available -->
       <div class="bento-6">
         <div class="stat-card-xl stat-card-xl--info h-100">
-          <div class="d-flex align-items-start justify-content-between">
+          <div class="stat-card-xl__header">
             <div class="stat-card-xl__icon">
               <i class="bi bi-people-fill"></i>
             </div>
             <a routerLink="/recruiter/candidates"
-              style="font-size:.75rem;color:var(--th-cyan);font-weight:600;text-decoration:none;
-                background:var(--th-cyan-soft);padding:.2rem .625rem;border-radius:999px;border:1px solid rgba(6,182,212,.2)">
+              style="font-size:.72rem;color:#0e7490;font-weight:600;text-decoration:none;
+                background:rgba(6,182,212,.10);padding:.2rem .625rem;border-radius:999px;border:1px solid rgba(6,182,212,.2)">
               Search <i class="bi bi-arrow-right ms-1"></i>
             </a>
           </div>
-          <div class="stat-card-xl__value mt-2">
+          <div class="stat-card-xl__value">
             @if (loading()) {
-              <span class="skeleton" style="width:80px;height:36px;display:block"></span>
+              <span class="skeleton" style="width:80px;height:40px;display:block"></span>
             } @else {
               {{ stats()?.candidatesAvailable ?? 0 }}
             }
           </div>
           <div class="stat-card-xl__label">Candidates Available</div>
-          <div class="stat-card-xl__trend" style="background:var(--th-cyan-soft);color:var(--th-cyan)">
+          <div class="stat-card-xl__trend" style="background:rgba(6,182,212,.10);color:#0e7490">
             <i class="bi bi-search"></i>Ready to discover
           </div>
         </div>

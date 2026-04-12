@@ -1,9 +1,8 @@
 // src/app/features/admin/recruiter-list/recruiter-list.component.ts
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { ReactiveFormsModule, FormBuilder, FormGroup } from '@angular/forms';
-import { RouterLink } from '@angular/router';
-import { debounceTime, distinctUntilChanged, catchError, of } from 'rxjs';
+import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
+import { RouterLink } from '@angular/router';import { debounceTime, distinctUntilChanged, catchError, of } from 'rxjs';
 import { RecruiterService } from '../../../core/services/recruiter.service';
 import { Recruiter } from '../../../core/models/recruiter.model';
 import { ToastService } from '../../../core/services/toast.service';
@@ -62,8 +61,7 @@ import { EmptyStateComponent } from '../../../shared/components/empty-state/empt
                 <th class="small">Name</th>
                 <th class="small">Company</th>
                 <th class="small">Email</th>
-                <th class="small">Access Expires</th>
-                <th class="small">Token</th>
+                <th class="small">Status</th>
                 <th class="small">Actions</th>
               </tr>
             </thead>
@@ -73,35 +71,37 @@ import { EmptyStateComponent } from '../../../shared/components/empty-state/empt
                   <td class="fw-semibold small">{{ rec.contact_name }}</td>
                   <td class="small text-muted">{{ rec.company_name || '—' }}</td>
                   <td class="small">{{ rec.email }}</td>
-                  <td class="small">
-                    <span [class.text-danger]="isExpired(rec.access_expires_at)">
-                      {{ rec.access_expires_at | date:'dd MMM yyyy, HH:mm' }}
-                    </span>
-                  </td>
                   <td>
                     <span class="badge rounded-pill"
-                      [class.bg-success]="rec.has_active_token"
-                      [class.bg-secondary]="!rec.has_active_token">
-                      {{ rec.has_active_token ? 'Active' : 'Inactive' }}
+                      [class.bg-success]="rec.is_active"
+                      [class.bg-secondary]="!rec.is_active">
+                      {{ rec.is_active ? 'Active' : 'Inactive' }}
                     </span>
                   </td>
                   <td>
-                    <div class="d-flex gap-1 flex-wrap">
-                      <button class="btn btn-sm btn-outline-primary"
-                        (click)="generateToken(rec)" [disabled]="tokenLoading === rec.id"
-                        title="Generate new access token">
-                        @if (tokenLoading === rec.id) {
+                    <div class="tbl-actions">
+                      <a [routerLink]="['/admin/recruiters', rec.id]"
+                        class="tbl-actions__btn tbl-actions__btn--view tbl-actions__btn--icon"
+                        title="View recruiter">
+                        <i class="bi bi-eye"></i>
+                      </a>
+                      <button class="tbl-actions__btn tbl-actions__btn--edit tbl-actions__btn--icon"
+                        (click)="openEdit(rec)" title="Edit recruiter">
+                        <i class="bi bi-pencil"></i>
+                      </button>
+                      <div class="tbl-actions__sep"></div>
+                      <button class="tbl-actions__btn tbl-actions__btn--token"
+                        (click)="resendCredentials(rec)" [disabled]="resendLoading === rec.id"
+                        title="Resend login credentials">
+                        @if (resendLoading === rec.id) {
                           <span class="spinner-border spinner-border-sm"></span>
                         } @else {
-                          <i class="bi bi-key me-1"></i>New Token
+                          <i class="bi bi-envelope"></i>
                         }
+                        Resend
                       </button>
-                      <button class="btn btn-sm btn-outline-warning"
-                        (click)="revokeToken(rec)" [disabled]="!rec.has_active_token"
-                        title="Revoke access token">
-                        <i class="bi bi-slash-circle me-1"></i>Revoke
-                      </button>
-                      <button class="btn btn-sm btn-outline-danger"
+                      <div class="tbl-actions__sep"></div>
+                      <button class="tbl-actions__btn tbl-actions__btn--danger tbl-actions__btn--icon"
                         (click)="deleteRecruiter(rec)" title="Delete recruiter">
                         <i class="bi bi-trash"></i>
                       </button>
@@ -131,15 +131,69 @@ import { EmptyStateComponent } from '../../../shared/components/empty-state/empt
         </nav>
       }
     }
+
+    <!-- ── Edit Recruiter Panel (slide-in overlay) ── -->
+    @if (editingRecruiter) {
+      <div class="file-preview-overlay" (click)="closeEdit()">
+        <div class="edit-panel" (click)="$event.stopPropagation()">
+          <div class="edit-panel__header">
+            <div>
+              <div class="fw-bold">Edit Recruiter</div>
+              <div class="text-muted small">{{ editingRecruiter.email }}</div>
+            </div>
+            <button type="button" class="file-preview-dialog__close" (click)="closeEdit()">
+              <i class="bi bi-x-lg"></i>
+            </button>
+          </div>
+          <div class="edit-panel__body">
+            <form [formGroup]="editForm" (ngSubmit)="saveEdit()">
+              <div class="mb-3">
+                <label class="form-label fw-semibold">Contact Name <span class="text-danger">*</span></label>
+                <input formControlName="contact_name" class="form-control"
+                  [class.is-invalid]="editInvalid('contact_name')">
+                @if (editInvalid('contact_name')) {
+                  <div class="invalid-feedback">Contact name is required.</div>
+                }
+              </div>
+              <div class="mb-4">
+                <label class="form-label fw-semibold">Company Name</label>
+                <input formControlName="company_name" class="form-control" placeholder="Optional">
+              </div>
+              @if (editError) {
+                <div class="alert alert-danger small py-2">{{ editError }}</div>
+              }
+              <div class="d-flex gap-2">
+                <button type="button" class="btn btn-outline-secondary flex-grow-1" (click)="closeEdit()">
+                  Cancel
+                </button>
+                <button type="submit" class="btn btn-primary flex-grow-1" [disabled]="editSaving">
+                  @if (editSaving) {
+                    <span class="spinner-border spinner-border-sm me-1"></span> Saving…
+                  } @else {
+                    <i class="bi bi-check-lg me-1"></i> Save
+                  }
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+    }
   `,
 })
 export class RecruiterListComponent implements OnInit {
   recruiters: Recruiter[] = [];
   pagination = { page: 1, limit: 20, total: 0, pages: 0 };
   loading = false;
-  tokenLoading: string | null = null;
+  resendLoading: string | null = null;
 
   filterForm: FormGroup;
+
+  // Edit panel state
+  editingRecruiter: Recruiter | null = null;
+  editForm!: FormGroup;
+  editSaving = false;
+  editError  = '';
 
   constructor(
     private fb: FormBuilder,
@@ -189,36 +243,61 @@ export class RecruiterListComponent implements OnInit {
     return Array.from({ length: end - start + 1 }, (_, i) => start + i);
   }
 
-  isExpired(dt: string): boolean {
-    return new Date(dt) < new Date();
+  // ── Edit panel ─────────────────────────────────────────────────────────────
+  openEdit(rec: Recruiter): void {
+    this.editingRecruiter = rec;
+    this.editError        = '';
+    this.editForm = this.fb.group({
+      contact_name: [rec.contact_name, Validators.required],
+      company_name: [rec.company_name ?? ''],
+    });
   }
 
-  generateToken(rec: Recruiter): void {
-    this.tokenLoading = rec.id;
-    this.recruiterService.generateToken(rec.id, { send_email: true }).subscribe({
-      next: (res) => {
-        this.tokenLoading = null;
-        this.toast.success(`Token generated. Copy it now: ${res.token.slice(0, 20)}…`);
+  closeEdit(): void {
+    this.editingRecruiter = null;
+    this.editSaving       = false;
+    this.editError        = '';
+  }
+
+  editInvalid(field: string): boolean {
+    const c = this.editForm?.get(field);
+    return !!(c && c.invalid && c.touched);
+  }
+
+  saveEdit(): void {
+    if (this.editForm.invalid) { this.editForm.markAllAsTouched(); return; }
+    if (!this.editingRecruiter) return;
+    this.editSaving = true;
+    this.editError  = '';
+    const val = this.editForm.value;
+    this.recruiterService.update(this.editingRecruiter.id, {
+      contact_name: val.contact_name,
+      company_name: val.company_name || undefined,
+    }).subscribe({
+      next: () => {
+        this.editSaving = false;
+        this.toast.success('Recruiter updated');
+        this.closeEdit();
         this.load();
       },
       error: (err) => {
-        this.tokenLoading = null;
-        this.toast.error(err?.error?.message ?? 'Failed to generate token');
+        this.editSaving = false;
+        this.editError  = err?.error?.message ?? 'Failed to update recruiter.';
       },
     });
   }
 
-  async revokeToken(rec: Recruiter): Promise<void> {
-    const ok = await this.confirm.confirm({
-      title: 'Revoke Token',
-      message: `Revoke the active token for ${rec.contact_name}? They will lose access immediately.`,
-      confirmLabel: 'Revoke',
-      confirmClass: 'btn-warning',
-    });
-    if (!ok) return;
-    this.recruiterService.revokeToken(rec.id).subscribe({
-      next: () => { this.toast.success('Token revoked'); this.load(); },
-      error: (err) => this.toast.error(err?.error?.message ?? 'Failed to revoke'),
+  resendCredentials(rec: Recruiter): void {
+    this.resendLoading = rec.id;
+    this.recruiterService.resendCredentials(rec.id).subscribe({
+      next: () => {
+        this.resendLoading = null;
+        this.toast.success(`Credentials resent to ${rec.email}`);
+      },
+      error: (err) => {
+        this.resendLoading = null;
+        this.toast.error(err?.error?.message ?? 'Failed to resend credentials');
+      },
     });
   }
 

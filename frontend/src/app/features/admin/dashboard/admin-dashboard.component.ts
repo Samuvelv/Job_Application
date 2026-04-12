@@ -58,24 +58,24 @@ import { StatsService, AdminStats } from '../../../core/services/stats.service';
       <!-- Employees — wide card -->
       <div class="bento-6">
         <div class="stat-card-xl stat-card-xl--primary h-100">
-          <div class="d-flex align-items-start justify-content-between">
+          <div class="stat-card-xl__header">
             <div class="stat-card-xl__icon">
               <i class="bi bi-people-fill"></i>
             </div>
             <span class="badge rounded-pill"
-              style="background:var(--th-primary-soft);color:var(--th-primary);font-size:.7rem">
+              style="background:rgba(99,102,241,.12);color:#4338ca;font-size:.7rem;font-weight:600">
               Active
             </span>
           </div>
-          <div class="stat-card-xl__value mt-2">
+          <div class="stat-card-xl__value">
             @if (loading()) {
-              <span class="skeleton" style="width:80px;height:36px;display:block"></span>
+              <span class="skeleton" style="width:80px;height:40px;display:block"></span>
             } @else {
               {{ stats()?.employees ?? 0 }}
             }
           </div>
           <div class="stat-card-xl__label">Total Employees</div>
-          <div class="stat-card-xl__trend" style="background:var(--th-primary-soft);color:var(--th-primary)">
+          <div class="stat-card-xl__trend" style="background:rgba(99,102,241,.10);color:#4338ca">
             <i class="bi bi-arrow-up-right"></i>On platform
           </div>
         </div>
@@ -84,12 +84,14 @@ import { StatsService, AdminStats } from '../../../core/services/stats.service';
       <!-- Recruiters -->
       <div class="bento-3">
         <div class="stat-card-xl stat-card-xl--success h-100">
-          <div class="stat-card-xl__icon">
-            <i class="bi bi-person-badge-fill"></i>
+          <div class="stat-card-xl__header">
+            <div class="stat-card-xl__icon">
+              <i class="bi bi-person-badge-fill"></i>
+            </div>
           </div>
-          <div class="stat-card-xl__value mt-2">
+          <div class="stat-card-xl__value">
             @if (loading()) {
-              <span class="skeleton" style="width:60px;height:36px;display:block"></span>
+              <span class="skeleton" style="width:60px;height:40px;display:block"></span>
             } @else {
               {{ stats()?.recruiters ?? 0 }}
             }
@@ -103,19 +105,21 @@ import { StatsService, AdminStats } from '../../../core/services/stats.service';
         <div class="stat-card-xl h-100"
           [class.stat-card-xl--warning]="(stats()?.pendingEdits ?? 0) > 0"
           [class.stat-card-xl--info]="(stats()?.pendingEdits ?? 0) === 0">
-          <div class="stat-card-xl__icon">
-            <i class="bi bi-pencil-square"></i>
+          <div class="stat-card-xl__header">
+            <div class="stat-card-xl__icon">
+              <i class="bi bi-pencil-square"></i>
+            </div>
           </div>
-          <div class="stat-card-xl__value mt-2">
+          <div class="stat-card-xl__value">
             @if (loading()) {
-              <span class="skeleton" style="width:60px;height:36px;display:block"></span>
+              <span class="skeleton" style="width:60px;height:40px;display:block"></span>
             } @else {
               {{ stats()?.pendingEdits ?? 0 }}
             }
           </div>
           <div class="stat-card-xl__label">Pending Edits</div>
           @if ((stats()?.pendingEdits ?? 0) > 0) {
-            <div class="stat-card-xl__trend" style="background:var(--th-amber-soft);color:var(--th-amber)">
+            <div class="stat-card-xl__trend" style="background:rgba(245,158,11,.12);color:#92400e">
               <i class="bi bi-exclamation-circle-fill"></i>Needs review
             </div>
           }
@@ -124,25 +128,24 @@ import { StatsService, AdminStats } from '../../../core/services/stats.service';
 
       <!-- Audit Logs Today — full width accent card -->
       <div class="bento-12">
-        <div class="stat-card-xl stat-card-xl--info"
-          style="background:linear-gradient(135deg,var(--th-info-soft) 0%,var(--th-surface) 100%)">
+        <div class="stat-card-xl stat-card-xl--info">
           <div class="d-flex align-items-center gap-3">
-            <div class="stat-card-xl__icon flex-shrink-0">
+            <div class="stat-card-xl__icon flex-shrink-0" style="width:52px;height:52px">
               <i class="bi bi-journal-text"></i>
             </div>
             <div class="flex-grow-1">
               <div class="stat-card-xl__label mb-1">Audit Logs Today</div>
-              <div class="stat-card-xl__value" style="font-size:1.75rem">
+              <div class="stat-card-xl__value" style="font-size:1.875rem">
                 @if (loading()) {
-                  <span class="skeleton" style="width:60px;height:28px;display:block"></span>
+                  <span class="skeleton" style="width:60px;height:30px;display:block"></span>
                 } @else {
                   {{ stats()?.auditLogsToday ?? 0 }}
                 }
               </div>
             </div>
             <a routerLink="/admin/audit-logs"
-              class="btn btn-sm ms-auto"
-              style="background:var(--th-info-soft);color:var(--th-info);border:1px solid rgba(6,182,212,.2)">
+              class="btn btn-sm ms-auto flex-shrink-0"
+              style="background:rgba(6,182,212,.12);color:#0e7490;border:1px solid rgba(6,182,212,.22);font-weight:600">
               View All <i class="bi bi-arrow-right ms-1"></i>
             </a>
           </div>

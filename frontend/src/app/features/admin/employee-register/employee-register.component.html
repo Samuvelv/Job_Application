@@ -23,27 +23,38 @@
   </div>
 }
 
-<!-- Step Progress -->
-<div class="step-indicator mb-4">
-  @for (step of STEPS; track step.num) {
-    <button type="button"
-      class="step-item"
-      [class.active]="currentStep === step.num"
-      [class.completed]="currentStep > step.num"
-      (click)="goToStep(step.num)">
-      <span class="step-dot">
-        @if (currentStep > step.num) {
-          <i class="bi bi-check"></i>
-        } @else {
-          {{ step.num }}
-        }
-      </span>
-      <span class="step-label">{{ step.label }}</span>
-    </button>
-  }
-</div>
-<div class="progress progress-gradient mb-4" style="height:4px">
-  <div class="progress-bar" [style.width.%]="(currentStep / totalSteps) * 100"></div>
+<!-- Step Progress Card -->
+<div class="step-progress-card mb-4">
+  <!-- Header row: title + step counter -->
+  <div class="step-progress-card__header">
+    <div class="step-progress-card__title">
+      <i class="bi bi-ui-checks-grid"></i>
+      {{ STEPS[currentStep - 1].label }}
+    </div>
+    <span class="step-progress-card__counter">
+      Step {{ currentStep }} of {{ totalSteps }}
+    </span>
+  </div>
+
+  <!-- Step dots + labels -->
+  <div class="step-indicator">
+    @for (step of STEPS; track step.num) {
+      <button type="button"
+        class="step-item"
+        [class.active]="currentStep === step.num"
+        [class.completed]="currentStep > step.num"
+        (click)="goToStep(step.num)">
+        <span class="step-dot">
+          @if (currentStep > step.num) {
+            <i class="bi bi-check2"></i>
+          } @else {
+            {{ step.num }}
+          }
+        </span>
+        <span class="step-label">{{ step.label }}</span>
+      </button>
+    }
+  </div>
 </div>
 
 <form [formGroup]="form" (ngSubmit)="onSubmit()" novalidate>
@@ -87,11 +98,36 @@
           <textarea class="form-control" formControlName="bio" rows="3"
             placeholder="Brief introduction about the candidate…"></textarea>
         </div>
+        <!-- Profile Photo drop-zone -->
         <div class="col-md-6">
           <label class="form-label">Profile Photo</label>
-          <input type="file" class="form-control" accept="image/jpeg,image/png,image/webp"
-            (change)="onPhotoSelected($event)">
-          <div class="form-text">JPG, PNG, WEBP — max 5MB</div>
+          @if (!pendingPhoto) {
+            <label class="file-drop-zone d-block" style="cursor:pointer">
+              <input type="file" class="d-none" accept="image/jpeg,image/png,image/webp"
+                (change)="onPhotoSelected($event)">
+              <div class="drop-icon mb-2"><i class="bi bi-person-bounding-box"></i></div>
+              <div class="fw-semibold small">Click to upload photo</div>
+              <div class="text-muted" style="font-size:.75rem">JPG, PNG, WEBP — max 5 MB</div>
+            </label>
+          } @else {
+            <div class="file-drop-zone has-file d-flex align-items-center gap-3">
+              <img [src]="photoPreviewUrl" alt="Preview"
+                style="width:56px;height:56px;object-fit:cover;border-radius:50%;border:2px solid var(--th-success);flex-shrink:0">
+              <div class="file-info">
+                <span class="file-info__name" [title]="pendingPhoto.name">{{ pendingPhoto.name }}</span>
+                <span class="file-info__meta">{{ formatFileSize(pendingPhoto.size) }}</span>
+              </div>
+              <div class="file-actions">
+                <button type="button" class="btn btn-sm btn-outline-primary"
+                  (click)="openPreview('image', photoPreviewUrl, pendingPhoto.name)">
+                  <i class="bi bi-eye"></i>
+                </button>
+                <button type="button" class="btn btn-sm btn-outline-danger" (click)="clearPhoto()">
+                  <i class="bi bi-x-lg"></i>
+                </button>
+              </div>
+            </div>
+          }
         </div>
       </div>
     }
@@ -207,15 +243,65 @@
         </div>
 
         <!-- Resume & Video -->
+        <!-- CV / Resume drop-zone -->
         <div class="col-md-6">
           <label class="form-label fw-semibold">CV / Resume</label>
-          <input type="file" class="form-control" accept=".pdf,.doc,.docx" (change)="onResumeSelected($event)">
-          <div class="form-text">PDF, DOC, DOCX — max 10MB</div>
+          @if (!pendingResume) {
+            <label class="file-drop-zone d-block" style="cursor:pointer">
+              <input type="file" class="d-none" accept=".pdf,.doc,.docx"
+                (change)="onResumeSelected($event)">
+              <div class="drop-icon mb-2"><i class="bi bi-file-earmark-text"></i></div>
+              <div class="fw-semibold small">Click to upload CV / Resume</div>
+              <div class="text-muted" style="font-size:.75rem">PDF, DOC, DOCX — max 10 MB</div>
+            </label>
+          } @else {
+            <div class="file-drop-zone has-file d-flex align-items-center gap-3">
+              <div class="drop-icon" style="font-size:2rem"><i class="bi bi-file-earmark-text"></i></div>
+              <div class="file-info">
+                <span class="file-info__name" [title]="pendingResume.name">{{ pendingResume.name }}</span>
+                <span class="file-info__meta">{{ formatFileSize(pendingResume.size) }}</span>
+              </div>
+              <div class="file-actions">
+                <button type="button" class="btn btn-sm btn-outline-primary"
+                  (click)="openPreview('pdf', undefined, pendingResume.name)">
+                  <i class="bi bi-eye"></i>
+                </button>
+                <button type="button" class="btn btn-sm btn-outline-danger" (click)="clearResume()">
+                  <i class="bi bi-x-lg"></i>
+                </button>
+              </div>
+            </div>
+          }
         </div>
+        <!-- Self-Introduction Video drop-zone -->
         <div class="col-md-6">
           <label class="form-label fw-semibold">Self-Introduction Video</label>
-          <input type="file" class="form-control" accept="video/mp4,video/webm,video/quicktime" (change)="onVideoSelected($event)">
-          <div class="form-text">MP4, WEBM — max 50MB</div>
+          @if (!pendingVideo) {
+            <label class="file-drop-zone d-block" style="cursor:pointer">
+              <input type="file" class="d-none" accept="video/mp4,video/webm,video/quicktime"
+                (change)="onVideoSelected($event)">
+              <div class="drop-icon mb-2"><i class="bi bi-camera-video"></i></div>
+              <div class="fw-semibold small">Click to upload video</div>
+              <div class="text-muted" style="font-size:.75rem">MP4, WEBM — max 50 MB</div>
+            </label>
+          } @else {
+            <div class="file-drop-zone has-file d-flex align-items-center gap-3">
+              <div class="drop-icon" style="font-size:2rem"><i class="bi bi-camera-video"></i></div>
+              <div class="file-info">
+                <span class="file-info__name" [title]="pendingVideo.name">{{ pendingVideo.name }}</span>
+                <span class="file-info__meta">{{ formatFileSize(pendingVideo.size) }}</span>
+              </div>
+              <div class="file-actions">
+                <button type="button" class="btn btn-sm btn-outline-primary"
+                  (click)="openPreview('video', videoPreviewUrl, pendingVideo.name)">
+                  <i class="bi bi-eye"></i>
+                </button>
+                <button type="button" class="btn btn-sm btn-outline-danger" (click)="clearVideo()">
+                  <i class="bi bi-x-lg"></i>
+                </button>
+              </div>
+            </div>
+          }
         </div>
       </div>
     }
@@ -256,18 +342,44 @@
       <div formArrayName="experience">
         @for (exp of experience.controls; track $index) {
           <div [formGroupName]="$index" class="glass-card p-3 mb-3">
-            <div class="d-flex justify-content-between mb-2">
-              <span class="fw-semibold small text-muted">Experience #{{ $index + 1 }}</span>
+            <div class="d-flex justify-content-between align-items-center mb-3">
+              <span class="fw-semibold small text-muted">
+                <i class="bi bi-briefcase me-1"></i> Experience #{{ $index + 1 }}
+              </span>
               <button type="button" class="btn btn-sm btn-outline-danger"
-                (click)="removeExperience($index)">Remove</button>
+                (click)="removeExperience($index)">
+                <i class="bi bi-trash me-1"></i>Remove
+              </button>
             </div>
-            <div class="row g-2">
-              <div class="col-md-6"><input class="form-control form-control-sm" formControlName="company_name" placeholder="Company name"></div>
-              <div class="col-md-6"><input class="form-control form-control-sm" formControlName="job_title" placeholder="Job title"></div>
-              <div class="col-md-3"><input type="date" class="form-control form-control-sm" formControlName="start_date"></div>
-              <div class="col-md-3"><input type="date" class="form-control form-control-sm" formControlName="end_date" placeholder="Leave blank if current"></div>
-              <div class="col-md-6"><input class="form-control form-control-sm" formControlName="location" placeholder="Location"></div>
-              <div class="col-12"><textarea class="form-control form-control-sm" formControlName="description" rows="2" placeholder="Description"></textarea></div>
+            <div class="row g-3">
+              <div class="col-md-6">
+                <label class="form-label form-label-sm">Company Name</label>
+                <input class="form-control form-control-sm" formControlName="company_name" placeholder="e.g. Google Inc.">
+              </div>
+              <div class="col-md-6">
+                <label class="form-label form-label-sm">Job Title</label>
+                <input class="form-control form-control-sm" formControlName="job_title" placeholder="e.g. Senior Developer">
+              </div>
+              <div class="col-md-3">
+                <label class="form-label form-label-sm">Start Date</label>
+                <input type="date" class="form-control form-control-sm" formControlName="start_date">
+              </div>
+              <div class="col-md-3">
+                <label class="form-label form-label-sm">
+                  End Date
+                  <span class="text-muted fw-normal" style="font-size:.7rem"> (leave blank if current)</span>
+                </label>
+                <input type="date" class="form-control form-control-sm" formControlName="end_date">
+              </div>
+              <div class="col-md-6">
+                <label class="form-label form-label-sm">Location</label>
+                <input class="form-control form-control-sm" formControlName="location" placeholder="e.g. New York, USA">
+              </div>
+              <div class="col-12">
+                <label class="form-label form-label-sm">Description</label>
+                <textarea class="form-control form-control-sm" formControlName="description" rows="2"
+                  placeholder="Key responsibilities and achievements…"></textarea>
+              </div>
             </div>
           </div>
         }
@@ -282,18 +394,49 @@
       <div formArrayName="education">
         @for (edu of education.controls; track $index) {
           <div [formGroupName]="$index" class="glass-card p-3 mb-3">
-            <div class="d-flex justify-content-between mb-2">
-              <span class="fw-semibold small text-muted">Education #{{ $index + 1 }}</span>
+            <div class="d-flex justify-content-between align-items-center mb-3">
+              <span class="fw-semibold small text-muted">
+                <i class="bi bi-mortarboard me-1"></i> Education #{{ $index + 1 }}
+              </span>
               <button type="button" class="btn btn-sm btn-outline-danger"
-                (click)="removeEducation($index)">Remove</button>
+                (click)="removeEducation($index)">
+                <i class="bi bi-trash me-1"></i>Remove
+              </button>
             </div>
-            <div class="row g-2">
-              <div class="col-md-6"><input class="form-control form-control-sm" formControlName="institution" placeholder="Institution name"></div>
-              <div class="col-md-6"><input class="form-control form-control-sm" formControlName="degree" placeholder="Degree (e.g. B.Sc.)"></div>
-              <div class="col-md-6"><input class="form-control form-control-sm" formControlName="field_of_study" placeholder="Field of study"></div>
-              <div class="col-md-6"><input class="form-control form-control-sm" formControlName="location" placeholder="Location"></div>
-              <div class="col-md-3"><input type="number" class="form-control form-control-sm" formControlName="start_year" placeholder="Start year"></div>
-              <div class="col-md-3"><input type="number" class="form-control form-control-sm" formControlName="end_year" placeholder="End year"></div>
+            <div class="row g-3">
+              <div class="col-md-6">
+                <label class="form-label form-label-sm">Institution / University</label>
+                <input class="form-control form-control-sm" formControlName="institution" placeholder="e.g. MIT, Stanford University">
+              </div>
+              <div class="col-md-6">
+                <label class="form-label form-label-sm">Degree</label>
+                <input class="form-control form-control-sm" formControlName="degree" placeholder="e.g. B.Sc., M.Tech, MBA">
+              </div>
+              <div class="col-md-6">
+                <label class="form-label form-label-sm">Field of Study</label>
+                <input class="form-control form-control-sm" formControlName="field_of_study" placeholder="e.g. Computer Science">
+              </div>
+              <div class="col-md-6">
+                <label class="form-label form-label-sm">Location</label>
+                <input class="form-control form-control-sm" formControlName="location" placeholder="e.g. Boston, USA">
+              </div>
+              <!-- Duration row -->
+              <div class="col-12">
+                <label class="form-label form-label-sm">Duration (years)</label>
+                <div class="d-flex align-items-center gap-2">
+                  <div class="flex-grow-1">
+                    <input type="number" class="form-control form-control-sm" formControlName="start_year"
+                      placeholder="Start year" min="1950" [max]="currentYear">
+                    <div class="form-text" style="font-size:.7rem">Start year</div>
+                  </div>
+                  <span class="text-muted fw-bold pb-3">–</span>
+                  <div class="flex-grow-1">
+                    <input type="number" class="form-control form-control-sm" formControlName="end_year"
+                      placeholder="End year (or expected)" min="1950" [max]="currentYear + 6">
+                    <div class="form-text" style="font-size:.7rem">End / expected year</div>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
         }
@@ -308,17 +451,37 @@
         </label>
       </div>
       @if (pendingCerts.length === 0) {
-        <p class="text-muted small">No certificates added yet.</p>
-      }
-      @for (cert of pendingCerts; track $index) {
-        <div class="d-flex align-items-center gap-2 mb-2 border rounded p-2">
-          <i class="bi bi-file-earmark-text text-muted"></i>
-          <span class="text-muted small flex-grow-1">{{ cert.name }}</span>
-          <button type="button" class="btn btn-sm btn-outline-danger" (click)="removeCert($index)">
-            <i class="bi bi-x"></i>
-          </button>
+        <div class="file-drop-zone text-center py-4">
+          <div class="drop-icon mb-1"><i class="bi bi-award"></i></div>
+          <div class="small text-muted">No certificates added yet — click Upload above</div>
         </div>
       }
+      <div class="d-flex flex-column gap-2 mt-2">
+        @for (cert of pendingCerts; track $index) {
+          <div class="file-card">
+            <div class="file-card__icon">
+              @if (cert.file.type.startsWith('image/')) {
+                <i class="bi bi-file-earmark-image"></i>
+              } @else {
+                <i class="bi bi-file-earmark-pdf"></i>
+              }
+            </div>
+            <div class="file-card__info">
+              <span class="file-info__name" [title]="cert.name">{{ cert.name }}</span>
+              <span class="file-info__meta">{{ formatFileSize(cert.file.size) }}</span>
+            </div>
+            <div class="file-card__actions">
+              <button type="button" class="btn btn-sm btn-outline-primary"
+                (click)="openPreview(cert.file.type.startsWith('image/') ? 'image' : 'pdf', cert.file.type.startsWith('image/') ? undefined : undefined, cert.name)">
+                <i class="bi bi-eye"></i>
+              </button>
+              <button type="button" class="btn btn-sm btn-outline-danger" (click)="removeCert($index)">
+                <i class="bi bi-x-lg"></i>
+              </button>
+            </div>
+          </div>
+        }
+      </div>
     }
 
     <!-- ══════════════════ STEP 5: Credentials ══════════════════ -->
@@ -384,3 +547,37 @@
   </div>
 
 </form>
+
+<!-- ── File Preview Overlay ──────────────────────────────────────────────── -->
+@if (previewOpen) {
+  <div class="file-preview-overlay" (click)="closePreview()">
+    <div class="file-preview-dialog" (click)="$event.stopPropagation()">
+      <!-- Header -->
+      <div class="file-preview-dialog__header">
+        <span class="file-preview-dialog__title text-truncate">{{ previewName }}</span>
+        <button type="button" class="file-preview-dialog__close" (click)="closePreview()">
+          <i class="bi bi-x-lg"></i>
+        </button>
+      </div>
+      <!-- Body -->
+      <div class="file-preview-dialog__body">
+        @if (previewType === 'image') {
+          <img [src]="previewUrl" [alt]="previewName" class="file-preview-dialog__image">
+        } @else if (previewType === 'video') {
+          <video [src]="previewUrl" controls class="file-preview-dialog__video" autoplay></video>
+        } @else {
+          <!-- PDF / generic file — no object-URL available, show info card -->
+          <div class="file-preview-dialog__no-preview">
+            @if (previewType === 'pdf') {
+              <i class="bi bi-file-earmark-pdf file-preview-dialog__no-preview-icon text-danger"></i>
+            } @else {
+              <i class="bi bi-file-earmark file-preview-dialog__no-preview-icon text-muted"></i>
+            }
+            <div class="fw-semibold mt-3">{{ previewName }}</div>
+            <div class="text-muted small mt-1">Preview not available — file will be uploaded on submit.</div>
+          </div>
+        }
+      </div>
+    </div>
+  </div>
+}

@@ -67,7 +67,7 @@ export class AuthService {
   }
 
   getRole(): UserRole | null {
-    return this.currentUser()?.role ?? 'admin';
+    return this.currentUser()?.role ?? null;
   }
 
   hasRole(...roles: UserRole[]): boolean {

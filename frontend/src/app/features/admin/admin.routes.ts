@@ -23,6 +23,11 @@ export const adminRoutes: Routes = [
       import('./employee-register/employee-register.component').then((m) => m.EmployeeRegisterComponent),
   },
   {
+    path: 'employees/:id/edit',
+    loadComponent: () =>
+      import('./employee-edit/employee-edit.component').then((m) => m.EmployeeEditComponent),
+  },
+  {
     path: 'employees/:id',
     loadComponent: () =>
       import('./employee-profile/employee-profile-page.component').then((m) => m.EmployeeProfilePageComponent),
@@ -36,6 +41,11 @@ export const adminRoutes: Routes = [
     path: 'recruiters/create',
     loadComponent: () =>
       import('./recruiter-create/recruiter-create.component').then((m) => m.RecruiterCreateComponent),
+  },
+  {
+    path: 'recruiters/:id',
+    loadComponent: () =>
+      import('./recruiter-profile/recruiter-profile-page.component').then((m) => m.RecruiterProfilePageComponent),
   },
   {
     path: 'edit-requests',

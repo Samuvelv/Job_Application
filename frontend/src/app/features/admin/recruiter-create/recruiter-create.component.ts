@@ -21,15 +21,10 @@ import { PageHeaderComponent } from '../../../shared/components/page-header/page
 
     <div class="form-card" style="max-width:600px;">
 
-      @if (successToken) {
+      @if (success) {
         <div class="alert alert-success">
           <strong><i class="bi bi-check-circle me-1"></i>Recruiter created!</strong>
-          @if (form.value.send_email) {
-            <p class="mb-0 mt-1 small">Access link has been emailed to the recruiter.</p>
-          } @else {
-            <p class="mt-2 mb-1 small fw-semibold">Copy this token now — it will not be shown again:</p>
-            <div class="token-box mt-2">{{ successToken }}</div>
-          }
+          <p class="mb-0 mt-1 small">Login credentials have been emailed to the recruiter.</p>
           <div class="mt-3">
             <a routerLink="/admin/recruiters" class="btn btn-sm btn-primary me-2">View Recruiters</a>
             <button class="btn btn-sm btn-outline-secondary" (click)="reset()">Add Another</button>
@@ -56,27 +51,9 @@ import { PageHeaderComponent } from '../../../shared/components/page-header/page
             }
           </div>
 
-          <div class="mb-3">
+          <div class="mb-4">
             <label class="form-label fw-semibold">Company Name</label>
             <input formControlName="company_name" class="form-control" placeholder="Acme Corp (optional)">
-          </div>
-
-          <div class="mb-3">
-            <label class="form-label fw-semibold">Access Duration</label>
-            <select formControlName="access_duration_seconds" class="form-select">
-              <option [value]="1 * 24 * 3600">1 day</option>
-              <option [value]="3 * 24 * 3600">3 days</option>
-              <option [value]="7 * 24 * 3600">7 days (default)</option>
-              <option [value]="14 * 24 * 3600">14 days</option>
-              <option [value]="30 * 24 * 3600">30 days</option>
-            </select>
-          </div>
-
-          <div class="mb-4 form-check">
-            <input type="checkbox" class="form-check-input" id="sendEmail" formControlName="send_email">
-            <label class="form-check-label small" for="sendEmail">
-              Send access link by email immediately
-            </label>
           </div>
 
           @if (error) {
@@ -100,7 +77,7 @@ export class RecruiterCreateComponent {
   form: FormGroup;
   submitting = false;
   error = '';
-  successToken = '';
+  success = false;
 
   constructor(
     private fb: FormBuilder,
@@ -108,11 +85,9 @@ export class RecruiterCreateComponent {
     private router: Router,
   ) {
     this.form = this.fb.group({
-      contact_name:            ['', Validators.required],
-      email:                   ['', [Validators.required, Validators.email]],
-      company_name:            [''],
-      access_duration_seconds: [7 * 24 * 3600],
-      send_email:              [true],
+      contact_name: ['', Validators.required],
+      email:        ['', [Validators.required, Validators.email]],
+      company_name: [''],
     });
   }
 
@@ -128,15 +103,13 @@ export class RecruiterCreateComponent {
 
     const val = this.form.value;
     this.recruiterService.create({
-      email:                   val.email,
-      contact_name:            val.contact_name,
-      company_name:            val.company_name || undefined,
-      access_duration_seconds: val.access_duration_seconds,
-      send_email:              val.send_email,
+      email:        val.email,
+      contact_name: val.contact_name,
+      company_name: val.company_name || undefined,
     }).subscribe({
-      next: (res) => {
-        this.submitting  = false;
-        this.successToken = res.token;
+      next: () => {
+        this.submitting = false;
+        this.success    = true;
       },
       error: (err) => {
         this.submitting = false;
@@ -146,10 +119,7 @@ export class RecruiterCreateComponent {
   }
 
   reset(): void {
-    this.successToken = '';
-    this.form.reset({
-      access_duration_seconds: 7 * 24 * 3600,
-      send_email: true,
-    });
+    this.success = false;
+    this.form.reset();
   }
 }

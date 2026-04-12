@@ -31,6 +31,18 @@ export class EmployeeRegisterComponent implements OnInit, OnDestroy {
   pendingVideo?:  File;
   pendingCerts: { file: File; name: string }[] = [];
 
+  // Preview state
+  photoPreviewUrl?:  string;
+  videoPreviewUrl?:  string;
+
+  previewOpen  = false;
+  previewType: 'image' | 'video' | 'pdf' | 'file' | null = null;
+  previewUrl?: string;
+  previewName?: string;
+
+  // Track created object URLs for cleanup
+  private _objectUrls: string[] = [];
+
   form!: FormGroup;
   private draftSub?: Subscription;
 
@@ -47,6 +59,7 @@ export class EmployeeRegisterComponent implements OnInit, OnDestroy {
   readonly CURRENCIES   = ['USD', 'EUR', 'GBP', 'AED', 'SGD', 'INR', 'AUD', 'CAD'];
   readonly PROFICIENCY_SKILL = ['beginner', 'intermediate', 'expert'];
   readonly PROFICIENCY_LANG  = ['basic', 'conversational', 'fluent', 'native'];
+  readonly currentYear = new Date().getFullYear();
 
   constructor(
     private fb: FormBuilder,
@@ -104,6 +117,7 @@ export class EmployeeRegisterComponent implements OnInit, OnDestroy {
 
   ngOnDestroy(): void {
     this.draftSub?.unsubscribe();
+    this._objectUrls.forEach(u => URL.revokeObjectURL(u));
   }
 
   // ── Draft helpers ──────────────────────────────────────────────────────────
@@ -200,14 +214,73 @@ export class EmployeeRegisterComponent implements OnInit, OnDestroy {
   }
 
   // ── File selection ─────────────────────────────────────────────────────────
-  onPhotoSelected(e: Event):  void { this.pendingPhoto  = (e.target as HTMLInputElement).files?.[0]; }
-  onResumeSelected(e: Event): void { this.pendingResume = (e.target as HTMLInputElement).files?.[0]; }
-  onVideoSelected(e: Event):  void { this.pendingVideo  = (e.target as HTMLInputElement).files?.[0]; }
-  onCertSelected(e: Event):   void {
+  onPhotoSelected(e: Event): void {
+    const file = (e.target as HTMLInputElement).files?.[0];
+    if (!file) return;
+    this.pendingPhoto = file;
+    if (this.photoPreviewUrl) { URL.revokeObjectURL(this.photoPreviewUrl); this._objectUrls = this._objectUrls.filter(u => u !== this.photoPreviewUrl); }
+    this.photoPreviewUrl = URL.createObjectURL(file);
+    this._objectUrls.push(this.photoPreviewUrl);
+  }
+
+  onResumeSelected(e: Event): void {
+    const file = (e.target as HTMLInputElement).files?.[0];
+    if (!file) return;
+    this.pendingResume = file;
+  }
+
+  onVideoSelected(e: Event): void {
+    const file = (e.target as HTMLInputElement).files?.[0];
+    if (!file) return;
+    this.pendingVideo = file;
+    if (this.videoPreviewUrl) { URL.revokeObjectURL(this.videoPreviewUrl); this._objectUrls = this._objectUrls.filter(u => u !== this.videoPreviewUrl); }
+    this.videoPreviewUrl = URL.createObjectURL(file);
+    this._objectUrls.push(this.videoPreviewUrl);
+  }
+
+  onCertSelected(e: Event): void {
     const file = (e.target as HTMLInputElement).files?.[0];
     if (file) this.pendingCerts.push({ file, name: file.name });
+    // Reset input so same file can be re-selected
+    (e.target as HTMLInputElement).value = '';
   }
+
   removeCert(i: number): void { this.pendingCerts.splice(i, 1); }
+
+  clearPhoto(): void {
+    if (this.photoPreviewUrl) { URL.revokeObjectURL(this.photoPreviewUrl); this._objectUrls = this._objectUrls.filter(u => u !== this.photoPreviewUrl); }
+    this.pendingPhoto = undefined;
+    this.photoPreviewUrl = undefined;
+  }
+
+  clearResume(): void { this.pendingResume = undefined; }
+
+  clearVideo(): void {
+    if (this.videoPreviewUrl) { URL.revokeObjectURL(this.videoPreviewUrl); this._objectUrls = this._objectUrls.filter(u => u !== this.videoPreviewUrl); }
+    this.pendingVideo = undefined;
+    this.videoPreviewUrl = undefined;
+  }
+
+  // ── Preview modal ──────────────────────────────────────────────────────────
+  openPreview(type: 'image' | 'video' | 'pdf' | 'file', url?: string, name?: string): void {
+    this.previewType = type;
+    this.previewUrl  = url;
+    this.previewName = name;
+    this.previewOpen = true;
+  }
+
+  closePreview(): void {
+    this.previewOpen = false;
+    this.previewType = null;
+    this.previewUrl  = undefined;
+    this.previewName = undefined;
+  }
+
+  formatFileSize(bytes: number): string {
+    if (bytes < 1024) return `${bytes} B`;
+    if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+    return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+  }
 
   // ── Submit ─────────────────────────────────────────────────────────────────
   onSubmit(): void {

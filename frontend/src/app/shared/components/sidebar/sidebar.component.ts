@@ -16,14 +16,9 @@ interface NavItem {
   standalone: true,
   imports: [CommonModule, RouterLink, RouterLinkActive],
   template: `
-    <nav class="app-sidebar" [class.open]="sidebar.isOpen()">
-      <!-- Brand -->
-      <div class="sidebar-brand">
-        <span class="sidebar-logo">TalentHub</span>
-        <span class="badge ms-2" [ngClass]="roleBadgeClass()">
-          {{ role() | titlecase }}
-        </span>
-      </div>
+    <nav class="app-sidebar"
+         [class.open]="sidebar.isOpen()"
+         [class.collapsed]="sidebar.isCollapsed()">
 
       <!-- Nav links -->
       <ul class="sidebar-nav">
@@ -32,33 +27,32 @@ interface NavItem {
             <a class="sidebar-link"
                [routerLink]="item.route"
                routerLinkActive="active"
+               [title]="sidebar.isCollapsed() ? item.label : ''"
                (click)="sidebar.close()">
               <i class="bi {{ item.icon }}"></i>
-              <span>{{ item.label }}</span>
+              <span class="sidebar-link-label">{{ item.label }}</span>
             </a>
           </li>
         }
       </ul>
 
-      <!-- Logout -->
-      <div class="sidebar-footer">
-        <button class="btn btn-outline-danger btn-sm w-100 d-flex align-items-center justify-content-center gap-2"
-                (click)="logout()">
-          <i class="bi bi-box-arrow-right"></i>
-          Sign out
+      <!-- Collapse toggle (desktop only, pinned to bottom) -->
+      <div class="sidebar-collapse-wrap">
+        <button class="sidebar-collapse-btn"
+                (click)="sidebar.toggleCollapse()"
+                [title]="sidebar.isCollapsed() ? 'Expand sidebar' : 'Collapse sidebar'">
+          <i class="bi"
+             [class.bi-chevron-double-left]="!sidebar.isCollapsed()"
+             [class.bi-chevron-double-right]="sidebar.isCollapsed()"></i>
+          <span class="sidebar-link-label">Collapse</span>
         </button>
       </div>
+
     </nav>
   `,
 })
 export class SidebarComponent {
-  role = computed(() => this.auth.currentUser()?.role ?? '');
-
-  roleBadgeClass = computed(() => ({
-    'badge-role-admin':     this.role() === 'admin',
-    'badge-role-employee':  this.role() === 'employee',
-    'badge-role-recruiter': this.role() === 'recruiter',
-  }));
+  private role = computed(() => this.auth.currentUser()?.role ?? '');
 
   navItems = computed<NavItem[]>(() => {
     switch (this.role()) {
@@ -91,6 +85,4 @@ export class SidebarComponent {
     private auth: AuthService,
     public sidebar: SidebarService,
   ) {}
-
-  logout(): void { this.auth.logout(); }
 }

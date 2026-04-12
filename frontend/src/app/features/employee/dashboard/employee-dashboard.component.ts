@@ -122,18 +122,20 @@ import { StatsService, EmployeeStats } from '../../../core/services/stats.servic
     <div class="bento-grid mb-4">
       <div class="bento-6">
         <div class="stat-card-xl stat-card-xl--success h-100">
-          <div class="stat-card-xl__icon">
-            <i class="bi bi-person-check-fill"></i>
+          <div class="stat-card-xl__header">
+            <div class="stat-card-xl__icon">
+              <i class="bi bi-person-check-fill"></i>
+            </div>
           </div>
-          <div class="stat-card-xl__value mt-2">
+          <div class="stat-card-xl__value">
             @if (loading()) {
-              <span class="skeleton" style="width:80px;height:36px;display:block"></span>
+              <span class="skeleton" style="width:80px;height:40px;display:block"></span>
             } @else {
               {{ stats()?.profileCompleteness ?? 0 }}%
             }
           </div>
           <div class="stat-card-xl__label">Profile Completeness</div>
-          <div class="stat-card-xl__trend" style="background:var(--th-emerald-soft);color:var(--th-emerald)">
+          <div class="stat-card-xl__trend" style="background:rgba(16,185,129,.12);color:#065f46">
             <i class="bi bi-graph-up-arrow"></i>Recruiter visibility
           </div>
         </div>
@@ -143,10 +145,12 @@ import { StatsService, EmployeeStats } from '../../../core/services/stats.servic
         <div class="stat-card-xl h-100"
           [class.stat-card-xl--warning]="stats()?.pendingRequest"
           [class.stat-card-xl--info]="!stats()?.pendingRequest">
-          <div class="stat-card-xl__icon">
-            <i class="bi bi-pencil-square"></i>
+          <div class="stat-card-xl__header">
+            <div class="stat-card-xl__icon">
+              <i class="bi bi-pencil-square"></i>
+            </div>
           </div>
-          <div class="stat-card-xl__value mt-2" style="font-size:1.5rem">
+          <div class="stat-card-xl__value" style="font-size:1.75rem">
             @if (loading()) {
               <span class="skeleton" style="width:80px;height:28px;display:block"></span>
             } @else {
@@ -155,11 +159,11 @@ import { StatsService, EmployeeStats } from '../../../core/services/stats.servic
           </div>
           <div class="stat-card-xl__label">Edit Request</div>
           @if (stats()?.pendingRequest) {
-            <div class="stat-card-xl__trend" style="background:var(--th-amber-soft);color:var(--th-amber)">
+            <div class="stat-card-xl__trend" style="background:rgba(245,158,11,.12);color:#92400e">
               <i class="bi bi-hourglass-split"></i>Under review
             </div>
           } @else {
-            <div class="stat-card-xl__trend" style="background:var(--th-info-soft);color:var(--th-info)">
+            <div class="stat-card-xl__trend" style="background:rgba(6,182,212,.12);color:#0e7490">
               <i class="bi bi-check-circle"></i>No active request
             </div>
           }

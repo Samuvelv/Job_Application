@@ -5,15 +5,11 @@ export const CreateRecruiterSchema = z.object({
   email:        z.string().email(),
   contact_name: z.string().min(1).max(200),
   company_name: z.string().max(200).optional(),
-  /** How many seconds the portal access lasts (default 7 days) */
-  access_duration_seconds: z.coerce.number().int().positive().default(7 * 24 * 60 * 60),
-  /** If true the recruiter link email is sent immediately */
-  send_email: z.boolean().default(true),
 });
 
-export const GenerateTokenSchema = z.object({
-  access_duration_seconds: z.coerce.number().int().positive().default(7 * 24 * 60 * 60),
-  send_email: z.boolean().default(true),
+export const UpdateRecruiterSchema = z.object({
+  contact_name: z.string().min(1).max(200).optional(),
+  company_name: z.string().max(200).optional(),
 });
 
 export const RecruiterFilterSchema = z.object({
@@ -23,5 +19,5 @@ export const RecruiterFilterSchema = z.object({
 });
 
 export type CreateRecruiterDto  = z.infer<typeof CreateRecruiterSchema>;
-export type GenerateTokenDto    = z.infer<typeof GenerateTokenSchema>;
+export type UpdateRecruiterDto  = z.infer<typeof UpdateRecruiterSchema>;
 export type RecruiterFilterDto  = z.infer<typeof RecruiterFilterSchema>;

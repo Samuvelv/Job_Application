@@ -30,6 +30,8 @@ export const routes: Routes = [
   // ── Admin ────────────────────────────────────────────────────────────────────
   {
     path: 'admin',
+    canActivate: [authGuard],
+    canActivateChild: [authGuard, roleGuard],
     data: { roles: ['admin'] },
     loadChildren: () =>
       import('./features/admin/admin.routes').then((m) => m.adminRoutes),
@@ -38,6 +40,8 @@ export const routes: Routes = [
   // ── Employee ──────────────────────────────────────────────────────────────────
   {
     path: 'employee',
+    canActivate: [authGuard],
+    canActivateChild: [authGuard, roleGuard],
     data: { roles: ['employee'] },
     loadChildren: () =>
       import('./features/employee/employee.routes').then((m) => m.employeeRoutes),
@@ -46,6 +50,8 @@ export const routes: Routes = [
   // ── Recruiter ─────────────────────────────────────────────────────────────────
   {
     path: 'recruiter',
+    canActivate: [authGuard],
+    canActivateChild: [authGuard, roleGuard],
     data: { roles: ['recruiter'] },
     loadChildren: () =>
       import('./features/recruiter/recruiter.routes').then((m) => m.recruiterRoutes),

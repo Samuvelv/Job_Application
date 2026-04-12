@@ -36,7 +36,7 @@ import { ConfirmDialogComponent } from './shared/components/confirm-dialog/confi
 
       <!-- Main content -->
       <div class="app-layout">
-        <main class="main-content">
+        <main class="main-content" [class.sidebar-collapsed]="sidebar.isCollapsed()">
           <router-outlet />
         </main>
       </div>

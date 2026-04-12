@@ -21,12 +21,12 @@ const envSchema = z.object({
 
   CORS_ORIGIN: z.string().default('http://localhost:4200'),
 
-  SMTP_HOST: z.string(),
+  SMTP_HOST: z.string().optional(),
   SMTP_PORT: z.string().default('587'),
   SMTP_SECURE: z.string().default('false'),
-  SMTP_USER: z.string(),
-  SMTP_PASS: z.string(),
-  EMAIL_FROM: z.string(),
+  SMTP_USER: z.string().optional(),
+  SMTP_PASS: z.string().optional(),
+  EMAIL_FROM: z.string().optional(),
 
   APP_URL: z.string().default('http://localhost:3000'),
   FRONTEND_URL: z.string().default('http://localhost:4200'),

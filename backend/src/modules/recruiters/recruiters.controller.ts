@@ -3,7 +3,7 @@ import { Request, Response, NextFunction } from 'express';
 import * as svc from './recruiters.service';
 import {
   CreateRecruiterSchema,
-  GenerateTokenSchema,
+  UpdateRecruiterSchema,
   RecruiterFilterSchema,
 } from './recruiters.dto';
 import { logAudit } from '../../services/audit.service';
@@ -40,6 +40,19 @@ export async function getOne(req: Request, res: Response, next: NextFunction): P
   } catch (err) { next(err); }
 }
 
+export async function update(req: Request, res: Response, next: NextFunction): Promise<void> {
+  try {
+    const id  = p(req.params['id']);
+    const dto = UpdateRecruiterSchema.parse(req.body);
+    const recruiter = await svc.updateRecruiter(id, dto);
+    await logAudit({
+      userId: req.user!.sub, action: 'UPDATE_RECRUITER',
+      resource: 'recruiter', resourceId: id, ipAddress: req.ip,
+    });
+    res.json({ recruiter });
+  } catch (err) { next(err); }
+}
+
 export async function remove(req: Request, res: Response, next: NextFunction): Promise<void> {
   try {
     const id = p(req.params['id']);
@@ -52,30 +65,17 @@ export async function remove(req: Request, res: Response, next: NextFunction): P
   } catch (err) { next(err); }
 }
 
-// ── Admin: Token management ───────────────────────────────────────────────────
+// ── Admin: Resend credentials ─────────────────────────────────────────────────
 
-export async function generateToken(req: Request, res: Response, next: NextFunction): Promise<void> {
-  try {
-    const id  = p(req.params['id']);
-    const dto = GenerateTokenSchema.parse(req.body);
-    const token = await svc.generateToken(id, dto);
-    await logAudit({
-      userId: req.user!.sub, action: 'GENERATE_RECRUITER_TOKEN',
-      resource: 'recruiter', resourceId: id, ipAddress: req.ip,
-    });
-    res.json({ token });
-  } catch (err) { next(err); }
-}
-
-export async function revokeToken(req: Request, res: Response, next: NextFunction): Promise<void> {
+export async function resendCreds(req: Request, res: Response, next: NextFunction): Promise<void> {
   try {
     const id = p(req.params['id']);
-    await svc.revokeToken(id);
+    await svc.resendCredentials(id);
     await logAudit({
-      userId: req.user!.sub, action: 'REVOKE_RECRUITER_TOKEN',
+      userId: req.user!.sub, action: 'RESEND_RECRUITER_CREDENTIALS',
       resource: 'recruiter', resourceId: id, ipAddress: req.ip,
     });
-    res.json({ message: 'Token revoked' });
+    res.json({ message: 'Credentials resent' });
   } catch (err) { next(err); }
 }
 
@@ -94,6 +94,14 @@ export async function getShortlist(req: Request, res: Response, next: NextFuncti
   try {
     const recruiter = await svc.getRecruiterByUserId(req.user!.sub);
     const shortlist = await svc.getShortlist(recruiter.id);
+    res.json({ shortlist });
+  } catch (err) { next(err); }
+}
+
+export async function getShortlistById(req: Request, res: Response, next: NextFunction): Promise<void> {
+  try {
+    const id = p(req.params['id']);
+    const shortlist = await svc.getShortlist(id);
     res.json({ shortlist });
   } catch (err) { next(err); }
 }

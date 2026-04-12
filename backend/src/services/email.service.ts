@@ -1,17 +1,44 @@
 // src/services/email.service.ts
-import nodemailer from 'nodemailer';
+import nodemailer, { Transporter } from 'nodemailer';
 import { env } from '../config/env';
 
-const transporter = nodemailer.createTransport({
-  host: env.SMTP_HOST,
-  port: Number(env.SMTP_PORT),
-  secure: env.SMTP_SECURE === 'true',
-  auth: {
-    user: env.SMTP_USER,
-    pass: env.SMTP_PASS,
-  },
-});
+// ── Transporter ──────────────────────────────────────────────────────────────
+// If real SMTP credentials are provided in .env, use them.
+// Otherwise, auto-create a free Ethereal test account on first use.
+// Ethereal emails are never delivered; preview them at the URL printed to console.
 
+let _transporter: Transporter | null = null;
+
+async function getTransporter(): Promise<Transporter> {
+  if (_transporter) return _transporter;
+
+  if (env.SMTP_HOST && env.SMTP_USER && env.SMTP_PASS) {
+    // Real SMTP config provided
+    _transporter = nodemailer.createTransport({
+      host: env.SMTP_HOST,
+      port: Number(env.SMTP_PORT ?? '587'),
+      secure: env.SMTP_SECURE === 'true',
+      auth: { user: env.SMTP_USER, pass: env.SMTP_PASS },
+    });
+    console.log(`📧  Email: using real SMTP (${env.SMTP_HOST})`);
+  } else {
+    // No credentials → create a free Ethereal catch-all inbox
+    const testAccount = await nodemailer.createTestAccount();
+    _transporter = nodemailer.createTransport({
+      host: 'smtp.ethereal.email',
+      port: 587,
+      secure: false,
+      auth: { user: testAccount.user, pass: testAccount.pass },
+    });
+    console.log('📧  Email: using Ethereal test account');
+    console.log(`    Inbox preview → https://ethereal.email/messages`);
+    console.log(`    Login: ${testAccount.user} / ${testAccount.pass}`);
+  }
+
+  return _transporter;
+}
+
+// ── Internal send helper ─────────────────────────────────────────────────────
 interface MailOptions {
   to: string;
   subject: string;
@@ -19,13 +46,24 @@ interface MailOptions {
 }
 
 async function sendMail(opts: MailOptions): Promise<void> {
-  await transporter.sendMail({
-    from: env.EMAIL_FROM,
+  const transport = await getTransporter();
+  const from = env.EMAIL_FROM ?? 'TalentHub <noreply@talenthub.local>';
+
+  const info = await transport.sendMail({
+    from,
     to: opts.to,
     subject: opts.subject,
     html: opts.html,
   });
+
+  // For Ethereal, log the preview URL so you can inspect the email immediately
+  const previewUrl = nodemailer.getTestMessageUrl(info);
+  if (previewUrl) {
+    console.log(`📨  Email sent → Preview: ${previewUrl}`);
+  }
 }
+
+// ── Public send functions ────────────────────────────────────────────────────
 
 export async function sendEmployeeCredentials(
   email: string,
@@ -38,6 +76,27 @@ export async function sendEmployeeCredentials(
     html: `
       <h2>Welcome to TalentHub, ${name}!</h2>
       <p>Your account has been created by the administrator. Below are your login credentials:</p>
+      <table style="border-collapse:collapse;">
+        <tr><td style="padding:8px;font-weight:bold;">Email:</td><td style="padding:8px;">${email}</td></tr>
+        <tr><td style="padding:8px;font-weight:bold;">Password:</td><td style="padding:8px;">${password}</td></tr>
+      </table>
+      <p>Please log in at <a href="${env.FRONTEND_URL}/login">${env.FRONTEND_URL}/login</a></p>
+      <p style="color:#888;font-size:12px;">For security, please change your password after your first login.</p>
+    `,
+  });
+}
+
+export async function sendRecruiterCredentials(
+  email: string,
+  contactName: string,
+  password: string,
+): Promise<void> {
+  await sendMail({
+    to: email,
+    subject: 'Your TalentHub Recruiter Account Credentials',
+    html: `
+      <h2>Welcome to TalentHub, ${contactName}!</h2>
+      <p>Your recruiter account has been created by the administrator. Below are your login credentials:</p>
       <table style="border-collapse:collapse;">
         <tr><td style="padding:8px;font-weight:bold;">Email:</td><td style="padding:8px;">${email}</td></tr>
         <tr><td style="padding:8px;font-weight:bold;">Password:</td><td style="padding:8px;">${password}</td></tr>

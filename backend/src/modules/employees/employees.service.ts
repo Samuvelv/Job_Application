@@ -304,7 +304,7 @@ export async function resendCredentials(employeeId: string) {
   const employee = await db('employees as e')
     .join('users as u', 'u.id', 'e.user_id')
     .where('e.id', employeeId)
-    .select('u.email', 'e.first_name', 'e.last_name')
+    .select('u.id as user_id', 'u.email', 'e.first_name', 'e.last_name')
     .first();
 
   if (!employee) throw new AppError(404, 'Employee not found');
@@ -313,8 +313,7 @@ export async function resendCredentials(employeeId: string) {
   const tempPassword = Math.random().toString(36).slice(-10) + 'A1!';
   const hash = await bcrypt.hash(tempPassword, 12);
   await db('users')
-    .join('employees', 'employees.user_id', 'users.id')
-    .where('employees.id', employeeId)
+    .where({ id: employee.user_id })
     .update({ password_hash: hash });
 
   await sendEmployeeCredentials(

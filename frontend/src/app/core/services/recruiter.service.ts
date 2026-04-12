@@ -33,26 +33,21 @@ export class RecruiterService {
     email: string;
     contact_name: string;
     company_name?: string;
-    access_duration_seconds?: number;
-    send_email?: boolean;
-  }): Observable<{ recruiter: Recruiter; token: string }> {
-    return this.http.post<{ recruiter: Recruiter; token: string }>(this.api, data);
+  }): Observable<{ recruiter: Recruiter }> {
+    return this.http.post<{ recruiter: Recruiter }>(this.api, data);
   }
 
   delete(id: string): Observable<{ message: string }> {
     return this.http.delete<{ message: string }>(`${this.api}/${id}`);
   }
 
-  // ── Admin: token management ──────────────────────────────────────────────────
-  generateToken(
-    id: string,
-    opts: { access_duration_seconds?: number; send_email?: boolean } = {},
-  ): Observable<{ token: string }> {
-    return this.http.post<{ token: string }>(`${this.api}/${id}/generate-token`, opts);
+  update(id: string, data: { contact_name?: string; company_name?: string }): Observable<{ recruiter: Recruiter }> {
+    return this.http.put<{ recruiter: Recruiter }>(`${this.api}/${id}`, data);
   }
 
-  revokeToken(id: string): Observable<{ message: string }> {
-    return this.http.post<{ message: string }>(`${this.api}/${id}/revoke-token`, {});
+  // ── Admin: resend credentials ────────────────────────────────────────────────
+  resendCredentials(id: string): Observable<{ message: string }> {
+    return this.http.post<{ message: string }>(`${this.api}/${id}/resend-credentials`, {});
   }
 
   // ── Recruiter self ───────────────────────────────────────────────────────────
@@ -63,6 +58,10 @@ export class RecruiterService {
   // ── Shortlist ────────────────────────────────────────────────────────────────
   getShortlist(): Observable<{ shortlist: ShortlistEntry[] }> {
     return this.http.get<{ shortlist: ShortlistEntry[] }>(`${this.api}/me/shortlist`);
+  }
+
+  getShortlistById(id: string): Observable<{ shortlist: ShortlistEntry[] }> {
+    return this.http.get<{ shortlist: ShortlistEntry[] }>(`${this.api}/${id}/shortlist`);
   }
 
   addToShortlist(employeeId: string, notes?: string): Observable<{ entry: ShortlistEntry }> {

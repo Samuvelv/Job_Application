@@ -91,9 +91,16 @@ import { ConfirmDialogService } from '../../../core/services/confirm-dialog.serv
                 <tr>
                   <td>
                     <div class="d-flex align-items-center gap-2">
-                      <div class="avatar-circle-sm flex-shrink-0">
-                        {{ emp.first_name[0] }}{{ emp.last_name[0] }}
-                      </div>
+                      @if (emp.profile_photo_url) {
+                        <img [src]="emp.profile_photo_url" alt=""
+                          class="avatar-circle-sm flex-shrink-0"
+                          style="object-fit:cover;"
+                          (error)="$any($event.target).style.display='none'">
+                      } @else {
+                        <div class="avatar-circle-sm flex-shrink-0">
+                          {{ emp.first_name[0] }}{{ emp.last_name[0] }}
+                        </div>
+                      }
                       <div>
                         <div class="fw-semibold small">{{ emp.first_name }} {{ emp.last_name }}</div>
                         <div class="text-muted" style="font-size:.75rem">{{ emp.email }}</div>
@@ -113,15 +120,24 @@ import { ConfirmDialogService } from '../../../core/services/confirm-dialog.serv
                     </span>
                   </td>
                   <td>
-                    <div class="d-flex gap-1">
+                    <div class="tbl-actions">
                       <a [routerLink]="['/admin/employees', emp.id]"
-                        class="btn btn-sm btn-outline-primary">View</a>
-                      <button class="btn btn-sm btn-outline-secondary"
+                        class="tbl-actions__btn tbl-actions__btn--view tbl-actions__btn--icon"
+                        title="View profile">
+                        <i class="bi bi-eye"></i>
+                      </a>
+                      <a [routerLink]="['/admin/employees', emp.id, 'edit']"
+                        class="tbl-actions__btn tbl-actions__btn--edit tbl-actions__btn--icon"
+                        title="Edit employee">
+                        <i class="bi bi-pencil"></i>
+                      </a>
+                      <div class="tbl-actions__sep"></div>
+                      <button class="tbl-actions__btn tbl-actions__btn--mail tbl-actions__btn--icon"
                         (click)="resendCreds(emp)" title="Resend credentials">
                         <i class="bi bi-envelope"></i>
                       </button>
-                      <button class="btn btn-sm btn-outline-danger"
-                        (click)="deleteEmployee(emp)">
+                      <button class="tbl-actions__btn tbl-actions__btn--danger tbl-actions__btn--icon"
+                        (click)="deleteEmployee(emp)" title="Delete employee">
                         <i class="bi bi-trash"></i>
                       </button>
                     </div>
@@ -137,9 +153,16 @@ import { ConfirmDialogService } from '../../../core/services/confirm-dialog.serv
           @for (emp of employees; track emp.id) {
             <div class="card-table-row border-bottom p-3">
               <div class="d-flex align-items-center gap-3 mb-2">
-                <div class="avatar-circle-sm flex-shrink-0">
-                  {{ emp.first_name[0] }}{{ emp.last_name[0] }}
-                </div>
+                @if (emp.profile_photo_url) {
+                  <img [src]="emp.profile_photo_url" alt=""
+                    class="avatar-circle-sm flex-shrink-0"
+                    style="object-fit:cover;"
+                    (error)="$any($event.target).style.display='none'">
+                } @else {
+                  <div class="avatar-circle-sm flex-shrink-0">
+                    {{ emp.first_name[0] }}{{ emp.last_name[0] }}
+                  </div>
+                }
                 <div class="flex-grow-1 min-width-0">
                   <div class="fw-semibold text-truncate">{{ emp.first_name }} {{ emp.last_name }}</div>
                   <div class="text-muted small text-truncate">{{ emp.email }}</div>
@@ -156,12 +179,24 @@ import { ConfirmDialogService } from '../../../core/services/confirm-dialog.serv
                 @if (emp.current_country) { <span><i class="bi bi-geo-alt me-1"></i>{{ emp.current_city ? emp.current_city + ', ' : '' }}{{ emp.current_country }}</span> }
                 @if (emp.years_experience != null) { <span><i class="bi bi-clock-history me-1"></i>{{ emp.years_experience }} yrs</span> }
               </div>
-              <div class="d-flex gap-1">
-                <a [routerLink]="['/admin/employees', emp.id]" class="btn btn-sm btn-outline-primary">View</a>
-                <button class="btn btn-sm btn-outline-secondary" (click)="resendCreds(emp)">
+              <div class="tbl-actions">
+                <a [routerLink]="['/admin/employees', emp.id]"
+                  class="tbl-actions__btn tbl-actions__btn--view tbl-actions__btn--icon"
+                  title="View profile">
+                  <i class="bi bi-eye"></i>
+                </a>
+                <a [routerLink]="['/admin/employees', emp.id, 'edit']"
+                  class="tbl-actions__btn tbl-actions__btn--edit tbl-actions__btn--icon"
+                  title="Edit employee">
+                  <i class="bi bi-pencil"></i>
+                </a>
+                <div class="tbl-actions__sep"></div>
+                <button class="tbl-actions__btn tbl-actions__btn--mail tbl-actions__btn--icon"
+                  (click)="resendCreds(emp)" title="Resend credentials">
                   <i class="bi bi-envelope"></i>
                 </button>
-                <button class="btn btn-sm btn-outline-danger" (click)="deleteEmployee(emp)">
+                <button class="tbl-actions__btn tbl-actions__btn--danger tbl-actions__btn--icon"
+                  (click)="deleteEmployee(emp)" title="Delete employee">
                   <i class="bi bi-trash"></i>
                 </button>
               </div>
