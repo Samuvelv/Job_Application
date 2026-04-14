@@ -719,7 +719,9 @@ body {
   border: 1px solid var(--th-border);
   border-radius: var(--th-radius);
   color: var(--th-text);
-  font-size: .8125rem;
+  font-size: .9375rem;
+  padding: .5rem .875rem;
+  min-height: 42px;
   transition: var(--th-transition);
   &:focus {
     border-color: var(--th-primary);
@@ -731,21 +733,30 @@ body {
   &::placeholder { color: var(--th-muted); }
 }
 
+// sm variant — slightly smaller but still readable
+.form-control-sm, .form-select-sm {
+  font-size: .875rem;
+  padding: .4rem .75rem;
+  min-height: 36px;
+}
+
 .input-group-text {
   background: var(--th-surface-raised);
   border-color: var(--th-surface-glass-border);
   color: var(--th-text-secondary);
+  font-size: .875rem;
+  padding: .4rem .875rem;
   transition: var(--th-transition);
 }
 
 .form-label {
   font-weight: 600;
-  font-size: .8125rem;
+  font-size: .875rem;
   color: var(--th-text-secondary);
-  margin-bottom: .375rem;
+  margin-bottom: .4rem;
 }
 
-.invalid-feedback { font-size: .75rem; }
+.invalid-feedback { font-size: .8rem; }
 
 // ── Table styles ──────────────────────────────────────────────────────────────
 .table {
@@ -4821,7 +4832,7 @@ body {
   }
 
   .form-control-sm, .form-select-sm {
-    font-size: .8125rem;
+    font-size: .875rem;
   }
 }
 

@@ -3,13 +3,29 @@ import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import {
   ReactiveFormsModule, FormBuilder, FormGroup,
-  FormArray, Validators, AbstractControl,
+  FormArray, Validators, AbstractControl, ValidationErrors,
 } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { Subscription, debounceTime } from 'rxjs';
 import { EmployeeService } from '../../../core/services/employee.service';
 
 const DRAFT_KEY = 'th_register_draft';
+
+function skillGroupValidator(g: AbstractControl): ValidationErrors | null {
+  const name = g.get('skill_name')?.value?.trim();
+  const prof = g.get('proficiency')?.value;
+  if (name && !prof) { g.get('proficiency')!.setErrors({ required: true }); return { proficiencyRequired: true }; }
+  if (!name || prof)  { const e = g.get('proficiency')!.errors; if (e?.['required']) { g.get('proficiency')!.setErrors(null); } }
+  return null;
+}
+
+function langGroupValidator(g: AbstractControl): ValidationErrors | null {
+  const name = g.get('language')?.value?.trim();
+  const prof = g.get('proficiency')?.value;
+  if (name && !prof) { g.get('proficiency')!.setErrors({ required: true }); return { proficiencyRequired: true }; }
+  if (!name || prof)  { const e = g.get('proficiency')!.errors; if (e?.['required']) { g.get('proficiency')!.setErrors(null); } }
+  return null;
+}
 
 @Component({
   selector: 'app-employee-register',
@@ -163,12 +179,12 @@ export class EmployeeRegisterComponent implements OnInit, OnDestroy {
   get education():  FormArray { return this.form.get('education')  as FormArray; }
 
   addSkill(): void {
-    this.skills.push(this.fb.group({ skill_name: [''], proficiency: [''] }));
+    this.skills.push(this.fb.group({ skill_name: ['', Validators.required], proficiency: [''] }, { validators: skillGroupValidator }));
   }
   removeSkill(i: number): void { this.skills.removeAt(i); }
 
   addLanguage(): void {
-    this.languages.push(this.fb.group({ language: [''], proficiency: [''] }));
+    this.languages.push(this.fb.group({ language: ['', Validators.required], proficiency: [''] }, { validators: langGroupValidator }));
   }
   removeLanguage(i: number): void { this.languages.removeAt(i); }
 
@@ -191,15 +207,62 @@ export class EmployeeRegisterComponent implements OnInit, OnDestroy {
   ctrl(name: string): AbstractControl { return this.form.get(name)!; }
 
   // ── Step validation ────────────────────────────────────────────────────────
+
+  /** Mark all controls relevant to a step as touched so errors become visible. */
+  private markStepTouched(step: number): void {
+    const mark = (c: AbstractControl) => { c.markAsTouched(); c.updateValueAndValidity(); };
+    switch (step) {
+      case 1:
+        mark(this.ctrl('first_name'));
+        mark(this.ctrl('last_name'));
+        break;
+      case 2:
+        this.skills.controls.forEach(g => {
+          const name = g.get('skill_name')?.value?.trim();
+          if (!name) return; // don't touch empty rows
+          mark(g.get('skill_name')!);
+          mark(g.get('proficiency')!);
+          g.updateValueAndValidity();
+        });
+        this.languages.controls.forEach(g => {
+          const name = g.get('language')?.value?.trim();
+          if (!name) return; // don't touch empty rows
+          mark(g.get('language')!);
+          mark(g.get('proficiency')!);
+          g.updateValueAndValidity();
+        });
+        break;
+      case 5:
+        mark(this.ctrl('email'));
+        mark(this.ctrl('password'));
+        break;
+    }
+  }
+
   isStepValid(step: number): boolean {
     switch (step) {
       case 1: return this.ctrl('first_name').valid && this.ctrl('last_name').valid;
+      case 2: {
+        // Only validate rows where the user has typed a name
+        const skillsOk = this.skills.controls.every(g => {
+          const name = g.get('skill_name')?.value?.trim();
+          if (!name) return true; // empty row — skip
+          return g.get('proficiency')!.valid;
+        });
+        const langsOk = this.languages.controls.every(g => {
+          const name = g.get('language')?.value?.trim();
+          if (!name) return true; // empty row — skip
+          return g.get('proficiency')!.valid;
+        });
+        return skillsOk && langsOk;
+      }
       case 5: return this.ctrl('email').valid && this.ctrl('password').valid;
       default: return true;
     }
   }
 
   nextStep(): void {
+    this.markStepTouched(this.currentStep);
     if (this.currentStep < this.totalSteps && this.isStepValid(this.currentStep)) {
       this.currentStep++;
     }
@@ -208,9 +271,9 @@ export class EmployeeRegisterComponent implements OnInit, OnDestroy {
     if (this.currentStep > 1) this.currentStep--;
   }
   goToStep(n: number): void {
-    if (n < this.currentStep || this.isStepValid(this.currentStep)) {
-      this.currentStep = n;
-    }
+    if (n < this.currentStep) { this.currentStep = n; return; }
+    this.markStepTouched(this.currentStep);
+    if (this.isStepValid(this.currentStep)) this.currentStep = n;
   }
 
   // ── File selection ─────────────────────────────────────────────────────────

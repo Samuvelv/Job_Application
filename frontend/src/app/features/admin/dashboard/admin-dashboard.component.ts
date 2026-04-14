@@ -26,12 +26,7 @@ import { StatsService, AdminStats } from '../../../core/services/stats.service';
             </span>
           </div>
         </div>
-        <div class="d-flex flex-column align-items-end gap-2">
-          <div class="dash-hero__stat">
-            <div class="dash-hero__stat-value">{{ stats()?.employees ?? '—' }}</div>
-            <div class="dash-hero__stat-label">Total Employees</div>
-          </div>
-        </div>
+
       </div>
       <div class="dash-hero__actions">
         <a routerLink="/admin/employees/register" class="dash-hero__btn dash-hero__btn--solid">

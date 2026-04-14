@@ -189,16 +189,31 @@
             </button>
           </div>
           <div formArrayName="skills">
+            @if (skills.length) {
+              <div class="row g-2 mb-1">
+                <div class="col-md-6"><label class="form-label form-label-sm mb-0">Skill Name <span class="text-danger">*</span></label></div>
+                <div class="col-md-4"><label class="form-label form-label-sm mb-0">Proficiency</label></div>
+              </div>
+            }
             @for (skill of skills.controls; track $index) {
-              <div [formGroupName]="$index" class="row g-2 mb-2 align-items-center">
+              <div [formGroupName]="$index" class="row g-2 mb-2 align-items-start">
                 <div class="col-md-6">
-                  <input type="text" class="form-control form-control-sm" formControlName="skill_name" placeholder="Skill name">
+                  <input type="text" class="form-control form-control-sm" formControlName="skill_name"
+                    placeholder="e.g. Angular"
+                    [class.is-invalid]="skills.at($index).get('skill_name')!.invalid && skills.at($index).get('skill_name')!.touched">
+                  @if (skills.at($index).get('skill_name')!.invalid && skills.at($index).get('skill_name')!.touched) {
+                    <div class="invalid-feedback">Skill name is required.</div>
+                  }
                 </div>
                 <div class="col-md-4">
-                  <select class="form-select form-select-sm" formControlName="proficiency">
-                    <option value="">Proficiency</option>
+                  <select class="form-select form-select-sm" formControlName="proficiency"
+                    [class.is-invalid]="skills.at($index).get('proficiency')!.invalid && skills.at($index).get('proficiency')!.touched">
+                    <option value="">— Select —</option>
                     @for (p of PROFICIENCY_SKILL; track p) { <option [value]="p">{{ p | titlecase }}</option> }
                   </select>
+                  @if (skills.at($index).get('proficiency')!.invalid && skills.at($index).get('proficiency')!.touched) {
+                    <div class="invalid-feedback">Select a proficiency level.</div>
+                  }
                 </div>
                 <div class="col-md-2">
                   <button type="button" class="btn btn-sm btn-outline-danger w-100"
@@ -220,16 +235,31 @@
             </button>
           </div>
           <div formArrayName="languages">
+            @if (languages.length) {
+              <div class="row g-2 mb-1">
+                <div class="col-md-6"><label class="form-label form-label-sm mb-0">Language <span class="text-danger">*</span></label></div>
+                <div class="col-md-4"><label class="form-label form-label-sm mb-0">Proficiency</label></div>
+              </div>
+            }
             @for (lang of languages.controls; track $index) {
-              <div [formGroupName]="$index" class="row g-2 mb-2 align-items-center">
+              <div [formGroupName]="$index" class="row g-2 mb-2 align-items-start">
                 <div class="col-md-6">
-                  <input type="text" class="form-control form-control-sm" formControlName="language" placeholder="Language">
+                  <input type="text" class="form-control form-control-sm" formControlName="language"
+                    placeholder="e.g. English"
+                    [class.is-invalid]="languages.at($index).get('language')!.invalid && languages.at($index).get('language')!.touched">
+                  @if (languages.at($index).get('language')!.invalid && languages.at($index).get('language')!.touched) {
+                    <div class="invalid-feedback">Language name is required.</div>
+                  }
                 </div>
                 <div class="col-md-4">
-                  <select class="form-select form-select-sm" formControlName="proficiency">
-                    <option value="">Proficiency</option>
+                  <select class="form-select form-select-sm" formControlName="proficiency"
+                    [class.is-invalid]="languages.at($index).get('proficiency')!.invalid && languages.at($index).get('proficiency')!.touched">
+                    <option value="">— Select —</option>
                     @for (p of PROFICIENCY_LANG; track p) { <option [value]="p">{{ p | titlecase }}</option> }
                   </select>
+                  @if (languages.at($index).get('proficiency')!.invalid && languages.at($index).get('proficiency')!.touched) {
+                    <div class="invalid-feedback">Select a proficiency level.</div>
+                  }
                 </div>
                 <div class="col-md-2">
                   <button type="button" class="btn btn-sm btn-outline-danger w-100"

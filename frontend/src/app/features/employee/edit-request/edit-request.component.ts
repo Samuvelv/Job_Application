@@ -3,13 +3,29 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import {
   ReactiveFormsModule, FormBuilder, FormGroup,
-  FormArray, Validators,
+  FormArray, Validators, AbstractControl, ValidationErrors,
 } from '@angular/forms';
 import { EmployeeService } from '../../../core/services/employee.service';
 import { EditRequestService } from '../../../core/services/edit-request.service';
 import { Employee } from '../../../core/models/employee.model';
 import { EditRequest } from '../../../core/models/edit-request.model';
 import { ToastService } from '../../../core/services/toast.service';
+
+function skillGroupValidator(g: AbstractControl): ValidationErrors | null {
+  const name = g.get('skill_name')?.value?.trim();
+  const prof = g.get('proficiency')?.value;
+  if (name && !prof) { g.get('proficiency')!.setErrors({ required: true }); return { proficiencyRequired: true }; }
+  if (!name || prof)  { const e = g.get('proficiency')!.errors; if (e?.['required']) { g.get('proficiency')!.setErrors(null); } }
+  return null;
+}
+
+function langGroupValidator(g: AbstractControl): ValidationErrors | null {
+  const name = g.get('language')?.value?.trim();
+  const prof = g.get('proficiency')?.value;
+  if (name && !prof) { g.get('proficiency')!.setErrors({ required: true }); return { proficiencyRequired: true }; }
+  if (!name || prof)  { const e = g.get('proficiency')!.errors; if (e?.['required']) { g.get('proficiency')!.setErrors(null); } }
+  return null;
+}
 import { PageHeaderComponent } from '../../../shared/components/page-header/page-header.component';
 
 @Component({
@@ -372,22 +388,37 @@ import { PageHeaderComponent } from '../../../shared/components/page-header/page
             </h5>
             <button type="button" class="btn btn-sm btn-outline-primary" (click)="addSkill()">+ Add</button>
           </div>
-          @for (ctrl of skillsArray.controls; track $index) {
-            <div [formGroup]="asGroup(ctrl)" class="row g-2 mb-2 align-items-center">
+          @if (skillsArray.length) {
+              <div class="row g-2 mb-1">
+                <div class="col-md-6"><label class="form-label form-label-sm mb-0">Skill Name <span class="text-danger">*</span></label></div>
+                <div class="col-md-4"><label class="form-label form-label-sm mb-0">Proficiency</label></div>
+              </div>
+            }
+            @for (ctrl of skillsArray.controls; track $index) {
+            <div [formGroup]="asGroup(ctrl)" class="row g-2 mb-2 align-items-start">
               <div class="col-md-6">
-                <input formControlName="skill_name" class="form-control form-control-sm" placeholder="Skill">
+                <input formControlName="skill_name" class="form-control form-control-sm"
+                  placeholder="e.g. Angular"
+                  [class.is-invalid]="asGroup(ctrl).get('skill_name')!.invalid && asGroup(ctrl).get('skill_name')!.touched">
+                @if (asGroup(ctrl).get('skill_name')!.invalid && asGroup(ctrl).get('skill_name')!.touched) {
+                  <div class="invalid-feedback">Skill name is required.</div>
+                }
               </div>
               <div class="col-md-4">
-                <select formControlName="proficiency" class="form-select form-select-sm">
-                  <option value="">Proficiency</option>
+                <select formControlName="proficiency" class="form-select form-select-sm"
+                  [class.is-invalid]="asGroup(ctrl).get('proficiency')!.invalid && asGroup(ctrl).get('proficiency')!.touched">
+                  <option value="">— Select —</option>
                   <option value="beginner">Beginner</option>
                   <option value="intermediate">Intermediate</option>
                   <option value="expert">Expert</option>
                 </select>
+                @if (asGroup(ctrl).get('proficiency')!.invalid && asGroup(ctrl).get('proficiency')!.touched) {
+                  <div class="invalid-feedback">Select a proficiency level.</div>
+                }
               </div>
               <div class="col-md-2">
                 <button type="button" class="btn btn-sm btn-outline-danger w-100"
-                  (click)="removeSkill($index)">✕</button>
+                  (click)="removeSkill($index)"><i class="bi bi-trash"></i></button>
               </div>
             </div>
           }
@@ -401,23 +432,38 @@ import { PageHeaderComponent } from '../../../shared/components/page-header/page
             </h5>
             <button type="button" class="btn btn-sm btn-outline-primary" (click)="addLanguage()">+ Add</button>
           </div>
-          @for (ctrl of languagesArray.controls; track $index) {
-            <div [formGroup]="asGroup(ctrl)" class="row g-2 mb-2 align-items-center">
+          @if (languagesArray.length) {
+              <div class="row g-2 mb-1">
+                <div class="col-md-6"><label class="form-label form-label-sm mb-0">Language <span class="text-danger">*</span></label></div>
+                <div class="col-md-4"><label class="form-label form-label-sm mb-0">Proficiency</label></div>
+              </div>
+            }
+            @for (ctrl of languagesArray.controls; track $index) {
+            <div [formGroup]="asGroup(ctrl)" class="row g-2 mb-2 align-items-start">
               <div class="col-md-6">
-                <input formControlName="language" class="form-control form-control-sm" placeholder="Language">
+                <input formControlName="language" class="form-control form-control-sm"
+                  placeholder="e.g. English"
+                  [class.is-invalid]="asGroup(ctrl).get('language')!.invalid && asGroup(ctrl).get('language')!.touched">
+                @if (asGroup(ctrl).get('language')!.invalid && asGroup(ctrl).get('language')!.touched) {
+                  <div class="invalid-feedback">Language name is required.</div>
+                }
               </div>
               <div class="col-md-4">
-                <select formControlName="proficiency" class="form-select form-select-sm">
-                  <option value="">Proficiency</option>
+                <select formControlName="proficiency" class="form-select form-select-sm"
+                  [class.is-invalid]="asGroup(ctrl).get('proficiency')!.invalid && asGroup(ctrl).get('proficiency')!.touched">
+                  <option value="">— Select —</option>
                   <option value="basic">Basic</option>
                   <option value="conversational">Conversational</option>
                   <option value="fluent">Fluent</option>
                   <option value="native">Native</option>
                 </select>
+                @if (asGroup(ctrl).get('proficiency')!.invalid && asGroup(ctrl).get('proficiency')!.touched) {
+                  <div class="invalid-feedback">Select a proficiency level.</div>
+                }
               </div>
               <div class="col-md-2">
                 <button type="button" class="btn btn-sm btn-outline-danger w-100"
-                  (click)="removeLanguage($index)">✕</button>
+                  (click)="removeLanguage($index)"><i class="bi bi-trash"></i></button>
               </div>
             </div>
           }
@@ -603,9 +649,9 @@ export class EditRequestComponent implements OnInit {
       salary_currency:  [emp.salary_currency  ?? ''],
       salary_type:      [emp.salary_type      ?? ''],
       skills:     this.fb.array((emp.skills    ?? []).map((s) =>
-        this.fb.group({ skill_name: [s.skill_name], proficiency: [s.proficiency ?? ''] }))),
+        this.fb.group({ skill_name: [s.skill_name, Validators.required], proficiency: [s.proficiency ?? ''] }, { validators: skillGroupValidator }))),
       languages:  this.fb.array((emp.languages ?? []).map((l) =>
-        this.fb.group({ language: [l.language], proficiency: [l.proficiency ?? ''] }))),
+        this.fb.group({ language: [l.language, Validators.required], proficiency: [l.proficiency ?? ''] }, { validators: langGroupValidator }))),
       experience: this.fb.array((emp.experience ?? []).map((e) => this.fb.group({
         job_title:    [e.job_title    ?? ''],
         company_name: [e.company_name ?? ''],
@@ -632,9 +678,9 @@ export class EditRequestComponent implements OnInit {
 
   asGroup(c: import('@angular/forms').AbstractControl): FormGroup { return c as FormGroup; }
 
-  addSkill():              void { this.skillsArray.push(this.fb.group({ skill_name: [''], proficiency: [''] })); }
+  addSkill():              void { this.skillsArray.push(this.fb.group({ skill_name: ['', Validators.required], proficiency: [''] }, { validators: skillGroupValidator })); }
   removeSkill(i: number):  void { this.skillsArray.removeAt(i); }
-  addLanguage():             void { this.languagesArray.push(this.fb.group({ language: [''], proficiency: [''] })); }
+  addLanguage():             void { this.languagesArray.push(this.fb.group({ language: ['', Validators.required], proficiency: [''] }, { validators: langGroupValidator })); }
   removeLanguage(i: number): void { this.languagesArray.removeAt(i); }
   addExperience(): void {
     this.experienceArray.push(this.fb.group({

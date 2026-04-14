@@ -1,14 +1,31 @@
-// src/app/features/admin/employee-edit/employee-edit.component.ts
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import {
   ReactiveFormsModule, FormBuilder, FormGroup,
-  FormArray, Validators,
+  FormArray, Validators, AbstractControl, ValidationErrors,
 } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { EmployeeService } from '../../../core/services/employee.service';
 import { ToastService } from '../../../core/services/toast.service';
 import { Employee, Certificate } from '../../../core/models/employee.model';
+
+// Group validator: proficiency required when skill_name is filled
+function skillGroupValidator(g: AbstractControl): ValidationErrors | null {
+  const name = g.get('skill_name')?.value?.trim();
+  const prof = g.get('proficiency')?.value;
+  if (name && !prof) { g.get('proficiency')!.setErrors({ required: true }); return { proficiencyRequired: true }; }
+  if (!name || prof)  { const e = g.get('proficiency')!.errors; if (e?.['required']) { g.get('proficiency')!.setErrors(null); } }
+  return null;
+}
+
+// Group validator: proficiency required when language is filled
+function langGroupValidator(g: AbstractControl): ValidationErrors | null {
+  const name = g.get('language')?.value?.trim();
+  const prof = g.get('proficiency')?.value;
+  if (name && !prof) { g.get('proficiency')!.setErrors({ required: true }); return { proficiencyRequired: true }; }
+  if (!name || prof)  { const e = g.get('proficiency')!.errors; if (e?.['required']) { g.get('proficiency')!.setErrors(null); } }
+  return null;
+}
 
 @Component({
   selector: 'app-employee-edit',
@@ -392,18 +409,32 @@ import { Employee, Certificate } from '../../../core/models/employee.model';
             </button>
           </div>
           <div formArrayName="skills">
+            @if (skills.length) {
+              <!-- Column headers — shown once above the first row -->
+              <div class="row g-2 mb-1">
+                <div class="col-md-6"><label class="form-label form-label-sm mb-0">Skill Name <span class="text-danger">*</span></label></div>
+                <div class="col-md-4"><label class="form-label form-label-sm mb-0">Proficiency</label></div>
+              </div>
+            }
             @for (skill of skills.controls; track $index) {
-              <div [formGroupName]="$index" class="row g-2 mb-2 align-items-end">
+              <div [formGroupName]="$index" class="row g-2 mb-2 align-items-start">
                 <div class="col-md-6">
-                  <label class="form-label form-label-sm">Skill Name</label>
-                  <input type="text" class="form-control form-control-sm" formControlName="skill_name" placeholder="e.g. Angular">
+                  <input type="text" class="form-control form-control-sm" formControlName="skill_name"
+                    placeholder="e.g. Angular"
+                    [class.is-invalid]="skill.get('skill_name')!.invalid && skill.get('skill_name')!.touched">
+                  @if (skill.get('skill_name')!.invalid && skill.get('skill_name')!.touched) {
+                    <div class="invalid-feedback">Skill name is required.</div>
+                  }
                 </div>
                 <div class="col-md-4">
-                  <label class="form-label form-label-sm">Proficiency</label>
-                  <select class="form-select form-select-sm" formControlName="proficiency">
-                    <option value="">Select…</option>
+                  <select class="form-select form-select-sm" formControlName="proficiency"
+                    [class.is-invalid]="skill.get('proficiency')!.invalid && skill.get('proficiency')!.touched">
+                    <option value="">— Select —</option>
                     @for (p of PROFICIENCY_SKILL; track p) { <option [value]="p">{{ p | titlecase }}</option> }
                   </select>
+                  @if (skill.get('proficiency')!.invalid && skill.get('proficiency')!.touched) {
+                    <div class="invalid-feedback">Select a proficiency level.</div>
+                  }
                 </div>
                 <div class="col-md-2">
                   <button type="button" class="btn btn-sm btn-outline-danger w-100"
@@ -427,18 +458,32 @@ import { Employee, Certificate } from '../../../core/models/employee.model';
             </button>
           </div>
           <div formArrayName="languages">
+            @if (languages.length) {
+              <!-- Column headers — shown once above the first row -->
+              <div class="row g-2 mb-1">
+                <div class="col-md-6"><label class="form-label form-label-sm mb-0">Language <span class="text-danger">*</span></label></div>
+                <div class="col-md-4"><label class="form-label form-label-sm mb-0">Proficiency</label></div>
+              </div>
+            }
             @for (lang of languages.controls; track $index) {
-              <div [formGroupName]="$index" class="row g-2 mb-2 align-items-end">
+              <div [formGroupName]="$index" class="row g-2 mb-2 align-items-start">
                 <div class="col-md-6">
-                  <label class="form-label form-label-sm">Language</label>
-                  <input type="text" class="form-control form-control-sm" formControlName="language" placeholder="e.g. English">
+                  <input type="text" class="form-control form-control-sm" formControlName="language"
+                    placeholder="e.g. English"
+                    [class.is-invalid]="lang.get('language')!.invalid && lang.get('language')!.touched">
+                  @if (lang.get('language')!.invalid && lang.get('language')!.touched) {
+                    <div class="invalid-feedback">Language name is required.</div>
+                  }
                 </div>
                 <div class="col-md-4">
-                  <label class="form-label form-label-sm">Proficiency</label>
-                  <select class="form-select form-select-sm" formControlName="proficiency">
-                    <option value="">Select…</option>
+                  <select class="form-select form-select-sm" formControlName="proficiency"
+                    [class.is-invalid]="lang.get('proficiency')!.invalid && lang.get('proficiency')!.touched">
+                    <option value="">— Select —</option>
                     @for (p of PROFICIENCY_LANG; track p) { <option [value]="p">{{ p | titlecase }}</option> }
                   </select>
+                  @if (lang.get('proficiency')!.invalid && lang.get('proficiency')!.touched) {
+                    <div class="invalid-feedback">Select a proficiency level.</div>
+                  }
                 </div>
                 <div class="col-md-2">
                   <button type="button" class="btn btn-sm btn-outline-danger w-100"
@@ -681,10 +726,10 @@ export class EmployeeEditComponent implements OnInit {
     return !!(c && c.invalid && c.touched);
   }
 
-  addSkill(): void    { this.skills.push(this.fb.group({ skill_name: [''], proficiency: [''] })); }
+  addSkill(): void    { this.skills.push(this.fb.group({ skill_name: ['', Validators.required], proficiency: [''] }, { validators: skillGroupValidator })); }
   removeSkill(i: number): void { this.skills.removeAt(i); }
 
-  addLanguage(): void    { this.languages.push(this.fb.group({ language: [''], proficiency: [''] })); }
+  addLanguage(): void    { this.languages.push(this.fb.group({ language: ['', Validators.required], proficiency: [''] }, { validators: langGroupValidator })); }
   removeLanguage(i: number): void { this.languages.removeAt(i); }
 
   addExperience(): void {
@@ -804,13 +849,13 @@ export class EmployeeEditComponent implements OnInit {
 
       skills: this.fb.array(
         emp.skills?.length
-          ? emp.skills.map(s => this.fb.group({ skill_name: [s.skill_name ?? ''], proficiency: [s.proficiency ?? ''] }))
-          : [this.fb.group({ skill_name: [''], proficiency: [''] })]
+          ? emp.skills.map(s => this.fb.group({ skill_name: [s.skill_name ?? '', Validators.required], proficiency: [s.proficiency ?? ''] }, { validators: skillGroupValidator }))
+          : [this.fb.group({ skill_name: ['', Validators.required], proficiency: [''] }, { validators: skillGroupValidator })]
       ),
       languages: this.fb.array(
         emp.languages?.length
-          ? emp.languages.map(l => this.fb.group({ language: [l.language ?? ''], proficiency: [l.proficiency ?? ''] }))
-          : [this.fb.group({ language: [''], proficiency: [''] })]
+          ? emp.languages.map(l => this.fb.group({ language: [l.language ?? '', Validators.required], proficiency: [l.proficiency ?? ''] }, { validators: langGroupValidator }))
+          : [this.fb.group({ language: ['', Validators.required], proficiency: [''] }, { validators: langGroupValidator })]
       ),
       experience: this.fb.array(
         emp.experience?.length

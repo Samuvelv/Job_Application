@@ -4,13 +4,17 @@ import { z } from 'zod';
 // ── Sub-schemas ───────────────────────────────────────────────────────────────
 
 export const SkillSchema = z.object({
-  skill_name:  z.string().min(1).max(100),
-  proficiency: z.enum(['beginner', 'intermediate', 'expert']).optional(),
+  skill_name:  z.string().min(1, 'Skill name is required').max(100),
+  proficiency: z.enum(['beginner', 'intermediate', 'expert'])
+    .optional()
+    .or(z.literal('').transform(() => undefined)),
 });
 
 export const LanguageSchema = z.object({
-  language:    z.string().min(1).max(100),
-  proficiency: z.enum(['basic', 'conversational', 'fluent', 'native']).optional(),
+  language:    z.string().min(1, 'Language name is required').max(100),
+  proficiency: z.enum(['basic', 'conversational', 'fluent', 'native'])
+    .optional()
+    .or(z.literal('').transform(() => undefined)),
 });
 
 export const ExperienceSchema = z.object({
@@ -65,9 +69,9 @@ export const CreateEmployeeSchema = z.object({
   nationality:      z.string().max(100).optional(),
   target_locations: z.array(z.string()).optional(),
 
-  // Salary
-  salary_min:      z.number().min(0).optional(),
-  salary_max:      z.number().min(0).optional(),
+  // Salary — coerce so string-encoded floats from form inputs are accepted
+  salary_min:      z.coerce.number().min(0).optional(),
+  salary_max:      z.coerce.number().min(0).optional(),
   salary_currency: z.string().max(10).optional(),
   salary_type:     z.enum(['monthly', 'annual', 'hourly']).optional(),
 
