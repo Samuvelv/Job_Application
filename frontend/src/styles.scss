@@ -1683,6 +1683,222 @@ body {
 }
 
 // ── Recruiter Profile Hero ────────────────────────────────────────────────────
+// ── Recruiter Profile Hero (.rp-hero) ────────────────────────────────────────
+.rp-hero {
+  border-radius: var(--th-radius-xl);
+  background: var(--th-surface);
+  border: 1px solid var(--th-border);
+  overflow: hidden;
+  box-shadow: 0 4px 24px -8px rgba(0,0,0,.18);
+
+  &__cover {
+    height: 110px;
+    background: linear-gradient(135deg, #312e81 0%, #4f46e5 45%, #7c3aed 100%);
+    position: relative;
+
+    &::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background-image: radial-gradient(circle at 20% 50%, rgba(255,255,255,.06) 0%, transparent 60%),
+                        radial-gradient(circle at 80% 20%, rgba(124,58,237,.3) 0%, transparent 50%);
+    }
+  }
+
+  &__body {
+    display: flex;
+    align-items: flex-end;
+    gap: 1.25rem;
+    padding: 0 1.75rem 1.5rem;
+    flex-wrap: wrap;
+  }
+
+  &__avatar-wrap {
+    margin-top: -40px;
+    flex-shrink: 0;
+  }
+
+  &__avatar {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #4f46e5, #7c3aed);
+    color: #fff;
+    font-size: 2rem;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 3px solid var(--th-surface);
+    box-shadow: 0 4px 16px -4px rgba(79,70,229,.5);
+  }
+
+  &__info {
+    flex: 1;
+    min-width: 0;
+    padding-top: .75rem;
+  }
+
+  &__name-row {
+    display: flex;
+    align-items: center;
+    gap: .75rem;
+    flex-wrap: wrap;
+    margin-bottom: .2rem;
+  }
+
+  &__name {
+    font-size: 1.4rem;
+    font-weight: 700;
+    color: var(--th-text);
+    margin: 0;
+    line-height: 1.2;
+  }
+
+  &__status-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: .3rem;
+    font-size: .72rem;
+    font-weight: 600;
+    padding: .25rem .7rem;
+    border-radius: 2rem;
+
+    &--active   { background: rgba(22,163,74,.15);  color: #16a34a; border: 1px solid rgba(22,163,74,.3); }
+    &--inactive { background: rgba(100,116,139,.12); color: #64748b; border: 1px solid rgba(100,116,139,.25); }
+  }
+
+  &__company {
+    font-size: .875rem;
+    color: var(--th-muted);
+    margin-bottom: .5rem;
+
+    i { color: var(--th-primary); }
+  }
+
+  &__chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: .4rem;
+    margin-top: .4rem;
+  }
+
+  &__chip {
+    display: inline-flex;
+    align-items: center;
+    gap: .3rem;
+    font-size: .75rem;
+    color: var(--th-text-secondary);
+    background: var(--th-bg);
+    border: 1px solid var(--th-border);
+    border-radius: 2rem;
+    padding: .2rem .7rem;
+
+    i { color: var(--th-primary); font-size: .72rem; }
+  }
+
+  &__stats {
+    display: flex;
+    gap: 1.5rem;
+    padding-top: .75rem;
+    padding-bottom: .25rem;
+    flex-shrink: 0;
+  }
+
+  &__stat {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: .1rem;
+    min-width: 56px;
+  }
+
+  &__stat-num {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--th-primary);
+    line-height: 1;
+  }
+
+  &__stat-label {
+    font-size: .68rem;
+    color: var(--th-muted);
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: .04em;
+  }
+}
+
+// ── Recruiter Profile Info Card (.rp-info-card) ───────────────────────────────
+.rp-info-card {
+  background: var(--th-surface);
+  border: 1px solid var(--th-border);
+  border-radius: var(--th-radius-lg);
+  overflow: hidden;
+
+  &__header {
+    display: flex;
+    align-items: center;
+    gap: .6rem;
+    padding: .875rem 1.125rem;
+    border-bottom: 1px solid var(--th-border);
+    font-size: .8rem;
+    font-weight: 600;
+    color: var(--th-text-secondary);
+    text-transform: uppercase;
+    letter-spacing: .05em;
+    background: rgba(255,255,255,.02);
+  }
+
+  &__icon {
+    font-size: 1rem;
+    &--primary { color: var(--th-primary); }
+    &--info    { color: #0891b2; }
+    &--warning { color: #f59e0b; }
+  }
+
+  &__rows {
+    padding: .75rem 0;
+  }
+
+  &__row {
+    display: flex;
+    align-items: flex-start;
+    gap: .875rem;
+    padding: .6rem 1.125rem;
+    transition: background .14s;
+
+    &:hover { background: rgba(255,255,255,.03); }
+
+    > i {
+      font-size: .9rem;
+      color: var(--th-muted);
+      margin-top: .15rem;
+      flex-shrink: 0;
+      width: 16px;
+      text-align: center;
+    }
+  }
+
+  &__label {
+    font-size: .7rem;
+    font-weight: 600;
+    color: var(--th-muted);
+    text-transform: uppercase;
+    letter-spacing: .04em;
+    line-height: 1.2;
+    margin-bottom: .15rem;
+  }
+
+  &__value {
+    font-size: .875rem;
+    color: var(--th-text);
+    line-height: 1.4;
+  }
+
+}
+
+// ── Old recruiter-hero (kept for backward compat, hidden by rp-hero now) ──────
 .recruiter-hero {
   display: flex;
   align-items: flex-start;
@@ -1749,6 +1965,214 @@ body {
     align-items: flex-start;
     padding-top: .25rem;
   }
+}
+
+// ── Shortlisted Candidates Section (.rp-shortlist-section) ───────────────────
+.rp-shortlist-section {
+  background: var(--th-surface);
+  border: 1px solid var(--th-border);
+  border-radius: var(--th-radius-lg);
+  overflow: hidden;
+  box-shadow: 0 4px 20px -5px rgba(79,70,229,.08);
+
+  &__header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: .6rem;
+    padding: .875rem 1.25rem;
+    border-bottom: 1px solid var(--th-border);
+    background: rgba(255,255,255,.02);
+  }
+
+  &__title {
+    display: flex;
+    align-items: center;
+    gap: .5rem;
+    font-size: .78rem;
+    font-weight: 700;
+    letter-spacing: .06em;
+    text-transform: uppercase;
+    color: var(--th-text-secondary);
+  }
+
+  &__icon {
+    font-size: 1rem;
+    color: #f59e0b;
+  }
+
+  &__count {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 22px;
+    height: 22px;
+    padding: 0 .45rem;
+    border-radius: 2rem;
+    font-size: .7rem;
+    font-weight: 700;
+    background: rgba(99,102,241,.12);
+    color: var(--th-primary);
+    border: 1px solid rgba(99,102,241,.2);
+  }
+
+  &__body {
+    padding: .5rem 0;
+  }
+
+  &__empty {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: .5rem;
+    padding: 3rem 1.25rem;
+    color: var(--th-muted);
+    font-size: .875rem;
+
+    i {
+      font-size: 2.25rem;
+      opacity: .2;
+    }
+  }
+}
+
+// ── Shortlist horizontal rows (.sl-row) ───────────────────────────────────────
+.sl-list {
+  display: flex;
+  flex-direction: column;
+}
+
+.sl-row {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: .875rem 1.25rem;
+  border-bottom: 1px solid var(--th-border);
+  transition: background .14s;
+
+  &:last-child { border-bottom: none; }
+
+  &:hover { background: rgba(99,102,241,.04); }
+
+  // Avatar
+  &__avatar-wrap { flex-shrink: 0; }
+
+  &__avatar {
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 2px solid var(--th-border);
+  }
+
+  &__avatar-placeholder {
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #4f46e5, #7c3aed);
+    color: #fff;
+    font-size: .85rem;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    box-shadow: 0 2px 8px -2px rgba(99,102,241,.4);
+  }
+
+  // Identity + chips
+  &__main {
+    flex: 1;
+    min-width: 0;
+  }
+
+  &__name {
+    font-size: .9rem;
+    font-weight: 600;
+    color: var(--th-text);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    line-height: 1.3;
+  }
+
+  &__email {
+    font-size: .72rem;
+    color: var(--th-muted);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    margin-bottom: .4rem;
+  }
+
+  &__chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: .35rem;
+  }
+
+  // Right-hand side: date + button
+  &__end {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: .4rem;
+    flex-shrink: 0;
+  }
+
+  &__date {
+    display: flex;
+    align-items: center;
+    gap: .3rem;
+    font-size: .7rem;
+    color: var(--th-muted);
+    white-space: nowrap;
+
+    i { color: #f59e0b; }
+  }
+
+  &__view-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: .25rem;
+    font-size: .75rem;
+    font-weight: 600;
+    padding: .3rem .875rem;
+    border-radius: .5rem;
+    white-space: nowrap;
+    background: linear-gradient(135deg, #4f46e5, #7c3aed);
+    color: #fff;
+    text-decoration: none;
+    transition: opacity .15s, transform .15s;
+
+    &:hover {
+      opacity: .88;
+      transform: scale(1.03);
+      color: #fff;
+    }
+  }
+}
+
+// ── Shortlist chips (.sl-chip) ────────────────────────────────────────────────
+.sl-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: .28rem;
+  font-size: .7rem;
+  font-weight: 500;
+  padding: .18rem .6rem;
+  border-radius: 2rem;
+  border: 1px solid var(--th-border);
+  background: var(--th-bg);
+  color: var(--th-text-secondary);
+  line-height: 1.4;
+
+  i { font-size: .65rem; }
+
+  &--role     { color: #6366f1; border-color: rgba(99,102,241,.3);  background: rgba(99,102,241,.08);  i { color: #6366f1; } }
+  &--industry { color: #0891b2; border-color: rgba(8,145,178,.3);   background: rgba(8,145,178,.08);   i { color: #0891b2; } }
+  &--location { color: #059669; border-color: rgba(5,150,105,.3);   background: rgba(5,150,105,.07);   i { color: #059669; } }
+  &--exp      { color: #d97706; border-color: rgba(217,119,6,.3);   background: rgba(217,119,6,.07);   i { color: #d97706; } }
 }
 
 // ── Info Definition List (.info-dl) ──────────────────────────────────────────

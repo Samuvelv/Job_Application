@@ -13,24 +13,24 @@ import { ConfirmDialogService } from '../../../core/services/confirm-dialog.serv
   standalone: true,
   imports: [CommonModule, FormsModule, RouterLink],
   template: `
-    <!-- Back + Edit row -->
+    <!-- Back + actions row -->
     <div class="d-flex align-items-center justify-content-between mb-4 gap-2 flex-wrap">
       <a routerLink="/admin/recruiters" class="back-btn">
         <i class="bi bi-arrow-left"></i> Back to Recruiters
       </a>
       @if (recruiter) {
         <div class="tbl-actions">
-          <button class="tbl-actions__btn tbl-actions__btn--edit tbl-actions__btn--icon"
+          <button class="tbl-actions__btn tbl-actions__btn--edit"
             (click)="openEdit()" title="Edit recruiter">
-            <i class="bi bi-pencil"></i>
+            <i class="bi bi-pencil me-1"></i> Edit
           </button>
           <div class="tbl-actions__sep"></div>
           <button class="tbl-actions__btn tbl-actions__btn--token"
-            (click)="resendCredentials()" [disabled]="resendLoading" title="Resend login credentials">
+            (click)="resendCredentials()" [disabled]="resendLoading">
             @if (resendLoading) {
-              <span class="spinner-border spinner-border-sm"></span>
+              <span class="spinner-border spinner-border-sm me-1"></span>
             } @else {
-              <i class="bi bi-envelope"></i>
+              <i class="bi bi-envelope me-1"></i>
             }
             Resend Credentials
           </button>
@@ -52,189 +52,225 @@ import { ConfirmDialogService } from '../../../core/services/confirm-dialog.serv
       </div>
     } @else {
 
-      <!-- ── Hero card ──────────────────────────────────────────────────── -->
-      <div class="section-card mb-4">
-        <div class="recruiter-hero">
-          <div class="recruiter-hero__avatar">
-            {{ recruiter.contact_name[0].toUpperCase() }}
+      <!-- ── Hero ──────────────────────────────────────────────────────── -->
+      <div class="rp-hero mb-4">
+        <!-- Cover banner -->
+        <div class="rp-hero__cover"></div>
+
+        <div class="rp-hero__body">
+          <!-- Avatar -->
+          <div class="rp-hero__avatar-wrap">
+            <div class="rp-hero__avatar">
+              {{ recruiter.contact_name[0].toUpperCase() }}
+            </div>
           </div>
-          <div class="recruiter-hero__info">
-            <h2 class="recruiter-hero__name">{{ recruiter.contact_name }}</h2>
+
+          <!-- Name / company / status row -->
+          <div class="rp-hero__info">
+            <div class="rp-hero__name-row">
+              <h2 class="rp-hero__name">{{ recruiter.contact_name }}</h2>
+              <span class="rp-hero__status-badge"
+                [class.rp-hero__status-badge--active]="recruiter.is_active"
+                [class.rp-hero__status-badge--inactive]="!recruiter.is_active">
+                <i class="bi"
+                  [class.bi-shield-fill-check]="recruiter.is_active"
+                  [class.bi-shield-fill-x]="!recruiter.is_active"></i>
+                {{ recruiter.is_active ? 'Active' : 'Inactive' }}
+              </span>
+            </div>
+
             @if (recruiter.company_name) {
-              <div class="recruiter-hero__company">
-                <i class="bi bi-building me-1"></i>{{ recruiter.company_name }}
+              <div class="rp-hero__company">
+                <i class="bi bi-building-fill me-1"></i>{{ recruiter.company_name }}
               </div>
             }
-            <div class="recruiter-hero__meta">
-              <span class="recruiter-hero__meta-chip">
+
+            <div class="rp-hero__chips">
+              <span class="rp-hero__chip">
                 <i class="bi bi-envelope-fill"></i>{{ recruiter.email }}
               </span>
-              <span class="recruiter-hero__meta-chip">
-                <i class="bi bi-calendar-fill"></i>
-                Joined {{ recruiter.created_at | date:'dd MMM yyyy' }}
+              <span class="rp-hero__chip">
+                <i class="bi bi-calendar3"></i>Joined {{ recruiter.created_at | date:'dd MMM yyyy' }}
               </span>
             </div>
           </div>
-          <!-- Account status badge -->
-          <div class="recruiter-hero__badge-wrap">
-            <span class="badge rounded-pill px-3 py-2 fs-6"
-              [class.bg-success]="recruiter.is_active"
-              [class.bg-secondary]="!recruiter.is_active">
-              <i class="bi me-1"
-                [class.bi-shield-check]="recruiter.is_active"
-                [class.bi-shield-x]="!recruiter.is_active"></i>
-              {{ recruiter.is_active ? 'Active' : 'Inactive' }}
-            </span>
+
+          <!-- Stat pills -->
+          <div class="rp-hero__stats">
+            <div class="rp-hero__stat">
+              <span class="rp-hero__stat-num">{{ shortlist.length }}</span>
+              <span class="rp-hero__stat-label">Shortlisted</span>
+            </div>
           </div>
         </div>
       </div>
 
-      <!-- ── Details + Access grid ─────────────────────────────────────── -->
-      <div class="row g-4 mb-4">
+      <!-- ── Info cards row ─────────────────────────────────────────────── -->
+      <div class="row g-3 mb-4">
 
-        <!-- Account details -->
+        <!-- Contact details -->
         <div class="col-md-6">
-          <div class="section-card h-100">
-            <h5 class="card-section-header mb-3">
-              <i class="bi bi-person-badge"></i> Account Details
-            </h5>
-            <dl class="info-dl">
-              <dt>Contact Name</dt>
-              <dd>{{ recruiter.contact_name }}</dd>
-              <dt>Company</dt>
-              <dd>{{ recruiter.company_name || '—' }}</dd>
-              <dt>Email</dt>
-              <dd>{{ recruiter.email }}</dd>
-              <dt>Account Status</dt>
-              <dd>
-                <span class="badge rounded-pill"
-                  [class.bg-success]="recruiter.is_active"
-                  [class.bg-secondary]="!recruiter.is_active">
-                  {{ recruiter.is_active ? 'Active' : 'Inactive' }}
-                </span>
-              </dd>
-              <dt>Registered</dt>
-              <dd>{{ recruiter.created_at | date:'dd MMM yyyy, HH:mm' }}</dd>
-            </dl>
+          <div class="rp-info-card h-100">
+            <div class="rp-info-card__header">
+              <i class="bi bi-person-badge-fill rp-info-card__icon rp-info-card__icon--primary"></i>
+              <span>Contact Details</span>
+            </div>
+            <div class="rp-info-card__rows">
+              <div class="rp-info-card__row">
+                <i class="bi bi-person"></i>
+                <div>
+                  <div class="rp-info-card__label">Full Name</div>
+                  <div class="rp-info-card__value">{{ recruiter.contact_name }}</div>
+                </div>
+              </div>
+              <div class="rp-info-card__row">
+                <i class="bi bi-building"></i>
+                <div>
+                  <div class="rp-info-card__label">Company</div>
+                  <div class="rp-info-card__value">{{ recruiter.company_name || '—' }}</div>
+                </div>
+              </div>
+              <div class="rp-info-card__row">
+                <i class="bi bi-envelope"></i>
+                <div>
+                  <div class="rp-info-card__label">Email</div>
+                  <div class="rp-info-card__value text-break">{{ recruiter.email }}</div>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
 
-        <!-- Access / login details -->
+        <!-- Account info -->
         <div class="col-md-6">
-          <div class="section-card h-100">
-            <h5 class="card-section-header card-section-header--info mb-3">
-              <i class="bi bi-shield-lock"></i> Login &amp; Access
-            </h5>
-            <dl class="info-dl">
-              <dt>Login Method</dt>
-              <dd>Email &amp; password (same as <code>/login</code>)</dd>
-              <dt>Account Status</dt>
-              <dd>
-                <span class="badge rounded-pill"
-                  [class.bg-success]="recruiter.is_active"
-                  [class.bg-secondary]="!recruiter.is_active">
-                  {{ recruiter.is_active ? 'Active' : 'Inactive' }}
-                </span>
-              </dd>
-              <dt>Credentials</dt>
-              <dd>
-                <button class="btn btn-sm btn-outline-secondary" [disabled]="resendLoading"
-                  (click)="resendCredentials()">
-                  @if (resendLoading) {
-                    <span class="spinner-border spinner-border-sm me-1"></span>
-                  } @else {
-                    <i class="bi bi-envelope me-1"></i>
-                  }
-                  Resend credentials email
-                </button>
-              </dd>
-            </dl>
+          <div class="rp-info-card h-100">
+            <div class="rp-info-card__header">
+              <i class="bi bi-shield-lock-fill rp-info-card__icon rp-info-card__icon--info"></i>
+              <span>Account Info</span>
+            </div>
+            <div class="rp-info-card__rows">
+              <div class="rp-info-card__row">
+                <i class="bi bi-toggle-on"></i>
+                <div>
+                  <div class="rp-info-card__label">Status</div>
+                  <div class="rp-info-card__value">
+                    <span class="badge rounded-pill"
+                      [class.badge-status-active]="recruiter.is_active"
+                      [class.badge-status-inactive]="!recruiter.is_active">
+                      {{ recruiter.is_active ? 'Active' : 'Inactive' }}
+                    </span>
+                  </div>
+                </div>
+              </div>
+              <div class="rp-info-card__row">
+                <i class="bi bi-calendar-check"></i>
+                <div>
+                  <div class="rp-info-card__label">Registered</div>
+                  <div class="rp-info-card__value">{{ recruiter.created_at | date:'dd MMM yyyy, HH:mm' }}</div>
+                </div>
+              </div>
+              <div class="rp-info-card__row">
+                <i class="bi bi-key"></i>
+                <div>
+                  <div class="rp-info-card__label">Login</div>
+                  <div class="rp-info-card__value">Email &amp; password</div>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
 
       </div>
 
       <!-- ── Shortlisted Candidates ─────────────────────────────────────── -->
-      <div class="section-card">
-        <h5 class="card-section-header card-section-header--success mb-3">
-          <i class="bi bi-bookmark-heart"></i> Shortlisted Candidates
-          <span class="badge bg-secondary rounded-pill ms-2 fw-normal" style="font-size:.7rem">
-            {{ shortlist.length }}
-          </span>
-        </h5>
+      <div class="rp-shortlist-section">
 
-        @if (shortlistLoading) {
-          <div class="loading-state py-4">
-            <div class="spinner-border spinner-border-sm"></div>
-            <div class="loading-state__text">Loading shortlist…</div>
+        <!-- Section header — matches rp-info-card header style -->
+        <div class="rp-shortlist-section__header">
+          <div class="rp-shortlist-section__title">
+            <i class="bi bi-bookmark-heart-fill rp-shortlist-section__icon"></i>
+            <span>Shortlisted Candidates</span>
           </div>
-        } @else if (shortlist.length === 0) {
-          <div class="text-center py-5 text-muted">
-            <i class="bi bi-bookmark display-5 d-block mb-2 opacity-25"></i>
-            <div class="small">No candidates shortlisted yet.</div>
-          </div>
-        } @else {
-          <div class="table-responsive">
-            <table class="table table-hover align-middle mb-0">
-              <thead class="table-light">
-                <tr>
-                  <th class="small">Candidate</th>
-                  <th class="small">Role</th>
-                  <th class="small">Industry</th>
-                  <th class="small">Location</th>
-                  <th class="small">Exp.</th>
-                  <th class="small">Shortlisted</th>
-                  <th class="small">Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                @for (entry of shortlist; track entry.shortlist_id) {
-                  <tr>
-                    <td>
-                      <div class="d-flex align-items-center gap-2">
-                        @if (entry.profile_photo_url) {
-                          <img [src]="entry.profile_photo_url" alt=""
-                            class="avatar-circle-sm flex-shrink-0"
-                            style="object-fit:cover"
-                            (error)="$any($event.target).style.display='none'">
-                        } @else {
-                          <div class="avatar-circle-sm flex-shrink-0">
-                            {{ entry.first_name[0] }}{{ entry.last_name[0] }}
-                          </div>
-                        }
-                        <div>
-                          <div class="fw-semibold small">{{ entry.first_name }} {{ entry.last_name }}</div>
-                          <div class="text-muted" style="font-size:.72rem">{{ entry.email }}</div>
-                        </div>
+          <span class="rp-shortlist-section__count">{{ shortlist.length }}</span>
+        </div>
+
+        <!-- Body -->
+        <div class="rp-shortlist-section__body">
+          @if (shortlistLoading) {
+            <div class="loading-state py-4">
+              <div class="spinner-border spinner-border-sm"></div>
+              <div class="loading-state__text">Loading shortlist…</div>
+            </div>
+          } @else if (shortlist.length === 0) {
+            <div class="rp-shortlist-section__empty">
+              <i class="bi bi-bookmark"></i>
+              <div>No candidates shortlisted yet.</div>
+            </div>
+          } @else {
+            <div class="sl-list">
+              @for (entry of shortlist; track entry.shortlist_id) {
+                <div class="sl-row">
+
+                  <!-- Avatar -->
+                  <div class="sl-row__avatar-wrap">
+                    @if (entry.profile_photo_url) {
+                      <img [src]="entry.profile_photo_url" alt=""
+                        class="sl-row__avatar"
+                        (error)="$any($event.target).src=''">
+                    } @else {
+                      <div class="sl-row__avatar-placeholder">
+                        {{ entry.first_name[0] }}{{ entry.last_name[0] }}
                       </div>
-                    </td>
-                    <td class="small">{{ entry.job_title || entry.occupation || '—' }}</td>
-                    <td class="small">{{ entry.industry || '—' }}</td>
-                    <td class="small">
-                      {{ entry.current_city ? entry.current_city + ', ' : '' }}{{ entry.current_country || '—' }}
-                    </td>
-                    <td class="small">
-                      {{ entry.years_experience != null ? entry.years_experience + ' yrs' : '—' }}
-                    </td>
-                    <td class="small text-muted">{{ entry.shortlisted_at | date:'dd MMM yyyy' }}</td>
-                    <td>
-                      <div class="tbl-actions">
-                        <a [routerLink]="['/admin/employees', entry.employee_id]"
-                          class="tbl-actions__btn tbl-actions__btn--view tbl-actions__btn--icon"
-                          title="View profile">
-                          <i class="bi bi-eye"></i>
-                        </a>
-                      </div>
-                    </td>
-                  </tr>
-                }
-              </tbody>
-            </table>
-          </div>
-        }
+                    }
+                  </div>
+
+                  <!-- Identity + chips -->
+                  <div class="sl-row__main">
+                    <div class="sl-row__name">{{ entry.first_name }} {{ entry.last_name }}</div>
+                    <div class="sl-row__email">{{ entry.email }}</div>
+                    <div class="sl-row__chips">
+                      @if (entry.job_title || entry.occupation) {
+                        <span class="sl-chip sl-chip--role">
+                          <i class="bi bi-briefcase-fill"></i>{{ entry.job_title || entry.occupation }}
+                        </span>
+                      }
+                      @if (entry.industry) {
+                        <span class="sl-chip sl-chip--industry">
+                          <i class="bi bi-building"></i>{{ entry.industry }}
+                        </span>
+                      }
+                      @if (entry.current_country) {
+                        <span class="sl-chip sl-chip--location">
+                          <i class="bi bi-geo-alt-fill"></i>{{ entry.current_city ? entry.current_city + ', ' : '' }}{{ entry.current_country }}
+                        </span>
+                      }
+                      @if (entry.years_experience != null) {
+                        <span class="sl-chip sl-chip--exp">
+                          <i class="bi bi-clock-history"></i>{{ entry.years_experience }} yrs exp
+                        </span>
+                      }
+                    </div>
+                  </div>
+
+                  <!-- Date + action -->
+                  <div class="sl-row__end">
+                    <span class="sl-row__date">
+                      <i class="bi bi-bookmark-fill"></i>{{ entry.shortlisted_at | date:'dd MMM yyyy' }}
+                    </span>
+                    <a [routerLink]="['/admin/employees', entry.employee_id]"
+                      class="sl-row__view-btn">
+                      <i class="bi bi-eye me-1"></i>View
+                    </a>
+                  </div>
+
+                </div>
+              }
+            </div>
+          }
+        </div>
       </div>
 
-      <!-- ── Inline Edit Panel ──────────────────────────────────────────── -->
+      <!-- ── Edit Panel ─────────────────────────────────────────────────── -->
       @if (editOpen) {
         <div class="file-preview-overlay" (click)="closeEdit()">
           <div class="edit-panel" (click)="$event.stopPropagation()">
