@@ -73,7 +73,7 @@
 
   // Layout
   --th-sidebar-width:            256px;
-  --th-sidebar-collapsed-width:  64px;
+  --th-sidebar-collapsed-width:  72px;
   --th-topbar-height:            62px;
 
   // Shape — consistent, refined
@@ -499,24 +499,35 @@ body {
       padding-right: 0;
     }
 
-    // Nav links: icon-only, truly centered
+    // Nav links: icon + label stacked vertically, centered
     .sidebar-link {
+      flex-direction: column;
       justify-content: center;
-      gap: 0;
-      padding: .6rem 0;
+      align-items: center;
+      gap: .2rem;
+      padding: .55rem 0;
       width: 100%;
 
       // Keep the active accent bar visible
       &::before { display: block; }
     }
 
-    // Hide all text labels — shrink to zero width
+    // Show label below icon — small, truncated
     .sidebar-link-label {
-      opacity: 0;
-      max-width: 0;
+      opacity: .7;
+      max-width: 100%;
       overflow: hidden;
       pointer-events: none;
       white-space: nowrap;
+      text-overflow: ellipsis;
+      font-size: .6rem;
+      font-weight: 500;
+      letter-spacing: .01em;
+      line-height: 1;
+    }
+
+    .sidebar-link.active .sidebar-link-label {
+      opacity: 1;
     }
   }
 
@@ -900,6 +911,19 @@ body {
   75%      { transform: translate(20px, 10px) scale(1.1); }
 }
 
+@keyframes svg-float {
+  0%, 100% { transform: translateY(0px); }
+  50%      { transform: translateY(-8px); }
+}
+
+@keyframes svg-float-slow {
+  0%, 100% { transform: translateY(0px); }
+  50%      { transform: translateY(-5px); }
+}
+
+.auth-svg-float      { animation: svg-float      3.5s ease-in-out infinite; }
+.auth-svg-float-slow { animation: svg-float-slow 5s   ease-in-out infinite 1s; }
+
 .auth-wrapper {
   min-height: 100vh;
   display: flex;
@@ -938,12 +962,92 @@ body {
   }
 }
 
+// ── Two-column split layout ───────────────────────────────────────────────────
+.auth-split {
+  display: flex;
+  align-items: stretch;
+  width: 100%;
+  max-width: 1120px;
+  gap: 3rem;
+
+  @media (max-width: 767.98px) {
+    flex-direction: column;
+    align-items: center;
+    gap: 1.5rem;
+  }
+}
+
+// Left illustration panel
+.auth-illustration-panel {
+  flex: 1 1 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem 1.5rem;
+  text-align: center;
+
+  @media (max-width: 767.98px) {
+    display: none; // hide on mobile — keep it clean
+  }
+}
+
+.auth-hero-svg {
+  display: block;
+  margin: 0 auto;
+  width: 100%;
+  max-width: 520px;
+  height: auto;
+  filter: drop-shadow(0 8px 32px rgba(99,102,241,.18));
+}
+
+// Stats row below illustration
+.auth-stats-row {
+  display: flex;
+  gap: 2rem;
+  justify-content: center;
+}
+
+.auth-stat {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: .15rem;
+
+  &__num {
+    font-size: 1.25rem;
+    font-weight: 700;
+    background: var(--th-gradient-primary);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    line-height: 1.1;
+  }
+
+  &__label {
+    font-size: .72rem;
+    color: rgba(255,255,255,.5);
+    font-weight: 500;
+    letter-spacing: .03em;
+  }
+}
+
+// Right panel — card aligns itself
+.auth-split .auth-card {
+  flex: 0 0 460px;
+  align-self: center;
+
+  @media (max-width: 767.98px) {
+    flex: 0 0 auto;
+    max-width: 460px;
+  }
+}
+
 .auth-card {
   background: var(--th-surface);
   border-radius: var(--th-radius-xl);
   padding: 2.5rem;
   width: 100%;
-  max-width: 420px;
   box-shadow: 0 25px 60px -15px rgba(0,0,0,.3);
   position: relative;
   z-index: 1;
