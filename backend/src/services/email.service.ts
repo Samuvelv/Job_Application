@@ -65,7 +65,7 @@ async function sendMail(opts: MailOptions): Promise<void> {
 
 // ── Public send functions ────────────────────────────────────────────────────
 
-export async function sendEmployeeCredentials(
+export async function sendCandidateCredentials(
   email: string,
   password: string,
   name: string,
@@ -142,7 +142,7 @@ export async function sendEditRequestStatus(
       <h2>Hello ${name},</h2>
       <p>Your profile edit request has been <strong style="color:${color};">${statusText}</strong>.</p>
       ${adminNote ? `<p><strong>Admin Note:</strong> ${adminNote}</p>` : ''}
-      <p>Visit your profile at <a href="${env.FRONTEND_URL}/employee/profile">${env.FRONTEND_URL}/employee/profile</a></p>
+      <p>Visit your profile at <a href="${env.FRONTEND_URL}/candidate/profile">${env.FRONTEND_URL}/candidate/profile</a></p>
     `,
   });
 }

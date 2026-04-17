@@ -4,60 +4,60 @@ import { authenticate } from '../../middleware/authenticate';
 import { authorize } from '../../middleware/authorize';
 import { upload } from '../../config/multer';
 import {
-  uploadEmployeeFile,
-  stageEmployeeFile,
-  deleteEmployeeFile,
-  deleteEmployeeCertificate,
+  uploadCandidateFile,
+  stageCandidateFile,
+  deleteCandidateFile,
+  deleteCandidateCertificate,
 } from './uploads.controller';
 
 const router = Router();
 
 /**
- * POST /api/v1/employees/me/stage-file/:type
- * Employee-only staging: upload to Cloudinary, return secure_url.
- * Does NOT update the employee row — URL goes into edit-request payload.
+ * POST /api/v1/candidates/me/stage-file/:type
+ * Candidate-only staging: upload to Cloudinary, return secure_url.
+ * Does NOT update the candidate row — URL goes into edit-request payload.
  * type: profiles | resumes | videos
  */
 router.post(
-  '/employees/me/stage-file/:type',
+  '/candidates/me/stage-file/:type',
   authenticate,
-  authorize('employee'),
+  authorize('candidate'),
   upload.single('file'),
-  stageEmployeeFile,
+  stageCandidateFile,
 );
 
 /**
- * POST /api/v1/employees/:id/files/:type
+ * POST /api/v1/candidates/:id/files/:type
  * type: profiles | resumes | videos | certificates
- * Admin: any employee.  Employee: own profile only (ownership enforced in controller).
+ * Admin: any candidate.  Candidate: own profile only (ownership enforced in controller).
  */
 router.post(
-  '/employees/:id/files/:type',
+  '/candidates/:id/files/:type',
   authenticate,
-  authorize('admin', 'employee'),
+  authorize('admin', 'candidate'),
   upload.single('file'),
-  uploadEmployeeFile,
+  uploadCandidateFile,
 );
 
 /**
- * DELETE /api/v1/employees/:id/files/:type
+ * DELETE /api/v1/candidates/:id/files/:type
  * type: profiles | resumes | videos
  */
 router.delete(
-  '/employees/:id/files/:type',
+  '/candidates/:id/files/:type',
   authenticate,
-  authorize('admin', 'employee'),
-  deleteEmployeeFile,
+  authorize('admin', 'candidate'),
+  deleteCandidateFile,
 );
 
 /**
- * DELETE /api/v1/employees/:id/certificates/:certId
+ * DELETE /api/v1/candidates/:id/certificates/:certId
  */
 router.delete(
-  '/employees/:id/certificates/:certId',
+  '/candidates/:id/certificates/:certId',
   authenticate,
-  authorize('admin', 'employee'),
-  deleteEmployeeCertificate,
+  authorize('admin', 'candidate'),
+  deleteCandidateCertificate,
 );
 
 export default router;

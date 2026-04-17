@@ -1,7 +1,7 @@
-// src/app/features/employee/employee.routes.ts
+// src/app/features/candidate/candidate.routes.ts
 import { Routes } from '@angular/router';
 
-export const employeeRoutes: Routes = [
+export const candidateRoutes: Routes = [
   {
     path: '',
     redirectTo: 'dashboard',
@@ -10,7 +10,7 @@ export const employeeRoutes: Routes = [
   {
     path: 'dashboard',
     loadComponent: () =>
-      import('./dashboard/employee-dashboard.component').then((m) => m.EmployeeDashboardComponent),
+      import('./dashboard/candidate-dashboard.component').then((m) => m.CandidateDashboardComponent),
   },
   {
     path: 'profile',

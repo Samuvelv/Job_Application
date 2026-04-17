@@ -4,9 +4,9 @@ import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, FormGroup } from '@angular/forms';
 import { Router } from '@angular/router';
 import { debounceTime, distinctUntilChanged, catchError, of } from 'rxjs';
-import { EmployeeService, PaginatedEmployees } from '../../../core/services/employee.service';
+import { CandidateService, PaginatedCandidates } from '../../../core/services/candidate.service';
 import { RecruiterService } from '../../../core/services/recruiter.service';
-import { Employee } from '../../../core/models/employee.model';
+import { Candidate } from '../../../core/models/candidate.model';
 import { ToastService } from '../../../core/services/toast.service';
 import { PageHeaderComponent } from '../../../shared/components/page-header/page-header.component';
 import { EmptyStateComponent } from '../../../shared/components/empty-state/empty-state.component';
@@ -58,7 +58,7 @@ import { EmptyStateComponent } from '../../../shared/components/empty-state/empt
         <div class="spinner-border"></div>
         <div class="loading-state__text">Searching candidates…</div>
       </div>
-    } @else if (employees.length === 0) {
+    } @else if (candidates.length === 0) {
       <app-empty-state
         icon="bi-person-search"
         title="No candidates match your filters"
@@ -66,7 +66,7 @@ import { EmptyStateComponent } from '../../../shared/components/empty-state/empt
       />
     } @else {
       <div class="row g-3">
-        @for (emp of employees; track emp.id) {
+        @for (emp of candidates; track emp.id) {
           <div class="col-md-6 col-xl-4">
             <div class="candidate-card" [class.candidate-card--shortlisted]="shortlistedIds.has(emp.id)">
 
@@ -177,7 +177,7 @@ import { EmptyStateComponent } from '../../../shared/components/empty-state/empt
   `,
 })
 export class CandidatesComponent implements OnInit {
-  employees: Employee[] = [];
+  candidates: Candidate[] = [];
   pagination = { page: 1, limit: 12, total: 0, pages: 0 };
   loading = false;
   shortlistedIds = new Set<string>();
@@ -188,7 +188,7 @@ export class CandidatesComponent implements OnInit {
   constructor(
     private fb: FormBuilder,
     private router: Router,
-    private employeeService: EmployeeService,
+    private candidateService: CandidateService,
     private recruiterService: RecruiterService,
     private toast: ToastService,
   ) {
@@ -217,7 +217,7 @@ export class CandidatesComponent implements OnInit {
   loadShortlist(): void {
     this.recruiterService.getShortlist().subscribe({
       next: (res) => {
-        this.shortlistedIds = new Set(res.shortlist.map((e) => e.employee_id));
+        this.shortlistedIds = new Set(res.shortlist.map((e) => e.candidate_id));
       },
     });
   }
@@ -225,7 +225,7 @@ export class CandidatesComponent implements OnInit {
   load(): void {
     this.loading = true;
     const v = this.filterForm.value;
-    this.employeeService.list({
+    this.candidateService.list({
       search:          v.search          || undefined,
       industry:        v.industry        || undefined,
       occupation:      v.occupation      || undefined,
@@ -233,11 +233,11 @@ export class CandidatesComponent implements OnInit {
       yearsExperience: v.yearsExperience ? +v.yearsExperience : undefined,
       page:            this.pagination.page,
       limit:           this.pagination.limit,
-    }).pipe(catchError(() => of(null as unknown as PaginatedEmployees)))
+    }).pipe(catchError(() => of(null as unknown as PaginatedCandidates)))
       .subscribe((res) => {
         this.loading = false;
         if (res) {
-          this.employees  = res.data;
+          this.candidates  = res.data;
           this.pagination = res.pagination;
         }
       });
@@ -253,11 +253,11 @@ export class CandidatesComponent implements OnInit {
     return Array.from({ length: this.pagination.pages }, (_, i) => i + 1);
   }
 
-  viewProfile(emp: Employee): void {
+  viewProfile(emp: Candidate): void {
     this.router.navigate(['/recruiter/candidates', emp.id]);
   }
 
-  shortlist(emp: Employee): void {
+  shortlist(emp: Candidate): void {
     this.shortlisting = emp.id;
     this.recruiterService.addToShortlist(emp.id).subscribe({
       next: () => {

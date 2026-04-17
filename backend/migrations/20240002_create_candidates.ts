@@ -1,8 +1,8 @@
-// migrations/20240002_create_employees.ts
+// migrations/20240002_create_candidates.ts
 import { Knex } from 'knex';
 
 export async function up(knex: Knex): Promise<void> {
-  await knex.schema.createTable('employees', (t) => {
+  await knex.schema.createTable('candidates', (t) => {
     t.uuid('id').primary().defaultTo(knex.raw('gen_random_uuid()'));
     t.uuid('user_id').unique().notNullable().references('id').inTable('users').onDelete('CASCADE');
 
@@ -45,23 +45,23 @@ export async function up(knex: Knex): Promise<void> {
     t.timestamp('updated_at', { useTz: true }).defaultTo(knex.fn.now());
   });
 
-  await knex.schema.createTable('employee_skills', (t) => {
+  await knex.schema.createTable('candidate_skills', (t) => {
     t.increments('id').primary();
-    t.uuid('employee_id').notNullable().references('id').inTable('employees').onDelete('CASCADE');
+    t.uuid('candidate_id').notNullable().references('id').inTable('candidates').onDelete('CASCADE');
     t.string('skill_name', 100).notNullable();
     t.string('proficiency', 30).nullable();
   });
 
-  await knex.schema.createTable('employee_languages', (t) => {
+  await knex.schema.createTable('candidate_languages', (t) => {
     t.increments('id').primary();
-    t.uuid('employee_id').notNullable().references('id').inTable('employees').onDelete('CASCADE');
+    t.uuid('candidate_id').notNullable().references('id').inTable('candidates').onDelete('CASCADE');
     t.string('language', 100).notNullable();
     t.string('proficiency', 30).nullable();
   });
 
-  await knex.schema.createTable('employee_experience', (t) => {
+  await knex.schema.createTable('candidate_experience', (t) => {
     t.increments('id').primary();
-    t.uuid('employee_id').notNullable().references('id').inTable('employees').onDelete('CASCADE');
+    t.uuid('candidate_id').notNullable().references('id').inTable('candidates').onDelete('CASCADE');
     t.string('company_name', 200).nullable();
     t.string('job_title', 150).nullable();
     t.date('start_date').nullable();
@@ -70,9 +70,9 @@ export async function up(knex: Knex): Promise<void> {
     t.string('location', 150).nullable();
   });
 
-  await knex.schema.createTable('employee_education', (t) => {
+  await knex.schema.createTable('candidate_education', (t) => {
     t.increments('id').primary();
-    t.uuid('employee_id').notNullable().references('id').inTable('employees').onDelete('CASCADE');
+    t.uuid('candidate_id').notNullable().references('id').inTable('candidates').onDelete('CASCADE');
     t.string('institution', 200).nullable();
     t.string('degree', 100).nullable();
     t.string('field_of_study', 150).nullable();
@@ -81,9 +81,9 @@ export async function up(knex: Knex): Promise<void> {
     t.string('location', 150).nullable();
   });
 
-  await knex.schema.createTable('employee_certificates', (t) => {
+  await knex.schema.createTable('candidate_certificates', (t) => {
     t.increments('id').primary();
-    t.uuid('employee_id').notNullable().references('id').inTable('employees').onDelete('CASCADE');
+    t.uuid('candidate_id').notNullable().references('id').inTable('candidates').onDelete('CASCADE');
     t.string('name', 200).nullable();
     t.string('issuer', 200).nullable();
     t.date('issue_date').nullable();
@@ -92,7 +92,7 @@ export async function up(knex: Knex): Promise<void> {
 
   await knex.schema.createTable('profile_edit_requests', (t) => {
     t.uuid('id').primary().defaultTo(knex.raw('gen_random_uuid()'));
-    t.uuid('employee_id').notNullable().references('id').inTable('employees').onDelete('CASCADE');
+    t.uuid('candidate_id').notNullable().references('id').inTable('candidates').onDelete('CASCADE');
     t.jsonb('requested_data').notNullable();
     t.string('status', 20).defaultTo('pending'); // pending/approved/rejected
     t.text('admin_note').nullable();
@@ -101,19 +101,19 @@ export async function up(knex: Knex): Promise<void> {
   });
 
   // Indexes
-  await knex.raw('CREATE INDEX idx_employees_industry   ON employees(industry)');
-  await knex.raw('CREATE INDEX idx_employees_occupation ON employees(occupation)');
-  await knex.raw('CREATE INDEX idx_employees_country    ON employees(current_country)');
-  await knex.raw('CREATE INDEX idx_employee_skills      ON employee_skills(skill_name)');
-  await knex.raw('CREATE INDEX idx_employee_languages   ON employee_languages(language)');
+  await knex.raw('CREATE INDEX idx_candidates_industry   ON candidates(industry)');
+  await knex.raw('CREATE INDEX idx_candidates_occupation ON candidates(occupation)');
+  await knex.raw('CREATE INDEX idx_candidates_country    ON candidates(current_country)');
+  await knex.raw('CREATE INDEX idx_candidate_skills      ON candidate_skills(skill_name)');
+  await knex.raw('CREATE INDEX idx_candidate_languages   ON candidate_languages(language)');
 }
 
 export async function down(knex: Knex): Promise<void> {
   await knex.schema.dropTableIfExists('profile_edit_requests');
-  await knex.schema.dropTableIfExists('employee_certificates');
-  await knex.schema.dropTableIfExists('employee_education');
-  await knex.schema.dropTableIfExists('employee_experience');
-  await knex.schema.dropTableIfExists('employee_languages');
-  await knex.schema.dropTableIfExists('employee_skills');
-  await knex.schema.dropTableIfExists('employees');
+  await knex.schema.dropTableIfExists('candidate_certificates');
+  await knex.schema.dropTableIfExists('candidate_education');
+  await knex.schema.dropTableIfExists('candidate_experience');
+  await knex.schema.dropTableIfExists('candidate_languages');
+  await knex.schema.dropTableIfExists('candidate_skills');
+  await knex.schema.dropTableIfExists('candidates');
 }

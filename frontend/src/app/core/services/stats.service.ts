@@ -5,13 +5,13 @@ import { Observable } from 'rxjs';
 import { environment } from '../../../environments/environment';
 
 export interface AdminStats {
-  employees:      number;
+  candidates:      number;
   recruiters:     number;
   pendingEdits:   number;
   auditLogsToday: number;
 }
 
-export interface EmployeeStats {
+export interface CandidateStats {
   profileCompleteness: number;
   pendingRequest:      boolean;
 }
@@ -28,6 +28,6 @@ export class StatsService {
   constructor(private http: HttpClient) {}
 
   getAdminStats():    Observable<AdminStats>    { return this.http.get<AdminStats>(`${this.base}/admin`); }
-  getEmployeeStats(): Observable<EmployeeStats> { return this.http.get<EmployeeStats>(`${this.base}/employee`); }
+  getCandidateStats(): Observable<CandidateStats> { return this.http.get<CandidateStats>(`${this.base}/candidate`); }
   getRecruiterStats():Observable<RecruiterStats>{ return this.http.get<RecruiterStats>(`${this.base}/recruiter`); }
 }

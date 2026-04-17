@@ -3,17 +3,17 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { catchError, of } from 'rxjs';
-import { EmployeeService } from '../../../core/services/employee.service';
+import { CandidateService } from '../../../core/services/candidate.service';
 import { RecruiterService } from '../../../core/services/recruiter.service';
-import { Employee } from '../../../core/models/employee.model';
+import { Candidate } from '../../../core/models/candidate.model';
 import { ToastService } from '../../../core/services/toast.service';
 import { PageHeaderComponent } from '../../../shared/components/page-header/page-header.component';
-import { EmployeeProfileComponent } from '../../../shared/components/employee-profile/employee-profile.component';
+import { CandidateProfileComponent } from '../../../shared/components/candidate-profile/candidate-profile.component';
 
 @Component({
   selector: 'app-candidate-profile',
   standalone: true,
-  imports: [CommonModule, RouterLink, PageHeaderComponent, EmployeeProfileComponent],
+  imports: [CommonModule, RouterLink, PageHeaderComponent, CandidateProfileComponent],
   template: `
     <!-- Back button + action bar -->
     <div class="d-flex align-items-center gap-3 mb-3 flex-wrap">
@@ -21,7 +21,7 @@ import { EmployeeProfileComponent } from '../../../shared/components/employee-pr
         <i class="bi bi-arrow-left me-1"></i>Back to Candidates
       </a>
 
-      @if (employee) {
+      @if (candidate) {
         <div class="ms-auto d-flex align-items-center gap-2">
           @if (shortlisted) {
             <span class="badge rounded-pill px-3 py-2"
@@ -54,13 +54,13 @@ import { EmployeeProfileComponent } from '../../../shared/components/employee-pr
       <div class="alert alert-danger">{{ error }}</div>
 
     <!-- Profile -->
-    } @else if (employee) {
-      <app-employee-profile [employee]="employee" />
+    } @else if (candidate) {
+      <app-candidate-profile [candidate]="candidate" />
     }
   `,
 })
-export class CandidateProfileComponent implements OnInit {
-  employee: Employee | null = null;
+export class RecruiterCandidateProfileComponent implements OnInit {
+  candidate: Candidate | null = null;
   loading = true;
   error = '';
   shortlisted = false;
@@ -69,7 +69,7 @@ export class CandidateProfileComponent implements OnInit {
   constructor(
     private route: ActivatedRoute,
     private router: Router,
-    private employeeService: EmployeeService,
+    private candidateService: CandidateService,
     private recruiterService: RecruiterService,
     private toast: ToastService,
   ) {}
@@ -78,7 +78,7 @@ export class CandidateProfileComponent implements OnInit {
     const id = this.route.snapshot.paramMap.get('id')!;
 
     // Load candidate profile
-    this.employeeService.getById(id).pipe(
+    this.candidateService.getById(id).pipe(
       catchError((err) => {
         this.error = err?.error?.message ?? 'Failed to load candidate profile.';
         this.loading = false;
@@ -86,7 +86,7 @@ export class CandidateProfileComponent implements OnInit {
       }),
     ).subscribe((res) => {
       if (res) {
-        this.employee = res.employee;
+        this.candidate = res.candidate;
         this.loading = false;
       }
     });
@@ -94,19 +94,19 @@ export class CandidateProfileComponent implements OnInit {
     // Check if already shortlisted
     this.recruiterService.getShortlist().subscribe({
       next: (res) => {
-        this.shortlisted = res.shortlist.some((e) => e.employee_id === id);
+        this.shortlisted = res.shortlist.some((e) => e.candidate_id === id);
       },
     });
   }
 
   addToShortlist(): void {
-    if (!this.employee) return;
+    if (!this.candidate) return;
     this.shortlisting = true;
-    this.recruiterService.addToShortlist(this.employee.id).subscribe({
+    this.recruiterService.addToShortlist(this.candidate.id).subscribe({
       next: () => {
         this.shortlisting = false;
         this.shortlisted = true;
-        this.toast.success(`${this.employee!.first_name} ${this.employee!.last_name} added to shortlist`);
+        this.toast.success(`${this.candidate!.first_name} ${this.candidate!.last_name} added to shortlist`);
       },
       error: (err) => {
         this.shortlisting = false;

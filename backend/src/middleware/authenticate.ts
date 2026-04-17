@@ -5,7 +5,7 @@ import { env } from '../config/env';
 
 export interface JwtPayload {
   sub: string;        // user UUID
-  role: string;       // admin | employee | recruiter
+  role: string;       // admin | candidate | recruiter
   recruiterId?: string;
   jti?: string;       // JWT ID — used for recruiter token revocation
   iat?: number;

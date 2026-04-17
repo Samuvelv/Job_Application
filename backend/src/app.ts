@@ -10,7 +10,7 @@ import { apiLimiter } from './middleware/rateLimiter';
 import { errorHandler } from './middleware/errorHandler';
 
 import authRouter        from './modules/auth/auth.router';
-import employeesRouter   from './modules/employees/employees.router';
+import candidatesRouter   from './modules/candidates/candidates.router';
 import recruitersRouter  from './modules/recruiters/recruiters.router';
 import editRequestsRouter from './modules/edit-requests/edit-requests.router';
 import auditLogsRouter   from './modules/audit-logs/audit-logs.router';
@@ -45,11 +45,11 @@ app.get('/health', (_req, res) => res.json({ status: 'ok', ts: new Date() }));
 
 // ── API Routes ────────────────────────────────────────────────────────────────
 app.use('/api/v1/auth',          authRouter);
-app.use('/api/v1/employees',     employeesRouter);
+app.use('/api/v1/candidates',     candidatesRouter);
 app.use('/api/v1/recruiters',    recruitersRouter);
 app.use('/api/v1/edit-requests', editRequestsRouter);
 app.use('/api/v1/audit-logs',   auditLogsRouter);
-app.use('/api/v1',               uploadsRouter);   // /files/:type/:filename + /employees/:id/files/:type
+app.use('/api/v1',               uploadsRouter);   // /files/:type/:filename + /candidates/:id/files/:type
 app.use('/api/v1/stats',         statsRouter);
 app.use('/api/v1/master',        masterRouter);
 

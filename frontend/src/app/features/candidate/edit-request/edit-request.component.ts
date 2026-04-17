@@ -1,13 +1,13 @@
-// src/app/features/employee/edit-request/edit-request.component.ts
+// src/app/features/candidate/edit-request/edit-request.component.ts
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import {
   ReactiveFormsModule, FormBuilder, FormGroup,
   FormArray, Validators, AbstractControl, ValidationErrors,
 } from '@angular/forms';
-import { EmployeeService } from '../../../core/services/employee.service';
+import { CandidateService } from '../../../core/services/candidate.service';
 import { EditRequestService } from '../../../core/services/edit-request.service';
-import { Employee } from '../../../core/models/employee.model';
+import { Candidate } from '../../../core/models/candidate.model';
 import { EditRequest } from '../../../core/models/edit-request.model';
 import { ToastService } from '../../../core/services/toast.service';
 
@@ -77,7 +77,7 @@ import { PageHeaderComponent } from '../../../shared/components/page-header/page
         <div class="spinner-border"></div>
         <div class="loading-state__text">Loading profile…</div>
       </div>
-    } @else if (employee && form) {
+    } @else if (candidate && form) {
 
       <!-- ══ Section: Media ════════════════════════════════════════════════ -->
       <div class="form-card mb-4">
@@ -98,8 +98,8 @@ import { PageHeaderComponent } from '../../../shared/components/page-header/page
                 <i class="bi bi-person-circle me-1"></i> Profile Photo
               </div>
               <div class="media-upload-cell__preview">
-                @if (staged['profiles'] || employee.profile_photo_url) {
-                  <img [src]="staged['profiles'] ?? employee.profile_photo_url"
+                @if (staged['profiles'] || candidate.profile_photo_url) {
+                  <img [src]="staged['profiles'] ?? candidate.profile_photo_url"
                     alt="Profile photo" class="media-upload-cell__img"
                     (error)="$any($event.target).style.display='none'">
                   @if (staged['profiles']) {
@@ -109,7 +109,7 @@ import { PageHeaderComponent } from '../../../shared/components/page-header/page
                   }
                   <div class="media-upload-cell__actions">
                     <button type="button" class="media-upload-cell__action-btn"
-                      (click)="openPreview('image', (staged['profiles'] ?? employee.profile_photo_url)!, 'Profile Photo')"
+                      (click)="openPreview('image', (staged['profiles'] ?? candidate.profile_photo_url)!, 'Profile Photo')"
                       title="Preview">
                       <i class="bi bi-eye"></i>
                     </button>
@@ -134,7 +134,7 @@ import { PageHeaderComponent } from '../../../shared/components/page-header/page
                   <span class="spinner-border spinner-border-sm me-1"></span> Staging…
                 } @else {
                   <i class="bi bi-upload me-1"></i>
-                  {{ staged['profiles'] ? 'Change staged file' : (employee.profile_photo_url ? 'Request replace' : 'Request upload') }}
+                  {{ staged['profiles'] ? 'Change staged file' : (candidate.profile_photo_url ? 'Request replace' : 'Request upload') }}
                 }
                 <input type="file" class="d-none" accept="image/jpeg,image/png,image/webp"
                   [disabled]="existingRequest?.status === 'pending'"
@@ -150,7 +150,7 @@ import { PageHeaderComponent } from '../../../shared/components/page-header/page
                 <i class="bi bi-file-earmark-person me-1"></i> Resume / CV
               </div>
               <div class="media-upload-cell__preview">
-                @if (staged['resumes'] || employee.resume_url) {
+                @if (staged['resumes'] || candidate.resume_url) {
                   <div class="media-upload-cell__doc-card">
                     <i class="bi bi-file-earmark-pdf-fill"
                       style="font-size:2rem;color:var(--th-rose)"></i>
@@ -165,7 +165,7 @@ import { PageHeaderComponent } from '../../../shared/components/page-header/page
                   }
                   <div class="media-upload-cell__actions">
                     <button type="button" class="media-upload-cell__action-btn"
-                      (click)="openPreview('pdf', (staged['resumes'] ?? employee.resume_url)!, 'Resume / CV')"
+                      (click)="openPreview('pdf', (staged['resumes'] ?? candidate.resume_url)!, 'Resume / CV')"
                       title="Preview">
                       <i class="bi bi-eye"></i>
                     </button>
@@ -190,7 +190,7 @@ import { PageHeaderComponent } from '../../../shared/components/page-header/page
                   <span class="spinner-border spinner-border-sm me-1"></span> Staging…
                 } @else {
                   <i class="bi bi-upload me-1"></i>
-                  {{ staged['resumes'] ? 'Change staged file' : (employee.resume_url ? 'Request replace' : 'Request upload') }}
+                  {{ staged['resumes'] ? 'Change staged file' : (candidate.resume_url ? 'Request replace' : 'Request upload') }}
                 }
                 <input type="file" class="d-none" accept="application/pdf"
                   [disabled]="existingRequest?.status === 'pending'"
@@ -206,7 +206,7 @@ import { PageHeaderComponent } from '../../../shared/components/page-header/page
                 <i class="bi bi-camera-video me-1"></i> Intro Video
               </div>
               <div class="media-upload-cell__preview">
-                @if (staged['videos'] || employee.intro_video_url) {
+                @if (staged['videos'] || candidate.intro_video_url) {
                   <div class="media-upload-cell__doc-card">
                     <i class="bi bi-camera-video-fill"
                       style="font-size:2rem;color:var(--th-primary)"></i>
@@ -221,7 +221,7 @@ import { PageHeaderComponent } from '../../../shared/components/page-header/page
                   }
                   <div class="media-upload-cell__actions">
                     <button type="button" class="media-upload-cell__action-btn"
-                      (click)="openPreview('video', (staged['videos'] ?? employee.intro_video_url)!, 'Intro Video')"
+                      (click)="openPreview('video', (staged['videos'] ?? candidate.intro_video_url)!, 'Intro Video')"
                       title="Preview">
                       <i class="bi bi-eye"></i>
                     </button>
@@ -246,7 +246,7 @@ import { PageHeaderComponent } from '../../../shared/components/page-header/page
                   <span class="spinner-border spinner-border-sm me-1"></span> Staging…
                 } @else {
                   <i class="bi bi-upload me-1"></i>
-                  {{ staged['videos'] ? 'Change staged file' : (employee.intro_video_url ? 'Request replace' : 'Request upload') }}
+                  {{ staged['videos'] ? 'Change staged file' : (candidate.intro_video_url ? 'Request replace' : 'Request upload') }}
                 }
                 <input type="file" class="d-none" accept="video/mp4,video/webm,video/ogg"
                   [disabled]="existingRequest?.status === 'pending'"
@@ -588,7 +588,7 @@ import { PageHeaderComponent } from '../../../shared/components/page-header/page
   `,
 })
 export class EditRequestComponent implements OnInit {
-  employee:        Employee | null  = null;
+  candidate:        Candidate | null  = null;
   loadingProfile   = true;
   form:            FormGroup | null = null;
   submitting       = false;
@@ -608,7 +608,7 @@ export class EditRequestComponent implements OnInit {
 
   constructor(
     private fb: FormBuilder,
-    private employeeService: EmployeeService,
+    private candidateService: CandidateService,
     private editRequestService: EditRequestService,
     private toast: ToastService,
   ) {}
@@ -618,17 +618,17 @@ export class EditRequestComponent implements OnInit {
       next: (res) => (this.existingRequest = res.request),
     });
 
-    this.employeeService.getMyProfile().subscribe({
+    this.candidateService.getMyProfile().subscribe({
       next: (res) => {
         this.loadingProfile = false;
-        this.employee = res.employee;
-        this.buildForm(res.employee);
+        this.candidate = res.candidate;
+        this.buildForm(res.candidate);
       },
       error: () => (this.loadingProfile = false),
     });
   }
 
-  buildForm(emp: Employee): void {
+  buildForm(emp: Candidate): void {
     this.form = this.fb.group({
       first_name:       [emp.first_name       ?? '', Validators.required],
       last_name:        [emp.last_name        ?? '', Validators.required],
@@ -698,7 +698,7 @@ export class EditRequestComponent implements OnInit {
   removeEducation(i: number): void { this.educationArray.removeAt(i); }
 
   // ── Stage media ─────────────────────────────────────────────────────────
-  /** Map upload type → employee field name for the submit payload */
+  /** Map upload type → candidate field name for the submit payload */
   private typeToField: Record<string, string> = {
     profiles: 'profile_photo_url',
     resumes:  'resume_url',
@@ -709,7 +709,7 @@ export class EditRequestComponent implements OnInit {
     const file = (event.target as HTMLInputElement).files?.[0];
     if (!file) return;
     this.mediaLoading[type] = true;
-    this.employeeService.stageMyFile(type, file).subscribe({
+    this.candidateService.stageMyFile(type, file).subscribe({
       next: (res) => {
         // Store relative path for submit payload, full URL for preview
         this.stagedRelative[type] = res.relativePath;

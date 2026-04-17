@@ -59,16 +59,16 @@ export class SidebarComponent {
       case 'admin':
         return [
           { label: 'Dashboard',     icon: 'bi-grid-1x2-fill',     route: '/admin/dashboard' },
-          { label: 'Employees',     icon: 'bi-people-fill',        route: '/admin/employees' },
+          { label: 'Candidates',     icon: 'bi-people-fill',        route: '/admin/candidates' },
           { label: 'Recruiters',    icon: 'bi-person-badge-fill',  route: '/admin/recruiters' },
           { label: 'Edit Requests', icon: 'bi-pencil-square',      route: '/admin/edit-requests' },
           { label: 'Audit Logs',    icon: 'bi-journal-text',       route: '/admin/audit-logs' },
         ];
-      case 'employee':
+      case 'candidate':
         return [
-          { label: 'Dashboard',    icon: 'bi-grid-1x2-fill', route: '/employee/dashboard' },
-          { label: 'My Profile',   icon: 'bi-person-circle', route: '/employee/profile' },
-          { label: 'Request Edit', icon: 'bi-pencil',        route: '/employee/edit-request' },
+          { label: 'Dashboard',    icon: 'bi-grid-1x2-fill', route: '/candidate/dashboard' },
+          { label: 'My Profile',   icon: 'bi-person-circle', route: '/candidate/profile' },
+          { label: 'Request Edit', icon: 'bi-pencil',        route: '/candidate/edit-request' },
         ];
       case 'recruiter':
         return [

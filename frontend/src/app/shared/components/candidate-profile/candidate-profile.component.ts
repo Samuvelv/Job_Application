@@ -1,16 +1,16 @@
-// src/app/shared/components/employee-profile/employee-profile.component.ts
+// src/app/shared/components/candidate-profile/candidate-profile.component.ts
 import { Component, Input, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { Employee } from '../../../core/models/employee.model';
+import { Candidate } from '../../../core/models/candidate.model';
 
 type Tab = 'overview' | 'experience' | 'education' | 'documents';
 
 @Component({
-  selector: 'app-employee-profile',
+  selector: 'app-candidate-profile',
   standalone: true,
   imports: [CommonModule],
   template: `
-    @if (!employee) {
+    @if (!candidate) {
       <div class="loading-state">
         <div class="spinner-border"></div>
         <div class="loading-state__text">Loading profile…</div>
@@ -24,15 +24,15 @@ type Tab = 'overview' | 'experience' | 'education' | 'documents';
 
           <!-- Avatar -->
           <div class="profile-hero-v2__avatar-wrap">
-            @if (employee.profile_photo_url) {
-              <img [src]="employee.profile_photo_url" alt="Profile photo"
+            @if (candidate.profile_photo_url) {
+              <img [src]="candidate.profile_photo_url" alt="Profile photo"
                 class="profile-hero-v2__avatar">
             } @else {
               <div class="profile-hero-v2__avatar-placeholder">
-                {{ employee.first_name[0] }}{{ employee.last_name[0] }}
+                {{ candidate.first_name[0] }}{{ candidate.last_name[0] }}
               </div>
             }
-            @if (employee.profile_status === 'active') {
+            @if (candidate.profile_status === 'active') {
               <div class="profile-hero-v2__online-dot" title="Active"></div>
             }
           </div>
@@ -41,48 +41,48 @@ type Tab = 'overview' | 'experience' | 'education' | 'documents';
           <div class="profile-hero-v2__info flex-grow-1">
             <div class="profile-hero-v2__name-row">
               <h2 class="profile-hero-v2__name mb-0">
-                {{ employee.first_name }} {{ employee.last_name }}
+                {{ candidate.first_name }} {{ candidate.last_name }}
               </h2>
               <span class="badge rounded-pill px-3 py-2"
-                [class.badge-status-active]="employee.profile_status === 'active'"
-                [class.badge-status-pending]="employee.profile_status === 'pending_edit'"
-                [class.badge-status-inactive]="employee.profile_status === 'inactive'">
-                {{ employee.profile_status | titlecase }}
+                [class.badge-status-active]="candidate.profile_status === 'active'"
+                [class.badge-status-pending]="candidate.profile_status === 'pending_edit'"
+                [class.badge-status-inactive]="candidate.profile_status === 'inactive'">
+                {{ candidate.profile_status | titlecase }}
               </span>
             </div>
 
             <div class="profile-hero-v2__headline">
-              @if (employee.job_title) { <span>{{ employee.job_title }}</span> }
-              @if (employee.job_title && employee.industry) { <span class="sep">·</span> }
-              @if (employee.industry) { <span>{{ employee.industry }}</span> }
-              @if ((employee.job_title || employee.industry) && employee.years_experience != null) {
+              @if (candidate.job_title) { <span>{{ candidate.job_title }}</span> }
+              @if (candidate.job_title && candidate.industry) { <span class="sep">·</span> }
+              @if (candidate.industry) { <span>{{ candidate.industry }}</span> }
+              @if ((candidate.job_title || candidate.industry) && candidate.years_experience != null) {
                 <span class="sep">·</span>
               }
-              @if (employee.years_experience != null) {
-                <span>{{ employee.years_experience }} yrs exp</span>
+              @if (candidate.years_experience != null) {
+                <span>{{ candidate.years_experience }} yrs exp</span>
               }
             </div>
 
             <div class="profile-hero-v2__meta">
-              @if (employee.current_city || employee.current_country) {
+              @if (candidate.current_city || candidate.current_country) {
                 <span class="profile-hero-v2__meta-chip">
                   <i class="bi bi-geo-alt-fill"></i>
-                  {{ employee.current_city }}{{ employee.current_city && employee.current_country ? ', ' : '' }}{{ employee.current_country }}
+                  {{ candidate.current_city }}{{ candidate.current_city && candidate.current_country ? ', ' : '' }}{{ candidate.current_country }}
                 </span>
               }
-              @if (employee.email) {
+              @if (candidate.email) {
                 <span class="profile-hero-v2__meta-chip">
-                  <i class="bi bi-envelope-fill"></i>{{ employee.email }}
+                  <i class="bi bi-envelope-fill"></i>{{ candidate.email }}
                 </span>
               }
-              @if (employee.phone) {
+              @if (candidate.phone) {
                 <span class="profile-hero-v2__meta-chip">
-                  <i class="bi bi-telephone-fill"></i>{{ employee.phone }}
+                  <i class="bi bi-telephone-fill"></i>{{ candidate.phone }}
                 </span>
               }
-              @if (employee.nationality) {
+              @if (candidate.nationality) {
                 <span class="profile-hero-v2__meta-chip">
-                  <i class="bi bi-flag-fill"></i>{{ employee.nationality }}
+                  <i class="bi bi-flag-fill"></i>{{ candidate.nationality }}
                 </span>
               }
             </div>
@@ -90,20 +90,20 @@ type Tab = 'overview' | 'experience' | 'education' | 'documents';
 
           <!-- Action buttons -->
           <div class="profile-hero-v2__actions">
-            @if (employee.resume_url) {
-              <a [href]="employee.resume_url" target="_blank"
+            @if (candidate.resume_url) {
+              <a [href]="candidate.resume_url" target="_blank"
                 class="profile-hero-v2__action-btn profile-hero-v2__action-btn--cv">
                 <i class="bi bi-file-earmark-person-fill"></i>Download CV
               </a>
             }
-            @if (employee.intro_video_url) {
-              <a [href]="employee.intro_video_url" target="_blank"
+            @if (candidate.intro_video_url) {
+              <a [href]="candidate.intro_video_url" target="_blank"
                 class="profile-hero-v2__action-btn profile-hero-v2__action-btn--video">
                 <i class="bi bi-camera-video-fill"></i>Intro Video
               </a>
             }
-            @if (employee.linkedin_url) {
-              <a [href]="employee.linkedin_url" target="_blank"
+            @if (candidate.linkedin_url) {
+              <a [href]="candidate.linkedin_url" target="_blank"
                 class="profile-hero-v2__action-btn profile-hero-v2__action-btn--linkedin">
                 <i class="bi bi-linkedin"></i>LinkedIn
               </a>
@@ -120,16 +120,16 @@ type Tab = 'overview' | 'experience' | 'education' | 'documents';
             [class.active]="activeTab() === tab.id"
             (click)="activeTab.set(tab.id)">
             <i [class]="'bi ' + tab.icon"></i>{{ tab.label }}
-            @if (tab.id === 'experience' && employee.experience?.length) {
+            @if (tab.id === 'experience' && candidate.experience?.length) {
               <span style="font-size:.65rem;padding:.1rem .45rem;border-radius:999px;
                 background:var(--th-primary-soft);color:var(--th-primary);font-weight:700;margin-left:.2rem">
-                {{ employee.experience!.length }}
+                {{ candidate.experience!.length }}
               </span>
             }
-            @if (tab.id === 'education' && (employee.education?.length || employee.certificates?.length)) {
+            @if (tab.id === 'education' && (candidate.education?.length || candidate.certificates?.length)) {
               <span style="font-size:.65rem;padding:.1rem .45rem;border-radius:999px;
                 background:var(--th-emerald-soft);color:var(--th-emerald);font-weight:700;margin-left:.2rem">
-                {{ (employee.education?.length ?? 0) + (employee.certificates?.length ?? 0) }}
+                {{ (candidate.education?.length ?? 0) + (candidate.certificates?.length ?? 0) }}
               </span>
             }
           </button>
@@ -153,42 +153,42 @@ type Tab = 'overview' | 'experience' | 'education' | 'documents';
                 <h6>Contact Info</h6>
               </div>
               <div class="profile-section-card__body">
-                @if (employee.phone) {
+                @if (candidate.phone) {
                   <div class="info-pill-row">
                     <div class="info-pill-row__icon"><i class="bi bi-telephone-fill"></i></div>
                     <div class="info-pill-row__label">Phone</div>
-                    <div class="info-pill-row__value">{{ employee.phone }}</div>
+                    <div class="info-pill-row__value">{{ candidate.phone }}</div>
                   </div>
                 }
-                @if (employee.nationality) {
+                @if (candidate.nationality) {
                   <div class="info-pill-row">
                     <div class="info-pill-row__icon"><i class="bi bi-flag-fill"></i></div>
                     <div class="info-pill-row__label">Nationality</div>
-                    <div class="info-pill-row__value">{{ employee.nationality }}</div>
+                    <div class="info-pill-row__value">{{ candidate.nationality }}</div>
                   </div>
                 }
-                @if (employee.date_of_birth) {
+                @if (candidate.date_of_birth) {
                   <div class="info-pill-row">
                     <div class="info-pill-row__icon"><i class="bi bi-calendar3"></i></div>
                     <div class="info-pill-row__label">Birthday</div>
-                    <div class="info-pill-row__value">{{ employee.date_of_birth | date:'mediumDate' }}</div>
+                    <div class="info-pill-row__value">{{ candidate.date_of_birth | date:'mediumDate' }}</div>
                   </div>
                 }
-                @if (employee.gender) {
+                @if (candidate.gender) {
                   <div class="info-pill-row">
                     <div class="info-pill-row__icon"><i class="bi bi-person-fill"></i></div>
                     <div class="info-pill-row__label">Gender</div>
-                    <div class="info-pill-row__value">{{ employee.gender | titlecase }}</div>
+                    <div class="info-pill-row__value">{{ candidate.gender | titlecase }}</div>
                   </div>
                 }
-                @if (!employee.phone && !employee.nationality && !employee.date_of_birth && !employee.gender) {
+                @if (!candidate.phone && !candidate.nationality && !candidate.date_of_birth && !candidate.gender) {
                   <p class="text-muted small mb-0">No contact details available.</p>
                 }
               </div>
             </div>
 
             <!-- Target Locations Card -->
-            @if (employee.target_locations?.length) {
+            @if (candidate.target_locations?.length) {
               <div class="profile-section-card mb-3">
                 <div class="profile-section-card__header">
                   <div class="profile-section-card__header-icon"
@@ -199,7 +199,7 @@ type Tab = 'overview' | 'experience' | 'education' | 'documents';
                 </div>
                 <div class="profile-section-card__body">
                   <div class="d-flex flex-wrap gap-2">
-                    @for (loc of employee.target_locations; track loc) {
+                    @for (loc of candidate.target_locations; track loc) {
                       <span style="display:inline-flex;align-items:center;gap:.3rem;padding:.3rem .75rem;
                         background:var(--th-emerald-soft);color:var(--th-emerald);border-radius:999px;
                         font-size:.75rem;font-weight:600;border:1px solid rgba(16,185,129,.2)">
@@ -212,7 +212,7 @@ type Tab = 'overview' | 'experience' | 'education' | 'documents';
             }
 
             <!-- Salary Card -->
-            @if (employee.salary_min || employee.salary_max) {
+            @if (candidate.salary_min || candidate.salary_max) {
               <div class="profile-section-card mb-3">
                 <div class="profile-section-card__header">
                   <div class="profile-section-card__header-icon"
@@ -223,19 +223,19 @@ type Tab = 'overview' | 'experience' | 'education' | 'documents';
                 </div>
                 <div class="profile-section-card__body">
                   <div style="font-size:1.25rem;font-weight:800;color:var(--th-amber)">
-                    {{ employee.salary_currency }}
-                    {{ employee.salary_min | number }}
-                    @if (employee.salary_max) { <span style="color:var(--th-muted);font-size:.875rem">–</span> {{ employee.salary_max | number }} }
+                    {{ candidate.salary_currency }}
+                    {{ candidate.salary_min | number }}
+                    @if (candidate.salary_max) { <span style="color:var(--th-muted);font-size:.875rem">–</span> {{ candidate.salary_max | number }} }
                   </div>
                   <div style="font-size:.75rem;color:var(--th-muted);margin-top:.25rem">
-                    per {{ employee.salary_type }}
+                    per {{ candidate.salary_type }}
                   </div>
                 </div>
               </div>
             }
 
             <!-- Languages Card -->
-            @if (employee.languages?.length) {
+            @if (candidate.languages?.length) {
               <div class="profile-section-card">
                 <div class="profile-section-card__header">
                   <div class="profile-section-card__header-icon"
@@ -245,7 +245,7 @@ type Tab = 'overview' | 'experience' | 'education' | 'documents';
                   <h6>Languages</h6>
                 </div>
                 <div class="profile-section-card__body">
-                  @for (lang of employee.languages; track lang.language) {
+                  @for (lang of candidate.languages; track lang.language) {
                     <div class="info-pill-row">
                       <div class="info-pill-row__icon"
                         style="background:var(--th-info-soft);color:var(--th-info)">
@@ -269,7 +269,7 @@ type Tab = 'overview' | 'experience' | 'education' | 'documents';
           <div class="col-lg-8">
 
             <!-- Bio Card -->
-            @if (employee.bio) {
+            @if (candidate.bio) {
               <div class="profile-section-card mb-3">
                 <div class="profile-section-card__header">
                   <div class="profile-section-card__header-icon"
@@ -280,7 +280,7 @@ type Tab = 'overview' | 'experience' | 'education' | 'documents';
                 </div>
                 <div class="profile-section-card__body">
                   <p style="font-size:.875rem;line-height:1.75;color:var(--th-text-secondary);margin:0">
-                    {{ employee.bio }}
+                    {{ candidate.bio }}
                   </p>
                 </div>
               </div>
@@ -303,7 +303,7 @@ type Tab = 'overview' | 'experience' | 'education' | 'documents';
                       <div style="font-size:.7rem;text-transform:uppercase;letter-spacing:.06em;
                         color:var(--th-muted);font-weight:600;margin-bottom:.3rem">Occupation</div>
                       <div style="font-size:.875rem;font-weight:600;color:var(--th-text)">
-                        {{ employee.occupation || '—' }}
+                        {{ candidate.occupation || '—' }}
                       </div>
                     </div>
                   </div>
@@ -313,7 +313,7 @@ type Tab = 'overview' | 'experience' | 'education' | 'documents';
                       <div style="font-size:.7rem;text-transform:uppercase;letter-spacing:.06em;
                         color:var(--th-muted);font-weight:600;margin-bottom:.3rem">Industry</div>
                       <div style="font-size:.875rem;font-weight:600;color:var(--th-text)">
-                        {{ employee.industry || '—' }}
+                        {{ candidate.industry || '—' }}
                       </div>
                     </div>
                   </div>
@@ -323,7 +323,7 @@ type Tab = 'overview' | 'experience' | 'education' | 'documents';
                       <div style="font-size:.7rem;text-transform:uppercase;letter-spacing:.06em;
                         color:var(--th-muted);font-weight:600;margin-bottom:.3rem">Experience</div>
                       <div style="font-size:.875rem;font-weight:600;color:var(--th-text)">
-                        {{ employee.years_experience != null ? employee.years_experience + ' years' : '—' }}
+                        {{ candidate.years_experience != null ? candidate.years_experience + ' years' : '—' }}
                       </div>
                     </div>
                   </div>
@@ -333,7 +333,7 @@ type Tab = 'overview' | 'experience' | 'education' | 'documents';
                       <div style="font-size:.7rem;text-transform:uppercase;letter-spacing:.06em;
                         color:var(--th-muted);font-weight:600;margin-bottom:.3rem">Job Title</div>
                       <div style="font-size:.875rem;font-weight:600;color:var(--th-text)">
-                        {{ employee.job_title || '—' }}
+                        {{ candidate.job_title || '—' }}
                       </div>
                     </div>
                   </div>
@@ -342,7 +342,7 @@ type Tab = 'overview' | 'experience' | 'education' | 'documents';
             </div>
 
             <!-- Skills Card -->
-            @if (employee.skills?.length) {
+            @if (candidate.skills?.length) {
               <div class="profile-section-card">
                 <div class="profile-section-card__header">
                   <div class="profile-section-card__header-icon"
@@ -351,12 +351,12 @@ type Tab = 'overview' | 'experience' | 'education' | 'documents';
                   </div>
                   <h6>Skills</h6>
                   <span style="margin-left:auto;font-size:.7rem;color:var(--th-muted)">
-                    {{ employee.skills!.length }} skills
+                    {{ candidate.skills!.length }} skills
                   </span>
                 </div>
                 <div class="profile-section-card__body">
                   <div class="d-flex flex-wrap gap-2">
-                    @for (skill of employee.skills; track skill.skill_name) {
+                    @for (skill of candidate.skills; track skill.skill_name) {
                       <span class="skill-pill">
                         <span class="skill-pill__dot"></span>
                         {{ skill.skill_name }}
@@ -375,7 +375,7 @@ type Tab = 'overview' | 'experience' | 'education' | 'documents';
 
       <!-- ══ TAB: Experience ═══════════════════════════════════════════════ -->
       @if (activeTab() === 'experience') {
-        @if (!employee.experience?.length) {
+        @if (!candidate.experience?.length) {
           <div class="empty-state">
             <div class="empty-state__icon" style="background:var(--th-gradient-info)">
               <i class="bi bi-briefcase"></i>
@@ -392,12 +392,12 @@ type Tab = 'overview' | 'experience' | 'education' | 'documents';
               </div>
               <h6>Work Experience</h6>
               <span style="margin-left:auto;font-size:.7rem;color:var(--th-muted)">
-                {{ employee.experience!.length }} position{{ employee.experience!.length > 1 ? 's' : '' }}
+                {{ candidate.experience!.length }} position{{ candidate.experience!.length > 1 ? 's' : '' }}
               </span>
             </div>
             <div class="profile-section-card__body">
               <div class="exp-timeline">
-                @for (exp of employee.experience; track $index) {
+                @for (exp of candidate.experience; track $index) {
                   <div class="exp-timeline__item">
                     <div class="exp-timeline__title">{{ exp.job_title }}</div>
                     <div class="exp-timeline__org">
@@ -426,7 +426,7 @@ type Tab = 'overview' | 'experience' | 'education' | 'documents';
 
       <!-- ══ TAB: Education ════════════════════════════════════════════════ -->
       @if (activeTab() === 'education') {
-        @if (!employee.education?.length && !employee.certificates?.length) {
+        @if (!candidate.education?.length && !candidate.certificates?.length) {
           <div class="empty-state">
             <div class="empty-state__icon" style="background:var(--th-gradient-success)">
               <i class="bi bi-mortarboard"></i>
@@ -435,7 +435,7 @@ type Tab = 'overview' | 'experience' | 'education' | 'documents';
             <div class="empty-state__description">Education and certifications will appear here once added.</div>
           </div>
         } @else {
-          @if (employee.education?.length) {
+          @if (candidate.education?.length) {
             <div class="profile-section-card mb-3">
               <div class="profile-section-card__header">
                 <div class="profile-section-card__header-icon"
@@ -446,7 +446,7 @@ type Tab = 'overview' | 'experience' | 'education' | 'documents';
               </div>
               <div class="profile-section-card__body">
                 <div class="exp-timeline" style="--th-primary:#10b981">
-                  @for (edu of employee.education; track $index) {
+                  @for (edu of candidate.education; track $index) {
                     <div class="exp-timeline__item"
                       style="--exp-dot-bg:var(--th-emerald)">
                       <div class="exp-timeline__title">
@@ -474,7 +474,7 @@ type Tab = 'overview' | 'experience' | 'education' | 'documents';
             </div>
           }
 
-          @if (employee.certificates?.length) {
+          @if (candidate.certificates?.length) {
             <div class="profile-section-card">
               <div class="profile-section-card__header">
                 <div class="profile-section-card__header-icon"
@@ -483,12 +483,12 @@ type Tab = 'overview' | 'experience' | 'education' | 'documents';
                 </div>
                 <h6>Certificates</h6>
                 <span style="margin-left:auto;font-size:.7rem;color:var(--th-muted)">
-                  {{ employee.certificates!.length }} cert{{ employee.certificates!.length > 1 ? 's' : '' }}
+                  {{ candidate.certificates!.length }} cert{{ candidate.certificates!.length > 1 ? 's' : '' }}
                 </span>
               </div>
               <div class="profile-section-card__body">
                 <div class="row g-2">
-                  @for (cert of employee.certificates; track $index) {
+                  @for (cert of candidate.certificates; track $index) {
                     <div class="col-sm-6">
                       <div style="padding:1rem;border:1px solid var(--th-border);border-radius:var(--th-radius-lg);
                         background:var(--th-surface-raised);display:flex;align-items:center;gap:.75rem;
@@ -531,7 +531,7 @@ type Tab = 'overview' | 'experience' | 'education' | 'documents';
 
       <!-- ══ TAB: Documents ═══════════════════════════════════════════════ -->
       @if (activeTab() === 'documents') {
-        @if (!employee.resume_url && !employee.intro_video_url) {
+        @if (!candidate.resume_url && !candidate.intro_video_url) {
           <div class="empty-state">
             <div class="empty-state__icon">
               <i class="bi bi-folder2-open"></i>
@@ -550,8 +550,8 @@ type Tab = 'overview' | 'experience' | 'education' | 'documents';
             </div>
             <div class="profile-section-card__body">
               <div class="d-flex flex-column gap-2">
-                @if (employee.resume_url) {
-                  <a [href]="employee.resume_url" target="_blank" class="doc-card">
+                @if (candidate.resume_url) {
+                  <a [href]="candidate.resume_url" target="_blank" class="doc-card">
                     <div class="doc-card__icon"
                       style="background:var(--th-primary-soft)">
                       <i class="bi bi-file-earmark-person-fill"
@@ -566,8 +566,8 @@ type Tab = 'overview' | 'experience' | 'education' | 'documents';
                     </div>
                   </a>
                 }
-                @if (employee.intro_video_url) {
-                  <a [href]="employee.intro_video_url" target="_blank" class="doc-card">
+                @if (candidate.intro_video_url) {
+                  <a [href]="candidate.intro_video_url" target="_blank" class="doc-card">
                     <div class="doc-card__icon"
                       style="background:var(--th-rose-soft)">
                       <i class="bi bi-camera-video-fill"
@@ -592,8 +592,8 @@ type Tab = 'overview' | 'experience' | 'education' | 'documents';
   `,
   styles: [],
 })
-export class EmployeeProfileComponent {
-  @Input() employee: Employee | null = null;
+export class CandidateProfileComponent {
+  @Input() candidate: Candidate | null = null;
 
   activeTab = signal<Tab>('overview');
 

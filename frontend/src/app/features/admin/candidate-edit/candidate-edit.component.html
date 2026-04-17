@@ -1,24 +1,24 @@
-<!-- src/app/features/admin/employee-edit/employee-edit.component.html -->
+<!-- src/app/features/admin/candidate-edit/candidate-edit.component.html -->
 
 <!-- Header -->
 <div class="d-flex align-items-center gap-3 mb-4">
-  <a [routerLink]="['/admin/employees', employeeId]" class="back-btn">
+  <a [routerLink]="['/admin/candidates', candidateId]" class="back-btn">
     <i class="bi bi-arrow-left"></i> Back
   </a>
   <div>
-    <h1 class="h4 fw-bold mb-0">Edit Employee</h1>
+    <h1 class="h4 fw-bold mb-0">Edit Candidate</h1>
     <p class="text-muted small mb-0">
-      @if (employee) { {{ employee.first_name }} {{ employee.last_name }} }
+      @if (candidate) { {{ candidate.first_name }} {{ candidate.last_name }} }
     </p>
   </div>
 </div>
 
 @if (loadError) {
   <div class="alert alert-danger">{{ loadError }}</div>
-} @else if (!employee) {
+} @else if (!candidate) {
   <div class="loading-state">
     <div class="spinner-border"></div>
-    <div class="loading-state__text">Loading employee…</div>
+    <div class="loading-state__text">Loading candidate…</div>
   </div>
 } @else {
 
@@ -45,12 +45,12 @@
         <div class="media-upload-cell">
           <div class="media-upload-cell__label"><i class="bi bi-person-circle me-1"></i> Profile Photo</div>
           <div class="media-upload-cell__preview">
-            @if (employee.profile_photo_url) {
-              <img [src]="employee.profile_photo_url" alt="Profile photo" class="media-upload-cell__img"
+            @if (candidate.profile_photo_url) {
+              <img [src]="candidate.profile_photo_url" alt="Profile photo" class="media-upload-cell__img"
                 (error)="$any($event.target).style.display='none'">
               <div class="media-upload-cell__actions">
                 <button type="button" class="media-upload-cell__action-btn"
-                  (click)="openPreview('image', employee.profile_photo_url, 'Profile Photo')"><i class="bi bi-eye"></i></button>
+                  (click)="openPreview('image', candidate.profile_photo_url, 'Profile Photo')"><i class="bi bi-eye"></i></button>
                 <button type="button" class="media-upload-cell__action-btn media-upload-cell__action-btn--danger"
                   [disabled]="mediaLoading['profiles']" (click)="deleteFile('profiles')"><i class="bi bi-trash"></i></button>
               </div>
@@ -60,7 +60,7 @@
           </div>
           <label class="btn btn-sm btn-outline-secondary w-100 mt-2" [class.disabled]="mediaLoading['profiles']">
             @if (mediaLoading['profiles']) { <span class="spinner-border spinner-border-sm me-1"></span> Uploading… }
-            @else { <i class="bi bi-upload me-1"></i>{{ employee.profile_photo_url ? 'Replace' : 'Upload' }} }
+            @else { <i class="bi bi-upload me-1"></i>{{ candidate.profile_photo_url ? 'Replace' : 'Upload' }} }
             <input type="file" class="d-none" accept="image/jpeg,image/png,image/webp" (change)="uploadFile('profiles', $event)">
           </label>
         </div>
@@ -71,12 +71,12 @@
         <div class="media-upload-cell">
           <div class="media-upload-cell__label"><i class="bi bi-file-earmark-person me-1"></i> Resume / CV</div>
           <div class="media-upload-cell__preview media-upload-cell__preview--doc">
-            @if (employee.resume_url) {
+            @if (candidate.resume_url) {
               <i class="bi bi-file-earmark-pdf-fill media-upload-cell__doc-icon"></i>
               <span class="media-upload-cell__doc-label">Resume / CV</span>
               <div class="media-upload-cell__actions">
                 <button type="button" class="media-upload-cell__action-btn"
-                  (click)="openPreview('pdf', employee.resume_url, 'Resume / CV')"><i class="bi bi-eye"></i></button>
+                  (click)="openPreview('pdf', candidate.resume_url, 'Resume / CV')"><i class="bi bi-eye"></i></button>
                 <button type="button" class="media-upload-cell__action-btn media-upload-cell__action-btn--danger"
                   [disabled]="mediaLoading['resumes']" (click)="deleteFile('resumes')"><i class="bi bi-trash"></i></button>
               </div>
@@ -86,7 +86,7 @@
           </div>
           <label class="btn btn-sm btn-outline-secondary w-100 mt-2" [class.disabled]="mediaLoading['resumes']">
             @if (mediaLoading['resumes']) { <span class="spinner-border spinner-border-sm me-1"></span> Uploading… }
-            @else { <i class="bi bi-upload me-1"></i>{{ employee.resume_url ? 'Replace' : 'Upload' }} }
+            @else { <i class="bi bi-upload me-1"></i>{{ candidate.resume_url ? 'Replace' : 'Upload' }} }
             <input type="file" class="d-none" accept=".pdf,.doc,.docx" (change)="uploadFile('resumes', $event)">
           </label>
         </div>
@@ -97,12 +97,12 @@
         <div class="media-upload-cell">
           <div class="media-upload-cell__label"><i class="bi bi-camera-video me-1"></i> Intro Video</div>
           <div class="media-upload-cell__preview media-upload-cell__preview--doc">
-            @if (employee.intro_video_url) {
+            @if (candidate.intro_video_url) {
               <i class="bi bi-play-circle-fill media-upload-cell__doc-icon" style="color:var(--th-purple)"></i>
               <span class="media-upload-cell__doc-label">Intro Video</span>
               <div class="media-upload-cell__actions">
                 <button type="button" class="media-upload-cell__action-btn"
-                  (click)="openPreview('video', employee.intro_video_url, 'Intro Video')"><i class="bi bi-eye"></i></button>
+                  (click)="openPreview('video', candidate.intro_video_url, 'Intro Video')"><i class="bi bi-eye"></i></button>
                 <button type="button" class="media-upload-cell__action-btn media-upload-cell__action-btn--danger"
                   [disabled]="mediaLoading['videos']" (click)="deleteFile('videos')"><i class="bi bi-trash"></i></button>
               </div>
@@ -112,7 +112,7 @@
           </div>
           <label class="btn btn-sm btn-outline-secondary w-100 mt-2" [class.disabled]="mediaLoading['videos']">
             @if (mediaLoading['videos']) { <span class="spinner-border spinner-border-sm me-1"></span> Uploading… }
-            @else { <i class="bi bi-upload me-1"></i>{{ employee.intro_video_url ? 'Replace' : 'Upload' }} }
+            @else { <i class="bi bi-upload me-1"></i>{{ candidate.intro_video_url ? 'Replace' : 'Upload' }} }
             <input type="file" class="d-none" accept="video/mp4,video/webm,video/ogg" (change)="uploadFile('videos', $event)">
           </label>
         </div>
@@ -123,11 +123,11 @@
         <div class="media-upload-cell">
           <div class="media-upload-cell__label">
             <i class="bi bi-patch-check me-1"></i> Certificates
-            <span class="badge bg-secondary rounded-pill ms-1">{{ employee.certificates?.length || 0 }}</span>
+            <span class="badge bg-secondary rounded-pill ms-1">{{ candidate.certificates?.length || 0 }}</span>
           </div>
           <div class="media-upload-cell__cert-list">
-            @if (employee.certificates?.length) {
-              @for (cert of employee.certificates; track cert.id) {
+            @if (candidate.certificates?.length) {
+              @for (cert of candidate.certificates; track cert.id) {
                 <div class="media-upload-cell__cert-item">
                   <i class="bi bi-file-earmark-check text-success flex-shrink-0"></i>
                   <span class="text-truncate flex-grow-1 small">{{ cert.name || 'Certificate' }}</span>
@@ -602,7 +602,7 @@
 
     <!-- ── Actions ── -->
     <div class="d-flex gap-3 justify-content-end mt-2 mb-5">
-      <a [routerLink]="['/admin/employees', employeeId]" class="btn btn-outline-secondary">
+      <a [routerLink]="['/admin/candidates', candidateId]" class="btn btn-outline-secondary">
         <i class="bi bi-x-lg me-1"></i> Cancel
       </a>
       <button type="submit" class="btn btn-primary px-4" [disabled]="saving">

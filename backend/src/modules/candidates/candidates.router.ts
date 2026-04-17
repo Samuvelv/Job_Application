@@ -1,8 +1,8 @@
-// src/modules/employees/employees.router.ts
+// src/modules/candidates/candidates.router.ts
 import { Router } from 'express';
 import { authenticate } from '../../middleware/authenticate';
 import { authorize } from '../../middleware/authorize';
-import * as ctrl from './employees.controller';
+import * as ctrl from './candidates.controller';
 
 const router = Router();
 
@@ -35,15 +35,15 @@ router.put('/:id',
   ctrl.update,
 );
 
-// ── Employee self-view ────────────────────────────────────────────────────────
+// ── Candidate self-view ────────────────────────────────────────────────────────
 router.get('/me',
-  authorize('employee'),
+  authorize('candidate'),
   ctrl.getMyProfile,
 );
 
-// ── Shared: admin, recruiter, employee (own) ──────────────────────────────────
+// ── Shared: admin, recruiter, candidate (own) ──────────────────────────────────
 router.get('/:id',
-  authorize('admin', 'recruiter', 'employee'),
+  authorize('admin', 'recruiter', 'candidate'),
   ctrl.getOne,
 );
 

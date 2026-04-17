@@ -109,9 +109,9 @@ export async function getShortlistById(req: Request, res: Response, next: NextFu
 export async function addShortlist(req: Request, res: Response, next: NextFunction): Promise<void> {
   try {
     const recruiter  = await svc.getRecruiterByUserId(req.user!.sub);
-    const employeeId = p(req.params['employeeId']);
+    const candidateId = p(req.params['candidateId']);
     const { notes }  = req.body as { notes?: string };
-    const entry = await svc.addToShortlist(recruiter.id, employeeId, notes);
+    const entry = await svc.addToShortlist(recruiter.id, candidateId, notes);
     res.status(201).json({ entry });
   } catch (err) { next(err); }
 }
@@ -119,8 +119,8 @@ export async function addShortlist(req: Request, res: Response, next: NextFuncti
 export async function removeShortlist(req: Request, res: Response, next: NextFunction): Promise<void> {
   try {
     const recruiter  = await svc.getRecruiterByUserId(req.user!.sub);
-    const employeeId = p(req.params['employeeId']);
-    await svc.removeFromShortlist(recruiter.id, employeeId);
+    const candidateId = p(req.params['candidateId']);
+    await svc.removeFromShortlist(recruiter.id, candidateId);
     res.json({ message: 'Removed from shortlist' });
   } catch (err) { next(err); }
 }

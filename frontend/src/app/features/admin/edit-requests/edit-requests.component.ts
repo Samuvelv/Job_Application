@@ -39,7 +39,7 @@ import { EmptyStateComponent } from '../../../shared/components/empty-state/empt
       <app-empty-state
         icon="bi-inbox"
         title="No edit requests found"
-        subtitle="Edit requests submitted by employees will appear here."
+        subtitle="Edit requests submitted by candidates will appear here."
       />
     } @else {
       <div class="d-flex flex-column gap-3">

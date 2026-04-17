@@ -17,7 +17,7 @@ export interface ShortlistEntry {
   shortlist_id: string;
   notes?: string;
   shortlisted_at: string;
-  employee_id: string;
+  candidate_id: string;
   first_name: string;
   last_name: string;
   job_title?: string;

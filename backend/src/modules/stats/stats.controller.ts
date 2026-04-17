@@ -11,10 +11,10 @@ export async function adminStats(req: Request, res: Response, next: NextFunction
   }
 }
 
-export async function employeeStats(req: Request, res: Response, next: NextFunction) {
+export async function candidateStats(req: Request, res: Response, next: NextFunction) {
   try {
     const userId = (req as any).user.sub as string;
-    const data = await statsService.getEmployeeStats(userId);
+    const data = await statsService.getCandidateStats(userId);
     res.json(data);
   } catch (err) {
     next(err);

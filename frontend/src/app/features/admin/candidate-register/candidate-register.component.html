@@ -1,13 +1,13 @@
-<!-- src/app/features/admin/employee-register/employee-register.component.html -->
+<!-- src/app/features/admin/candidate-register/candidate-register.component.html -->
 
 <!-- Header -->
 <div class="d-flex align-items-center gap-3 mb-4">
-  <a routerLink="/admin/employees" class="back-btn">
+  <a routerLink="/admin/candidates" class="back-btn">
     <i class="bi bi-arrow-left"></i> Back
   </a>
   <div>
-    <h1 class="h4 fw-bold mb-0">Register New Employee</h1>
-    <p class="text-muted small mb-0">Fill all steps to create an employee profile</p>
+    <h1 class="h4 fw-bold mb-0">Register New Candidate</h1>
+    <p class="text-muted small mb-0">Fill all steps to create an candidate profile</p>
   </div>
 </div>
 
@@ -596,7 +596,7 @@
     <!-- ══════════════════ STEP 5: Credentials ══════════════════ -->
     @if (currentStep === 5) {
       <h5 class="card-section-header card-section-header--purple mb-4"><i class="bi bi-key"></i> Login Credentials</h5>
-      <p class="text-muted small mb-4">These credentials will be emailed to the employee after registration.</p>
+      <p class="text-muted small mb-4">These credentials will be emailed to the candidate after registration.</p>
       <div class="row g-3">
         <div class="col-md-6">
           <label class="form-label">Email Address <span class="text-danger">*</span></label>
@@ -648,7 +648,7 @@
         @if (loading) {
           <span class="spinner-border spinner-border-sm me-2"></span> Registering…
         } @else {
-          <i class="bi bi-check-lg me-1"></i> Register Employee
+          <i class="bi bi-check-lg me-1"></i> Register Candidate
         }
       </button>
     }

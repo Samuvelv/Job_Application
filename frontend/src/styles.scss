@@ -334,7 +334,7 @@ body {
   background: rgba(255,255,255,.12);
   color: #c7d2fe;
 }
-.sidebar-brand .badge-role-employee {
+.sidebar-brand .badge-role-candidate {
   background: rgba(16,185,129,.22);
   color: #6ee7b7;
 }
@@ -411,7 +411,7 @@ body {
 // Per-icon accent colors (matched to route semantics)
 // Dashboard
 .sidebar-link .bi-grid-1x2-fill       { color: #67e8f9; }  // cyan
-// Employees / profile
+// Candidates / profile
 .sidebar-link .bi-people-fill         { color: #86efac; }  // green
 .sidebar-link .bi-person-circle       { color: #86efac; }
 // Recruiters
@@ -830,7 +830,7 @@ body {
   background: var(--th-gradient-primary);
   color: #fff;
 }
-.badge-role-employee {
+.badge-role-candidate {
   background: var(--th-gradient-success);
   color: #fff;
 }
@@ -2334,7 +2334,7 @@ body {
   }
 }
 
-// ── Media Upload Cell (employee-edit media section) ──────────────────────────
+// ── Media Upload Cell (candidate-edit media section) ──────────────────────────
 .media-upload-cell {
   display: flex;
   flex-direction: column;
@@ -3776,7 +3776,7 @@ body {
   &--default { background: var(--th-surface-raised); color: var(--th-text-secondary); }
 }
 
-// ── Profile tabs (override for employee profile) ────────────────────────────
+// ── Profile tabs (override for candidate profile) ────────────────────────────
 .profile-tabs {
   display: flex;
   gap: 2px;
@@ -5683,7 +5683,7 @@ body {
 
 // ══════════════════════════════════════════════════════════════════════════════
 //  RECRUITER — CANDIDATE PROFILE PANEL
-//  Wide slide-in panel that hosts <app-employee-profile> read-only
+//  Wide slide-in panel that hosts <app-candidate-profile> read-only
 // ══════════════════════════════════════════════════════════════════════════════
 
 // Override the base .detail-panel width for this wider variant

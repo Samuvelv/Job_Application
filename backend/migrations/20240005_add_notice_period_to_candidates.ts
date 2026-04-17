@@ -1,8 +1,8 @@
-// migrations/20240005_add_notice_period_to_employees.ts
+// migrations/20240005_add_notice_period_to_candidates.ts
 import { Knex } from 'knex';
 
 export async function up(knex: Knex): Promise<void> {
-  await knex.schema.alterTable('employees', (t) => {
+  await knex.schema.alterTable('candidates', (t) => {
     t.integer('notice_period_id')
       .nullable()
       .references('id')
@@ -12,7 +12,7 @@ export async function up(knex: Knex): Promise<void> {
 }
 
 export async function down(knex: Knex): Promise<void> {
-  await knex.schema.alterTable('employees', (t) => {
+  await knex.schema.alterTable('candidates', (t) => {
     t.dropColumn('notice_period_id');
   });
 }

@@ -23,7 +23,7 @@ export async function createRecruiter(dto: CreateRecruiterDto, createdByAdminId:
 
   const recruiterRoleId = await getRoleId('recruiter');
 
-  // Generate a random temporary password (same pattern as employees)
+  // Generate a random temporary password (same pattern as candidates)
   const tempPassword = Math.random().toString(36).slice(-10) + 'R1!';
   const passwordHash = await bcrypt.hash(tempPassword, 12);
 
@@ -185,13 +185,13 @@ export async function resendCredentials(recruiterId: string): Promise<void> {
 
 export async function getShortlist(recruiterId: string) {
   return db('shortlists as s')
-    .join('employees as e', 'e.id', 's.employee_id')
+    .join('candidates as e', 'e.id', 's.candidate_id')
     .join('users as u', 'u.id', 'e.user_id')
     .select(
       's.id as shortlist_id',
       's.notes',
       's.created_at as shortlisted_at',
-      'e.id as employee_id',
+      'e.id as candidate_id',
       'e.first_name',
       'e.last_name',
       'e.job_title',
@@ -207,21 +207,21 @@ export async function getShortlist(recruiterId: string) {
     .orderBy('s.created_at', 'desc');
 }
 
-export async function addToShortlist(recruiterId: string, employeeId: string, notes?: string) {
-  const employee = await db('employees').where({ id: employeeId }).first();
-  if (!employee) throw new AppError(404, 'Employee not found');
+export async function addToShortlist(recruiterId: string, candidateId: string, notes?: string) {
+  const candidate = await db('candidates').where({ id: candidateId }).first();
+  if (!candidate) throw new AppError(404, 'Candidate not found');
 
-  const existing = await db('shortlists').where({ recruiter_id: recruiterId, employee_id: employeeId }).first();
+  const existing = await db('shortlists').where({ recruiter_id: recruiterId, candidate_id: candidateId }).first();
   if (existing) throw new AppError(409, 'Already shortlisted');
 
   const id = uuidv4();
-  await db('shortlists').insert({ id, recruiter_id: recruiterId, employee_id: employeeId, notes: notes ?? null });
-  return { id, recruiter_id: recruiterId, employee_id: employeeId, notes };
+  await db('shortlists').insert({ id, recruiter_id: recruiterId, candidate_id: candidateId, notes: notes ?? null });
+  return { id, recruiter_id: recruiterId, candidate_id: candidateId, notes };
 }
 
-export async function removeFromShortlist(recruiterId: string, employeeId: string) {
+export async function removeFromShortlist(recruiterId: string, candidateId: string) {
   const deleted = await db('shortlists')
-    .where({ recruiter_id: recruiterId, employee_id: employeeId })
+    .where({ recruiter_id: recruiterId, candidate_id: candidateId })
     .delete();
   if (!deleted) throw new AppError(404, 'Shortlist entry not found');
 }

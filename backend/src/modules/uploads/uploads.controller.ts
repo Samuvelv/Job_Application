@@ -6,10 +6,10 @@ import { db } from '../../config/db';
 import { AppError } from '../../middleware/errorHandler';
 import { MAX_SIZES } from '../../config/multer';
 import {
-  updateEmployeeFile,
+  updateCandidateFile,
   addCertificateFile,
-  getEmployeeById,
-} from '../employees/employees.service';
+  getCandidateById,
+} from '../candidates/candidates.service';
 import { logAudit } from '../../services/audit.service';
 
 type FileField = 'profile_photo_url' | 'resume_url' | 'intro_video_url';
@@ -64,19 +64,19 @@ function publicIdFromUrl(secureUrl: string): string {
   return match[1].replace(/\.[^/.]+$/, ''); // strip file extension
 }
 
-/** Resolve the employee row that belongs to the calling user */
-async function getOwnEmployeeId(userId: string): Promise<string | null> {
-  const row = await db('employees').where({ user_id: userId }).select('id').first();
+/** Resolve the candidate row that belongs to the calling user */
+async function getOwnCandidateId(userId: string): Promise<string | null> {
+  const row = await db('candidates').where({ user_id: userId }).select('id').first();
   return row?.id ?? null;
 }
 
-// ── Stage file (employee edit-request flow) ───────────────────────────────────
+// ── Stage file (candidate edit-request flow) ───────────────────────────────────
 
-/** POST /api/v1/employees/me/stage-file/:type
+/** POST /api/v1/candidates/me/stage-file/:type
  * Upload to Cloudinary, return the secure_url.
- * Does NOT write to the employee row — included in the edit-request payload.
+ * Does NOT write to the candidate row — included in the edit-request payload.
  */
-export async function stageEmployeeFile(
+export async function stageCandidateFile(
   req: Request,
   res: Response,
   next: NextFunction,
@@ -107,10 +107,10 @@ export async function stageEmployeeFile(
   }
 }
 
-// ── Upload directly to employee profile ───────────────────────────────────────
+// ── Upload directly to candidate profile ───────────────────────────────────────
 
-/** POST /api/v1/employees/:id/files/:type */
-export async function uploadEmployeeFile(
+/** POST /api/v1/candidates/:id/files/:type */
+export async function uploadCandidateFile(
   req: Request,
   res: Response,
   next: NextFunction,
@@ -119,9 +119,9 @@ export async function uploadEmployeeFile(
     const id   = p(req.params['id']);
     const type = p(req.params['type']);
 
-    // Employees may only upload to their own profile
-    if (req.user?.role === 'employee') {
-      const ownId = await getOwnEmployeeId(req.user.sub);
+    // Candidates may only upload to their own profile
+    if (req.user?.role === 'candidate') {
+      const ownId = await getOwnCandidateId(req.user.sub);
       if (ownId !== id) throw new AppError(403, 'Access denied');
     }
 
@@ -133,7 +133,7 @@ export async function uploadEmployeeFile(
       throw new AppError(413, `File too large. Max size for ${type}: ${maxSize / 1024 / 1024} MB`);
     }
 
-    await getEmployeeById(id);
+    await getCandidateById(id);
 
     const folder       = TYPE_TO_FOLDER[type]   ?? 'talenthub/misc';
     const resourceType = TYPE_TO_RESOURCE[type] ?? 'raw';
@@ -147,12 +147,12 @@ export async function uploadEmployeeFile(
     } else {
       const field = TYPE_TO_FIELD[type];
       if (!field) throw new AppError(400, `Unknown file type: ${type}`);
-      await updateEmployeeFile(id, field, secureUrl);
+      await updateCandidateFile(id, field, secureUrl);
     }
 
     await logAudit({
       userId: req.user?.sub, action: 'UPLOAD_FILE',
-      resource: 'employee', resourceId: id,
+      resource: 'candidate', resourceId: id,
       metadata: { type, cloudinaryPublicId: result.public_id },
       ipAddress: req.ip,
     });
@@ -169,8 +169,8 @@ export async function uploadEmployeeFile(
 
 // ── Delete profile / resume / video ──────────────────────────────────────────
 
-/** DELETE /api/v1/employees/:id/files/:type */
-export async function deleteEmployeeFile(
+/** DELETE /api/v1/candidates/:id/files/:type */
+export async function deleteCandidateFile(
   req: Request,
   res: Response,
   next: NextFunction,
@@ -179,19 +179,19 @@ export async function deleteEmployeeFile(
     const id   = p(req.params['id']);
     const type = p(req.params['type']);
 
-    if (req.user?.role === 'employee') {
-      const ownId = await getOwnEmployeeId(req.user.sub);
+    if (req.user?.role === 'candidate') {
+      const ownId = await getOwnCandidateId(req.user.sub);
       if (ownId !== id) throw new AppError(403, 'Access denied');
     }
 
     const field = TYPE_TO_FIELD[type];
     if (!field) throw new AppError(400, `Unknown file type: ${type}`);
 
-    const employee = await getEmployeeById(id);
-    const existing = (employee as any)[field] as string | null;
+    const candidate = await getCandidateById(id);
+    const existing = (candidate as any)[field] as string | null;
 
     // Clear DB reference first
-    await db('employees').where({ id }).update({ [field]: null, updated_at: new Date() });
+    await db('candidates').where({ id }).update({ [field]: null, updated_at: new Date() });
 
     // Destroy from Cloudinary
     if (existing) {
@@ -204,7 +204,7 @@ export async function deleteEmployeeFile(
 
     await logAudit({
       userId: req.user?.sub, action: 'DELETE_FILE',
-      resource: 'employee', resourceId: id,
+      resource: 'candidate', resourceId: id,
       metadata: { type },
       ipAddress: req.ip,
     });
@@ -217,8 +217,8 @@ export async function deleteEmployeeFile(
 
 // ── Delete certificate ────────────────────────────────────────────────────────
 
-/** DELETE /api/v1/employees/:id/certificates/:certId */
-export async function deleteEmployeeCertificate(
+/** DELETE /api/v1/candidates/:id/certificates/:certId */
+export async function deleteCandidateCertificate(
   req: Request,
   res: Response,
   next: NextFunction,
@@ -227,18 +227,18 @@ export async function deleteEmployeeCertificate(
     const id     = p(req.params['id']);
     const certId = p(req.params['certId']);
 
-    if (req.user?.role === 'employee') {
-      const ownId = await getOwnEmployeeId(req.user.sub);
+    if (req.user?.role === 'candidate') {
+      const ownId = await getOwnCandidateId(req.user.sub);
       if (ownId !== id) throw new AppError(403, 'Access denied');
     }
 
-    const cert = await db('employee_certificates')
-      .where({ id: certId, employee_id: id })
+    const cert = await db('candidate_certificates')
+      .where({ id: certId, candidate_id: id })
       .first();
 
     if (!cert) throw new AppError(404, 'Certificate not found');
 
-    await db('employee_certificates').where({ id: certId }).delete();
+    await db('candidate_certificates').where({ id: certId }).delete();
 
     // Destroy from Cloudinary
     if (cert.file_url) {
@@ -250,7 +250,7 @@ export async function deleteEmployeeCertificate(
 
     await logAudit({
       userId: req.user?.sub, action: 'DELETE_FILE',
-      resource: 'employee', resourceId: id,
+      resource: 'candidate', resourceId: id,
       metadata: { type: 'certificates', certId },
       ipAddress: req.ip,
     });

@@ -1,49 +1,49 @@
-// src/app/core/services/employee.service.ts
+// src/app/core/services/candidate.service.ts
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from '../../../environments/environment';
-import { Employee, EmployeeFilters } from '../models/employee.model';
+import { Candidate, CandidateFilters } from '../models/candidate.model';
 
-export interface PaginatedEmployees {
-  data: Employee[];
+export interface PaginatedCandidates {
+  data: Candidate[];
   pagination: { page: number; limit: number; total: number; pages: number };
 }
 
 @Injectable({ providedIn: 'root' })
-export class EmployeeService {
-  private readonly api = `${environment.apiUrl}/employees`;
+export class CandidateService {
+  private readonly api = `${environment.apiUrl}/candidates`;
 
   constructor(private http: HttpClient) {}
 
   // ── List / Filter ─────────────────────────────────────────────────────────
-  list(filters: EmployeeFilters = {}): Observable<PaginatedEmployees> {
+  list(filters: CandidateFilters = {}): Observable<PaginatedCandidates> {
     let params = new HttpParams();
     Object.entries(filters).forEach(([k, v]) => {
       if (v !== undefined && v !== null && v !== '') {
         params = params.set(k, Array.isArray(v) ? v.join(',') : String(v));
       }
     });
-    return this.http.get<PaginatedEmployees>(this.api, { params });
+    return this.http.get<PaginatedCandidates>(this.api, { params });
   }
 
   // ── Get one ───────────────────────────────────────────────────────────────
-  getById(id: string): Observable<{ employee: Employee }> {
-    return this.http.get<{ employee: Employee }>(`${this.api}/${id}`);
+  getById(id: string): Observable<{ candidate: Candidate }> {
+    return this.http.get<{ candidate: Candidate }>(`${this.api}/${id}`);
   }
 
-  getMyProfile(): Observable<{ employee: Employee }> {
-    return this.http.get<{ employee: Employee }>(`${this.api}/me`);
+  getMyProfile(): Observable<{ candidate: Candidate }> {
+    return this.http.get<{ candidate: Candidate }>(`${this.api}/me`);
   }
 
   // ── Create ────────────────────────────────────────────────────────────────
-  create(data: Partial<Employee> & { email: string; password: string }): Observable<{ employee: Employee }> {
-    return this.http.post<{ employee: Employee }>(this.api, data);
+  create(data: Partial<Candidate> & { email: string; password: string }): Observable<{ candidate: Candidate }> {
+    return this.http.post<{ candidate: Candidate }>(this.api, data);
   }
 
   // ── Update ────────────────────────────────────────────────────────────────
-  update(id: string, data: Partial<Employee>): Observable<{ employee: Employee }> {
-    return this.http.put<{ employee: Employee }>(`${this.api}/${id}`, data);
+  update(id: string, data: Partial<Candidate>): Observable<{ candidate: Candidate }> {
+    return this.http.put<{ candidate: Candidate }>(`${this.api}/${id}`, data);
   }
 
   // ── Delete ────────────────────────────────────────────────────────────────
@@ -58,7 +58,7 @@ export class EmployeeService {
 
   // ── File upload ───────────────────────────────────────────────────────────
   uploadFile(
-    employeeId: string,
+    candidateId: string,
     type: 'profiles' | 'resumes' | 'videos' | 'certificates',
     file: File,
     name?: string,
@@ -67,34 +67,34 @@ export class EmployeeService {
     form.append('file', file);
     if (name) form.append('name', name);
     return this.http.post<{ url: string; filename: string }>(
-      `${environment.apiUrl}/employees/${employeeId}/files/${type}`,
+      `${environment.apiUrl}/candidates/${candidateId}/files/${type}`,
       form,
     );
   }
 
   // ── File delete ───────────────────────────────────────────────────────────
   deleteFile(
-    employeeId: string,
+    candidateId: string,
     type: 'profiles' | 'resumes' | 'videos',
   ): Observable<{ message: string }> {
     return this.http.delete<{ message: string }>(
-      `${environment.apiUrl}/employees/${employeeId}/files/${type}`,
+      `${environment.apiUrl}/candidates/${candidateId}/files/${type}`,
     );
   }
 
   deleteCertificate(
-    employeeId: string,
+    candidateId: string,
     certId: number,
   ): Observable<{ message: string }> {
     return this.http.delete<{ message: string }>(
-      `${environment.apiUrl}/employees/${employeeId}/certificates/${certId}`,
+      `${environment.apiUrl}/candidates/${candidateId}/certificates/${certId}`,
     );
   }
 
-  // ── Self-service file helpers (employee uploading to own profile) ──────────
+  // ── Self-service file helpers (candidate uploading to own profile) ──────────
 
   /** Stage a file for an edit-request: stores on disk, returns relativePath only.
-   *  Does NOT update the employee row — include relativePath in the edit-request payload. */
+   *  Does NOT update the candidate row — include relativePath in the edit-request payload. */
   stageMyFile(
     type: 'profiles' | 'resumes' | 'videos',
     file: File,
@@ -102,13 +102,13 @@ export class EmployeeService {
     const form = new FormData();
     form.append('file', file);
     return this.http.post<{ relativePath: string; url: string; message: string }>(
-      `${environment.apiUrl}/employees/me/stage-file/${type}`,
+      `${environment.apiUrl}/candidates/me/stage-file/${type}`,
       form,
     );
   }
 
   uploadMyFile(
-    employeeId: string,
+    candidateId: string,
     type: 'profiles' | 'resumes' | 'videos' | 'certificates',
     file: File,
     name?: string,
@@ -117,26 +117,26 @@ export class EmployeeService {
     form.append('file', file);
     if (name) form.append('name', name);
     return this.http.post<{ url: string; filename: string; message: string }>(
-      `${environment.apiUrl}/employees/${employeeId}/files/${type}`,
+      `${environment.apiUrl}/candidates/${candidateId}/files/${type}`,
       form,
     );
   }
 
   deleteMyFile(
-    employeeId: string,
+    candidateId: string,
     type: 'profiles' | 'resumes' | 'videos',
   ): Observable<{ message: string }> {
     return this.http.delete<{ message: string }>(
-      `${environment.apiUrl}/employees/${employeeId}/files/${type}`,
+      `${environment.apiUrl}/candidates/${candidateId}/files/${type}`,
     );
   }
 
   deleteMyCertificate(
-    employeeId: string,
+    candidateId: string,
     certId: number,
   ): Observable<{ message: string }> {
     return this.http.delete<{ message: string }>(
-      `${environment.apiUrl}/employees/${employeeId}/certificates/${certId}`,
+      `${environment.apiUrl}/candidates/${candidateId}/certificates/${certId}`,
     );
   }
 }

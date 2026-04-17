@@ -13,24 +13,24 @@ export const adminRoutes: Routes = [
       import('./dashboard/admin-dashboard.component').then((m) => m.AdminDashboardComponent),
   },
   {
-    path: 'employees',
+    path: 'candidates',
     loadComponent: () =>
-      import('./employee-list/employee-list.component').then((m) => m.EmployeeListComponent),
+      import('./candidate-list/candidate-list.component').then((m) => m.CandidateListComponent),
   },
   {
-    path: 'employees/register',
+    path: 'candidates/register',
     loadComponent: () =>
-      import('./employee-register/employee-register.component').then((m) => m.EmployeeRegisterComponent),
+      import('./candidate-register/candidate-register.component').then((m) => m.CandidateRegisterComponent),
   },
   {
-    path: 'employees/:id/edit',
+    path: 'candidates/:id/edit',
     loadComponent: () =>
-      import('./employee-edit/employee-edit.component').then((m) => m.EmployeeEditComponent),
+      import('./candidate-edit/candidate-edit.component').then((m) => m.CandidateEditComponent),
   },
   {
-    path: 'employees/:id',
+    path: 'candidates/:id',
     loadComponent: () =>
-      import('./employee-profile/employee-profile-page.component').then((m) => m.EmployeeProfilePageComponent),
+      import('./candidate-profile/candidate-profile-page.component').then((m) => m.CandidateProfilePageComponent),
   },
   {
     path: 'recruiters',

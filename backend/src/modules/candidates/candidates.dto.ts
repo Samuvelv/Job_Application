@@ -1,4 +1,4 @@
-// src/modules/employees/employees.dto.ts
+// src/modules/candidates/candidates.dto.ts
 import { z } from 'zod';
 
 // ── Sub-schemas ───────────────────────────────────────────────────────────────
@@ -41,9 +41,9 @@ export const CertificateSchema = z.object({
   issue_date: z.string().optional(),
 });
 
-// ── Create Employee ───────────────────────────────────────────────────────────
+// ── Create Candidate ───────────────────────────────────────────────────────────
 
-export const CreateEmployeeSchema = z.object({
+export const CreateCandidateSchema = z.object({
   // Auth
   email:    z.string().email(),
   password: z.string().min(8).max(100),
@@ -86,10 +86,10 @@ export const CreateEmployeeSchema = z.object({
   certificates: z.array(CertificateSchema).optional(),
 });
 
-// ── Update Employee ───────────────────────────────────────────────────────────
+// ── Update Candidate ───────────────────────────────────────────────────────────
 // Also allows file URL fields so they can flow through the edit-request approval flow.
 
-export const UpdateEmployeeSchema = CreateEmployeeSchema
+export const UpdateCandidateSchema = CreateCandidateSchema
   .omit({ email: true, password: true })
   .extend({
     profile_photo_url: z.string().optional().nullable(),
@@ -100,7 +100,7 @@ export const UpdateEmployeeSchema = CreateEmployeeSchema
 
 // ── Filter/Query ──────────────────────────────────────────────────────────────
 
-export const EmployeeFilterSchema = z.object({
+export const CandidateFilterSchema = z.object({
   search:          z.string().optional(),
   industry:        z.string().optional(),
   occupation:      z.string().optional(),
@@ -114,6 +114,6 @@ export const EmployeeFilterSchema = z.object({
   limit:           z.coerce.number().int().min(1).max(100).default(20),
 });
 
-export type CreateEmployeeDto  = z.infer<typeof CreateEmployeeSchema>;
-export type UpdateEmployeeDto  = z.infer<typeof UpdateEmployeeSchema>;
-export type EmployeeFilterDto  = z.infer<typeof EmployeeFilterSchema>;
+export type CreateCandidateDto  = z.infer<typeof CreateCandidateSchema>;
+export type UpdateCandidateDto  = z.infer<typeof UpdateCandidateSchema>;
+export type CandidateFilterDto  = z.infer<typeof CandidateFilterSchema>;

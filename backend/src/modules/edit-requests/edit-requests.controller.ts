@@ -10,7 +10,7 @@ import { logAudit } from '../../services/audit.service';
 
 const p = (v: string | string[]): string => (Array.isArray(v) ? v[0] : v);
 
-// ── Employee: submit ──────────────────────────────────────────────────────────
+// ── Candidate: submit ──────────────────────────────────────────────────────────
 
 export async function submit(req: Request, res: Response, next: NextFunction): Promise<void> {
   try {
@@ -24,7 +24,7 @@ export async function submit(req: Request, res: Response, next: NextFunction): P
   } catch (err) { next(err); }
 }
 
-// ── Employee: get own latest request ─────────────────────────────────────────
+// ── Candidate: get own latest request ─────────────────────────────────────────
 
 export async function getMyRequest(req: Request, res: Response, next: NextFunction): Promise<void> {
   try {

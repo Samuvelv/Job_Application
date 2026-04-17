@@ -24,10 +24,10 @@ export async function up(knex: Knex): Promise<void> {
   await knex.schema.createTable('shortlists', (t) => {
     t.uuid('id').primary().defaultTo(knex.raw('gen_random_uuid()'));
     t.uuid('recruiter_id').notNullable().references('id').inTable('recruiters').onDelete('CASCADE');
-    t.uuid('employee_id').notNullable().references('id').inTable('employees').onDelete('CASCADE');
+    t.uuid('candidate_id').notNullable().references('id').inTable('candidates').onDelete('CASCADE');
     t.text('notes').nullable();
     t.timestamp('created_at', { useTz: true }).defaultTo(knex.fn.now());
-    t.unique(['recruiter_id', 'employee_id']);
+    t.unique(['recruiter_id', 'candidate_id']);
   });
 
   await knex.schema.createTable('audit_logs', (t) => {

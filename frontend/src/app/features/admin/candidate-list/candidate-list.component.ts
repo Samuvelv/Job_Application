@@ -1,25 +1,25 @@
-// src/app/features/admin/employee-list/employee-list.component.ts
+// src/app/features/admin/candidate-list/candidate-list.component.ts
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, FormGroup } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { debounceTime, distinctUntilChanged, switchMap, catchError, of } from 'rxjs';
-import { EmployeeService } from '../../../core/services/employee.service';
-import { Employee } from '../../../core/models/employee.model';
+import { CandidateService } from '../../../core/services/candidate.service';
+import { Candidate } from '../../../core/models/candidate.model';
 import { PageHeaderComponent } from '../../../shared/components/page-header/page-header.component';
 import { EmptyStateComponent } from '../../../shared/components/empty-state/empty-state.component';
 import { ToastService } from '../../../core/services/toast.service';
 import { ConfirmDialogService } from '../../../core/services/confirm-dialog.service';
 
 @Component({
-  selector: 'app-employee-list',
+  selector: 'app-candidate-list',
   standalone: true,
   imports: [CommonModule, ReactiveFormsModule, RouterLink, PageHeaderComponent, EmptyStateComponent],
   template: `
-    <app-page-header title="Employees" icon="bi-people-fill"
-                     [subtitle]="pagination.total + ' total employees'">
-      <a routerLink="/admin/employees/register" class="btn btn-primary btn-sm">
-        <i class="bi bi-plus-lg me-1"></i> Register Employee
+    <app-page-header title="Candidates" icon="bi-people-fill"
+                     [subtitle]="pagination.total + ' total candidates'">
+      <a routerLink="/admin/candidates/register" class="btn btn-primary btn-sm">
+        <i class="bi bi-plus-lg me-1"></i> Register Candidate
       </a>
     </app-page-header>
 
@@ -58,26 +58,26 @@ import { ConfirmDialogService } from '../../../core/services/confirm-dialog.serv
     @if (loading) {
       <div class="loading-state">
         <div class="spinner-border"></div>
-        <div class="loading-state__text">Loading employees…</div>
+        <div class="loading-state__text">Loading candidates…</div>
       </div>
     }
 
     <!-- Empty -->
-    @if (!loading && employees.length === 0) {
+    @if (!loading && candidates.length === 0) {
       <app-empty-state icon="bi-people"
-                       title="No employees found"
-                       message="Try adjusting your filters or register a new employee." />
+                       title="No candidates found"
+                       message="Try adjusting your filters or register a new candidate." />
     }
 
     <!-- Responsive card-table -->
-    @if (!loading && employees.length > 0) {
+    @if (!loading && candidates.length > 0) {
       <div class="section-card">
         <!-- Desktop table -->
         <div class="table-responsive d-none d-md-block">
           <table class="table table-hover align-middle mb-0">
             <thead class="table-light">
               <tr>
-                <th>Employee</th>
+                <th>Candidate</th>
                 <th>Job Title</th>
                 <th>Industry</th>
                 <th>Location</th>
@@ -87,7 +87,7 @@ import { ConfirmDialogService } from '../../../core/services/confirm-dialog.serv
               </tr>
             </thead>
             <tbody>
-              @for (emp of employees; track emp.id) {
+              @for (emp of candidates; track emp.id) {
                 <tr>
                   <td>
                     <div class="d-flex align-items-center gap-2">
@@ -121,14 +121,14 @@ import { ConfirmDialogService } from '../../../core/services/confirm-dialog.serv
                   </td>
                   <td>
                     <div class="tbl-actions">
-                      <a [routerLink]="['/admin/employees', emp.id]"
+                      <a [routerLink]="['/admin/candidates', emp.id]"
                         class="tbl-actions__btn tbl-actions__btn--view tbl-actions__btn--icon"
                         title="View profile">
                         <i class="bi bi-eye"></i>
                       </a>
-                      <a [routerLink]="['/admin/employees', emp.id, 'edit']"
+                      <a [routerLink]="['/admin/candidates', emp.id, 'edit']"
                         class="tbl-actions__btn tbl-actions__btn--edit tbl-actions__btn--icon"
-                        title="Edit employee">
+                        title="Edit candidate">
                         <i class="bi bi-pencil"></i>
                       </a>
                       <div class="tbl-actions__sep"></div>
@@ -137,7 +137,7 @@ import { ConfirmDialogService } from '../../../core/services/confirm-dialog.serv
                         <i class="bi bi-envelope"></i>
                       </button>
                       <button class="tbl-actions__btn tbl-actions__btn--danger tbl-actions__btn--icon"
-                        (click)="deleteEmployee(emp)" title="Delete employee">
+                        (click)="deleteCandidate(emp)" title="Delete candidate">
                         <i class="bi bi-trash"></i>
                       </button>
                     </div>
@@ -150,7 +150,7 @@ import { ConfirmDialogService } from '../../../core/services/confirm-dialog.serv
 
         <!-- Mobile card list -->
         <div class="d-md-none">
-          @for (emp of employees; track emp.id) {
+          @for (emp of candidates; track emp.id) {
             <div class="card-table-row border-bottom p-3">
               <div class="d-flex align-items-center gap-3 mb-2">
                 @if (emp.profile_photo_url) {
@@ -180,14 +180,14 @@ import { ConfirmDialogService } from '../../../core/services/confirm-dialog.serv
                 @if (emp.years_experience != null) { <span><i class="bi bi-clock-history me-1"></i>{{ emp.years_experience }} yrs</span> }
               </div>
               <div class="tbl-actions">
-                <a [routerLink]="['/admin/employees', emp.id]"
+                <a [routerLink]="['/admin/candidates', emp.id]"
                   class="tbl-actions__btn tbl-actions__btn--view tbl-actions__btn--icon"
                   title="View profile">
                   <i class="bi bi-eye"></i>
                 </a>
-                <a [routerLink]="['/admin/employees', emp.id, 'edit']"
+                <a [routerLink]="['/admin/candidates', emp.id, 'edit']"
                   class="tbl-actions__btn tbl-actions__btn--edit tbl-actions__btn--icon"
-                  title="Edit employee">
+                  title="Edit candidate">
                   <i class="bi bi-pencil"></i>
                 </a>
                 <div class="tbl-actions__sep"></div>
@@ -196,7 +196,7 @@ import { ConfirmDialogService } from '../../../core/services/confirm-dialog.serv
                   <i class="bi bi-envelope"></i>
                 </button>
                 <button class="tbl-actions__btn tbl-actions__btn--danger tbl-actions__btn--icon"
-                  (click)="deleteEmployee(emp)" title="Delete employee">
+                  (click)="deleteCandidate(emp)" title="Delete candidate">
                   <i class="bi bi-trash"></i>
                 </button>
               </div>
@@ -229,14 +229,14 @@ import { ConfirmDialogService } from '../../../core/services/confirm-dialog.serv
     }
   `,
 })
-export class EmployeeListComponent implements OnInit {
-  employees: Employee[] = [];
+export class CandidateListComponent implements OnInit {
+  candidates: Candidate[] = [];
   pagination = { page: 1, limit: 20, total: 0, pages: 1 };
   loading = true;
   filterForm!: FormGroup;
 
   constructor(
-    private empSvc: EmployeeService,
+    private empSvc: CandidateService,
     private fb: FormBuilder,
     private toast: ToastService,
     private confirm: ConfirmDialogService,
@@ -261,19 +261,19 @@ export class EmployeeListComponent implements OnInit {
         );
       }),
     ).subscribe((res) => {
-      this.employees  = res.data;
+      this.candidates  = res.data;
       this.pagination = res.pagination;
       this.loading    = false;
     });
 
-    this.loadEmployees();
+    this.loadCandidates();
   }
 
-  loadEmployees(): void {
+  loadCandidates(): void {
     this.loading = true;
     this.empSvc.list({ ...this.filterForm.value, page: this.pagination.page, limit: 20 })
       .subscribe({
-        next:  res => { this.employees = res.data; this.pagination = res.pagination; this.loading = false; },
+        next:  res => { this.candidates = res.data; this.pagination = res.pagination; this.loading = false; },
         error: ()  => { this.loading = false; },
       });
   }
@@ -281,12 +281,12 @@ export class EmployeeListComponent implements OnInit {
   clearFilters(): void {
     this.filterForm.reset();
     this.pagination.page = 1;
-    this.loadEmployees();
+    this.loadCandidates();
   }
 
   changePage(page: number): void {
     this.pagination.page = page;
-    this.loadEmployees();
+    this.loadCandidates();
   }
 
   pageRange(): number[] {
@@ -296,7 +296,7 @@ export class EmployeeListComponent implements OnInit {
     return Array.from({ length: end - start + 1 }, (_, i) => start + i);
   }
 
-  resendCreds(emp: Employee): void {
+  resendCreds(emp: Candidate): void {
     this.confirm.confirm({ title: 'Resend Credentials', message: `Resend login credentials to ${emp.email}?`, confirmLabel: 'Send', confirmClass: 'btn-primary' })
       .then(ok => {
         if (!ok) return;
@@ -307,12 +307,12 @@ export class EmployeeListComponent implements OnInit {
       });
   }
 
-  deleteEmployee(emp: Employee): void {
-    this.confirm.confirm({ title: 'Delete Employee', message: `Delete ${emp.first_name} ${emp.last_name}? This cannot be undone.`, confirmLabel: 'Delete', confirmClass: 'btn-danger' })
+  deleteCandidate(emp: Candidate): void {
+    this.confirm.confirm({ title: 'Delete Candidate', message: `Delete ${emp.first_name} ${emp.last_name}? This cannot be undone.`, confirmLabel: 'Delete', confirmClass: 'btn-danger' })
       .then(ok => {
         if (!ok) return;
         this.empSvc.delete(emp.id).subscribe({
-          next:  () => { this.toast.show('Employee deleted', 'success'); this.loadEmployees(); },
+          next:  () => { this.toast.show('Candidate deleted', 'success'); this.loadCandidates(); },
           error: (err) => this.toast.show(err?.error?.message ?? 'Delete failed', 'error'),
         });
       });

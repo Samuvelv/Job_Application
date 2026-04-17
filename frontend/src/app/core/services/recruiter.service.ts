@@ -64,11 +64,11 @@ export class RecruiterService {
     return this.http.get<{ shortlist: ShortlistEntry[] }>(`${this.api}/${id}/shortlist`);
   }
 
-  addToShortlist(employeeId: string, notes?: string): Observable<{ entry: ShortlistEntry }> {
-    return this.http.post<{ entry: ShortlistEntry }>(`${this.api}/me/shortlist/${employeeId}`, { notes });
+  addToShortlist(candidateId: string, notes?: string): Observable<{ entry: ShortlistEntry }> {
+    return this.http.post<{ entry: ShortlistEntry }>(`${this.api}/me/shortlist/${candidateId}`, { notes });
   }
 
-  removeFromShortlist(employeeId: string): Observable<{ message: string }> {
-    return this.http.delete<{ message: string }>(`${this.api}/me/shortlist/${employeeId}`);
+  removeFromShortlist(candidateId: string): Observable<{ message: string }> {
+    return this.http.delete<{ message: string }>(`${this.api}/me/shortlist/${candidateId}`);
   }
 }

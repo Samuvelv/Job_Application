@@ -339,14 +339,14 @@ export class LoginComponent implements OnInit {
   //   // ── Mock login (no API required) ──────────────────────────────────────
   //   // Detect role from the email field:
   //   //   • contains "recruiter" → recruiter
-  //   //   • contains "employee" or "emp" → employee
+  //   //   • contains "candidate" or "emp" → candidate
   //   //   • anything else → admin
   //   const email: string = (this.form.value.email ?? '').toLowerCase().trim();
-  //   let role: 'admin' | 'employee' | 'recruiter' = 'admin';
+  //   let role: 'admin' | 'candidate' | 'recruiter' = 'admin';
   //   if (email.includes('recruiter')) {
   //     role = 'recruiter';
-  //   } else if (email.includes('employee') || email.includes('emp')) {
-  //     role = 'employee';
+  //   } else if (email.includes('candidate') || email.includes('emp')) {
+  //     role = 'candidate';
   //   }
 
   //   const mockUser = {

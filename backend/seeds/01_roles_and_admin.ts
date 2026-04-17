@@ -9,7 +9,7 @@ export async function seed(knex: Knex): Promise<void> {
   const roles = await knex('roles')
     .insert([
       { name: 'admin' },
-      { name: 'employee' },
+      { name: 'candidate' },
       { name: 'recruiter' },
     ])
     .returning('*');

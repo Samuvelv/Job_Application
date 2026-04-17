@@ -257,7 +257,7 @@ import { ConfirmDialogService } from '../../../core/services/confirm-dialog.serv
                     <span class="sl-row__date">
                       <i class="bi bi-bookmark-fill"></i>{{ entry.shortlisted_at | date:'dd MMM yyyy' }}
                     </span>
-                    <a [routerLink]="['/admin/employees', entry.employee_id]"
+                    <a [routerLink]="['/admin/candidates', entry.candidate_id]"
                       class="sl-row__view-btn">
                       <i class="bi bi-eye me-1"></i>View
                     </a>

@@ -66,7 +66,7 @@ export class TopbarComponent {
 
   roleBadgeClass = computed(() => ({
     'badge-role-admin':     this.role() === 'admin',
-    'badge-role-employee':  this.role() === 'employee',
+    'badge-role-candidate':  this.role() === 'candidate',
     'badge-role-recruiter': this.role() === 'recruiter',
   }));
 

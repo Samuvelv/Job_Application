@@ -6,9 +6,9 @@ import * as ctrl        from './edit-requests.controller';
 
 const router = Router();
 
-// ── Employee: submit + view own request ──────────────────────────────────────
-router.post('/me',  authenticate, authorize('employee'), ctrl.submit);
-router.get( '/me',  authenticate, authorize('employee'), ctrl.getMyRequest);
+// ── Candidate: submit + view own request ──────────────────────────────────────
+router.post('/me',  authenticate, authorize('candidate'), ctrl.submit);
+router.get( '/me',  authenticate, authorize('candidate'), ctrl.getMyRequest);
 
 // ── Admin: list + review ──────────────────────────────────────────────────────
 router.get(  '/',       authenticate, authorize('admin'), ctrl.list);

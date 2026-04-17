@@ -1,4 +1,4 @@
-// src/app/features/admin/employee-register/employee-register.component.ts
+// src/app/features/admin/candidate-register/candidate-register.component.ts
 import { Component, OnInit, OnDestroy, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import {
@@ -7,7 +7,7 @@ import {
 } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { Subscription, debounceTime } from 'rxjs';
-import { EmployeeService } from '../../../core/services/employee.service';
+import { CandidateService } from '../../../core/services/candidate.service';
 import { MasterDataService } from '../../../core/services/master-data.service';
 import { SearchableSelectComponent, SelectOption } from '../../../shared/components/searchable-select/searchable-select.component';
 import { ChipMultiSelectComponent, ChipOption } from '../../../shared/components/chip-multi-select/chip-multi-select.component';
@@ -31,12 +31,12 @@ function langGroupValidator(g: AbstractControl): ValidationErrors | null {
 }
 
 @Component({
-  selector: 'app-employee-register',
+  selector: 'app-candidate-register',
   standalone: true,
   imports: [CommonModule, ReactiveFormsModule, RouterLink, SearchableSelectComponent, ChipMultiSelectComponent],
-  templateUrl: './employee-register.component.html',
+  templateUrl: './candidate-register.component.html',
 })
-export class EmployeeRegisterComponent implements OnInit, OnDestroy {
+export class CandidateRegisterComponent implements OnInit, OnDestroy {
   currentStep = 1;
   totalSteps  = 5;
   loading     = false;
@@ -139,7 +139,7 @@ export class EmployeeRegisterComponent implements OnInit, OnDestroy {
 
   constructor(
     private fb: FormBuilder,
-    private empSvc: EmployeeService,
+    private empSvc: CandidateService,
     private router: Router,
     public master: MasterDataService,
   ) {}
@@ -432,12 +432,12 @@ export class EmployeeRegisterComponent implements OnInit, OnDestroy {
     this.loading = true;
     this.empSvc.create(payload as any).subscribe({
       next: async (res) => {
-        const id = res.employee.id;
+        const id = res.candidate.id;
         await this.uploadPendingFiles(id);
         this.clearDraft();
         this.loading    = false;
-        this.successMsg = `Employee ${res.employee.first_name} registered successfully! Credentials emailed.`;
-        setTimeout(() => this.router.navigate(['/admin/employees']), 2000);
+        this.successMsg = `Candidate ${res.candidate.first_name} registered successfully! Credentials emailed.`;
+        setTimeout(() => this.router.navigate(['/admin/candidates']), 2000);
       },
       error: (err) => {
         this.loading  = false;
@@ -446,13 +446,13 @@ export class EmployeeRegisterComponent implements OnInit, OnDestroy {
     });
   }
 
-  private async uploadPendingFiles(employeeId: string): Promise<void> {
+  private async uploadPendingFiles(candidateId: string): Promise<void> {
     const uploads: Promise<any>[] = [];
-    if (this.pendingPhoto)  uploads.push(this.empSvc.uploadFile(employeeId, 'profiles',     this.pendingPhoto).toPromise());
-    if (this.pendingResume) uploads.push(this.empSvc.uploadFile(employeeId, 'resumes',      this.pendingResume).toPromise());
-    if (this.pendingVideo)  uploads.push(this.empSvc.uploadFile(employeeId, 'videos',       this.pendingVideo).toPromise());
+    if (this.pendingPhoto)  uploads.push(this.empSvc.uploadFile(candidateId, 'profiles',     this.pendingPhoto).toPromise());
+    if (this.pendingResume) uploads.push(this.empSvc.uploadFile(candidateId, 'resumes',      this.pendingResume).toPromise());
+    if (this.pendingVideo)  uploads.push(this.empSvc.uploadFile(candidateId, 'videos',       this.pendingVideo).toPromise());
     for (const cert of this.pendingCerts) {
-      uploads.push(this.empSvc.uploadFile(employeeId, 'certificates', cert.file, cert.name).toPromise());
+      uploads.push(this.empSvc.uploadFile(candidateId, 'certificates', cert.file, cert.name).toPromise());
     }
     await Promise.allSettled(uploads);
   }

@@ -1,12 +1,12 @@
-// src/app/features/employee/dashboard/employee-dashboard.component.ts
+// src/app/features/candidate/dashboard/candidate-dashboard.component.ts
 import { Component, signal, OnInit, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { AuthService } from '../../../core/services/auth.service';
-import { StatsService, EmployeeStats } from '../../../core/services/stats.service';
+import { StatsService, CandidateStats } from '../../../core/services/stats.service';
 
 @Component({
-  selector: 'app-employee-dashboard',
+  selector: 'app-candidate-dashboard',
   standalone: true,
   imports: [CommonModule, RouterLink],
   template: `
@@ -14,7 +14,7 @@ import { StatsService, EmployeeStats } from '../../../core/services/stats.servic
     <div class="dash-hero" style="background:var(--th-gradient-success);background-size:200% 200%">
       <div class="d-flex align-items-start justify-content-between flex-wrap gap-3">
         <div>
-          <div class="dash-hero__greeting">Employee Portal</div>
+          <div class="dash-hero__greeting">Candidate Portal</div>
           <h1 class="dash-hero__title mb-0">Good {{ timeOfDay() }},</h1>
           <div class="dash-hero__subtitle mt-1">{{ email() }}</div>
           <div class="dash-hero__meta">
@@ -58,10 +58,10 @@ import { StatsService, EmployeeStats } from '../../../core/services/stats.servic
       </div>
 
       <div class="dash-hero__actions">
-        <a routerLink="/employee/profile" class="dash-hero__btn dash-hero__btn--solid">
+        <a routerLink="/candidate/profile" class="dash-hero__btn dash-hero__btn--solid">
           <i class="bi bi-person-circle"></i>View Profile
         </a>
-        <a routerLink="/employee/edit-request" class="dash-hero__btn">
+        <a routerLink="/candidate/edit-request" class="dash-hero__btn">
           <i class="bi bi-pencil"></i>Request Edit
         </a>
       </div>
@@ -104,7 +104,7 @@ import { StatsService, EmployeeStats } from '../../../core/services/stats.servic
             <p style="font-size:.8125rem;color:var(--th-text-secondary);margin:0">
               <i class="bi bi-info-circle me-1" style="color:var(--th-info)"></i>
               Complete your profile to improve visibility to recruiters.
-              <a routerLink="/employee/edit-request" style="color:var(--th-primary);font-weight:600;text-decoration:none">
+              <a routerLink="/candidate/edit-request" style="color:var(--th-primary);font-weight:600;text-decoration:none">
                 &nbsp;Update now →
               </a>
             </p>
@@ -180,7 +180,7 @@ import { StatsService, EmployeeStats } from '../../../core/services/stats.servic
     </div>
 
     <div class="d-flex flex-column gap-2">
-      <a routerLink="/employee/profile" class="nav-link-card nav-link-card--success">
+      <a routerLink="/candidate/profile" class="nav-link-card nav-link-card--success">
         <div class="nav-link-card__icon">
           <i class="bi bi-person-circle"></i>
         </div>
@@ -191,7 +191,7 @@ import { StatsService, EmployeeStats } from '../../../core/services/stats.servic
         <i class="bi bi-chevron-right nav-link-card__arrow"></i>
       </a>
 
-      <a routerLink="/employee/edit-request" class="nav-link-card nav-link-card--warning">
+      <a routerLink="/candidate/edit-request" class="nav-link-card nav-link-card--warning">
         <div class="nav-link-card__icon">
           <i class="bi bi-pencil"></i>
         </div>
@@ -210,8 +210,8 @@ import { StatsService, EmployeeStats } from '../../../core/services/stats.servic
     </div>
   `,
 })
-export class EmployeeDashboardComponent implements OnInit {
-  stats   = signal<EmployeeStats | null>(null);
+export class CandidateDashboardComponent implements OnInit {
+  stats   = signal<CandidateStats | null>(null);
   loading = signal(true);
 
   readonly circumference = 2 * Math.PI * 33; // r = 33
@@ -222,7 +222,7 @@ export class EmployeeDashboardComponent implements OnInit {
   ) {}
 
   ngOnInit(): void {
-    this.statsService.getEmployeeStats().subscribe({
+    this.statsService.getCandidateStats().subscribe({
       next:  s => { this.stats.set(s); this.loading.set(false); },
       error: () => this.loading.set(false),
     });

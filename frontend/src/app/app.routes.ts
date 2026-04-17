@@ -37,14 +37,14 @@ export const routes: Routes = [
       import('./features/admin/admin.routes').then((m) => m.adminRoutes),
   },
 
-  // ── Employee ──────────────────────────────────────────────────────────────────
+  // ── Candidate ──────────────────────────────────────────────────────────────────
   {
-    path: 'employee',
+    path: 'candidate',
     canActivate: [authGuard],
     canActivateChild: [authGuard, roleGuard],
-    data: { roles: ['employee'] },
+    data: { roles: ['candidate'] },
     loadChildren: () =>
-      import('./features/employee/employee.routes').then((m) => m.employeeRoutes),
+      import('./features/candidate/candidate.routes').then((m) => m.candidateRoutes),
   },
 
   // ── Recruiter ─────────────────────────────────────────────────────────────────

@@ -10,8 +10,8 @@ const router = Router();
 // MUST be declared before /:id routes so Express doesn't match 'me' as an id param
 router.get(   '/me',                          authenticate, authorize('recruiter'), ctrl.getMyProfile);
 router.get(   '/me/shortlist',                authenticate, authorize('recruiter'), ctrl.getShortlist);
-router.post(  '/me/shortlist/:employeeId',    authenticate, authorize('recruiter'), ctrl.addShortlist);
-router.delete('/me/shortlist/:employeeId',    authenticate, authorize('recruiter'), ctrl.removeShortlist);
+router.post(  '/me/shortlist/:candidateId',    authenticate, authorize('recruiter'), ctrl.addShortlist);
+router.delete('/me/shortlist/:candidateId',    authenticate, authorize('recruiter'), ctrl.removeShortlist);
 
 // ── Admin-only: manage recruiters ─────────────────────────────────────────────
 router.post(  '/',                        authenticate, authorize('admin'), ctrl.create);

@@ -9,7 +9,7 @@ const router = Router();
 router.use(authenticate);
 
 router.get('/admin',    authorize('admin'),    ctrl.adminStats);
-router.get('/employee', authorize('employee'), ctrl.employeeStats);
+router.get('/candidate', authorize('candidate'), ctrl.candidateStats);
 router.get('/recruiter',authorize('recruiter'),ctrl.recruiterStats);
 
 export default router;

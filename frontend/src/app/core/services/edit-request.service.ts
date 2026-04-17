@@ -16,7 +16,7 @@ export class EditRequestService {
 
   constructor(private http: HttpClient) {}
 
-  // ── Employee ─────────────────────────────────────────────────────────────────
+  // ── Candidate ─────────────────────────────────────────────────────────────────
   submit(data: Record<string, unknown>): Observable<{ request: EditRequest }> {
     return this.http.post<{ request: EditRequest }>(`${this.api}/me`, data);
   }

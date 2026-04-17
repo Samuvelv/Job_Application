@@ -1,10 +1,10 @@
-// src/modules/employees/employees.service.ts
+// src/modules/candidates/candidates.service.ts
 import bcrypt from 'bcryptjs';
 import { v4 as uuidv4 } from 'uuid';
 import { db } from '../../config/db';
 import { AppError } from '../../middleware/errorHandler';
-import { sendEmployeeCredentials } from '../../services/email.service';
-import type { CreateEmployeeDto, UpdateEmployeeDto, EmployeeFilterDto } from './employees.dto';
+import { sendCandidateCredentials } from '../../services/email.service';
+import type { CreateCandidateDto, UpdateCandidateDto, CandidateFilterDto } from './candidates.dto';
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -14,28 +14,28 @@ async function getRoleId(roleName: string): Promise<number> {
   return role.id;
 }
 
-async function fetchRelations(employeeId: string) {
+async function fetchRelations(candidateId: string) {
   const [skills, languages, experience, education, certificates] = await Promise.all([
-    db('employee_skills').where({ employee_id: employeeId }),
-    db('employee_languages').where({ employee_id: employeeId }),
-    db('employee_experience').where({ employee_id: employeeId }).orderBy('start_date', 'desc'),
-    db('employee_education').where({ employee_id: employeeId }).orderBy('start_year', 'desc'),
-    db('employee_certificates').where({ employee_id: employeeId }),
+    db('candidate_skills').where({ candidate_id: candidateId }),
+    db('candidate_languages').where({ candidate_id: candidateId }),
+    db('candidate_experience').where({ candidate_id: candidateId }).orderBy('start_date', 'desc'),
+    db('candidate_education').where({ candidate_id: candidateId }).orderBy('start_year', 'desc'),
+    db('candidate_certificates').where({ candidate_id: candidateId }),
   ]);
   return { skills, languages, experience, education, certificates };
 }
 
 // ── Create ────────────────────────────────────────────────────────────────────
 
-export async function createEmployee(dto: CreateEmployeeDto, createdByAdminId: string) {
+export async function createCandidate(dto: CreateCandidateDto, createdByAdminId: string) {
   // Check email uniqueness
   const existing = await db('users').where({ email: dto.email.toLowerCase() }).first();
   if (existing) throw new AppError(409, 'Email is already registered');
 
-  const employeeRoleId = await getRoleId('employee');
+  const candidateRoleId = await getRoleId('candidate');
   const passwordHash   = await bcrypt.hash(dto.password, 12);
   const userId         = uuidv4();
-  const employeeId     = uuidv4();
+  const candidateId     = uuidv4();
 
   await db.transaction(async (trx) => {
     // 1. Create user account
@@ -43,13 +43,13 @@ export async function createEmployee(dto: CreateEmployeeDto, createdByAdminId: s
       id:            userId,
       email:         dto.email.toLowerCase(),
       password_hash: passwordHash,
-      role_id:       employeeRoleId,
+      role_id:       candidateRoleId,
       is_active:     true,
     });
 
-    // 2. Create employee profile
-    await trx('employees').insert({
-      id:               employeeId,
+    // 2. Create candidate profile
+    await trx('candidates').insert({
+      id:               candidateId,
       user_id:          userId,
       first_name:       dto.first_name,
       last_name:        dto.last_name,
@@ -76,49 +76,49 @@ export async function createEmployee(dto: CreateEmployeeDto, createdByAdminId: s
 
     // 3. Insert related arrays
     if (dto.skills?.length) {
-      await trx('employee_skills').insert(
-        dto.skills.map((s) => ({ employee_id: employeeId, ...s })),
+      await trx('candidate_skills').insert(
+        dto.skills.map((s) => ({ candidate_id: candidateId, ...s })),
       );
     }
     if (dto.languages?.length) {
-      await trx('employee_languages').insert(
-        dto.languages.map((l) => ({ employee_id: employeeId, ...l })),
+      await trx('candidate_languages').insert(
+        dto.languages.map((l) => ({ candidate_id: candidateId, ...l })),
       );
     }
     if (dto.experience?.length) {
-      await trx('employee_experience').insert(
-        dto.experience.map((e) => ({ employee_id: employeeId, ...e })),
+      await trx('candidate_experience').insert(
+        dto.experience.map((e) => ({ candidate_id: candidateId, ...e })),
       );
     }
     if (dto.education?.length) {
-      await trx('employee_education').insert(
-        dto.education.map((e) => ({ employee_id: employeeId, ...e })),
+      await trx('candidate_education').insert(
+        dto.education.map((e) => ({ candidate_id: candidateId, ...e })),
       );
     }
     if (dto.certificates?.length) {
-      await trx('employee_certificates').insert(
-        dto.certificates.map((c) => ({ employee_id: employeeId, ...c })),
+      await trx('candidate_certificates').insert(
+        dto.certificates.map((c) => ({ candidate_id: candidateId, ...c })),
       );
     }
   });
 
   // 4. Send credentials email (non-blocking)
-  sendEmployeeCredentials(
+  sendCandidateCredentials(
     dto.email,
     dto.password,
     `${dto.first_name} ${dto.last_name}`,
   ).catch((err) => console.error('[EMAIL] Failed to send credentials:', err));
 
-  return getEmployeeById(employeeId);
+  return getCandidateById(candidateId);
 }
 
 // ── List / Filter ─────────────────────────────────────────────────────────────
 
-export async function listEmployees(filters: EmployeeFilterDto) {
+export async function listCandidates(filters: CandidateFilterDto) {
   const { page, limit } = filters;
   const offset = (page - 1) * limit;
 
-  let query = db('employees as e')
+  let query = db('candidates as e')
     .join('users as u', 'u.id', 'e.user_id')
     .select(
       'e.id', 'e.first_name', 'e.last_name', 'e.job_title',
@@ -151,7 +151,7 @@ export async function listEmployees(filters: EmployeeFilterDto) {
     const skillList = filters.skills.split(',').map((s) => s.trim()).filter(Boolean);
     if (skillList.length) {
       query = query.whereIn('e.id', (sub) => {
-        sub.select('employee_id').from('employee_skills').whereIn('skill_name', skillList);
+        sub.select('candidate_id').from('candidate_skills').whereIn('skill_name', skillList);
       });
     }
   }
@@ -161,7 +161,7 @@ export async function listEmployees(filters: EmployeeFilterDto) {
     const langList = filters.languages.split(',').map((l) => l.trim()).filter(Boolean);
     if (langList.length) {
       query = query.whereIn('e.id', (sub) => {
-        sub.select('employee_id').from('employee_languages').whereIn('language', langList);
+        sub.select('candidate_id').from('candidate_languages').whereIn('language', langList);
       });
     }
   }
@@ -182,33 +182,33 @@ export async function listEmployees(filters: EmployeeFilterDto) {
 
 // ── Get by ID ─────────────────────────────────────────────────────────────────
 
-export async function getEmployeeById(id: string) {
-  const employee = await db('employees as e')
+export async function getCandidateById(id: string) {
+  const candidate = await db('candidates as e')
     .join('users as u', 'u.id', 'e.user_id')
     .where('e.id', id)
     .select('e.*', 'u.email', 'u.is_active')
     .first();
 
-  if (!employee) throw new AppError(404, 'Employee not found');
+  if (!candidate) throw new AppError(404, 'Candidate not found');
 
   const relations = await fetchRelations(id);
 
-  return { ...employee, ...relations };
+  return { ...candidate, ...relations };
 }
 
-// ── Get by user_id (for employee self-view) ───────────────────────────────────
+// ── Get by user_id (for candidate self-view) ───────────────────────────────────
 
-export async function getEmployeeByUserId(userId: string) {
-  const employee = await db('employees').where({ user_id: userId }).first();
-  if (!employee) throw new AppError(404, 'Employee profile not found');
-  return getEmployeeById(employee.id);
+export async function getCandidateByUserId(userId: string) {
+  const candidate = await db('candidates').where({ user_id: userId }).first();
+  if (!candidate) throw new AppError(404, 'Candidate profile not found');
+  return getCandidateById(candidate.id);
 }
 
 // ── Update ────────────────────────────────────────────────────────────────────
 
-export async function updateEmployee(id: string, dto: UpdateEmployeeDto) {
-  const employee = await db('employees').where({ id }).first();
-  if (!employee) throw new AppError(404, 'Employee not found');
+export async function updateCandidate(id: string, dto: UpdateCandidateDto) {
+  const candidate = await db('candidates').where({ id }).first();
+  if (!candidate) throw new AppError(404, 'Candidate not found');
 
   await db.transaction(async (trx) => {
     // Update core fields
@@ -217,71 +217,71 @@ export async function updateEmployee(id: string, dto: UpdateEmployeeDto) {
     } = dto;
 
     if (Object.keys(coreFields).length) {
-      await trx('employees')
+      await trx('candidates')
         .where({ id })
         .update({ ...coreFields, updated_at: new Date() });
     }
 
     // Replace relations if provided
     if (skills !== undefined) {
-      await trx('employee_skills').where({ employee_id: id }).delete();
+      await trx('candidate_skills').where({ candidate_id: id }).delete();
       if (skills.length)
-        await trx('employee_skills').insert(skills.map((s) => ({ employee_id: id, ...s })));
+        await trx('candidate_skills').insert(skills.map((s) => ({ candidate_id: id, ...s })));
     }
     if (languages !== undefined) {
-      await trx('employee_languages').where({ employee_id: id }).delete();
+      await trx('candidate_languages').where({ candidate_id: id }).delete();
       if (languages.length)
-        await trx('employee_languages').insert(languages.map((l) => ({ employee_id: id, ...l })));
+        await trx('candidate_languages').insert(languages.map((l) => ({ candidate_id: id, ...l })));
     }
     if (experience !== undefined) {
-      await trx('employee_experience').where({ employee_id: id }).delete();
+      await trx('candidate_experience').where({ candidate_id: id }).delete();
       if (experience.length)
-        await trx('employee_experience').insert(experience.map((e) => ({ employee_id: id, ...e })));
+        await trx('candidate_experience').insert(experience.map((e) => ({ candidate_id: id, ...e })));
     }
     if (education !== undefined) {
-      await trx('employee_education').where({ employee_id: id }).delete();
+      await trx('candidate_education').where({ candidate_id: id }).delete();
       if (education.length)
-        await trx('employee_education').insert(education.map((e) => ({ employee_id: id, ...e })));
+        await trx('candidate_education').insert(education.map((e) => ({ candidate_id: id, ...e })));
     }
     if (certificates !== undefined) {
-      await trx('employee_certificates').where({ employee_id: id }).delete();
+      await trx('candidate_certificates').where({ candidate_id: id }).delete();
       if (certificates.length)
-        await trx('employee_certificates').insert(certificates.map((c) => ({ employee_id: id, ...c })));
+        await trx('candidate_certificates').insert(certificates.map((c) => ({ candidate_id: id, ...c })));
     }
   });
 
-  return getEmployeeById(id);
+  return getCandidateById(id);
 }
 
 // ── Delete ────────────────────────────────────────────────────────────────────
 
-export async function deleteEmployee(id: string) {
-  const employee = await db('employees').where({ id }).first();
-  if (!employee) throw new AppError(404, 'Employee not found');
+export async function deleteCandidate(id: string) {
+  const candidate = await db('candidates').where({ id }).first();
+  if (!candidate) throw new AppError(404, 'Candidate not found');
 
-  // Cascade deletes user → employee (FK ON DELETE CASCADE)
-  await db('users').where({ id: employee.user_id }).delete();
+  // Cascade deletes user → candidate (FK ON DELETE CASCADE)
+  await db('users').where({ id: candidate.user_id }).delete();
 }
 
 // ── Update file URL ───────────────────────────────────────────────────────────
 
-export async function updateEmployeeFile(
-  employeeId: string,
+export async function updateCandidateFile(
+  candidateId: string,
   field: 'profile_photo_url' | 'resume_url' | 'intro_video_url',
   relativePath: string,
 ) {
-  await db('employees')
-    .where({ id: employeeId })
+  await db('candidates')
+    .where({ id: candidateId })
     .update({ [field]: relativePath, updated_at: new Date() });
 }
 
 export async function addCertificateFile(
-  employeeId: string,
+  candidateId: string,
   name: string,
   relativePath: string,
 ) {
-  await db('employee_certificates').insert({
-    employee_id: employeeId,
+  await db('candidate_certificates').insert({
+    candidate_id: candidateId,
     name,
     file_url: relativePath,
   });
@@ -289,25 +289,25 @@ export async function addCertificateFile(
 
 // ── Resend credentials ─────────────────────────────────────────────────────────
 
-export async function resendCredentials(employeeId: string) {
-  const employee = await db('employees as e')
+export async function resendCredentials(candidateId: string) {
+  const candidate = await db('candidates as e')
     .join('users as u', 'u.id', 'e.user_id')
-    .where('e.id', employeeId)
+    .where('e.id', candidateId)
     .select('u.id as user_id', 'u.email', 'e.first_name', 'e.last_name')
     .first();
 
-  if (!employee) throw new AppError(404, 'Employee not found');
+  if (!candidate) throw new AppError(404, 'Candidate not found');
 
   // Generate a new temp password
   const tempPassword = Math.random().toString(36).slice(-10) + 'A1!';
   const hash = await bcrypt.hash(tempPassword, 12);
   await db('users')
-    .where({ id: employee.user_id })
+    .where({ id: candidate.user_id })
     .update({ password_hash: hash });
 
-  await sendEmployeeCredentials(
-    employee.email,
+  await sendCandidateCredentials(
+    candidate.email,
     tempPassword,
-    `${employee.first_name} ${employee.last_name}`,
+    `${candidate.first_name} ${candidate.last_name}`,
   );
 }

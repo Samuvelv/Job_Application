@@ -1,4 +1,4 @@
-// src/app/features/admin/employee-edit/employee-edit.component.ts
+// src/app/features/admin/candidate-edit/candidate-edit.component.ts
 import { Component, OnInit, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import {
@@ -6,12 +6,12 @@ import {
   FormArray, Validators, AbstractControl, ValidationErrors,
 } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
-import { EmployeeService } from '../../../core/services/employee.service';
+import { CandidateService } from '../../../core/services/candidate.service';
 import { ToastService } from '../../../core/services/toast.service';
 import { MasterDataService } from '../../../core/services/master-data.service';
 import { SearchableSelectComponent, SelectOption } from '../../../shared/components/searchable-select/searchable-select.component';
 import { ChipMultiSelectComponent, ChipOption } from '../../../shared/components/chip-multi-select/chip-multi-select.component';
-import { Employee, Certificate } from '../../../core/models/employee.model';
+import { Candidate, Certificate } from '../../../core/models/candidate.model';
 
 function skillGroupValidator(g: AbstractControl): ValidationErrors | null {
   const name = g.get('skill_name')?.value?.trim();
@@ -30,14 +30,14 @@ function langGroupValidator(g: AbstractControl): ValidationErrors | null {
 }
 
 @Component({
-  selector: 'app-employee-edit',
+  selector: 'app-candidate-edit',
   standalone: true,
   imports: [CommonModule, ReactiveFormsModule, RouterLink, SearchableSelectComponent, ChipMultiSelectComponent],
-  templateUrl: './employee-edit.component.html',
+  templateUrl: './candidate-edit.component.html',
 })
-export class EmployeeEditComponent implements OnInit {
-  employeeId = '';
-  employee: Employee | null = null;
+export class CandidateEditComponent implements OnInit {
+  candidateId = '';
+  candidate: Candidate | null = null;
   loadError = '';
   saving = false;
   successMsg = '';
@@ -133,38 +133,38 @@ export class EmployeeEditComponent implements OnInit {
     private fb: FormBuilder,
     private route: ActivatedRoute,
     private router: Router,
-    private empSvc: EmployeeService,
+    private empSvc: CandidateService,
     private toast: ToastService,
     public master: MasterDataService,
   ) {}
 
   ngOnInit(): void {
     this.master.loadAll();
-    this.employeeId = this.route.snapshot.paramMap.get('id') ?? '';
-    if (!this.employeeId) { this.loadError = 'Invalid employee ID.'; return; }
-    this.loadEmployee();
+    this.candidateId = this.route.snapshot.paramMap.get('id') ?? '';
+    if (!this.candidateId) { this.loadError = 'Invalid candidate ID.'; return; }
+    this.loadCandidate();
   }
 
-  private loadEmployee(): void {
-    this.empSvc.getById(this.employeeId).subscribe({
+  private loadCandidate(): void {
+    this.empSvc.getById(this.candidateId).subscribe({
       next: (res) => {
-        this.employee = res.employee;
+        this.candidate = res.candidate;
         if (!this.form) {
-          this.buildForm(res.employee);
+          this.buildForm(res.candidate);
           const f = this.form as FormGroup;
           // After form is built, subscribe to country changes for city cascade
           f.get('current_country')!.valueChanges.subscribe((v: any) => this.onCountryChange(v));
           // Subscribe to job_title for auto-fill occupation
           f.get('job_title')!.valueChanges.subscribe((v: any) => this.onJobTitleChange(v));
           // Pre-load cities if country already set
-          const country = res.employee.current_country;
+          const country = res.candidate.current_country;
           if (country) {
             const found = this.master.countries().find(c => c.name === country);
             if (found) this.master.loadCities(found.id);
           }
         }
       },
-      error: (err) => (this.loadError = err?.error?.message ?? 'Failed to load employee.'),
+      error: (err) => (this.loadError = err?.error?.message ?? 'Failed to load candidate.'),
     });
   }
 
@@ -255,14 +255,14 @@ export class EmployeeEditComponent implements OnInit {
   // ── Media handlers ─────────────────────────────────────────────────────────
   uploadFile(type: 'profiles' | 'resumes' | 'videos' | 'certificates', event: Event): void {
     const file = (event.target as HTMLInputElement).files?.[0];
-    if (!file || !this.employee) return;
+    if (!file || !this.candidate) return;
     this.mediaLoading[type] = true;
     const name = type === 'certificates' ? file.name.replace(/\.[^.]+$/, '') : undefined;
-    this.empSvc.uploadFile(this.employeeId, type, file, name).subscribe({
+    this.empSvc.uploadFile(this.candidateId, type, file, name).subscribe({
       next: () => {
         this.mediaLoading[type] = false;
         this.toast.success('File uploaded');
-        this.empSvc.getById(this.employeeId).subscribe(r => { this.employee = r.employee; });
+        this.empSvc.getById(this.candidateId).subscribe(r => { this.candidate = r.candidate; });
         (event.target as HTMLInputElement).value = '';
       },
       error: (err) => {
@@ -274,13 +274,13 @@ export class EmployeeEditComponent implements OnInit {
   }
 
   deleteFile(type: 'profiles' | 'resumes' | 'videos'): void {
-    if (!this.employee) return;
+    if (!this.candidate) return;
     this.mediaLoading[type] = true;
-    this.empSvc.deleteFile(this.employeeId, type).subscribe({
+    this.empSvc.deleteFile(this.candidateId, type).subscribe({
       next: () => {
         this.mediaLoading[type] = false;
         this.toast.success('File removed');
-        this.empSvc.getById(this.employeeId).subscribe(r => { this.employee = r.employee; });
+        this.empSvc.getById(this.candidateId).subscribe(r => { this.candidate = r.candidate; });
       },
       error: (err) => {
         this.mediaLoading[type] = false;
@@ -292,11 +292,11 @@ export class EmployeeEditComponent implements OnInit {
   deleteCertificate(cert: Certificate): void {
     if (!cert.id) return;
     this.certDeleting = cert.id;
-    this.empSvc.deleteCertificate(this.employeeId, cert.id).subscribe({
+    this.empSvc.deleteCertificate(this.candidateId, cert.id).subscribe({
       next: () => {
         this.certDeleting = null;
         this.toast.success('Certificate removed');
-        this.empSvc.getById(this.employeeId).subscribe(r => { this.employee = r.employee; });
+        this.empSvc.getById(this.candidateId).subscribe(r => { this.candidate = r.candidate; });
       },
       error: (err) => {
         this.certDeleting = null;
@@ -305,8 +305,8 @@ export class EmployeeEditComponent implements OnInit {
     });
   }
 
-  // ── Build form prefilled with employee data ───────────────────────────────
-  private buildForm(emp: Employee): void {
+  // ── Build form prefilled with candidate data ───────────────────────────────
+  private buildForm(emp: Candidate): void {
     const { dialCode, number: phoneNumber } = this.splitPhone(emp.phone ?? '');
     this.form = this.fb.group({
       first_name:    [emp.first_name, [Validators.required, Validators.maxLength(100)]],
@@ -402,14 +402,14 @@ export class EmployeeEditComponent implements OnInit {
       education:  raw.education.filter((e: any) => e.institution?.trim() || e.degree?.trim()),
     };
 
-    this.empSvc.update(this.employeeId, payload as any).subscribe({
+    this.empSvc.update(this.candidateId, payload as any).subscribe({
       next: (res) => {
         this.saving     = false;
-        this.employee   = res.employee;
-        this.successMsg = 'Employee updated successfully!';
-        this.toast.success('Employee updated');
+        this.candidate   = res.candidate;
+        this.successMsg = 'Candidate updated successfully!';
+        this.toast.success('Candidate updated');
         window.scrollTo({ top: 0, behavior: 'smooth' });
-        setTimeout(() => this.router.navigate(['/admin/employees', this.employeeId]), 1500);
+        setTimeout(() => this.router.navigate(['/admin/candidates', this.candidateId]), 1500);
       },
       error: (err) => {
         this.saving   = false;

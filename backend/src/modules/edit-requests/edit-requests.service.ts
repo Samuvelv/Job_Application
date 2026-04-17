@@ -2,7 +2,7 @@
 import { v4 as uuidv4 } from 'uuid';
 import { db } from '../../config/db';
 import { AppError } from '../../middleware/errorHandler';
-import { updateEmployee } from '../employees/employees.service';
+import { updateCandidate } from '../candidates/candidates.service';
 import { sendEditRequestStatus } from '../../services/email.service';
 import type {
   SubmitEditRequestDto,
@@ -10,37 +10,37 @@ import type {
   EditRequestFilterDto,
 } from './edit-requests.dto';
 
-// ── Submit (employee) ─────────────────────────────────────────────────────────
+// ── Submit (candidate) ─────────────────────────────────────────────────────────
 
 export async function submitEditRequest(
   userId: string,
   dto: SubmitEditRequestDto,
 ) {
-  // Resolve employee from user
-  const employee = await db('employees as e')
+  // Resolve candidate from user
+  const candidate = await db('candidates as e')
     .join('users as u', 'u.id', 'e.user_id')
     .select('e.id', 'e.first_name', 'e.last_name', 'u.email')
     .where('e.user_id', userId)
     .first();
-  if (!employee) throw new AppError(404, 'Employee profile not found');
+  if (!candidate) throw new AppError(404, 'Candidate profile not found');
 
   // Block if there is already an open pending request
   const existing = await db('profile_edit_requests')
-    .where({ employee_id: employee.id, status: 'pending' })
+    .where({ candidate_id: candidate.id, status: 'pending' })
     .first();
   if (existing) throw new AppError(409, 'You already have a pending edit request');
 
   const id = uuidv4();
   await db('profile_edit_requests').insert({
     id,
-    employee_id:    employee.id,
+    candidate_id:    candidate.id,
     requested_data: JSON.stringify(dto),
     status:         'pending',
   });
 
   // Mark profile as pending_edit
-  await db('employees')
-    .where({ id: employee.id })
+  await db('candidates')
+    .where({ id: candidate.id })
     .update({ profile_status: 'pending_edit', updated_at: new Date() });
 
   return getEditRequestById(id);
@@ -53,7 +53,7 @@ export async function listEditRequests(filters: EditRequestFilterDto) {
   const offset = (page - 1) * limit;
 
   let base = db('profile_edit_requests as r')
-    .join('employees as e', 'e.id', 'r.employee_id')
+    .join('candidates as e', 'e.id', 'r.candidate_id')
     .join('users as u', 'u.id', 'e.user_id');
 
   if (status) base = base.where('r.status', status);
@@ -68,7 +68,7 @@ export async function listEditRequests(filters: EditRequestFilterDto) {
       'r.admin_note',
       'r.created_at',
       'r.reviewed_at',
-      'e.id as employee_id',
+      'e.id as candidate_id',
       'e.first_name',
       'e.last_name',
       'u.email',
@@ -92,11 +92,11 @@ export async function listEditRequests(filters: EditRequestFilterDto) {
 
 export async function getEditRequestById(id: string) {
   const row = await db('profile_edit_requests as r')
-    .join('employees as e', 'e.id', 'r.employee_id')
+    .join('candidates as e', 'e.id', 'r.candidate_id')
     .join('users as u', 'u.id', 'e.user_id')
     .select(
       'r.id',
-      'r.employee_id',
+      'r.candidate_id',
       'r.requested_data',
       'r.status',
       'r.admin_note',
@@ -113,14 +113,14 @@ export async function getEditRequestById(id: string) {
   return row;
 }
 
-// ── Get pending request for a specific employee ───────────────────────────────
+// ── Get pending request for a specific candidate ───────────────────────────────
 
 export async function getMyPendingRequest(userId: string) {
-  const employee = await db('employees').where({ user_id: userId }).first();
-  if (!employee) throw new AppError(404, 'Employee profile not found');
+  const candidate = await db('candidates').where({ user_id: userId }).first();
+  if (!candidate) throw new AppError(404, 'Candidate profile not found');
 
   const row = await db('profile_edit_requests')
-    .where({ employee_id: employee.id })
+    .where({ candidate_id: candidate.id })
     .orderBy('created_at', 'desc')
     .first();
 
@@ -143,38 +143,38 @@ export async function reviewEditRequest(
     reviewed_at: new Date(),
   });
 
-  // Fetch employee + user for email + profile_status update
-  const employee = await db('employees as e')
+  // Fetch candidate + user for email + profile_status update
+  const candidate = await db('candidates as e')
     .join('users as u', 'u.id', 'e.user_id')
     .select('e.id', 'e.first_name', 'e.last_name', 'u.email')
-    .where('e.id', request.employee_id)
+    .where('e.id', request.candidate_id)
     .first();
 
-  if (!employee) throw new AppError(404, 'Employee not found');
+  if (!candidate) throw new AppError(404, 'Candidate not found');
 
   if (dto.status === 'approved') {
-    // Parse the stored requested_data and apply it to the employee profile
+    // Parse the stored requested_data and apply it to the candidate profile
     const requestedData = typeof request.requested_data === 'string'
       ? JSON.parse(request.requested_data)
       : request.requested_data;
 
-    await updateEmployee(request.employee_id, requestedData);
+    await updateCandidate(request.candidate_id, requestedData);
 
     // Reset status to active
-    await db('employees')
-      .where({ id: request.employee_id })
+    await db('candidates')
+      .where({ id: request.candidate_id })
       .update({ profile_status: 'active', updated_at: new Date() });
   } else {
     // Rejected — reset status back to active
-    await db('employees')
-      .where({ id: request.employee_id })
+    await db('candidates')
+      .where({ id: request.candidate_id })
       .update({ profile_status: 'active', updated_at: new Date() });
   }
 
   // Send email notification (non-fatal)
   sendEditRequestStatus(
-    employee.email,
-    `${employee.first_name} ${employee.last_name}`,
+    candidate.email,
+    `${candidate.first_name} ${candidate.last_name}`,
     dto.status,
     dto.admin_note,
   ).catch(() => { /* non-fatal */ });

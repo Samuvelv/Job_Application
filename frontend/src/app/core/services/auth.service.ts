@@ -79,7 +79,7 @@ export class AuthService {
     const role = this.getRole();
     switch (role) {
       case 'admin':     return '/admin/dashboard';
-      case 'employee':  return '/employee/dashboard';
+      case 'candidate':  return '/candidate/dashboard';
       case 'recruiter': return '/recruiter/dashboard';
       default:          return '/login';
     }

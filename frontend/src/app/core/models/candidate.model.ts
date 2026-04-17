@@ -1,4 +1,4 @@
-// src/app/core/models/employee.model.ts
+// src/app/core/models/candidate.model.ts
 
 export interface Skill {
   id?: number;
@@ -40,7 +40,7 @@ export interface Certificate {
   file_url?: string;
 }
 
-export interface Employee {
+export interface Candidate {
   id: string;
   user_id: string;
   email?: string;
@@ -91,7 +91,7 @@ export interface Employee {
   updated_at?: string;
 }
 
-export interface EmployeeFilters {
+export interface CandidateFilters {
   search?: string;
   industry?: string;
   occupation?: string;

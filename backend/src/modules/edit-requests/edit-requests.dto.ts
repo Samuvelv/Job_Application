@@ -1,9 +1,9 @@
 // src/modules/edit-requests/edit-requests.dto.ts
 import { z } from 'zod';
-import { UpdateEmployeeSchema } from '../employees/employees.dto';
+import { UpdateCandidateSchema } from '../candidates/candidates.dto';
 
-// Employee submits this — same shape as UpdateEmployee (all optional fields)
-export const SubmitEditRequestSchema = UpdateEmployeeSchema;
+// Candidate submits this — same shape as UpdateCandidate (all optional fields)
+export const SubmitEditRequestSchema = UpdateCandidateSchema;
 
 export const ReviewEditRequestSchema = z.object({
   status:     z.enum(['approved', 'rejected']),

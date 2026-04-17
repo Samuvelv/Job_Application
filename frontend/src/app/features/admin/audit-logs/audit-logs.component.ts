@@ -39,7 +39,7 @@ import { PageHeaderComponent } from '../../../shared/components/page-header/page
             <div class="col-md-2">
               <label class="form-label small mb-1">Resource</label>
               <input type="text" class="form-control form-control-sm"
-                formControlName="resource" placeholder="e.g. employee">
+                formControlName="resource" placeholder="e.g. candidate">
             </div>
             <div class="col-md-3">
               <label class="form-label small mb-1">User Email / ID</label>

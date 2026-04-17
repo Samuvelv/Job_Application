@@ -89,8 +89,8 @@ import { EmptyStateComponent } from '../../../shared/components/empty-state/empt
 
               <div class="candidate-card__footer">
                 <button class="btn btn-sm btn-outline-danger flex-grow-1"
-                  (click)="remove(entry)" [disabled]="removing === entry.employee_id">
-                  @if (removing === entry.employee_id) {
+                  (click)="remove(entry)" [disabled]="removing === entry.candidate_id">
+                  @if (removing === entry.candidate_id) {
                     <span class="spinner-border spinner-border-sm me-1"></span>Removing…
                   } @else {
                     <i class="bi bi-bookmark-x me-1"></i>Remove from Shortlist
@@ -131,11 +131,11 @@ export class ShortlistComponent implements OnInit {
   }
 
   remove(entry: ShortlistEntry): void {
-    this.removing = entry.employee_id;
-    this.recruiterService.removeFromShortlist(entry.employee_id).subscribe({
+    this.removing = entry.candidate_id;
+    this.recruiterService.removeFromShortlist(entry.candidate_id).subscribe({
       next: () => {
         this.removing = null;
-        this.entries  = this.entries.filter((e) => e.employee_id !== entry.employee_id);
+        this.entries  = this.entries.filter((e) => e.candidate_id !== entry.candidate_id);
         this.toast.success('Removed from shortlist');
       },
       error: (err) => {
