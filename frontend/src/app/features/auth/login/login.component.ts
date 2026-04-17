@@ -40,147 +40,159 @@ import { AuthService } from '../../../core/services/auth.service';
           <div class="auth-wordmark mb-1">TalentHub</div>
           <div class="auth-tagline mb-2">Your smart hiring platform</div>
 
-          <!-- Person-at-desk hiring scene SVG -->
-          <svg class="auth-hero-svg" viewBox="-20 0 500 400" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-
-            <!-- Floor shadow -->
-            <ellipse cx="230" cy="388" rx="160" ry="10" fill="rgba(0,0,0,0.18)"/>
-
-            <!-- Desk body -->
-            <rect x="80" y="270" width="300" height="16" rx="6" fill="#312e81"/>
-            <rect x="80" y="270" width="300" height="6" rx="3" fill="#4338ca"/>
-            <!-- Desk legs -->
-            <rect x="98"  y="286" width="14" height="90" rx="5" fill="#312e81"/>
-            <rect x="348" y="286" width="14" height="90" rx="5" fill="#312e81"/>
-
-            <!-- Monitor stand -->
-            <rect x="218" y="240" width="24" height="32" rx="4" fill="#3730a3"/>
-            <rect x="200" y="268" width="60" height="8" rx="4" fill="#3730a3"/>
-
-            <!-- Monitor screen -->
-            <rect x="130" y="130" width="200" height="118" rx="12" fill="#1e1b4b" stroke="#4f46e5" stroke-width="2"/>
-            <rect x="138" y="138" width="184" height="102" rx="8" fill="#0f0c29"/>
-            <!-- Screen glow -->
-            <rect x="138" y="138" width="184" height="102" rx="8" fill="url(#screenGlow)" opacity="0.6"/>
-
-            <!-- Screen content: resume / candidate card -->
-            <rect x="148" y="148" width="164" height="82" rx="6" fill="rgba(99,102,241,0.12)" stroke="rgba(165,180,252,0.2)" stroke-width="1"/>
-            <!-- Avatar on screen -->
-            <circle cx="170" cy="174" r="14" fill="rgba(99,102,241,0.45)" stroke="rgba(165,180,252,0.5)" stroke-width="1.5"/>
-            <!-- Head -->
-            <circle cx="170" cy="170" r="6" fill="#c7d2fe"/>
-            <!-- Shoulders -->
-            <path d="M158 184 Q170 177 182 184" stroke="#a5b4fc" stroke-width="2" fill="none"/>
-            <!-- Name line -->
-            <rect x="192" y="164" width="100" height="7" rx="3" fill="rgba(165,180,252,0.75)"/>
-            <rect x="192" y="176" width="68" height="5" rx="2.5" fill="rgba(165,180,252,0.38)"/>
-            <!-- Tags on screen -->
-            <rect x="192" y="188" width="38" height="14" rx="5" fill="rgba(16,185,129,0.35)"/>
-            <text x="211" y="199" text-anchor="middle" font-size="7" fill="#34d399" font-family="sans-serif" font-weight="600">Hired</text>
-            <rect x="236" y="188" width="46" height="14" rx="5" fill="rgba(6,182,212,0.3)"/>
-            <text x="259" y="199" text-anchor="middle" font-size="7" fill="#67e8f9" font-family="sans-serif">Remote</text>
-            <!-- Divider -->
-            <line x1="148" y1="210" x2="312" y2="210" stroke="rgba(165,180,252,0.15)" stroke-width="1"/>
-            <!-- Second row on screen -->
-            <rect x="148" y="214" width="60" height="5" rx="2.5" fill="rgba(165,180,252,0.2)"/>
-            <rect x="216" y="214" width="40" height="5" rx="2.5" fill="rgba(165,180,252,0.15)"/>
-
-            <!-- Screen gradient def -->
+          <!-- Premium platform illustration SVG — relevant to both job seekers & recruiters -->
+          <svg class="auth-hero-svg" viewBox="0 0 520 420" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
             <defs>
-              <radialGradient id="screenGlow" cx="50%" cy="50%" r="50%">
-                <stop offset="0%" stop-color="#4f46e5" stop-opacity="0.3"/>
+              <linearGradient id="grad-bar-indigo" x1="0%" y1="0%" x2="100%" y2="0%">
+                <stop offset="0%" stop-color="#6366f1"/>
+                <stop offset="100%" stop-color="#a78bfa"/>
+              </linearGradient>
+              <linearGradient id="grad-bar-emerald" x1="0%" y1="0%" x2="100%" y2="0%">
+                <stop offset="0%" stop-color="#10b981"/>
+                <stop offset="100%" stop-color="#34d399"/>
+              </linearGradient>
+              <linearGradient id="grad-bar-cyan" x1="0%" y1="0%" x2="100%" y2="0%">
+                <stop offset="0%" stop-color="#06b6d4"/>
+                <stop offset="100%" stop-color="#67e8f9"/>
+              </linearGradient>
+              <linearGradient id="grad-bar-amber" x1="0%" y1="0%" x2="100%" y2="0%">
+                <stop offset="0%" stop-color="#f59e0b"/>
+                <stop offset="100%" stop-color="#fcd34d"/>
+              </linearGradient>
+              <linearGradient id="grad-ring" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stop-color="#6366f1"/>
+                <stop offset="100%" stop-color="#a78bfa"/>
+              </linearGradient>
+              <radialGradient id="glow-center" cx="50%" cy="50%" r="50%">
+                <stop offset="0%" stop-color="#4f46e5" stop-opacity="0.22"/>
                 <stop offset="100%" stop-color="#4f46e5" stop-opacity="0"/>
               </radialGradient>
+              <filter id="card-shadow" x="-10%" y="-10%" width="120%" height="130%">
+                <feDropShadow dx="0" dy="8" stdDeviation="18" flood-color="#4f46e5" flood-opacity="0.22"/>
+              </filter>
+              <filter id="badge-glow" x="-20%" y="-20%" width="140%" height="140%">
+                <feDropShadow dx="0" dy="4" stdDeviation="8" flood-color="#6366f1" flood-opacity="0.35"/>
+              </filter>
             </defs>
 
-            <!-- Keyboard -->
-            <rect x="160" y="272" width="140" height="18" rx="5" fill="#2e2a6e" stroke="rgba(99,102,241,0.4)" stroke-width="1"/>
-            <!-- Key rows -->
-            <rect x="168" y="276" width="6" height="4" rx="1" fill="rgba(165,180,252,0.3)"/>
-            <rect x="178" y="276" width="6" height="4" rx="1" fill="rgba(165,180,252,0.3)"/>
-            <rect x="188" y="276" width="6" height="4" rx="1" fill="rgba(165,180,252,0.3)"/>
-            <rect x="198" y="276" width="6" height="4" rx="1" fill="rgba(165,180,252,0.3)"/>
-            <rect x="208" y="276" width="6" height="4" rx="1" fill="rgba(165,180,252,0.3)"/>
-            <rect x="218" y="276" width="6" height="4" rx="1" fill="rgba(165,180,252,0.3)"/>
-            <rect x="228" y="276" width="6" height="4" rx="1" fill="rgba(165,180,252,0.3)"/>
-            <rect x="238" y="276" width="6" height="4" rx="1" fill="rgba(165,180,252,0.3)"/>
-            <rect x="248" y="276" width="6" height="4" rx="1" fill="rgba(165,180,252,0.3)"/>
-            <rect x="258" y="276" width="6" height="4" rx="1" fill="rgba(165,180,252,0.3)"/>
-            <rect x="172" y="284" width="68" height="4" rx="1" fill="rgba(165,180,252,0.2)"/>
-            <rect x="244" y="284" width="46" height="4" rx="1" fill="rgba(165,180,252,0.15)"/>
+            <!-- Background ambient glow -->
+            <ellipse cx="260" cy="210" rx="200" ry="160" fill="url(#glow-center)"/>
 
-            <!-- Mouse -->
-            <rect x="322" y="272" width="24" height="32" rx="12" fill="#2e2a6e" stroke="rgba(99,102,241,0.4)" stroke-width="1"/>
-            <line x1="334" y1="272" x2="334" y2="288" stroke="rgba(165,180,252,0.3)" stroke-width="1"/>
+            <!-- ── Main dashboard card ────────────────────────────────────── -->
+            <g transform="rotate(-3, 260, 210)" filter="url(#card-shadow)">
+              <!-- Card body -->
+              <rect x="60" y="60" width="380" height="280" rx="20" fill="rgba(30,27,75,0.72)" stroke="rgba(165,180,252,0.18)" stroke-width="1.5"/>
+              <!-- Top sheen -->
+              <rect x="60" y="60" width="380" height="40"  rx="20" fill="rgba(255,255,255,0.04)"/>
+              <rect x="60" y="80" width="380" height="20"  fill="rgba(255,255,255,0.02)"/>
 
-            <!-- Coffee mug -->
-            <rect x="360" y="250" width="22" height="26" rx="4" fill="#312e81" stroke="rgba(99,102,241,0.5)" stroke-width="1.5"/>
-            <path d="M382 258 Q392 258 392 265 Q392 272 382 272" stroke="rgba(99,102,241,0.6)" stroke-width="2" fill="none"/>
-            <!-- Steam -->
-            <path d="M366 248 Q368 242 366 236" stroke="rgba(165,180,252,0.3)" stroke-width="1.5" stroke-linecap="round"/>
-            <path d="M372 246 Q374 240 372 234" stroke="rgba(165,180,252,0.25)" stroke-width="1.5" stroke-linecap="round"/>
+              <!-- Window dots + title bar -->
+              <circle cx="86"  cy="82" r="5" fill="rgba(248,113,113,0.6)"/>
+              <circle cx="102" cy="82" r="5" fill="rgba(251,191,36,0.6)"/>
+              <circle cx="118" cy="82" r="5" fill="rgba(52,211,153,0.6)"/>
+              <rect x="188" y="76" width="124" height="12" rx="6" fill="rgba(165,180,252,0.15)"/>
 
-            <!-- Person: chair -->
-            <rect x="200" y="330" width="60" height="10" rx="5" fill="#2e2a6e" stroke="rgba(99,102,241,0.4)" stroke-width="1"/>
-            <rect x="226" y="340" width="8" height="28" rx="3" fill="#2e2a6e"/>
-            <!-- Chair back -->
-            <rect x="205" y="295" width="50" height="38" rx="8" fill="#2e2a6e" stroke="rgba(99,102,241,0.3)" stroke-width="1"/>
+              <!-- Section label -->
+              <text x="80" y="122" font-size="9" fill="rgba(165,180,252,0.55)" font-family="sans-serif" font-weight="600" letter-spacing="1.5">PLATFORM ACTIVITY</text>
 
-            <!-- Person: torso -->
-            <rect x="210" y="248" width="40" height="50" rx="10" fill="#4f46e5"/>
-            <!-- Collar / shirt detail -->
-            <path d="M224 248 L230 258 L236 248" fill="#312e81"/>
+              <!-- Stat rows — neutral, meaningful for both sides -->
 
-            <!-- Person: arms -->
-            <!-- Left arm reaching to keyboard -->
-            <path d="M210 262 Q185 268 175 280" stroke="#c7d2fe" stroke-width="10" stroke-linecap="round" fill="none"/>
-            <!-- Right arm reaching to keyboard -->
-            <path d="M250 262 Q268 268 278 280" stroke="#c7d2fe" stroke-width="10" stroke-linecap="round" fill="none"/>
-            <!-- Hands -->
-            <circle cx="172" cy="282" r="7" fill="#e0d8f0"/>
-            <circle cx="281" cy="282" r="7" fill="#e0d8f0"/>
+              <!-- Jobs Available -->
+              <text x="80" y="148" font-size="8.5" fill="rgba(165,180,252,0.7)" font-family="sans-serif">Jobs Available</text>
+              <rect x="80" y="153" width="230" height="7" rx="3.5" fill="rgba(255,255,255,0.06)"/>
+              <rect x="80" y="153" width="198" height="7" rx="3.5" fill="url(#grad-bar-indigo)"/>
+              <text x="322" y="161" font-size="8" fill="#a5b4fc" font-family="sans-serif" font-weight="700">1,240</text>
 
-            <!-- Person: neck -->
-            <rect x="224" y="236" width="12" height="14" rx="4" fill="#c7b8ea"/>
+              <!-- Applications Sent -->
+              <text x="80" y="179" font-size="8.5" fill="rgba(165,180,252,0.7)" font-family="sans-serif">Applications Sent</text>
+              <rect x="80" y="184" width="230" height="7" rx="3.5" fill="rgba(255,255,255,0.06)"/>
+              <rect x="80" y="184" width="170" height="7" rx="3.5" fill="url(#grad-bar-cyan)"/>
+              <text x="322" y="192" font-size="8" fill="#67e8f9" font-family="sans-serif" font-weight="700">856</text>
 
-            <!-- Person: head -->
-            <circle cx="230" cy="222" r="22" fill="#c7b8ea"/>
-            <!-- Hair -->
-            <path d="M208 218 Q210 198 230 200 Q250 198 252 218" fill="#312e81"/>
-            <path d="M208 218 Q206 210 210 206" stroke="#312e81" stroke-width="3" fill="none" stroke-linecap="round"/>
-            <path d="M252 218 Q254 210 250 206" stroke="#312e81" stroke-width="3" fill="none" stroke-linecap="round"/>
-            <!-- Eyes -->
-            <circle cx="222" cy="222" r="3" fill="#1e1b4b"/>
-            <circle cx="238" cy="222" r="3" fill="#1e1b4b"/>
-            <!-- Eye shine -->
-            <circle cx="223" cy="221" r="1" fill="white"/>
-            <circle cx="239" cy="221" r="1" fill="white"/>
-            <!-- Smile -->
-            <path d="M222 230 Q230 236 238 230" stroke="#7c3aed" stroke-width="1.5" fill="none" stroke-linecap="round"/>
+              <!-- Matches Made -->
+              <text x="80" y="210" font-size="8.5" fill="rgba(165,180,252,0.7)" font-family="sans-serif">Matches Made</text>
+              <rect x="80" y="215" width="230" height="7" rx="3.5" fill="rgba(255,255,255,0.06)"/>
+              <rect x="80" y="215" width="120" height="7" rx="3.5" fill="url(#grad-bar-amber)"/>
+              <text x="322" y="223" font-size="8" fill="#fcd34d" font-family="sans-serif" font-weight="700">342</text>
 
-            <!-- Floating notification: "New Applicant!" -->
-            <g class="auth-svg-float">
-              <rect x="316" y="120" width="126" height="42" rx="10" fill="rgba(16,185,129,0.22)" stroke="rgba(52,211,153,0.45)" stroke-width="1.5"/>
-              <circle cx="338" cy="141" r="10" fill="rgba(16,185,129,0.5)"/>
-              <text x="338" y="145" text-anchor="middle" font-size="10" fill="white" font-family="sans-serif">✓</text>
-              <text x="354" y="136" font-size="8.5" fill="#34d399" font-family="sans-serif" font-weight="700">New Applicant!</text>
-              <text x="354" y="149" font-size="7.5" fill="rgba(52,211,153,0.8)" font-family="sans-serif">Sarah — UX Designer</text>
+              <!-- Interviews Scheduled -->
+              <text x="80" y="241" font-size="8.5" fill="rgba(165,180,252,0.7)" font-family="sans-serif">Interviews Scheduled</text>
+              <rect x="80" y="246" width="230" height="7" rx="3.5" fill="rgba(255,255,255,0.06)"/>
+              <rect x="80" y="246" width="72" height="7" rx="3.5" fill="url(#grad-bar-emerald)"/>
+              <text x="322" y="254" font-size="8" fill="#34d399" font-family="sans-serif" font-weight="700">89</text>
+
+              <!-- Divider -->
+              <line x1="80" y1="272" x2="420" y2="272" stroke="rgba(165,180,252,0.10)" stroke-width="1"/>
+
+              <!-- Bottom: active users row -->
+              <text x="80" y="291" font-size="8" fill="rgba(165,180,252,0.45)" font-family="sans-serif" font-weight="600" letter-spacing="1">ACTIVE TODAY</text>
+
+              <!-- Avatar stack -->
+              <circle cx="92"  cy="316" r="12" fill="rgba(99,102,241,0.45)"  stroke="rgba(165,180,252,0.35)" stroke-width="1.5"/>
+              <circle cx="92"  cy="313" r="5"  fill="#c7d2fe"/>
+              <path   d="M82 323 Q92 317 102 323" stroke="#a5b4fc" stroke-width="1.5" fill="none"/>
+
+              <circle cx="122" cy="316" r="12" fill="rgba(16,185,129,0.35)"   stroke="rgba(52,211,153,0.35)"  stroke-width="1.5"/>
+              <circle cx="122" cy="313" r="5"  fill="#a7f3d0"/>
+              <path   d="M112 323 Q122 317 132 323" stroke="#6ee7b7" stroke-width="1.5" fill="none"/>
+
+              <circle cx="152" cy="316" r="12" fill="rgba(251,191,36,0.3)"    stroke="rgba(251,191,36,0.35)"  stroke-width="1.5"/>
+              <circle cx="152" cy="313" r="5"  fill="#fde68a"/>
+              <path   d="M142 323 Q152 317 162 323" stroke="#fcd34d" stroke-width="1.5" fill="none"/>
+
+              <circle cx="182" cy="316" r="12" fill="rgba(6,182,212,0.3)"     stroke="rgba(6,182,212,0.35)"   stroke-width="1.5"/>
+              <circle cx="182" cy="313" r="5"  fill="#a5f3fc"/>
+              <path   d="M172 323 Q182 317 192 323" stroke="#67e8f9" stroke-width="1.5" fill="none"/>
+
+              <circle cx="212" cy="316" r="12" fill="rgba(255,255,255,0.06)"  stroke="rgba(165,180,252,0.2)"  stroke-width="1.5"/>
+              <text x="212" y="320" text-anchor="middle" font-size="8" fill="rgba(165,180,252,0.7)" font-family="sans-serif" font-weight="700">+94</text>
+
+              <!-- Status chips -->
+              <rect x="250" y="308" width="66" height="18" rx="9" fill="rgba(16,185,129,0.2)"  stroke="rgba(52,211,153,0.4)"    stroke-width="1"/>
+              <text x="283" y="320" text-anchor="middle" font-size="7.5" fill="#34d399" font-family="sans-serif" font-weight="700">Recruiters</text>
+              <rect x="324" y="308" width="60" height="18" rx="9" fill="rgba(99,102,241,0.2)"  stroke="rgba(165,180,252,0.35)"  stroke-width="1"/>
+              <text x="354" y="320" text-anchor="middle" font-size="7.5" fill="#a5b4fc" font-family="sans-serif" font-weight="700">Seekers</text>
             </g>
 
-            <!-- Floating badge: "3 Interviews Today" -->
+            <!-- ── Match score donut (top-right) ─────────────────────────── -->
+            <g class="auth-svg-float" transform="translate(392, 48)">
+              <circle cx="44" cy="44" r="36" fill="none" stroke="rgba(99,102,241,0.12)" stroke-width="8"/>
+              <circle cx="44" cy="44" r="36" fill="none" stroke="url(#grad-ring)" stroke-width="8"
+                stroke-dasharray="192 227" stroke-dashoffset="57" stroke-linecap="round"/>
+              <circle cx="44" cy="44" r="26" fill="rgba(15,12,41,0.55)"/>
+              <text x="44" y="41" text-anchor="middle" font-size="12" fill="#a5b4fc" font-family="sans-serif" font-weight="800">94%</text>
+              <text x="44" y="53" text-anchor="middle" font-size="7"  fill="rgba(165,180,252,0.5)" font-family="sans-serif">match</text>
+            </g>
+
+            <!-- ── Floating badge: Great Match (both sides relate) ──────── -->
+            <g class="auth-svg-float-slow" filter="url(#badge-glow)">
+              <rect x="330" y="196" width="148" height="52" rx="14" fill="rgba(15,12,41,0.72)" stroke="rgba(52,211,153,0.45)" stroke-width="1.5"/>
+              <rect x="330" y="209" width="3"   height="26" rx="1.5" fill="url(#grad-bar-emerald)"/>
+              <circle cx="355" cy="222" r="11" fill="rgba(16,185,129,0.25)"/>
+              <text x="355" y="226" text-anchor="middle" font-size="11" fill="#34d399" font-family="sans-serif">✓</text>
+              <text x="372" y="217" font-size="8.5" fill="#34d399"              font-family="sans-serif" font-weight="700">Great Match!</text>
+              <text x="372" y="231" font-size="7.5" fill="rgba(167,243,208,0.7)" font-family="sans-serif">Frontend Role · Remote</text>
+              <text x="452" y="242" text-anchor="end" font-size="6.5" fill="rgba(165,180,252,0.35)" font-family="sans-serif">just now</text>
+            </g>
+
+            <!-- ── Floating badge: Interview Scheduled (both sides) ──────── -->
+            <g class="auth-svg-float">
+              <rect x="16" y="155" width="136" height="52" rx="14" fill="rgba(15,12,41,0.72)" stroke="rgba(251,191,36,0.4)" stroke-width="1.5"/>
+              <rect x="16" y="168" width="3"   height="26" rx="1.5" fill="url(#grad-bar-amber)"/>
+              <circle cx="42" cy="181" r="11" fill="rgba(251,191,36,0.22)"/>
+              <text x="42" y="186" text-anchor="middle" font-size="13" fill="#fbbf24" font-family="sans-serif">⏰</text>
+              <text x="60" y="176" font-size="8.5" fill="#fbbf24"              font-family="sans-serif" font-weight="700">Interview Set</text>
+              <text x="60" y="190" font-size="7.5" fill="rgba(252,211,77,0.7)" font-family="sans-serif">Tomorrow · 10:00 AM</text>
+            </g>
+
+            <!-- ── Floating badge: Profile Viewed (job-seeker + recruiter) ── -->
             <g class="auth-svg-float-slow">
-              <rect x="18" y="148" width="108" height="38" rx="10" fill="rgba(251,191,36,0.18)" stroke="rgba(251,191,36,0.4)" stroke-width="1.5"/>
-              <circle cx="38" cy="167" r="10" fill="rgba(251,191,36,0.45)"/>
-              <text x="38" y="171" text-anchor="middle" font-size="10" fill="#1e1b4b" font-family="sans-serif">📅</text>
-              <text x="54" y="163" font-size="8.5" fill="#fbbf24" font-family="sans-serif" font-weight="700">3 Interviews</text>
-              <text x="54" y="175" font-size="7.5" fill="rgba(251,191,36,0.75)" font-family="sans-serif">Scheduled today</text>
-            </g>
-
-            <!-- Floating badge: match score -->
-            <g class="auth-svg-float">
-              <rect x="340" y="220" width="100" height="36" rx="10" fill="rgba(99,102,241,0.22)" stroke="rgba(165,180,252,0.4)" stroke-width="1.5"/>
-              <text x="390" y="235" text-anchor="middle" font-size="8" fill="rgba(165,180,252,0.85)" font-family="sans-serif">Match score</text>
-              <text x="390" y="250" text-anchor="middle" font-size="13" fill="#a5b4fc" font-family="sans-serif" font-weight="800">94%</text>
+              <rect x="22" y="295" width="126" height="48" rx="14" fill="rgba(15,12,41,0.72)" stroke="rgba(6,182,212,0.38)" stroke-width="1.5"/>
+              <rect x="22" y="307" width="3"   height="24" rx="1.5" fill="url(#grad-bar-cyan)"/>
+              <circle cx="46" cy="319" r="11" fill="rgba(6,182,212,0.2)"/>
+              <text x="46" y="323" text-anchor="middle" font-size="9" fill="#67e8f9" font-family="sans-serif" font-weight="800">48</text>
+              <text x="63" y="314" font-size="8.5" fill="#67e8f9"              font-family="sans-serif" font-weight="700">Profile Views</text>
+              <text x="63" y="327" font-size="7.5" fill="rgba(103,232,249,0.6)" font-family="sans-serif">↑ 12 this week</text>
             </g>
 
           </svg>

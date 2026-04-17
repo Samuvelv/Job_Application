@@ -75,6 +75,9 @@ export const CreateEmployeeSchema = z.object({
   salary_currency: z.string().max(10).optional(),
   salary_type:     z.enum(['monthly', 'annual', 'hourly']).optional(),
 
+  // Availability
+  notice_period_id: z.coerce.number().int().positive().optional().nullable(),
+
   // Relations (arrays)
   skills:      z.array(SkillSchema).optional(),
   languages:   z.array(LanguageSchema).optional(),

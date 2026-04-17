@@ -474,7 +474,9 @@ body {
   flex: 1;
   padding: 1.5rem 1rem;
   min-height: calc(100vh - var(--th-topbar-height));
-  overflow-x: hidden;
+  // overflow-x: hidden removed — it was clipping absolutely-positioned dropdowns
+  // (any overflow-x/y value other than visible creates a scroll container that clips children)
+  max-width: 100%;
   transition: margin-left .25s cubic-bezier(.4,0,.2,1);
 
   @media (min-width: 992px) {
@@ -984,8 +986,18 @@ body {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 2rem 1.5rem;
+  padding: 2.5rem 2rem;
   text-align: center;
+  position: relative;
+
+  // Subtle deep radial glow behind the SVG
+  &::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(ellipse 70% 55% at 50% 55%, rgba(79,70,229,.18) 0%, transparent 70%);
+    pointer-events: none;
+  }
 
   @media (max-width: 767.98px) {
     display: none; // hide on mobile — keep it clean
@@ -998,7 +1010,7 @@ body {
   width: 100%;
   max-width: 520px;
   height: auto;
-  filter: drop-shadow(0 8px 32px rgba(99,102,241,.18));
+  filter: drop-shadow(0 12px 48px rgba(99,102,241,.28)) drop-shadow(0 2px 8px rgba(0,0,0,.35));
 }
 
 // Stats row below illustration
@@ -1044,22 +1056,39 @@ body {
 }
 
 .auth-card {
-  background: var(--th-surface);
+  background: rgba(255, 255, 255, 0.06);
+  backdrop-filter: blur(28px) saturate(160%);
+  -webkit-backdrop-filter: blur(28px) saturate(160%);
+  border: 1px solid rgba(255, 255, 255, 0.11);
   border-radius: var(--th-radius-xl);
   padding: 2.5rem;
   width: 100%;
-  box-shadow: 0 25px 60px -15px rgba(0,0,0,.3);
+  box-shadow:
+    0 32px 64px -16px rgba(0, 0, 0, 0.5),
+    0 0 0 1px rgba(99, 102, 241, 0.08) inset,
+    0 1px 0 rgba(255, 255, 255, 0.10) inset;
   position: relative;
   z-index: 1;
   overflow: hidden;
 
-  // Gradient accent strip at top
+  // Glowing top edge instead of gradient strip
   &::before {
     content: '';
     position: absolute;
-    top: 0; left: 0; right: 0;
-    height: 4px;
-    background: var(--th-gradient-primary);
+    top: 0; left: 10%; right: 10%;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(165,180,252,0.55), rgba(167,139,250,0.55), transparent);
+    border-radius: 0 0 2px 2px;
+  }
+
+  // Subtle corner glow
+  &::after {
+    content: '';
+    position: absolute;
+    top: -60px; right: -60px;
+    width: 180px; height: 180px;
+    background: radial-gradient(circle, rgba(99,102,241,0.12) 0%, transparent 70%);
+    pointer-events: none;
   }
 
   @media (max-width: 480px) { padding: 2rem 1.5rem; }
@@ -3472,7 +3501,7 @@ body {
   border-radius: var(--th-radius-lg);
   padding: 2rem;
   position: relative;
-  overflow: hidden;
+  // overflow: visible so absolutely-positioned dropdowns can escape the card
   box-shadow: var(--th-shadow-sm);
 
   &::before {
@@ -3481,6 +3510,8 @@ body {
     top: 0; left: 0; right: 0;
     height: 4px;
     background: var(--th-gradient-primary);
+    // Match top corners so the stripe is clipped without overflow:hidden on parent
+    border-radius: var(--th-radius-lg) var(--th-radius-lg) 0 0;
   }
 }
 
@@ -5147,11 +5178,11 @@ body {
 
 .auth-field-icon {
   position: absolute;
-  left: 0;
+  left: .9rem;
   top: 50%;
   transform: translateY(-50%);
-  color: rgba(255,255,255,.3);
-  font-size: 1rem;
+  color: rgba(165,180,252,.4);
+  font-size: .95rem;
   pointer-events: none;
   transition: color .2s ease;
   z-index: 2;
@@ -5160,69 +5191,57 @@ body {
 .auth-underline-field {
   display: block;
   width: 100%;
-  background: transparent;
-  border: none;
-  border-bottom: 1.5px solid rgba(255,255,255,.15);
-  border-radius: 0;
-  padding: .55rem 2.4rem .55rem 1.75rem; // left for icon, right for toggle btn
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.10);
+  border-radius: 10px;
+  padding: .65rem 2.5rem .65rem 2.5rem; // left for icon, right for toggle btn
   font-size: .9375rem;
   color: #f1f5f9;
   outline: none;
-  transition: border-color .2s ease, color .2s ease;
+  transition: border-color .2s ease, background .2s ease, box-shadow .2s ease;
   box-shadow: none !important;
 
-  &::placeholder { color: rgba(255,255,255,.25); }
+  &::placeholder { color: rgba(255,255,255,.2); }
 
   &:focus {
-    border-bottom-color: #818cf8;
+    border-color: rgba(99, 102, 241, 0.65);
+    background: rgba(99, 102, 241, 0.07);
+    box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15) !important;
     color: #fff;
-    background: transparent;
 
     & ~ .auth-field-underline { transform: scaleX(1); }
-    & ~ .auth-field-icon-wrap .auth-field-icon { color: #818cf8; }
+    & ~ .auth-field-icon { color: #818cf8; }
   }
 
   &.is-invalid {
-    border-bottom-color: rgba(248,113,113,.7);
+    border-color: rgba(248,113,113,.6);
+    background: rgba(239,68,68,.05);
   }
 
   // Override Bootstrap defaults
-  &:not(.is-invalid):focus { box-shadow: none; }
+  &:not(.is-invalid):focus { box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15) !important; }
 }
 
-// Animated underline accent
-.auth-field-underline {
-  position: absolute;
-  bottom: 0; left: 0;
-  width: 100%; height: 2px;
-  background: linear-gradient(90deg, #6366f1, #a78bfa);
-  border-radius: 2px;
-  transform: scaleX(0);
-  transform-origin: left center;
-  transition: transform .25s cubic-bezier(.4,0,.2,1);
-  pointer-events: none;
-}
-
-// Focus: grow underline
+// Focus: icon colour shift (sibling)
 .auth-underline-field:focus ~ .auth-field-underline { transform: scaleX(1); }
 .auth-underline-field:focus ~ .auth-field-icon { color: #818cf8; }
 
 // Password toggle button
 .auth-toggle-btn {
   position: absolute;
-  right: 0;
+  right: .75rem;
   top: 50%;
   transform: translateY(-50%);
   background: none;
   border: none;
   padding: .25rem;
-  color: rgba(255,255,255,.35);
+  color: rgba(165,180,252,.35);
   cursor: pointer;
   font-size: .95rem;
   transition: color .2s ease;
   z-index: 2;
 
-  &:hover { color: rgba(255,255,255,.7); }
+  &:hover { color: rgba(165,180,252,.8); }
   &:focus { outline: none; }
 }
 
@@ -5376,7 +5395,7 @@ body {
   padding: 2rem;
   box-shadow: 0 8px 32px -8px rgba(79,70,229,.10);
   position: relative;
-  overflow: hidden;
+  // overflow: visible so absolutely-positioned dropdowns can escape the card
 
   &::before {
     content: '';
@@ -5385,6 +5404,8 @@ body {
     height: 2px;
     background: var(--th-gradient-primary);
     opacity: .7;
+    // Match top corners so stripe stays within rounded border without overflow:hidden
+    border-radius: var(--th-radius-xl) var(--th-radius-xl) 0 0;
   }
 
   .card-section-header {
@@ -6148,4 +6169,278 @@ body {
     color: var(--th-text-secondary);
     &:hover { background: var(--th-primary-soft); border-color: rgba(80,70,229,.2); color: var(--th-primary); }
   }
+}
+
+// ══════════════════════════════════════════════════════════════════════════════
+//  SEARCHABLE SELECT & CHIP MULTI-SELECT  (shared reusable components)
+// ══════════════════════════════════════════════════════════════════════════════
+
+// ── Shared search box (used in both components) ───────────────────────────────
+.ss-search-wrap {
+  position: relative;
+  padding: .5rem .6rem .4rem;
+  border-bottom: 1px solid var(--th-border);
+}
+.ss-search-icon {
+  position: absolute;
+  left: 1.1rem;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--th-text-muted);
+  font-size: .85rem;
+  pointer-events: none;
+}
+.ss-search {
+  width: 100%;
+  background: var(--th-surface-2);
+  border: 1px solid var(--th-border);
+  border-radius: 8px;
+  padding: .38rem .3rem .38rem 2rem;
+  font-size: .82rem;
+  color: var(--th-text);
+  outline: none;
+  &:focus { border-color: var(--th-primary); box-shadow: 0 0 0 2px rgba(99,102,241,.15); }
+  &::placeholder { color: var(--th-text-muted); }
+}
+.ss-clear-search {
+  position: absolute;
+  right: 1rem;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  color: var(--th-text-muted);
+  padding: 0;
+  cursor: pointer;
+  font-size: .8rem;
+  &:hover { color: var(--th-text); }
+}
+.ss-list {
+  list-style: none;
+  margin: 0;
+  padding: .3rem 0;
+  max-height: 220px;
+  overflow-y: auto;
+  scrollbar-width: thin;
+}
+.ss-option {
+  padding: .42rem .9rem;
+  font-size: .85rem;
+  color: var(--th-text);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: .4rem;
+  transition: background .12s;
+
+  &:hover { background: var(--th-primary-soft); }
+  &.ss-selected {
+    background: var(--th-primary-soft);
+    color: var(--th-primary);
+    font-weight: 600;
+  }
+  &.ss-clear-option { color: var(--th-text-muted); font-size: .8rem; }
+}
+.ss-opt-label { flex: 1 1 0; }
+.ss-opt-sub {
+  font-size: .72rem;
+  color: var(--th-text-muted);
+  white-space: nowrap;
+}
+.ss-empty {
+  padding: .7rem .9rem;
+  font-size: .82rem;
+  color: var(--th-text-muted);
+  text-align: center;
+}
+
+// ── Searchable Select ─────────────────────────────────────────────────────────
+.ss-wrap {
+  position: relative;
+  width: 100%;
+
+  &.ss-disabled { opacity: .6; pointer-events: none; }
+}
+.ss-trigger {
+  display: flex;
+  align-items: center;
+  gap: .4rem;
+  padding: .55rem .85rem;
+  background: var(--th-surface-2);
+  border: 1px solid var(--th-border);
+  border-radius: var(--th-radius);
+  cursor: pointer;
+  transition: border-color .15s, box-shadow .15s;
+  min-height: 2.45rem;
+  user-select: none;
+
+  &:hover { border-color: var(--th-primary); }
+  &.ss-invalid { border-color: #f87171; }
+
+  i { margin-left: auto; font-size: .75rem; color: var(--th-text-muted); flex-shrink: 0; }
+}
+.ss-value { flex: 1 1 0; font-size: .9rem; color: var(--th-text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.ss-placeholder { color: var(--th-text-muted) !important; }
+
+.ss-dropdown {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  right: 0;
+  z-index: 1060;
+  background: var(--th-surface);
+  border: 1px solid var(--th-border);
+  border-radius: var(--th-radius);
+  box-shadow: 0 8px 24px -6px rgba(0,0,0,.28);
+  overflow: hidden;
+}
+
+.ss-wrap.ss-open .ss-trigger { border-color: var(--th-primary); box-shadow: 0 0 0 3px rgba(99,102,241,.15); }
+
+// ── Chip Multi-Select ─────────────────────────────────────────────────────────
+.cms-wrap {
+  position: relative;
+  width: 100%;
+
+  &.cms-disabled { opacity: .6; pointer-events: none; }
+}
+.cms-trigger {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: .35rem;
+  padding: .4rem .75rem .4rem .6rem;
+  background: var(--th-surface-2);
+  border: 1px solid var(--th-border);
+  border-radius: var(--th-radius);
+  cursor: pointer;
+  min-height: 2.45rem;
+  transition: border-color .15s, box-shadow .15s;
+  user-select: none;
+
+  &:hover { border-color: var(--th-primary); }
+  &.cms-invalid { border-color: #f87171; }
+
+  i.bi-chevron-down, i.bi-chevron-up { font-size: .75rem; color: var(--th-text-muted); }
+}
+.cms-placeholder { font-size: .9rem; color: var(--th-text-muted); flex: 1 1 0; }
+.cms-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: .25rem;
+  padding: .18rem .55rem;
+  background: var(--th-primary-soft);
+  color: var(--th-primary);
+  border-radius: 6px;
+  font-size: .78rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+.cms-chip-remove {
+  background: none;
+  border: none;
+  padding: 0;
+  color: var(--th-primary);
+  opacity: .65;
+  cursor: pointer;
+  font-size: .75rem;
+  display: flex;
+  align-items: center;
+  &:hover { opacity: 1; }
+}
+.cms-dropdown {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  right: 0;
+  z-index: 1060;
+  background: var(--th-surface);
+  border: 1px solid var(--th-border);
+  border-radius: var(--th-radius);
+  box-shadow: 0 8px 24px -6px rgba(0,0,0,.28);
+  overflow: hidden;
+}
+.cms-wrap.cms-open .cms-trigger { border-color: var(--th-primary); box-shadow: 0 0 0 3px rgba(99,102,241,.15); }
+
+// ── Phone dial-code picker ────────────────────────────────────────────────────
+.phone-input-group {
+  display: flex;
+  align-items: stretch;
+
+  // Host element app-searchable-select.dial-select
+  .dial-select {
+    flex: 0 0 auto;
+    width: 120px;
+
+    // Fill height so trigger stretches to match the text input
+    .ss-wrap { height: 100%; }
+
+    // Trigger: left segment of the joined group
+    .ss-trigger {
+      height: 100%;
+      min-height: 38px;
+      border-right: none;
+      border-radius: var(--th-radius) 0 0 var(--th-radius);
+      padding: 0 .45rem 0 .65rem;
+      gap: .3rem;
+
+      .ss-value {
+        font-size: .85rem;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+
+      i { font-size: .7rem; flex-shrink: 0; }
+    }
+
+    // Open state — left-only focus ring
+    .ss-wrap.ss-open .ss-trigger {
+      border-color: var(--th-primary);
+      box-shadow: -3px 0 0 0 rgba(99,102,241,.15),
+                   0  3px 0 0 rgba(99,102,241,.15),
+                   0 -3px 0 0 rgba(99,102,241,.15);
+      z-index: 2;
+      position: relative;
+    }
+
+    // Dropdown wider than the 120px trigger, anchored left
+    .ss-dropdown {
+      min-width: 290px;
+      width: 290px;
+      right: auto;
+      left: 0;
+    }
+  }
+
+  // Number input: right segment of the joined group
+  .phone-number-input {
+    flex: 1 1 0;
+    min-width: 0;
+    height: 38px;
+    background: var(--th-surface-2);
+    border: 1px solid var(--th-border);
+    border-left: none;
+    border-radius: 0 var(--th-radius) var(--th-radius) 0;
+    padding: .46rem .85rem;
+    font-size: .9rem;
+    color: var(--th-text);
+    outline: none;
+    transition: border-color .15s, box-shadow .15s;
+
+    &::placeholder { color: var(--th-text-muted); }
+    &:focus {
+      border-color: var(--th-primary);
+      box-shadow:  3px 0 0 0 rgba(99,102,241,.15),
+                   0  3px 0 0 rgba(99,102,241,.15),
+                   0 -3px 0 0 rgba(99,102,241,.15);
+      z-index: 1;
+      position: relative;
+    }
+    &.is-invalid { border-color: #f87171; }
+  }
+
+  // Unified hover: highlight both sides together
+  &:hover .dial-select .ss-trigger { border-color: var(--th-primary); }
+  &:hover .phone-number-input:not(:focus) { border-color: var(--th-primary); }
 }

@@ -25,7 +25,6 @@
 
 <!-- Step Progress Card -->
 <div class="step-progress-card mb-4">
-  <!-- Header row: title + step counter -->
   <div class="step-progress-card__header">
     <div class="step-progress-card__title">
       <i class="bi bi-ui-checks-grid"></i>
@@ -35,8 +34,6 @@
       Step {{ currentStep }} of {{ totalSteps }}
     </span>
   </div>
-
-  <!-- Step dots + labels -->
   <div class="step-indicator">
     @for (step of STEPS; track step.num) {
       <button type="button"
@@ -82,16 +79,26 @@
         </div>
         <div class="col-md-4">
           <label class="form-label">Gender</label>
-          <select class="form-select" formControlName="gender">
-            <option value="">Select…</option>
-            @for (g of GENDERS; track g) {
-              <option [value]="g">{{ g | titlecase }}</option>
-            }
-          </select>
+          <app-searchable-select
+            formControlName="gender"
+            [options]="genderOptions"
+            placeholder="Select gender…"
+            [allowClear]="true">
+          </app-searchable-select>
         </div>
+        <!-- Phone: dial code + number -->
         <div class="col-md-4">
           <label class="form-label">Phone</label>
-          <input type="tel" class="form-control" formControlName="phone" placeholder="+1 234 567 8900">
+          <div class="phone-input-group">
+            <app-searchable-select
+              formControlName="dial_code"
+              [options]="dialCodeOptions()"
+              placeholder="🌐"
+              class="dial-select">
+            </app-searchable-select>
+            <input type="tel" class="form-control phone-number-input"
+              formControlName="phone" placeholder="e.g. 234 567 8900">
+          </div>
         </div>
         <div class="col-12">
           <label class="form-label">Bio / Self Introduction</label>
@@ -138,15 +145,39 @@
       <div class="row g-3">
         <div class="col-md-6">
           <label class="form-label">Job Title</label>
-          <input type="text" class="form-control" formControlName="job_title" placeholder="e.g. Senior Developer">
+          <app-searchable-select
+            formControlName="job_title"
+            [options]="jobTitleOptions()"
+            placeholder="e.g. Senior Developer"
+            [allowClear]="true">
+          </app-searchable-select>
         </div>
         <div class="col-md-6">
           <label class="form-label">Occupation</label>
-          <input type="text" class="form-control" formControlName="occupation" placeholder="e.g. Software Engineer">
+          <app-searchable-select
+            formControlName="occupation"
+            [options]="occupationOptions()"
+            placeholder="e.g. Software Engineer"
+            [allowClear]="true">
+          </app-searchable-select>
         </div>
         <div class="col-md-6">
           <label class="form-label">Industry</label>
-          <input type="text" class="form-control" formControlName="industry" placeholder="e.g. Technology">
+          <app-searchable-select
+            formControlName="industry"
+            [options]="industryOptions()"
+            placeholder="e.g. Technology"
+            [allowClear]="true">
+          </app-searchable-select>
+        </div>
+        <div class="col-md-6">
+          <label class="form-label">Notice Period / Availability</label>
+          <app-searchable-select
+            formControlName="notice_period_id"
+            [options]="noticePeriodOptions()"
+            placeholder="Select availability…"
+            [allowClear]="true">
+          </app-searchable-select>
         </div>
         <div class="col-md-3">
           <label class="form-label">Years of Experience</label>
@@ -169,15 +200,20 @@
         </div>
         <div class="col-md-3">
           <label class="form-label">Currency</label>
-          <select class="form-select" formControlName="salary_currency">
-            @for (c of CURRENCIES; track c) { <option [value]="c">{{ c }}</option> }
-          </select>
+          <app-searchable-select
+            formControlName="salary_currency"
+            [options]="currencyOptions()"
+            placeholder="USD">
+          </app-searchable-select>
         </div>
         <div class="col-md-3">
           <label class="form-label">Type</label>
-          <select class="form-select" formControlName="salary_type">
-            @for (t of SALARY_TYPES; track t) { <option [value]="t">{{ t | titlecase }}</option> }
-          </select>
+          <app-searchable-select
+            formControlName="salary_type"
+            [options]="salaryTypeOptions"
+            placeholder="Select type…"
+            [allowClear]="false">
+          </app-searchable-select>
         </div>
 
         <!-- Skills -->
@@ -206,13 +242,15 @@
                   }
                 </div>
                 <div class="col-md-4">
-                  <select class="form-select form-select-sm" formControlName="proficiency"
-                    [class.is-invalid]="skills.at($index).get('proficiency')!.invalid && skills.at($index).get('proficiency')!.touched">
-                    <option value="">— Select —</option>
-                    @for (p of PROFICIENCY_SKILL; track p) { <option [value]="p">{{ p | titlecase }}</option> }
-                  </select>
+                  <app-searchable-select
+                    formControlName="proficiency"
+                    [options]="proficiencySkillOptions"
+                    placeholder="— Select —"
+                    [allowClear]="false"
+                    [invalid]="skills.at($index).get('proficiency')!.invalid && skills.at($index).get('proficiency')!.touched">
+                  </app-searchable-select>
                   @if (skills.at($index).get('proficiency')!.invalid && skills.at($index).get('proficiency')!.touched) {
-                    <div class="invalid-feedback">Select a proficiency level.</div>
+                    <div class="text-danger" style="font-size:.875em;margin-top:.25rem">Select a proficiency level.</div>
                   }
                 </div>
                 <div class="col-md-2">
@@ -244,21 +282,26 @@
             @for (lang of languages.controls; track $index) {
               <div [formGroupName]="$index" class="row g-2 mb-2 align-items-start">
                 <div class="col-md-6">
-                  <input type="text" class="form-control form-control-sm" formControlName="language"
+                  <app-searchable-select
+                    formControlName="language"
+                    [options]="languageOptions()"
                     placeholder="e.g. English"
-                    [class.is-invalid]="languages.at($index).get('language')!.invalid && languages.at($index).get('language')!.touched">
+                    [invalid]="languages.at($index).get('language')!.invalid && languages.at($index).get('language')!.touched">
+                  </app-searchable-select>
                   @if (languages.at($index).get('language')!.invalid && languages.at($index).get('language')!.touched) {
-                    <div class="invalid-feedback">Language name is required.</div>
+                    <div class="text-danger" style="font-size:.875em;margin-top:.25rem">Language name is required.</div>
                   }
                 </div>
                 <div class="col-md-4">
-                  <select class="form-select form-select-sm" formControlName="proficiency"
-                    [class.is-invalid]="languages.at($index).get('proficiency')!.invalid && languages.at($index).get('proficiency')!.touched">
-                    <option value="">— Select —</option>
-                    @for (p of PROFICIENCY_LANG; track p) { <option [value]="p">{{ p | titlecase }}</option> }
-                  </select>
+                  <app-searchable-select
+                    formControlName="proficiency"
+                    [options]="proficiencyLangOptions"
+                    placeholder="— Select —"
+                    [allowClear]="false"
+                    [invalid]="languages.at($index).get('proficiency')!.invalid && languages.at($index).get('proficiency')!.touched">
+                  </app-searchable-select>
                   @if (languages.at($index).get('proficiency')!.invalid && languages.at($index).get('proficiency')!.touched) {
-                    <div class="invalid-feedback">Select a proficiency level.</div>
+                    <div class="text-danger" style="font-size:.875em;margin-top:.25rem">Select a proficiency level.</div>
                   }
                 </div>
                 <div class="col-md-2">
@@ -273,7 +316,6 @@
         </div>
 
         <!-- Resume & Video -->
-        <!-- CV / Resume drop-zone -->
         <div class="col-md-6">
           <label class="form-label fw-semibold">CV / Resume</label>
           @if (!pendingResume) {
@@ -303,7 +345,6 @@
             </div>
           }
         </div>
-        <!-- Self-Introduction Video drop-zone -->
         <div class="col-md-6">
           <label class="form-label fw-semibold">Self-Introduction Video</label>
           @if (!pendingVideo) {
@@ -342,21 +383,40 @@
       <div class="row g-3">
         <div class="col-md-6">
           <label class="form-label">Current Country</label>
-          <input type="text" class="form-control" formControlName="current_country" placeholder="e.g. United States">
+          <app-searchable-select
+            formControlName="current_country"
+            [options]="countryOptions()"
+            placeholder="Select country…"
+            [allowClear]="true">
+          </app-searchable-select>
         </div>
         <div class="col-md-6">
           <label class="form-label">Current City</label>
-          <input type="text" class="form-control" formControlName="current_city" placeholder="e.g. New York">
+          <app-searchable-select
+            formControlName="current_city"
+            [options]="cityOptions()"
+            placeholder="Select city…"
+            [allowClear]="true">
+          </app-searchable-select>
+          <div class="form-text">Select a country first to load cities</div>
         </div>
         <div class="col-md-6">
           <label class="form-label">Nationality</label>
-          <input type="text" class="form-control" formControlName="nationality" placeholder="e.g. American">
+          <app-searchable-select
+            formControlName="nationality"
+            [options]="countryOptions()"
+            placeholder="Select nationality…"
+            [allowClear]="true">
+          </app-searchable-select>
         </div>
         <div class="col-md-6">
           <label class="form-label">Target Locations</label>
-          <input type="text" class="form-control" formControlName="target_locations"
-            placeholder="e.g. USA, Canada, UK (comma separated)">
-          <div class="form-text">Enter countries separated by commas</div>
+          <app-chip-multi-select
+            formControlName="target_locations"
+            [options]="targetLocationChipOptions()"
+            placeholder="Add target countries…">
+          </app-chip-multi-select>
+          <div class="form-text">Select multiple countries you are open to work in</div>
         </div>
       </div>
     }
@@ -403,7 +463,12 @@
               </div>
               <div class="col-md-6">
                 <label class="form-label form-label-sm">Location</label>
-                <input class="form-control form-control-sm" formControlName="location" placeholder="e.g. New York, USA">
+                <app-searchable-select
+                  formControlName="location"
+                  [options]="countryOptions()"
+                  placeholder="e.g. New York, USA"
+                  [allowClear]="true">
+                </app-searchable-select>
               </div>
               <div class="col-12">
                 <label class="form-label form-label-sm">Description</label>
@@ -440,17 +505,31 @@
               </div>
               <div class="col-md-6">
                 <label class="form-label form-label-sm">Degree</label>
-                <input class="form-control form-control-sm" formControlName="degree" placeholder="e.g. B.Sc., M.Tech, MBA">
+                <app-searchable-select
+                  formControlName="degree"
+                  [options]="degreeOptions()"
+                  placeholder="e.g. B.Sc., MBA"
+                  [allowClear]="true">
+                </app-searchable-select>
               </div>
               <div class="col-md-6">
                 <label class="form-label form-label-sm">Field of Study</label>
-                <input class="form-control form-control-sm" formControlName="field_of_study" placeholder="e.g. Computer Science">
+                <app-searchable-select
+                  formControlName="field_of_study"
+                  [options]="fieldOfStudyOptions()"
+                  placeholder="e.g. Computer Science"
+                  [allowClear]="true">
+                </app-searchable-select>
               </div>
               <div class="col-md-6">
                 <label class="form-label form-label-sm">Location</label>
-                <input class="form-control form-control-sm" formControlName="location" placeholder="e.g. Boston, USA">
+                <app-searchable-select
+                  formControlName="location"
+                  [options]="countryOptions()"
+                  placeholder="e.g. Boston, USA"
+                  [allowClear]="true">
+                </app-searchable-select>
               </div>
-              <!-- Duration row -->
               <div class="col-12">
                 <label class="form-label form-label-sm">Duration (years)</label>
                 <div class="d-flex align-items-center gap-2">
@@ -502,7 +581,7 @@
             </div>
             <div class="file-card__actions">
               <button type="button" class="btn btn-sm btn-outline-primary"
-                (click)="openPreview(cert.file.type.startsWith('image/') ? 'image' : 'pdf', cert.file.type.startsWith('image/') ? undefined : undefined, cert.name)">
+                (click)="openPreview(cert.file.type.startsWith('image/') ? 'image' : 'pdf', undefined, cert.name)">
                 <i class="bi bi-eye"></i>
               </button>
               <button type="button" class="btn btn-sm btn-outline-danger" (click)="removeCert($index)">
@@ -544,7 +623,6 @@
         &nbsp;|&nbsp; {{ experience.length }} experience(s)
       </div>
 
-      <!-- Draft saved indicator -->
       @if (draftSaved) {
         <div class="d-flex align-items-center gap-1 text-muted small mt-2">
           <i class="bi bi-cloud-check"></i> Draft auto-saved
@@ -582,21 +660,18 @@
 @if (previewOpen) {
   <div class="file-preview-overlay" (click)="closePreview()">
     <div class="file-preview-dialog" (click)="$event.stopPropagation()">
-      <!-- Header -->
       <div class="file-preview-dialog__header">
         <span class="file-preview-dialog__title text-truncate">{{ previewName }}</span>
         <button type="button" class="file-preview-dialog__close" (click)="closePreview()">
           <i class="bi bi-x-lg"></i>
         </button>
       </div>
-      <!-- Body -->
       <div class="file-preview-dialog__body">
         @if (previewType === 'image') {
           <img [src]="previewUrl" [alt]="previewName" class="file-preview-dialog__image">
         } @else if (previewType === 'video') {
           <video [src]="previewUrl" controls class="file-preview-dialog__video" autoplay></video>
         } @else {
-          <!-- PDF / generic file — no object-URL available, show info card -->
           <div class="file-preview-dialog__no-preview">
             @if (previewType === 'pdf') {
               <i class="bi bi-file-earmark-pdf file-preview-dialog__no-preview-icon text-danger"></i>

@@ -1,9 +1,6 @@
 // src/config/multer.ts
 import multer, { FileFilterCallback } from 'multer';
-import path from 'path';
-import fs from 'fs';
 import { Request } from 'express';
-import { v4 as uuidv4 } from 'uuid';
 
 const ALLOWED_TYPES: Record<string, string[]> = {
   profiles:     ['image/jpeg', 'image/png', 'image/webp'],
@@ -20,18 +17,8 @@ const MAX_SIZES: Record<string, number> = {
   videos:       50 * 1024 * 1024,   // 50 MB
 };
 
-const storage = multer.diskStorage({
-  destination(req: Request, _file, cb) {
-    const folder = (req.params.type as string) || 'profiles';
-    const dest = path.join(__dirname, '../../uploads', folder);
-    fs.mkdirSync(dest, { recursive: true });
-    cb(null, dest);
-  },
-  filename(_req, file, cb) {
-    const ext = path.extname(file.originalname);
-    cb(null, `${uuidv4()}${ext}`);
-  },
-});
+// Use memory storage — files are buffered in RAM and streamed to Cloudinary
+const storage = multer.memoryStorage();
 
 const fileFilter = (req: Request, file: Express.Multer.File, cb: FileFilterCallback) => {
   const folder = (req.params.type as string) || 'profiles';
@@ -46,7 +33,7 @@ const fileFilter = (req: Request, file: Express.Multer.File, cb: FileFilterCallb
 export const upload = multer({
   storage,
   fileFilter,
-  limits: { fileSize: 50 * 1024 * 1024 }, // global max 50MB; per-type checked in controller
+  limits: { fileSize: 50 * 1024 * 1024 }, // global max 50 MB; per-type enforced in controller
 });
 
 export { MAX_SIZES, ALLOWED_TYPES };

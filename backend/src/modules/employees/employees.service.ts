@@ -4,7 +4,6 @@ import { v4 as uuidv4 } from 'uuid';
 import { db } from '../../config/db';
 import { AppError } from '../../middleware/errorHandler';
 import { sendEmployeeCredentials } from '../../services/email.service';
-import { env } from '../../config/env';
 import type { CreateEmployeeDto, UpdateEmployeeDto, EmployeeFilterDto } from './employees.dto';
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
@@ -71,6 +70,7 @@ export async function createEmployee(dto: CreateEmployeeDto, createdByAdminId: s
       salary_max:      dto.salary_max      ?? null,
       salary_currency: dto.salary_currency ?? null,
       salary_type:     dto.salary_type     ?? null,
+      notice_period_id: dto.notice_period_id ?? null,
       profile_status:  'active',
     });
 
@@ -192,17 +192,6 @@ export async function getEmployeeById(id: string) {
   if (!employee) throw new AppError(404, 'Employee not found');
 
   const relations = await fetchRelations(id);
-
-  // Build file URLs
-  const base = env.APP_URL;
-  if (employee.profile_photo_url) employee.profile_photo_url = `${base}${employee.profile_photo_url}`;
-  if (employee.resume_url)        employee.resume_url        = `${base}${employee.resume_url}`;
-  if (employee.intro_video_url)   employee.intro_video_url   = `${base}${employee.intro_video_url}`;
-
-  relations.certificates = relations.certificates.map((c: any) => ({
-    ...c,
-    file_url: c.file_url ? `${base}${c.file_url}` : null,
-  }));
 
   return { ...employee, ...relations };
 }

@@ -16,6 +16,7 @@ import editRequestsRouter from './modules/edit-requests/edit-requests.router';
 import auditLogsRouter   from './modules/audit-logs/audit-logs.router';
 import uploadsRouter     from './modules/uploads/uploads.router';
 import statsRouter      from './modules/stats/stats.router';
+import masterRouter     from './modules/master/master.router';
 
 const app = express();
 
@@ -50,6 +51,7 @@ app.use('/api/v1/edit-requests', editRequestsRouter);
 app.use('/api/v1/audit-logs',   auditLogsRouter);
 app.use('/api/v1',               uploadsRouter);   // /files/:type/:filename + /employees/:id/files/:type
 app.use('/api/v1/stats',         statsRouter);
+app.use('/api/v1/master',        masterRouter);
 
 // ── Global error handler (must be last) ───────────────────────────────────────
 app.use(errorHandler);

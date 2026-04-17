@@ -1,5 +1,5 @@
 // src/app/features/admin/employee-register/employee-register.component.ts
-import { Component, OnInit, OnDestroy } from '@angular/core';
+import { Component, OnInit, OnDestroy, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import {
   ReactiveFormsModule, FormBuilder, FormGroup,
@@ -8,6 +8,9 @@ import {
 import { Router, RouterLink } from '@angular/router';
 import { Subscription, debounceTime } from 'rxjs';
 import { EmployeeService } from '../../../core/services/employee.service';
+import { MasterDataService } from '../../../core/services/master-data.service';
+import { SearchableSelectComponent, SelectOption } from '../../../shared/components/searchable-select/searchable-select.component';
+import { ChipMultiSelectComponent, ChipOption } from '../../../shared/components/chip-multi-select/chip-multi-select.component';
 
 const DRAFT_KEY = 'th_register_draft';
 
@@ -30,7 +33,7 @@ function langGroupValidator(g: AbstractControl): ValidationErrors | null {
 @Component({
   selector: 'app-employee-register',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, RouterLink],
+  imports: [CommonModule, ReactiveFormsModule, RouterLink, SearchableSelectComponent, ChipMultiSelectComponent],
   templateUrl: './employee-register.component.html',
 })
 export class EmployeeRegisterComponent implements OnInit, OnDestroy {
@@ -47,7 +50,6 @@ export class EmployeeRegisterComponent implements OnInit, OnDestroy {
   pendingVideo?:  File;
   pendingCerts: { file: File; name: string }[] = [];
 
-  // Preview state
   photoPreviewUrl?:  string;
   videoPreviewUrl?:  string;
 
@@ -56,7 +58,6 @@ export class EmployeeRegisterComponent implements OnInit, OnDestroy {
   previewUrl?: string;
   previewName?: string;
 
-  // Track created object URLs for cleanup
   private _objectUrls: string[] = [];
 
   form!: FormGroup;
@@ -72,23 +73,86 @@ export class EmployeeRegisterComponent implements OnInit, OnDestroy {
 
   readonly GENDERS      = ['male', 'female', 'non-binary', 'prefer_not_to_say'];
   readonly SALARY_TYPES = ['monthly', 'annual', 'hourly'];
-  readonly CURRENCIES   = ['USD', 'EUR', 'GBP', 'AED', 'SGD', 'INR', 'AUD', 'CAD'];
   readonly PROFICIENCY_SKILL = ['beginner', 'intermediate', 'expert'];
   readonly PROFICIENCY_LANG  = ['basic', 'conversational', 'fluent', 'native'];
   readonly currentYear = new Date().getFullYear();
+
+  readonly genderOptions: SelectOption[] = [
+    { value: 'male',            label: 'Male'            },
+    { value: 'female',          label: 'Female'          },
+    { value: 'non-binary',      label: 'Non-binary'      },
+    { value: 'prefer_not_to_say', label: 'Prefer not to say' },
+  ];
+  readonly salaryTypeOptions: SelectOption[] = [
+    { value: 'monthly', label: 'Monthly' },
+    { value: 'annual',  label: 'Annual'  },
+    { value: 'hourly',  label: 'Hourly'  },
+  ];
+  readonly proficiencySkillOptions: SelectOption[] = [
+    { value: 'beginner',     label: 'Beginner'     },
+    { value: 'intermediate', label: 'Intermediate' },
+    { value: 'expert',       label: 'Expert'       },
+  ];
+  readonly proficiencyLangOptions: SelectOption[] = [
+    { value: 'basic',          label: 'Basic'          },
+    { value: 'conversational', label: 'Conversational' },
+    { value: 'fluent',         label: 'Fluent'         },
+    { value: 'native',         label: 'Native'         },
+  ];
+
+  // ── Computed SelectOption arrays from master data ─────────────────────────
+  countryOptions    = computed<SelectOption[]>(() =>
+    this.master.countries().map(c => ({ value: c.name, label: `${c.flag_emoji} ${c.name}` })));
+
+  dialCodeOptions   = computed<SelectOption[]>(() =>
+    this.master.countries().map(c => ({ value: c.dial_code, label: `${c.flag_emoji} ${c.dial_code}`, sublabel: c.name })));
+
+  cityOptions       = computed<SelectOption[]>(() =>
+    this.master.cities().map(c => ({ value: c.name, label: c.name })));
+
+  jobTitleOptions   = computed<SelectOption[]>(() =>
+    this.master.jobTitles().map(j => ({ value: j.title, label: j.title, sublabel: j.occupation_name })));
+
+  occupationOptions = computed<SelectOption[]>(() =>
+    this.master.occupations().map(o => ({ value: o.name, label: o.name })));
+
+  industryOptions   = computed<SelectOption[]>(() =>
+    this.master.industries().map(i => ({ value: i.name, label: i.name })));
+
+  languageOptions   = computed<SelectOption[]>(() =>
+    this.master.languages().map(l => ({ value: l.name, label: l.name })));
+
+  degreeOptions     = computed<SelectOption[]>(() =>
+    this.master.degrees().map(d => ({ value: d.name, label: d.name })));
+
+  fieldOfStudyOptions = computed<SelectOption[]>(() =>
+    this.master.fieldsOfStudy().map(f => ({ value: f.name, label: f.name })));
+
+  currencyOptions   = computed<SelectOption[]>(() =>
+    this.master.currencies().map(c => ({ value: c.code, label: `${c.code} — ${c.name}`, sublabel: c.symbol })));
+
+  noticePeriodOptions = computed<SelectOption[]>(() =>
+    this.master.noticePeriods().map(n => ({ value: n.id, label: n.label })));
+
+  targetLocationChipOptions = computed<ChipOption[]>(() =>
+    this.master.countries().map(c => ({ value: c.name, label: `${c.flag_emoji} ${c.name}` })));
 
   constructor(
     private fb: FormBuilder,
     private empSvc: EmployeeService,
     private router: Router,
+    public master: MasterDataService,
   ) {}
 
   ngOnInit(): void {
+    this.master.loadAll();
+
     this.form = this.fb.group({
       first_name:    ['', [Validators.required, Validators.maxLength(100)]],
       last_name:     ['', [Validators.required, Validators.maxLength(100)]],
       date_of_birth: [''],
       gender:        [''],
+      dial_code:     ['+1'],
       phone:         [''],
       bio:           ['', Validators.maxLength(2000)],
 
@@ -101,6 +165,7 @@ export class EmployeeRegisterComponent implements OnInit, OnDestroy {
       salary_max:       [null],
       salary_currency:  ['USD'],
       salary_type:      ['monthly'],
+      notice_period_id: [null],
 
       skills:    this.fb.array([]),
       languages: this.fb.array([]),
@@ -108,7 +173,7 @@ export class EmployeeRegisterComponent implements OnInit, OnDestroy {
       current_country:  [''],
       current_city:     [''],
       nationality:      [''],
-      target_locations: [''],
+      target_locations: [[]],
 
       experience: this.fb.array([]),
       education:  this.fb.array([]),
@@ -122,10 +187,13 @@ export class EmployeeRegisterComponent implements OnInit, OnDestroy {
     this.addExperience();
     this.addEducation();
 
-    // Restore draft
     this.restoreDraft();
 
-    // Auto-save draft on changes
+    // Subscribe to job_title changes for auto-fill
+    this.form.get('job_title')!.valueChanges.subscribe(v => this.onJobTitleChange(v));
+    // Subscribe to current_country changes for city cascade
+    this.form.get('current_country')!.valueChanges.subscribe(v => this.onCountryChange(v));
+
     this.draftSub = this.form.valueChanges.pipe(debounceTime(800)).subscribe(() => {
       this.saveDraft();
     });
@@ -136,15 +204,31 @@ export class EmployeeRegisterComponent implements OnInit, OnDestroy {
     this._objectUrls.forEach(u => URL.revokeObjectURL(u));
   }
 
+  // ── Job Title → auto-fill Occupation ────────────────────────────────────────
+  onJobTitleChange(titleName: string | number | null): void {
+    if (!titleName) return;
+    const jt = this.master.jobTitles().find(j => j.title === String(titleName));
+    if (jt && !this.form.get('occupation')?.value) {
+      this.form.patchValue({ occupation: jt.occupation_name }, { emitEvent: false });
+    }
+  }
+
+  // ── Country change → load cities ────────────────────────────────────────────
+  onCountryChange(countryName: string | number | null): void {
+    this.form.patchValue({ current_city: '' }, { emitEvent: false });
+    if (!countryName) { this.master.cities.set([]); return; }
+    const country = this.master.countries().find(c => c.name === String(countryName));
+    if (country) this.master.loadCities(country.id);
+  }
+
   // ── Draft helpers ──────────────────────────────────────────────────────────
   private saveDraft(): void {
     try {
       const simple = { ...this.form.getRawValue() };
-      // Don't persist FormArrays as they get complex — store top-level scalars only
       localStorage.setItem(DRAFT_KEY, JSON.stringify(simple));
       this.draftSaved = true;
       setTimeout(() => (this.draftSaved = false), 3000);
-    } catch { /* storage full — ignore */ }
+    } catch { /* storage full */ }
   }
 
   private restoreDraft(): void {
@@ -152,11 +236,10 @@ export class EmployeeRegisterComponent implements OnInit, OnDestroy {
       const raw = localStorage.getItem(DRAFT_KEY);
       if (!raw) return;
       const draft = JSON.parse(raw);
-      // Only patch scalar fields (not FormArrays)
       const scalarKeys = [
-        'first_name','last_name','date_of_birth','gender','phone','bio',
+        'first_name','last_name','date_of_birth','gender','dial_code','phone','bio',
         'job_title','occupation','industry','years_experience','linkedin_url',
-        'salary_min','salary_max','salary_currency','salary_type',
+        'salary_min','salary_max','salary_currency','salary_type','notice_period_id',
         'current_country','current_city','nationality','target_locations',
         'email','password',
       ];
@@ -165,12 +248,10 @@ export class EmployeeRegisterComponent implements OnInit, OnDestroy {
         if (draft[k] !== undefined && draft[k] !== null && draft[k] !== '') patch[k] = draft[k];
       }
       this.form.patchValue(patch, { emitEvent: false });
-    } catch { /* corrupted draft — ignore */ }
+    } catch { /* corrupted draft */ }
   }
 
-  private clearDraft(): void {
-    localStorage.removeItem(DRAFT_KEY);
-  }
+  private clearDraft(): void { localStorage.removeItem(DRAFT_KEY); }
 
   // ── FormArray helpers ──────────────────────────────────────────────────────
   get skills():     FormArray { return this.form.get('skills')     as FormArray; }
@@ -207,35 +288,23 @@ export class EmployeeRegisterComponent implements OnInit, OnDestroy {
   ctrl(name: string): AbstractControl { return this.form.get(name)!; }
 
   // ── Step validation ────────────────────────────────────────────────────────
-
-  /** Mark all controls relevant to a step as touched so errors become visible. */
   private markStepTouched(step: number): void {
     const mark = (c: AbstractControl) => { c.markAsTouched(); c.updateValueAndValidity(); };
     switch (step) {
-      case 1:
-        mark(this.ctrl('first_name'));
-        mark(this.ctrl('last_name'));
-        break;
+      case 1: mark(this.ctrl('first_name')); mark(this.ctrl('last_name')); break;
       case 2:
         this.skills.controls.forEach(g => {
           const name = g.get('skill_name')?.value?.trim();
-          if (!name) return; // don't touch empty rows
-          mark(g.get('skill_name')!);
-          mark(g.get('proficiency')!);
-          g.updateValueAndValidity();
+          if (!name) return;
+          mark(g.get('skill_name')!); mark(g.get('proficiency')!); g.updateValueAndValidity();
         });
         this.languages.controls.forEach(g => {
           const name = g.get('language')?.value?.trim();
-          if (!name) return; // don't touch empty rows
-          mark(g.get('language')!);
-          mark(g.get('proficiency')!);
-          g.updateValueAndValidity();
+          if (!name) return;
+          mark(g.get('language')!); mark(g.get('proficiency')!); g.updateValueAndValidity();
         });
         break;
-      case 5:
-        mark(this.ctrl('email'));
-        mark(this.ctrl('password'));
-        break;
+      case 5: mark(this.ctrl('email')); mark(this.ctrl('password')); break;
     }
   }
 
@@ -243,15 +312,14 @@ export class EmployeeRegisterComponent implements OnInit, OnDestroy {
     switch (step) {
       case 1: return this.ctrl('first_name').valid && this.ctrl('last_name').valid;
       case 2: {
-        // Only validate rows where the user has typed a name
         const skillsOk = this.skills.controls.every(g => {
           const name = g.get('skill_name')?.value?.trim();
-          if (!name) return true; // empty row — skip
+          if (!name) return true;
           return g.get('proficiency')!.valid;
         });
         const langsOk = this.languages.controls.every(g => {
           const name = g.get('language')?.value?.trim();
-          if (!name) return true; // empty row — skip
+          if (!name) return true;
           return g.get('proficiency')!.valid;
         });
         return skillsOk && langsOk;
@@ -263,13 +331,9 @@ export class EmployeeRegisterComponent implements OnInit, OnDestroy {
 
   nextStep(): void {
     this.markStepTouched(this.currentStep);
-    if (this.currentStep < this.totalSteps && this.isStepValid(this.currentStep)) {
-      this.currentStep++;
-    }
+    if (this.currentStep < this.totalSteps && this.isStepValid(this.currentStep)) this.currentStep++;
   }
-  prevStep(): void {
-    if (this.currentStep > 1) this.currentStep--;
-  }
+  prevStep(): void { if (this.currentStep > 1) this.currentStep--; }
   goToStep(n: number): void {
     if (n < this.currentStep) { this.currentStep = n; return; }
     this.markStepTouched(this.currentStep);
@@ -285,13 +349,11 @@ export class EmployeeRegisterComponent implements OnInit, OnDestroy {
     this.photoPreviewUrl = URL.createObjectURL(file);
     this._objectUrls.push(this.photoPreviewUrl);
   }
-
   onResumeSelected(e: Event): void {
     const file = (e.target as HTMLInputElement).files?.[0];
     if (!file) return;
     this.pendingResume = file;
   }
-
   onVideoSelected(e: Event): void {
     const file = (e.target as HTMLInputElement).files?.[0];
     if (!file) return;
@@ -300,43 +362,27 @@ export class EmployeeRegisterComponent implements OnInit, OnDestroy {
     this.videoPreviewUrl = URL.createObjectURL(file);
     this._objectUrls.push(this.videoPreviewUrl);
   }
-
   onCertSelected(e: Event): void {
     const file = (e.target as HTMLInputElement).files?.[0];
     if (file) this.pendingCerts.push({ file, name: file.name });
-    // Reset input so same file can be re-selected
     (e.target as HTMLInputElement).value = '';
   }
-
   removeCert(i: number): void { this.pendingCerts.splice(i, 1); }
-
   clearPhoto(): void {
     if (this.photoPreviewUrl) { URL.revokeObjectURL(this.photoPreviewUrl); this._objectUrls = this._objectUrls.filter(u => u !== this.photoPreviewUrl); }
-    this.pendingPhoto = undefined;
-    this.photoPreviewUrl = undefined;
+    this.pendingPhoto = undefined; this.photoPreviewUrl = undefined;
   }
-
   clearResume(): void { this.pendingResume = undefined; }
-
   clearVideo(): void {
     if (this.videoPreviewUrl) { URL.revokeObjectURL(this.videoPreviewUrl); this._objectUrls = this._objectUrls.filter(u => u !== this.videoPreviewUrl); }
-    this.pendingVideo = undefined;
-    this.videoPreviewUrl = undefined;
+    this.pendingVideo = undefined; this.videoPreviewUrl = undefined;
   }
 
-  // ── Preview modal ──────────────────────────────────────────────────────────
   openPreview(type: 'image' | 'video' | 'pdf' | 'file', url?: string, name?: string): void {
-    this.previewType = type;
-    this.previewUrl  = url;
-    this.previewName = name;
-    this.previewOpen = true;
+    this.previewType = type; this.previewUrl = url; this.previewName = name; this.previewOpen = true;
   }
-
   closePreview(): void {
-    this.previewOpen = false;
-    this.previewType = null;
-    this.previewUrl  = undefined;
-    this.previewName = undefined;
+    this.previewOpen = false; this.previewType = null; this.previewUrl = undefined; this.previewName = undefined;
   }
 
   formatFileSize(bytes: number): string {
@@ -357,29 +403,29 @@ export class EmployeeRegisterComponent implements OnInit, OnDestroy {
     const experience  = raw.experience.filter((e: any) => e.company_name?.trim() || e.job_title?.trim());
     const education   = raw.education.filter((e: any) => e.institution?.trim() || e.degree?.trim());
 
+    const phone = raw.phone ? `${raw.dial_code || ''}${raw.phone}`.trim() : undefined;
+
     const payload = {
-      email:    raw.email,
-      password: raw.password,
+      email: raw.email, password: raw.password,
       first_name: raw.first_name, last_name: raw.last_name,
-      date_of_birth:   raw.date_of_birth   || undefined,
-      gender:          raw.gender          || undefined,
-      phone:           raw.phone           || undefined,
-      bio:             raw.bio             || undefined,
-      job_title:       raw.job_title       || undefined,
-      occupation:      raw.occupation      || undefined,
-      industry:        raw.industry        || undefined,
+      date_of_birth:    raw.date_of_birth   || undefined,
+      gender:           raw.gender          || undefined,
+      phone:            phone               || undefined,
+      bio:              raw.bio             || undefined,
+      job_title:        raw.job_title       || undefined,
+      occupation:       raw.occupation      || undefined,
+      industry:         raw.industry        || undefined,
       years_experience: raw.years_experience || undefined,
-      linkedin_url:    raw.linkedin_url    || undefined,
-      salary_min:      raw.salary_min      || undefined,
-      salary_max:      raw.salary_max      || undefined,
-      salary_currency: raw.salary_currency || undefined,
-      salary_type:     raw.salary_type     || undefined,
-      current_country: raw.current_country || undefined,
-      current_city:    raw.current_city    || undefined,
-      nationality:     raw.nationality     || undefined,
-      target_locations: raw.target_locations
-        ? raw.target_locations.split(',').map((s: string) => s.trim()).filter(Boolean)
-        : [],
+      linkedin_url:     raw.linkedin_url    || undefined,
+      salary_min:       raw.salary_min      || undefined,
+      salary_max:       raw.salary_max      || undefined,
+      salary_currency:  raw.salary_currency || undefined,
+      salary_type:      raw.salary_type     || undefined,
+      notice_period_id: raw.notice_period_id || undefined,
+      current_country:  raw.current_country || undefined,
+      current_city:     raw.current_city    || undefined,
+      nationality:      raw.nationality     || undefined,
+      target_locations: Array.isArray(raw.target_locations) ? raw.target_locations : [],
       skills, languages, experience, education,
     };
 
