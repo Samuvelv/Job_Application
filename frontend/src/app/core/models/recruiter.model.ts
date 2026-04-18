@@ -31,7 +31,9 @@ export interface ShortlistEntry {
 }
 
 export interface RecruiterFilters {
-  search?: string;
-  page?: number;
-  limit?: number;
+  search?:   string;
+  company?:  string;
+  isActive?: 'true' | 'false';
+  page?:     number;
+  limit?:    number;
 }

@@ -2,6 +2,7 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
+import { ReactiveFormsModule, FormBuilder, FormGroup } from '@angular/forms';
 import { RecruiterService } from '../../../core/services/recruiter.service';
 import { ShortlistEntry } from '../../../core/models/recruiter.model';
 import { ToastService } from '../../../core/services/toast.service';
@@ -11,7 +12,7 @@ import { EmptyStateComponent } from '../../../shared/components/empty-state/empt
 @Component({
   selector: 'app-shortlist',
   standalone: true,
-  imports: [CommonModule, RouterLink, PageHeaderComponent, EmptyStateComponent],
+  imports: [CommonModule, RouterLink, ReactiveFormsModule, PageHeaderComponent, EmptyStateComponent],
   template: `
     <app-page-header
       title="My Shortlist"
@@ -23,18 +24,97 @@ import { EmptyStateComponent } from '../../../shared/components/empty-state/empt
       </a>
     </app-page-header>
 
+    <!-- Filter card (client-side) -->
+    @if (!loading && allEntries.length > 0) {
+      <div class="filter-card">
+        <form [formGroup]="filterForm" (ngSubmit)="applyFilters()">
+
+          <!-- Basic row -->
+          <div class="filter-card__search-row">
+            <div class="filter-card__search-input-wrap">
+              <i class="bi bi-search"></i>
+              <input type="text" class="form-control form-control-sm"
+                formControlName="search"
+                placeholder="Search name, job title…"
+                (keydown.enter)="applyFilters()">
+            </div>
+            <div class="filter-card__actions">
+              <button type="submit" class="filter-search-btn">
+                <i class="bi bi-search"></i> Search
+              </button>
+              <button type="button" class="filter-card__adv-toggle"
+                [class.is-open]="advOpen"
+                (click)="advOpen = !advOpen">
+                <i class="bi bi-sliders2"></i>
+                Advanced
+                @if (activeAdvCount > 0) {
+                  <span class="filter-card__badge">{{ activeAdvCount }}</span>
+                }
+                <i class="bi bi-chevron-down adv-toggle__caret"></i>
+              </button>
+              @if (hasAnyFilter) {
+                <button type="button" class="filter-clear-btn" (click)="clearFilters()">
+                  <i class="bi bi-x-lg"></i> Clear
+                </button>
+              }
+            </div>
+          </div>
+
+          <!-- Advanced panel -->
+          <div class="filter-card__advanced" [class.is-open]="advOpen">
+            <div class="filter-card__advanced-inner">
+              <div class="row g-2">
+                <div class="col-sm-6 col-md-4 col-lg-3">
+                  <label class="filter-card__section-label">Industry</label>
+                  <input type="text" class="form-control form-control-sm"
+                    formControlName="industry" placeholder="e.g. Technology">
+                </div>
+                <div class="col-sm-6 col-md-4 col-lg-3">
+                  <label class="filter-card__section-label">Country</label>
+                  <input type="text" class="form-control form-control-sm"
+                    formControlName="currentCountry" placeholder="e.g. Australia">
+                </div>
+                <div class="col-sm-6 col-md-4 col-lg-3">
+                  <label class="filter-card__section-label">Min. Experience (yrs)</label>
+                  <input type="number" class="form-control form-control-sm"
+                    formControlName="yearsExperience" placeholder="e.g. 3" min="0">
+                </div>
+              </div>
+              <div class="mt-3 d-flex gap-2">
+                <button type="submit" class="filter-search-btn">
+                  <i class="bi bi-search"></i> Apply Filters
+                </button>
+                @if (hasAnyFilter) {
+                  <button type="button" class="filter-clear-btn" (click)="clearFilters()">
+                    <i class="bi bi-x-lg"></i> Clear All
+                  </button>
+                }
+              </div>
+            </div>
+          </div>
+
+        </form>
+      </div>
+    }
+
     @if (loading) {
       <div class="loading-state">
         <div class="spinner-border"></div>
         <div class="loading-state__text">Loading shortlist…</div>
       </div>
-    } @else if (entries.length === 0) {
+    } @else if (allEntries.length === 0) {
       <app-empty-state
         icon="bi-bookmark"
         title="Your shortlist is empty"
         subtitle="Browse candidates and add them to your shortlist."
         actionLabel="Browse Talent"
         actionRoute="/recruiter/candidates"
+      />
+    } @else if (entries.length === 0) {
+      <app-empty-state
+        icon="bi-search"
+        title="No results match your filters"
+        subtitle="Try adjusting your search criteria."
       />
     } @else {
       <div class="row g-3">
@@ -106,25 +186,70 @@ import { EmptyStateComponent } from '../../../shared/components/empty-state/empt
   `,
 })
 export class ShortlistComponent implements OnInit {
+  allEntries: ShortlistEntry[] = [];
   entries: ShortlistEntry[] = [];
   loading = false;
   removing: string | null = null;
+  advOpen = false;
+
+  filterForm: FormGroup;
 
   constructor(
     private recruiterService: RecruiterService,
     private toast: ToastService,
-  ) {}
+    private fb: FormBuilder,
+  ) {
+    this.filterForm = this.fb.group({
+      search:          [''],
+      industry:        [''],
+      currentCountry:  [''],
+      yearsExperience: [''],
+    });
+  }
 
   ngOnInit(): void {
     this.load();
+  }
+
+  get activeAdvCount(): number {
+    const v = this.filterForm.value;
+    return [v.industry, v.currentCountry, v.yearsExperience]
+      .filter(x => x !== null && x !== '' && x !== undefined).length;
+  }
+
+  get hasAnyFilter(): boolean {
+    const v = this.filterForm.value;
+    return Object.values(v).some(x => x !== null && x !== '' && x !== undefined);
+  }
+
+  applyFilters(): void {
+    const v = this.filterForm.value;
+    const search  = (v.search || '').toLowerCase().trim();
+    const industry = (v.industry || '').toLowerCase().trim();
+    const country  = (v.currentCountry || '').toLowerCase().trim();
+    const minYrs   = v.yearsExperience ? +v.yearsExperience : null;
+
+    this.entries = this.allEntries.filter(e => {
+      if (search && !`${e.first_name} ${e.last_name} ${e.job_title || ''} ${e.occupation || ''}`.toLowerCase().includes(search)) return false;
+      if (industry && !(e.industry || '').toLowerCase().includes(industry)) return false;
+      if (country  && !(e.current_country || '').toLowerCase().includes(country)) return false;
+      if (minYrs !== null && (e.years_experience == null || e.years_experience < minYrs)) return false;
+      return true;
+    });
+  }
+
+  clearFilters(): void {
+    this.filterForm.reset();
+    this.entries = [...this.allEntries];
   }
 
   load(): void {
     this.loading = true;
     this.recruiterService.getShortlist().subscribe({
       next: (res) => {
-        this.loading = false;
-        this.entries = res.shortlist;
+        this.loading    = false;
+        this.allEntries = res.shortlist;
+        this.entries    = [...this.allEntries];
       },
       error: () => (this.loading = false),
     });
@@ -134,8 +259,9 @@ export class ShortlistComponent implements OnInit {
     this.removing = entry.candidate_id;
     this.recruiterService.removeFromShortlist(entry.candidate_id).subscribe({
       next: () => {
-        this.removing = null;
-        this.entries  = this.entries.filter((e) => e.candidate_id !== entry.candidate_id);
+        this.removing   = null;
+        this.allEntries = this.allEntries.filter((e) => e.candidate_id !== entry.candidate_id);
+        this.entries    = this.entries.filter((e) => e.candidate_id !== entry.candidate_id);
         this.toast.success('Removed from shortlist');
       },
       error: (err) => {

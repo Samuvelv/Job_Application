@@ -61,8 +61,20 @@ export async function createRecruiter(dto: CreateRecruiterDto, createdByAdminId:
 // ── List recruiters ───────────────────────────────────────────────────────────
 
 export async function listRecruiters(filters: RecruiterFilterDto) {
-  const { search, page, limit } = filters;
+  const { search, company, isActive, page, limit } = filters;
   const offset = (page - 1) * limit;
+
+  const applyFilters = (b: any) => {
+    if (search) {
+      b.where((inner: any) =>
+        inner.whereILike('r.contact_name', `%${search}%`)
+             .orWhereILike('r.company_name', `%${search}%`)
+             .orWhereILike('u.email', `%${search}%`),
+      );
+    }
+    if (company) b.whereILike('r.company_name', `%${company}%`);
+    if (isActive !== undefined) b.where('u.is_active', isActive === 'true');
+  };
 
   let query = db('recruiters as r')
     .join('users as u', 'u.id', 'r.user_id')
@@ -75,27 +87,12 @@ export async function listRecruiters(filters: RecruiterFilterDto) {
       'r.access_expires_at',
       'u.is_active',
       'r.created_at',
-    );
-
-  if (search) {
-    query = query.where((b) =>
-      b.whereILike('r.contact_name', `%${search}%`)
-       .orWhereILike('r.company_name', `%${search}%`)
-       .orWhereILike('u.email', `%${search}%`),
-    );
-  }
+    )
+    .modify(applyFilters);
 
   const [{ count }] = await db('recruiters as r')
     .join('users as u', 'u.id', 'r.user_id')
-    .modify((b) => {
-      if (search) {
-        b.where((inner) =>
-          inner.whereILike('r.contact_name', `%${search}%`)
-               .orWhereILike('r.company_name', `%${search}%`)
-               .orWhereILike('u.email', `%${search}%`),
-        );
-      }
-    })
+    .modify(applyFilters)
     .count('r.id as count');
 
   const data = await query.orderBy('r.created_at', 'desc').limit(limit).offset(offset);

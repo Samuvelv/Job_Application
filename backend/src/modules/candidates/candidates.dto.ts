@@ -103,15 +103,41 @@ export const UpdateCandidateSchema = CreateCandidateSchema
 // ── Filter/Query ──────────────────────────────────────────────────────────────
 
 export const CandidateFilterSchema = z.object({
+  // Basic
   search:          z.string().optional(),
-  industry:        z.string().optional(),
+  // Professional
+  industry:        z.string().optional(),   // comma-sep multi
   occupation:      z.string().optional(),
-  currentCountry:  z.string().optional(),
-  skills:          z.string().optional(),       // comma-separated → split in service
-  languages:       z.string().optional(),
+  skills:          z.string().optional(),   // comma-sep → subquery
+  yearsExpMin:     z.coerce.number().optional(),
+  yearsExpMax:     z.coerce.number().optional(),
+  // Location
+  currentCountry:  z.string().optional(),   // comma-sep multi
+  currentCity:     z.string().optional(),
+  nationality:     z.string().optional(),   // comma-sep multi
+  targetCountry:   z.string().optional(),   // comma-sep multi
+  // Education
+  educationLevel:  z.string().optional(),   // comma-sep: Diploma,Bachelors,Masters,PhD
+  university:      z.string().optional(),
+  fieldOfStudy:    z.string().optional(),
+  // Language
+  languages:       z.string().optional(),   // comma-sep
+  // Salary
   salaryMin:       z.coerce.number().optional(),
   salaryMax:       z.coerce.number().optional(),
+  salaryCurrency:  z.string().optional(),
+  // Age
+  ageMin:          z.coerce.number().optional(),
+  ageMax:          z.coerce.number().optional(),
+  // Status / flags
+  gender:          z.string().optional(),
+  visaStatus:      z.string().optional(),   // 'has_visa' | 'needs_sponsorship' | 'citizen'
+  availability:    z.string().optional(),   // 'immediate' | '1_month' | '3_months'
+  hasVideo:        z.enum(['true','false']).optional(),
+  profileStatus:   z.string().optional(),
+  // Legacy compat
   yearsExperience: z.coerce.number().optional(),
+  // Pagination
   page:            z.coerce.number().int().min(1).default(1),
   limit:           z.coerce.number().int().min(1).max(100).default(20),
 });

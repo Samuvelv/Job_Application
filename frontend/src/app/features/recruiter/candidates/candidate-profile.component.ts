@@ -11,7 +11,7 @@ import { PageHeaderComponent } from '../../../shared/components/page-header/page
 import { CandidateProfileComponent } from '../../../shared/components/candidate-profile/candidate-profile.component';
 
 @Component({
-  selector: 'app-candidate-profile',
+  selector: 'app-recruiter-candidate-profile',
   standalone: true,
   imports: [CommonModule, RouterLink, PageHeaderComponent, CandidateProfileComponent],
   template: `

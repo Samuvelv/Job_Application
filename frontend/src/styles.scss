@@ -8,6 +8,8 @@
 :root {
   // Brand colours — slightly more vibrant indigo
   --th-primary:         #5046e5;
+  --th-primary-rgb:     80, 70, 229;
+  --th-primary-dark:    #4338ca;
   --th-primary-hover:   #4338ca;
   --th-primary-soft:    #eef2ff;
   --th-secondary:       #7c3aed;
@@ -1457,6 +1459,68 @@ body {
   &--skill { background: var(--th-primary-soft); color: var(--th-primary); border-color: rgba(80,70,229,.15); }
   &--language { background: var(--th-info-soft); color: var(--th-info); border-color: rgba(2,132,199,.15); }
   &--plain { background: var(--th-surface-raised); color: var(--th-text-secondary); border: 1px solid var(--th-border); }
+}
+
+// ── Tag Input field (app-tag-input) ───────────────────────────────────────────
+.tag-input-field {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: .35rem;
+  min-height: 42px;
+  padding: .375rem .625rem;
+  background: var(--th-input-bg, var(--th-surface));
+  border: 1px solid var(--th-border);
+  border-radius: .5rem;
+  cursor: text;
+  transition: border-color .15s, box-shadow .15s;
+
+  &:focus-within {
+    border-color: var(--th-primary);
+    box-shadow: 0 0 0 3px rgba(var(--th-primary-rgb), .12);
+    outline: none;
+  }
+
+  &.disabled {
+    opacity: .6;
+    pointer-events: none;
+    background: var(--th-surface-raised);
+  }
+
+  .tag-chip {
+    // chips inside the input inherit the existing .tag-chip style
+    flex-shrink: 0;
+  }
+
+  .tag-chip-remove {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: inherit;
+    padding: 0 0 0 .1rem;
+    line-height: 1;
+    opacity: .6;
+    font-size: .7rem;
+
+    &:hover { opacity: 1; }
+  }
+}
+
+.tag-input-inner {
+  flex: 1 1 80px;
+  min-width: 80px;
+  border: none;
+  outline: none;
+  background: transparent;
+  font-size: .8125rem;
+  color: var(--th-text);
+  padding: .1rem .15rem;
+  line-height: 1.5;
+
+  &::placeholder { color: var(--th-text-secondary); }
 }
 
 // ══════════════════════════════════════════════════════════════════════════════
@@ -3311,6 +3375,650 @@ body {
     gap: .5rem;
 
     i { color: var(--th-primary); }
+  }
+
+  // ── Basic search row inside filter-card ───────────────────────────────────
+  &__search-row {
+    display: flex;
+    gap: .5rem;
+    align-items: center;
+    flex-wrap: wrap;
+  }
+
+  &__search-input-wrap {
+    position: relative;
+    flex: 1 1 240px;
+
+    .bi-search {
+      position: absolute;
+      left: .75rem;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--th-text-secondary);
+      font-size: .875rem;
+      pointer-events: none;
+    }
+
+    input {
+      padding-left: 2.25rem;
+    }
+  }
+
+  &__actions {
+    display: flex;
+    gap: .5rem;
+    align-items: center;
+    flex-shrink: 0;
+    flex-wrap: wrap;
+  }
+
+  // ── Advanced filter toggle button ─────────────────────────────────────────
+  &__adv-toggle {
+    display: inline-flex;
+    align-items: center;
+    gap: .4rem;
+    font-size: .8125rem;
+    font-weight: 500;
+    padding: .3rem .75rem;
+    border-radius: .375rem;
+    border: 1px solid var(--th-border);
+    background: transparent;
+    color: var(--th-text-secondary);
+    cursor: pointer;
+    transition: color .15s, border-color .15s, background .15s;
+    white-space: nowrap;
+
+    &:hover {
+      color: var(--th-primary);
+      border-color: var(--th-primary);
+      background: rgba(var(--th-primary-rgb), .06);
+    }
+
+    &.is-open {
+      color: var(--th-primary);
+      border-color: var(--th-primary);
+      background: rgba(var(--th-primary-rgb), .08);
+    }
+
+    .adv-toggle__caret {
+      transition: transform .2s ease;
+      font-size: .7rem;
+    }
+
+    &.is-open .adv-toggle__caret {
+      transform: rotate(180deg);
+    }
+  }
+
+  // ── Active filter count badge ──────────────────────────────────────────────
+  &__badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 1.25rem;
+    height: 1.25rem;
+    padding: 0 .3rem;
+    border-radius: 999px;
+    background: var(--th-primary);
+    color: #fff;
+    font-size: .65rem;
+    font-weight: 700;
+    line-height: 1;
+  }
+
+  // ── Advanced filter panel (slide-down) ────────────────────────────────────
+  &__advanced {
+    overflow: hidden;
+    max-height: 0;
+    opacity: 0;
+    transition: max-height .3s ease, opacity .2s ease, margin-top .3s ease;
+    margin-top: 0;
+
+    &.is-open {
+      max-height: 600px;
+      opacity: 1;
+      margin-top: .875rem;
+    }
+  }
+
+  &__advanced-inner {
+    padding-top: .75rem;
+    border-top: 1px solid var(--th-border);
+  }
+
+  &__section-label {
+    font-size: .7rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .6px;
+    color: var(--th-text-secondary);
+    margin-bottom: .5rem;
+    margin-top: .25rem;
+  }
+}
+
+// ── Search / Clear buttons inside filter bar ─────────────────────────────────
+.filter-search-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: .4rem;
+  font-size: .8125rem;
+  font-weight: 600;
+  padding: .35rem .9rem;
+  border-radius: .375rem;
+  border: none;
+  background: var(--th-primary);
+  color: #fff;
+  cursor: pointer;
+  transition: background .15s, box-shadow .15s;
+  white-space: nowrap;
+
+  &:hover { background: var(--th-primary-dark, #4338ca); }
+  &:active { transform: scale(.97); }
+}
+
+.filter-clear-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: .35rem;
+  font-size: .8125rem;
+  font-weight: 500;
+  padding: .35rem .75rem;
+  border-radius: .375rem;
+  border: 1px solid var(--th-border);
+  background: transparent;
+  color: var(--th-text-secondary);
+  cursor: pointer;
+  transition: color .15s, border-color .15s, background .15s;
+  white-space: nowrap;
+
+  &:hover {
+    color: #ef4444;
+    border-color: rgba(239,68,68,.4);
+    background: rgba(239,68,68,.06);
+  }
+}
+
+// ══════════════════════════════════════════════════════════════════════════════
+//  CANDIDATE FILTER SIDEBAR
+// ══════════════════════════════════════════════════════════════════════════════
+
+// Layout wrapper: sidebar + results
+// .cfs-layout is just a plain results container now (sidebar is an overlay)
+.cfs-layout {
+  display: block;
+  position: relative;
+}
+
+// ── Sidebar panel — RIGHT-SIDE off-canvas drawer (all screen sizes) ───────────
+.cfs-sidebar {
+  position: fixed;
+  top: 0;
+  right: 0;
+  height: 100dvh;
+  width: min(360px, 92vw);
+  max-height: 100dvh;
+  z-index: 1055;
+  background: var(--th-surface);
+  border-radius: var(--th-radius) 0 0 var(--th-radius);
+  box-shadow: -4px 0 32px rgba(0, 0, 0, 0.18);
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: var(--th-border) transparent;
+  // Start off-screen to the right
+  transform: translateX(100%);
+  transition: transform .28s cubic-bezier(.4, 0, .2, 1);
+
+  &::-webkit-scrollbar { width: 4px; }
+  &::-webkit-scrollbar-thumb { background: var(--th-border); border-radius: 4px; }
+
+  // Open state (drawer slides in from right)
+  &.cfs-sidebar--open {
+    transform: translateX(0);
+  }
+}
+
+// ── Sidebar header ────────────────────────────────────────────────────────────
+.cfs-sidebar__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: .875rem 1rem .75rem;
+  border-bottom: 1px solid var(--th-border);
+  position: sticky;
+  top: 0;
+  background: var(--th-surface);
+  z-index: 1;
+}
+
+.cfs-sidebar__title {
+  font-size: .8125rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .6px;
+  color: var(--th-text);
+  display: flex;
+  align-items: center;
+  gap: .4rem;
+
+  i { color: var(--th-primary); }
+}
+
+.cfs-sidebar__count {
+  font-size: .7rem;
+  font-weight: 700;
+  padding: .15rem .45rem;
+  border-radius: 999px;
+  background: var(--th-primary);
+  color: #fff;
+  line-height: 1.4;
+}
+
+.cfs-sidebar__clear-all {
+  font-size: .75rem;
+  font-weight: 500;
+  color: #ef4444;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: .15rem .25rem;
+  border-radius: .25rem;
+  transition: background .15s;
+
+  &:hover { background: rgba(239,68,68,.08); }
+}
+
+// ── Filter sections ───────────────────────────────────────────────────────────
+.cfs-section {
+  border-bottom: 1px solid var(--th-border);
+
+  &:last-child { border-bottom: none; }
+}
+
+.cfs-section__toggle {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  padding: .625rem 1rem;
+  background: none;
+  border: none;
+  cursor: pointer;
+  text-align: left;
+  transition: background .15s;
+
+  &:hover { background: var(--th-hover-bg, rgba(0,0,0,.03)); }
+}
+.cfs-section__label {
+  display: block;
+  font-size: .75rem;
+  font-weight: 600;
+  color: var(--th-text-secondary);
+  text-transform: uppercase;
+  letter-spacing: .4px;
+  padding: .75rem 1rem .35rem;
+}
+
+.cfs-section__caret {
+  font-size: .65rem;
+  color: var(--th-text-secondary);
+  transition: transform .2s ease;
+
+  &.open { transform: rotate(180deg); }
+}
+
+.cfs-section__body {
+  padding: 0 1rem .875rem;
+  display: block;
+}
+
+// ── Filter controls inside sections ──────────────────────────────────────────
+
+// Checkbox group
+.cfs-checkbox-group {
+  display: flex;
+  flex-direction: column;
+  gap: .3rem;
+}
+
+.cfs-checkbox-item {
+  display: flex;
+  align-items: center;
+  gap: .5rem;
+  cursor: pointer;
+  font-size: .8125rem;
+  color: var(--th-text);
+  padding: .15rem 0;
+
+  input[type="checkbox"] {
+    width: 15px; height: 15px;
+    accent-color: var(--th-primary);
+    cursor: pointer;
+    flex-shrink: 0;
+  }
+}
+
+// Tag chip input (skills / languages)
+.cfs-tag-input-wrap {
+  border: 1px solid var(--th-border);
+  border-radius: .375rem;
+  padding: .35rem .5rem;
+  min-height: 36px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: .25rem;
+  align-items: center;
+  background: var(--th-input-bg, var(--th-surface));
+  cursor: text;
+  transition: border-color .15s;
+
+  &:focus-within {
+    border-color: var(--th-primary);
+    box-shadow: 0 0 0 2px rgba(var(--th-primary-rgb), .15);
+  }
+}
+
+.cfs-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: .25rem;
+  font-size: .7rem;
+  font-weight: 500;
+  padding: .15rem .45rem .15rem .5rem;
+  border-radius: 999px;
+  background: rgba(var(--th-primary-rgb), .12);
+  color: var(--th-primary);
+  white-space: nowrap;
+
+  button {
+    background: none;
+    border: none;
+    padding: 0;
+    cursor: pointer;
+    color: inherit;
+    opacity: .7;
+    font-size: .65rem;
+    line-height: 1;
+    display: flex;
+    align-items: center;
+
+    &:hover { opacity: 1; }
+  }
+}
+
+.cfs-tag-input {
+  border: none;
+  outline: none;
+  background: transparent;
+  font-size: .8rem;
+  color: var(--th-text);
+  min-width: 80px;
+  flex: 1;
+  padding: .1rem 0;
+  line-height: 1.4;
+}
+
+// Range slider pair
+.cfs-range-row {
+  display: flex;
+  gap: .5rem;
+  align-items: center;
+
+  input[type="number"] {
+    width: 0;
+    flex: 1;
+  }
+
+  span {
+    font-size: .75rem;
+    color: var(--th-text-secondary);
+    flex-shrink: 0;
+  }
+}
+
+// Native range slider
+.cfs-range-slider {
+  width: 100%;
+  accent-color: var(--th-primary);
+  cursor: pointer;
+  height: 4px;
+  margin: .5rem 0 .25rem;
+}
+
+.cfs-range-labels {
+  display: flex;
+  justify-content: space-between;
+  font-size: .7rem;
+  color: var(--th-text-secondary);
+  margin-top: .1rem;
+}
+
+// Radio button group
+.cfs-radio-group {
+  display: flex;
+  flex-direction: column;
+  gap: .3rem;
+}
+
+.cfs-radio-item {
+  display: flex;
+  align-items: center;
+  gap: .5rem;
+  cursor: pointer;
+  font-size: .8125rem;
+  color: var(--th-text);
+  padding: .15rem 0;
+
+  input[type="radio"] {
+    width: 15px; height: 15px;
+    accent-color: var(--th-primary);
+    cursor: pointer;
+    flex-shrink: 0;
+  }
+}
+
+// Toggle switch
+.cfs-toggle-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: .5rem;
+}
+
+.cfs-toggle-label {
+  font-size: .8125rem;
+  color: var(--th-text);
+}
+
+.cfs-toggle {
+  position: relative;
+  width: 36px;
+  height: 20px;
+  flex-shrink: 0;
+
+  input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+    position: absolute;
+  }
+
+  &__track {
+    position: absolute;
+    inset: 0;
+    background: var(--th-border);
+    border-radius: 999px;
+    cursor: pointer;
+    transition: background .2s;
+
+    &::after {
+      content: '';
+      position: absolute;
+      left: 2px;
+      top: 2px;
+      width: 16px; height: 16px;
+      border-radius: 50%;
+      background: #fff;
+      transition: transform .2s;
+      box-shadow: 0 1px 3px rgba(0,0,0,.2);
+    }
+  }
+
+  input:checked + &__track {
+    background: var(--th-primary);
+
+    &::after { transform: translateX(16px); }
+  }
+}
+
+// Results area — full width, sidebar overlays on top
+.cfs-results {
+  width: 100%;
+  min-width: 0;
+}
+
+// ── Topbar (search bar above results) ────────────────────────────────────────
+.cfs-topbar {
+  display: flex;
+  gap: .5rem;
+  align-items: center;
+  margin-bottom: 1rem;
+  flex-wrap: wrap;
+}
+
+.cfs-topbar__search {
+  position: relative;
+  flex: 1 1 200px;
+
+  i {
+    position: absolute;
+    left: .75rem;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--th-text-secondary);
+    font-size: .875rem;
+    pointer-events: none;
+  }
+
+  input {
+    padding-left: 2.25rem;
+    width: 100%;
+  }
+}
+
+.cfs-topbar__actions {
+  display: flex;
+  gap: .5rem;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+// Toggle sidebar button (topbar)
+.cfs-toggle-sidebar-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: .4rem;
+  font-size: .8125rem;
+  font-weight: 500;
+  padding: .35rem .75rem;
+  border-radius: .375rem;
+  border: 1px solid var(--th-border);
+  background: var(--th-surface);
+  color: var(--th-text-secondary);
+  cursor: pointer;
+  transition: color .15s, border-color .15s, background .15s;
+  white-space: nowrap;
+
+  &:hover, &.active {
+    color: var(--th-primary);
+    border-color: var(--th-primary);
+    background: rgba(var(--th-primary-rgb), .07);
+  }
+
+  .cfs-filter-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 1.1rem;
+    height: 1.1rem;
+    padding: 0 .25rem;
+    border-radius: 999px;
+    background: var(--th-primary);
+    color: #fff;
+    font-size: .6rem;
+    font-weight: 700;
+    line-height: 1;
+  }
+}
+
+// ── Backdrop overlay (all screen sizes — behind the right panel) ──────────────
+.cfs-backdrop {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, .45);
+  z-index: 1054;
+  backdrop-filter: blur(2px);
+
+  &.cfs-backdrop--visible { display: block; }
+}
+
+// ── Dark theme overrides ──────────────────────────────────────────────────────
+[data-theme='dark'] {
+  .cfs-section__toggle:hover { background: rgba(255,255,255,.04); }
+}
+
+// ── CFS section active indicator dot ─────────────────────────────────────────
+.cfs-section__active-dot {
+  display: inline-block;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--th-primary, #5046e5);
+  margin-left: .4rem;
+  vertical-align: middle;
+  flex-shrink: 0;
+}
+
+// ── CFS sidebar apply footer ──────────────────────────────────────────────────
+.cfs-apply-footer {
+  position: sticky;
+  bottom: 0;
+  background: var(--th-card-bg, #fff);
+  border-top: 1px solid var(--th-border, #e5e7eb);
+  padding: .875rem 1rem;
+  display: flex;
+  gap: .5rem;
+
+  .btn-apply {
+    flex: 1;
+    background: var(--th-primary, #5046e5);
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    font-size: .875rem;
+    font-weight: 600;
+    padding: .5rem 1rem;
+    cursor: pointer;
+    transition: background .15s;
+
+    &:hover { background: var(--th-primary-dark, #4338ca); }
+  }
+
+  .btn-clear-all {
+    background: transparent;
+    color: var(--th-text-secondary, #6b7280);
+    border: 1px solid var(--th-border, #e5e7eb);
+    border-radius: 8px;
+    font-size: .875rem;
+    padding: .5rem .875rem;
+    cursor: pointer;
+    transition: border-color .15s, color .15s;
+
+    &:hover {
+      border-color: var(--th-primary, #5046e5);
+      color: var(--th-primary, #5046e5);
+    }
   }
 }
 

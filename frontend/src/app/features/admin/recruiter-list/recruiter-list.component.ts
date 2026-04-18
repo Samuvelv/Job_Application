@@ -2,7 +2,8 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
-import { RouterLink } from '@angular/router';import { debounceTime, distinctUntilChanged, catchError, of } from 'rxjs';
+import { RouterLink } from '@angular/router';
+import { catchError, of } from 'rxjs';
 import { RecruiterService } from '../../../core/services/recruiter.service';
 import { Recruiter } from '../../../core/models/recruiter.model';
 import { ToastService } from '../../../core/services/toast.service';
@@ -26,18 +27,73 @@ import { EmptyStateComponent } from '../../../shared/components/empty-state/empt
       </a>
     </app-page-header>
 
-    <!-- Filters -->
-    <div class="filter-card" [formGroup]="filterForm">
-      <div class="filter-card__title"><i class="bi bi-search"></i> Search</div>
-      <div class="row g-2">
-        <div class="col-md-6">
-          <div class="input-group">
-            <span class="input-group-text"><i class="bi bi-search"></i></span>
-            <input formControlName="search" class="form-control form-control-sm"
-              placeholder="Search name, company, email…">
+    <!-- Filter card -->
+    <div class="filter-card">
+      <form [formGroup]="filterForm" (ngSubmit)="search()">
+
+        <!-- Basic row -->
+        <div class="filter-card__search-row">
+          <div class="filter-card__search-input-wrap">
+            <i class="bi bi-search"></i>
+            <input type="text" class="form-control form-control-sm"
+              formControlName="search"
+              placeholder="Search name, company, email…"
+              (keydown.enter)="search()">
+          </div>
+          <div class="filter-card__actions">
+            <button type="submit" class="filter-search-btn">
+              <i class="bi bi-search"></i> Search
+            </button>
+            <button type="button" class="filter-card__adv-toggle"
+              [class.is-open]="advOpen"
+              (click)="advOpen = !advOpen">
+              <i class="bi bi-sliders2"></i>
+              Advanced
+              @if (activeAdvCount > 0) {
+                <span class="filter-card__badge">{{ activeAdvCount }}</span>
+              }
+              <i class="bi bi-chevron-down adv-toggle__caret"></i>
+            </button>
+            @if (hasAnyFilter) {
+              <button type="button" class="filter-clear-btn" (click)="clearFilters()">
+                <i class="bi bi-x-lg"></i> Clear
+              </button>
+            }
           </div>
         </div>
-      </div>
+
+        <!-- Advanced panel -->
+        <div class="filter-card__advanced" [class.is-open]="advOpen">
+          <div class="filter-card__advanced-inner">
+            <div class="row g-2">
+              <div class="col-sm-6 col-md-4 col-lg-3">
+                <label class="filter-card__section-label">Company Name</label>
+                <input type="text" class="form-control form-control-sm"
+                  formControlName="company" placeholder="e.g. Acme Corp">
+              </div>
+              <div class="col-sm-6 col-md-4 col-lg-3">
+                <label class="filter-card__section-label">Status</label>
+                <select class="form-select form-select-sm" formControlName="isActive">
+                  <option value="">All Statuses</option>
+                  <option value="true">Active</option>
+                  <option value="false">Inactive</option>
+                </select>
+              </div>
+            </div>
+            <div class="mt-3 d-flex gap-2">
+              <button type="submit" class="filter-search-btn">
+                <i class="bi bi-search"></i> Apply Filters
+              </button>
+              @if (hasAnyFilter) {
+                <button type="button" class="filter-clear-btn" (click)="clearFilters()">
+                  <i class="bi bi-x-lg"></i> Clear All
+                </button>
+              }
+            </div>
+          </div>
+        </div>
+
+      </form>
     </div>
 
     <!-- Table -->
@@ -186,6 +242,7 @@ export class RecruiterListComponent implements OnInit {
   pagination = { page: 1, limit: 20, total: 0, pages: 0 };
   loading = false;
   resendLoading: string | null = null;
+  advOpen = false;
 
   filterForm: FormGroup;
 
@@ -201,25 +258,42 @@ export class RecruiterListComponent implements OnInit {
     private toast: ToastService,
     private confirm: ConfirmDialogService,
   ) {
-    this.filterForm = this.fb.group({ search: [''] });
+    this.filterForm = this.fb.group({
+      search:   [''],
+      company:  [''],
+      isActive: [''],
+    });
   }
 
   ngOnInit(): void {
     this.load();
+  }
 
-    this.filterForm.valueChanges.pipe(
-      debounceTime(400),
-      distinctUntilChanged(),
-    ).subscribe(() => {
-      this.pagination.page = 1;
-      this.load();
-    });
+  get activeAdvCount(): number {
+    const v = this.filterForm.value;
+    return [v.company, v.isActive].filter(x => x !== null && x !== '' && x !== undefined).length;
+  }
+
+  get hasAnyFilter(): boolean {
+    const v = this.filterForm.value;
+    return Object.values(v).some(x => x !== null && x !== '' && x !== undefined);
+  }
+
+  search(): void {
+    this.pagination.page = 1;
+    this.load();
   }
 
   load(): void {
     this.loading = true;
-    const { search } = this.filterForm.value;
-    this.recruiterService.list({ search: search || undefined, page: this.pagination.page, limit: this.pagination.limit })
+    const v = this.filterForm.value;
+    this.recruiterService.list({
+      search:   v.search   || undefined,
+      company:  v.company  || undefined,
+      isActive: v.isActive || undefined,
+      page:     this.pagination.page,
+      limit:    this.pagination.limit,
+    })
       .pipe(catchError(() => of(null)))
       .subscribe((res) => {
         this.loading = false;
@@ -228,6 +302,12 @@ export class RecruiterListComponent implements OnInit {
           this.pagination  = res.pagination;
         }
       });
+  }
+
+  clearFilters(): void {
+    this.filterForm.reset({ search: '', company: '', isActive: '' });
+    this.pagination.page = 1;
+    this.load();
   }
 
   goToPage(page: number): void {

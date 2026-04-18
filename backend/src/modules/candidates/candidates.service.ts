@@ -126,47 +126,116 @@ export async function listCandidates(filters: CandidateFilterDto) {
       'e.id', 'e.first_name', 'e.last_name', 'e.job_title',
       'e.industry', 'e.occupation', 'e.current_country', 'e.current_city',
       'e.years_experience', 'e.salary_min', 'e.salary_max', 'e.salary_currency',
-      'e.profile_photo_url', 'e.profile_status', 'e.created_at',
+      'e.profile_photo_url', 'e.profile_status', 'e.intro_video_url', 'e.created_at',
+      'e.nationality', 'e.target_locations', 'e.date_of_birth', 'e.gender',
       'u.email', 'u.is_active',
     )
     .where('u.is_active', true);
 
+  // ── Full-text search ───────────────────────────────────────────────────────
   if (filters.search) {
     const term = `%${filters.search}%`;
     query = query.where((b) =>
       b.whereILike('e.first_name', term)
        .orWhereILike('e.last_name', term)
        .orWhereILike('u.email', term)
-       .orWhereILike('e.job_title', term),
+       .orWhereILike('e.job_title', term)
+       .orWhereILike('e.occupation', term),
     );
   }
-  if (filters.industry)       query = query.whereILike('e.industry', `%${filters.industry}%`);
-  if (filters.occupation)     query = query.whereILike('e.occupation', `%${filters.occupation}%`);
-  if (filters.currentCountry) query = query.where('e.current_country', filters.currentCountry);
-  if (filters.salaryMin)      query = query.where('e.salary_min', '>=', filters.salaryMin);
-  if (filters.salaryMax)      query = query.where('e.salary_max', '<=', filters.salaryMax);
-  if (filters.yearsExperience)
-    query = query.where('e.years_experience', '>=', filters.yearsExperience);
 
-  // Skills filter via subquery
+  // ── Professional ──────────────────────────────────────────────────────────
+  if (filters.occupation) query = query.whereILike('e.occupation', `%${filters.occupation}%`);
+
+  if (filters.industry) {
+    const list = filters.industry.split(',').map(s => s.trim()).filter(Boolean);
+    if (list.length === 1) query = query.whereILike('e.industry', `%${list[0]}%`);
+    else query = query.where((b) => { list.forEach(i => b.orWhereILike('e.industry', `%${i}%`)); });
+  }
+
+  const minExp = filters.yearsExpMin ?? filters.yearsExperience;
+  if (minExp != null) query = query.where('e.years_experience', '>=', minExp);
+  if (filters.yearsExpMax != null) query = query.where('e.years_experience', '<=', filters.yearsExpMax);
+
+  // ── Location ──────────────────────────────────────────────────────────────
+  if (filters.currentCountry) {
+    const list = filters.currentCountry.split(',').map(s => s.trim()).filter(Boolean);
+    if (list.length === 1) query = query.whereILike('e.current_country', `%${list[0]}%`);
+    else query = query.where((b) => { list.forEach(c => b.orWhereILike('e.current_country', `%${c}%`)); });
+  }
+  if (filters.currentCity) query = query.whereILike('e.current_city', `%${filters.currentCity}%`);
+
+  if (filters.nationality) {
+    const list = filters.nationality.split(',').map(s => s.trim()).filter(Boolean);
+    if (list.length === 1) query = query.whereILike('e.nationality', `%${list[0]}%`);
+    else query = query.where((b) => { list.forEach(n => b.orWhereILike('e.nationality', `%${n}%`)); });
+  }
+
+  // ── Education ─────────────────────────────────────────────────────────────
+  if (filters.university) {
+    query = query.whereIn('e.id', (sub) =>
+      sub.select('candidate_id').from('candidate_education')
+         .whereILike('institution', `%${filters.university}%`),
+    );
+  }
+  if (filters.fieldOfStudy) {
+    query = query.whereIn('e.id', (sub) =>
+      sub.select('candidate_id').from('candidate_education')
+         .whereILike('field_of_study', `%${filters.fieldOfStudy}%`),
+    );
+  }
+  if (filters.educationLevel) {
+    const levels = filters.educationLevel.split(',').map(s => s.trim().toLowerCase()).filter(Boolean);
+    if (levels.length) {
+      query = query.whereIn('e.id', (sub) => {
+        sub.select('candidate_id').from('candidate_education').where((b) => {
+          levels.forEach(l => b.orWhereILike('degree', `%${l}%`));
+        });
+      });
+    }
+  }
+
+  // ── Skills ────────────────────────────────────────────────────────────────
   if (filters.skills) {
-    const skillList = filters.skills.split(',').map((s) => s.trim()).filter(Boolean);
+    const skillList = filters.skills.split(',').map(s => s.trim()).filter(Boolean);
     if (skillList.length) {
-      query = query.whereIn('e.id', (sub) => {
-        sub.select('candidate_id').from('candidate_skills').whereIn('skill_name', skillList);
-      });
+      query = query.whereIn('e.id', (sub) =>
+        sub.select('candidate_id').from('candidate_skills').whereIn('skill_name', skillList),
+      );
     }
   }
 
-  // Languages filter via subquery
+  // ── Languages ─────────────────────────────────────────────────────────────
   if (filters.languages) {
-    const langList = filters.languages.split(',').map((l) => l.trim()).filter(Boolean);
+    const langList = filters.languages.split(',').map(l => l.trim()).filter(Boolean);
     if (langList.length) {
-      query = query.whereIn('e.id', (sub) => {
-        sub.select('candidate_id').from('candidate_languages').whereIn('language', langList);
-      });
+      query = query.whereIn('e.id', (sub) =>
+        sub.select('candidate_id').from('candidate_languages').whereIn('language', langList),
+      );
     }
   }
+
+  // ── Salary ────────────────────────────────────────────────────────────────
+  if (filters.salaryMin) query = query.where('e.salary_min', '>=', filters.salaryMin);
+  if (filters.salaryMax) query = query.where('e.salary_max', '<=', filters.salaryMax);
+
+  // ── Age ───────────────────────────────────────────────────────────────────
+  if (filters.ageMin != null) {
+    const maxDob = new Date();
+    maxDob.setFullYear(maxDob.getFullYear() - filters.ageMin);
+    query = query.where('e.date_of_birth', '<=', maxDob.toISOString().slice(0, 10));
+  }
+  if (filters.ageMax != null) {
+    const minDob = new Date();
+    minDob.setFullYear(minDob.getFullYear() - filters.ageMax - 1);
+    query = query.where('e.date_of_birth', '>=', minDob.toISOString().slice(0, 10));
+  }
+
+  // ── Flags ─────────────────────────────────────────────────────────────────
+  if (filters.gender)        query = query.where('e.gender', filters.gender);
+  if (filters.profileStatus) query = query.where('e.profile_status', filters.profileStatus);
+  if (filters.hasVideo === 'true')  query = query.whereNotNull('e.intro_video_url');
+  if (filters.hasVideo === 'false') query = query.whereNull('e.intro_video_url');
 
   // Total count (same filters, no pagination)
   const countQuery = query.clone().clearSelect().count('e.id as total').first();

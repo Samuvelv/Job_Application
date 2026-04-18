@@ -94,15 +94,40 @@ export interface Candidate {
 }
 
 export interface CandidateFilters {
+  // Basic
   search?: string;
-  industry?: string;
+  // Professional
+  industry?: string;        // comma-sep
   occupation?: string;
-  currentCountry?: string;
-  skills?: string[];
-  languages?: string[];
+  skills?: string;          // comma-sep
+  yearsExpMin?: number;
+  yearsExpMax?: number;
+  yearsExperience?: number; // legacy
+  // Location
+  currentCountry?: string;  // comma-sep
+  currentCity?: string;
+  nationality?: string;     // comma-sep
+  targetCountry?: string;
+  // Education
+  educationLevel?: string;  // comma-sep
+  university?: string;
+  fieldOfStudy?: string;
+  // Language
+  languages?: string;       // comma-sep
+  // Salary
   salaryMin?: number;
   salaryMax?: number;
-  yearsExperience?: number;
+  salaryCurrency?: string;
+  // Age
+  ageMin?: number;
+  ageMax?: number;
+  // Flags
+  gender?: string;
+  visaStatus?: string;
+  availability?: string;
+  hasVideo?: 'true' | 'false';
+  profileStatus?: string;
+  // Pagination
   page?: number;
   limit?: number;
 }
