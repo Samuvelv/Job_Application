@@ -265,7 +265,7 @@
                 <div class="col-md-2">
                   <button type="button" class="btn btn-sm btn-outline-danger w-100"
                     (click)="removeSkill($index)" [disabled]="skills.length === 1">
-                    <i class="bi bi-x"></i>
+                    <i class="bi bi-trash me-1"></i>Remove
                   </button>
                 </div>
               </div>
@@ -316,7 +316,7 @@
                 <div class="col-md-2">
                   <button type="button" class="btn btn-sm btn-outline-danger w-100"
                     (click)="removeLanguage($index)" [disabled]="languages.length === 1">
-                    <i class="bi bi-x"></i>
+                    <i class="bi bi-trash me-1"></i>Remove
                   </button>
                 </div>
               </div>
@@ -386,56 +386,14 @@
       </div>
     }
 
-    <!-- ══════════════════ STEP 3: Location ══════════════════ -->
+    <!-- ══════════════════ STEP 3: Education & Experience ══════════════════ -->
     @if (currentStep === 3) {
-      <h5 class="card-section-header card-section-header--success mb-4"><i class="bi bi-geo-alt"></i> Location Details</h5>
-      <div class="row g-3">
-        <div class="col-md-6">
-          <label class="form-label">Current Country</label>
-          <app-searchable-select
-            formControlName="current_country"
-            [options]="countryOptions()"
-            placeholder="Select country…"
-            [allowClear]="true">
-          </app-searchable-select>
-        </div>
-        <div class="col-md-6">
-          <label class="form-label">Current City</label>
-          <app-searchable-select
-            formControlName="current_city"
-            [options]="cityOptions()"
-            placeholder="Select city…"
-            [allowClear]="true">
-          </app-searchable-select>
-          <div class="form-text">Select a country first to load cities</div>
-        </div>
-        <div class="col-md-6">
-          <label class="form-label">Nationality</label>
-          <app-searchable-select
-            formControlName="nationality"
-            [options]="countryOptions()"
-            placeholder="Select nationality…"
-            [allowClear]="true">
-          </app-searchable-select>
-        </div>
-        <div class="col-md-6">
-          <label class="form-label">Target Locations</label>
-          <app-chip-multi-select
-            formControlName="target_locations"
-            [options]="targetLocationChipOptions()"
-            placeholder="Add target countries…">
-          </app-chip-multi-select>
-          <div class="form-text">Select multiple countries you are open to work in</div>
-        </div>
-      </div>
-    }
 
-    <!-- ══════════════════ STEP 4: Education & Experience ══════════════════ -->
-    @if (currentStep === 4) {
-      <div class="d-flex justify-content-between align-items-center mb-3">
-        <h5 class="fw-bold mb-0">Work Experience</h5>
-        <button type="button" class="btn btn-sm btn-outline-primary" (click)="addExperience()">
-          <i class="bi bi-plus-lg me-1"></i> Add
+      <!-- Work Experience -->
+      <div class="card-section-header mb-3">
+        <i class="bi bi-briefcase-fill"></i>Work Experience
+        <button type="button" class="btn btn-sm btn-outline-primary ms-auto" (click)="addExperience()">
+          <i class="bi bi-plus-lg me-1"></i>Add
         </button>
       </div>
       <div formArrayName="experience">
@@ -487,12 +445,18 @@
             </div>
           </div>
         }
+        @if (experience.controls.length === 0) {
+          <p class="text-muted small mb-0 text-center py-2">
+            <i class="bi bi-briefcase me-1"></i>No experience added yet — click Add to get started.
+          </p>
+        }
       </div>
 
-      <div class="d-flex justify-content-between align-items-center mb-3 mt-4">
-        <h5 class="fw-bold mb-0">Education</h5>
-        <button type="button" class="btn btn-sm btn-outline-primary" (click)="addEducation()">
-          <i class="bi bi-plus-lg me-1"></i> Add
+      <!-- Education -->
+      <div class="card-section-header mt-4 mb-3">
+        <i class="bi bi-mortarboard-fill"></i>Education
+        <button type="button" class="btn btn-sm btn-outline-primary ms-auto" (click)="addEducation()">
+          <i class="bi bi-plus-lg me-1"></i>Add
         </button>
       </div>
       <div formArrayName="education">
@@ -558,6 +522,11 @@
             </div>
           </div>
         }
+        @if (education.controls.length === 0) {
+          <p class="text-muted small mb-0 text-center py-2">
+            <i class="bi bi-mortarboard me-1"></i>No education added yet — click Add to get started.
+          </p>
+        }
       </div>
 
       <!-- Certificates -->
@@ -602,9 +571,68 @@
       </div>
     }
 
-    <!-- ══════════════════ STEP 5: Credentials ══════════════════ -->
+    <!-- ══════════════════ STEP 4: Location ══════════════════ -->
+    @if (currentStep === 4) {
+      <h5 class="card-section-header card-section-header--success mb-4"><i class="bi bi-geo-alt"></i> Location Details</h5>
+      <p class="text-muted small mb-4">Please provide your current residential address for administrative and payroll purposes.</p>
+      <div class="row g-3">
+        <div class="col-md-6">
+          <label class="form-label">Current Country</label>
+          <app-searchable-select
+            formControlName="current_country"
+            [options]="countryOptions()"
+            placeholder="Select country…"
+            [allowClear]="true">
+          </app-searchable-select>
+        </div>
+        <div class="col-md-6">
+          <label class="form-label">Current City</label>
+          <app-searchable-select
+            formControlName="current_city"
+            [options]="cityOptions()"
+            placeholder="Select city…"
+            [allowClear]="true">
+          </app-searchable-select>
+          <div class="form-text">Select a country first to load cities</div>
+        </div>
+        <div class="col-md-6">
+          <label class="form-label">Nationality</label>
+          <app-searchable-select
+            formControlName="nationality"
+            [options]="countryOptions()"
+            placeholder="Select nationality…"
+            [allowClear]="true">
+          </app-searchable-select>
+        </div>
+        <div class="col-md-6">
+          <label class="form-label">Postal Code</label>
+          <input type="text" class="form-control" formControlName="postal_code"
+            placeholder="e.g. 94105">
+        </div>
+        <div class="col-12">
+          <label class="form-label">Target Locations</label>
+          <app-chip-multi-select
+            formControlName="target_locations"
+            [options]="targetLocationChipOptions()"
+            placeholder="Add target countries…">
+          </app-chip-multi-select>
+          <div class="form-text">Select multiple countries you are open to work in</div>
+        </div>
+      </div>
+
+      <!-- Privacy Guarantee -->
+      <div class="alert alert-info d-flex gap-2 mt-4">
+        <i class="bi bi-info-circle-fill flex-shrink-0 mt-1"></i>
+        <div>
+          <strong>Privacy Guarantee</strong><br>
+          <span class="small">Your location data is strictly used for tax compliance and regional office assignment. We never share your personal address with third parties.</span>
+        </div>
+      </div>
+    }
+
+    <!-- ══════════════════ STEP 5: Review ══════════════════ -->
     @if (currentStep === 5) {
-      <h5 class="card-section-header card-section-header--purple mb-4"><i class="bi bi-key"></i> Login Credentials</h5>
+      <h5 class="card-section-header card-section-header--purple mb-4"><i class="bi bi-clipboard-check"></i> Review &amp; Submit</h5>
       <p class="text-muted small mb-4">These credentials will be emailed to the candidate after registration.</p>
       <div class="row g-3">
         <div class="col-md-6">

@@ -67,7 +67,16 @@ export class AuthService {
   }
 
   getRole(): UserRole | null {
-    return this.currentUser()?.role ?? null;
+    // Try in-memory signal first
+    const fromSignal = this.currentUser()?.role ?? null;
+    if (fromSignal) return fromSignal;
+    // Fallback: re-hydrate from localStorage (covers hard-refresh with stale signal)
+    const stored = this.loadUser();
+    if (stored) {
+      this.currentUser.set(stored);
+      return stored.role;
+    }
+    return null;
   }
 
   hasRole(...roles: UserRole[]): boolean {

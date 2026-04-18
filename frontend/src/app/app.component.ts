@@ -1,6 +1,6 @@
 // src/app/app.component.ts
-import { Component } from '@angular/core';
-import { RouterOutlet } from '@angular/router';
+import { Component, signal } from '@angular/core';
+import { Router, RouterOutlet, NavigationEnd } from '@angular/router';
 import { ToastContainerComponent } from './shared/components/toast-container/toast-container.component';
 import { TopbarComponent } from './shared/components/topbar/topbar.component';
 import { SidebarComponent } from './shared/components/sidebar/sidebar.component';
@@ -8,6 +8,9 @@ import { SidebarService } from './core/services/sidebar.service';
 import { AuthService } from './core/services/auth.service';
 import { CommonModule } from '@angular/common';
 import { ConfirmDialogComponent } from './shared/components/confirm-dialog/confirm-dialog.component';
+import { filter } from 'rxjs';
+
+const PUBLIC_ROUTES = ['/login', '/unauthorized'];
 
 @Component({
   selector: 'app-root',
@@ -21,7 +24,7 @@ import { ConfirmDialogComponent } from './shared/components/confirm-dialog/confi
     ConfirmDialogComponent,
   ],
   template: `
-    @if (auth.isLoggedIn()) {
+    @if (showShell()) {
       <!-- Topbar -->
       <app-topbar />
 
@@ -41,7 +44,7 @@ import { ConfirmDialogComponent } from './shared/components/confirm-dialog/confi
         </main>
       </div>
     } @else {
-      <!-- Unauthenticated: just render the outlet (login page) -->
+      <!-- Public pages (login, unauthorized) -->
       <router-outlet />
     }
 
@@ -50,8 +53,19 @@ import { ConfirmDialogComponent } from './shared/components/confirm-dialog/confi
   `,
 })
 export class AppComponent {
+  showShell = signal(false);
+
   constructor(
     public auth: AuthService,
     public sidebar: SidebarService,
-  ) {}
+    router: Router,
+  ) {
+    router.events
+      .pipe(filter(e => e instanceof NavigationEnd))
+      .subscribe((e) => {
+        const url = (e as NavigationEnd).urlAfterRedirects;
+        const isPublic = PUBLIC_ROUTES.some(r => url.startsWith(r));
+        this.showShell.set(auth.isLoggedIn() && !isPublic);
+      });
+  }
 }

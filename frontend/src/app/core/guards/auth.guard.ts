@@ -12,3 +12,14 @@ export const authGuard: CanActivateFn = () => {
   router.navigate(['/login']);
   return false;
 };
+
+/** Redirects already-logged-in users away from public pages like /login */
+export const guestGuard: CanActivateFn = () => {
+  const auth   = inject(AuthService);
+  const router = inject(Router);
+
+  if (!auth.isLoggedIn()) return true;
+
+  router.navigate([auth.getDashboardRoute()]);
+  return false;
+};

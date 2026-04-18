@@ -64,11 +64,11 @@ export class CandidateRegisterComponent implements OnInit, OnDestroy {
   private draftSub?: Subscription;
 
   readonly STEPS = [
-    { num: 1, label: 'Personal'     },
-    { num: 2, label: 'Professional' },
-    { num: 3, label: 'Location'     },
-    { num: 4, label: 'Education'    },
-    { num: 5, label: 'Credentials'  },
+    { num: 1, label: 'Personal Details' },
+    { num: 2, label: 'Professional'     },
+    { num: 3, label: 'Experience/Education'        },
+    { num: 4, label: 'Location'         },
+    { num: 5, label: 'Review'           },
   ];
 
   readonly GENDERS      = ['male', 'female', 'non-binary', 'prefer_not_to_say'];
@@ -177,6 +177,7 @@ export class CandidateRegisterComponent implements OnInit, OnDestroy {
       current_country:  [''],
       current_city:     [''],
       nationality:      [''],
+      postal_code:      ['', Validators.maxLength(20)],
       target_locations: [[]],
 
       experience: this.fb.array([]),
@@ -244,7 +245,7 @@ export class CandidateRegisterComponent implements OnInit, OnDestroy {
         'first_name','last_name','date_of_birth','gender','dial_code','phone','bio',
         'job_title','occupation','industry','years_experience','linkedin_url',
         'salary_min','salary_max','salary_currency','salary_type','notice_period_id',
-        'current_country','current_city','nationality','target_locations',
+        'current_country','current_city','nationality','postal_code','target_locations',
         'email','password','hobbies',
       ];      const patch: Record<string, unknown> = {};
       for (const k of scalarKeys) {
@@ -428,6 +429,7 @@ export class CandidateRegisterComponent implements OnInit, OnDestroy {
       current_country:  raw.current_country || undefined,
       current_city:     raw.current_city    || undefined,
       nationality:      raw.nationality     || undefined,
+      postal_code:      raw.postal_code     || undefined,
       target_locations: Array.isArray(raw.target_locations) ? raw.target_locations : [],
       hobbies: Array.isArray(raw.hobbies) ? raw.hobbies : [],
       skills, languages, experience, education,

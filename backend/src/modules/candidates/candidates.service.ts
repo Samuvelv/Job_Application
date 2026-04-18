@@ -65,6 +65,7 @@ export async function createCandidate(dto: CreateCandidateDto, createdByAdminId:
       current_country:  dto.current_country  ?? null,
       current_city:     dto.current_city     ?? null,
       nationality:      dto.nationality      ?? null,
+      postal_code:      dto.postal_code      ?? null,
       target_locations: dto.target_locations ?? null,
       hobbies:          dto.hobbies          ?? [],
       salary_min:      dto.salary_min      ?? null,

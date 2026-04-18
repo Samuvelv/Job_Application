@@ -65,6 +65,7 @@ export interface Candidate {
   current_country?: string;
   current_city?: string;
   nationality?: string;
+  postal_code?: string;
   target_locations?: string[];
   hobbies?: string[];
 

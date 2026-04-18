@@ -67,6 +67,7 @@ export const CreateCandidateSchema = z.object({
   current_country:  z.string().max(100).optional(),
   current_city:     z.string().max(100).optional(),
   nationality:      z.string().max(100).optional(),
+  postal_code:      z.string().max(20).optional(),
   target_locations: z.array(z.string()).optional(),
   hobbies:          z.array(z.string()).optional(),
 
