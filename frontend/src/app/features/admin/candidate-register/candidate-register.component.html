@@ -105,6 +105,15 @@
           <textarea class="form-control" formControlName="bio" rows="3"
             placeholder="Brief introduction about the candidate…"></textarea>
         </div>
+        <!-- Hobbies -->
+        <div class="col-12">
+          <label class="form-label">Hobbies &amp; Interests</label>
+          <app-chip-multi-select
+            formControlName="hobbies"
+            [options]="hobbyChipOptions()"
+            placeholder="Select hobbies…">
+          </app-chip-multi-select>
+        </div>
         <!-- Profile Photo drop-zone -->
         <div class="col-md-6">
           <label class="form-label">Profile Photo</label>

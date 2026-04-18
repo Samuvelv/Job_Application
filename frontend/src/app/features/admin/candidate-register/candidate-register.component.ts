@@ -137,6 +137,9 @@ export class CandidateRegisterComponent implements OnInit, OnDestroy {
   targetLocationChipOptions = computed<ChipOption[]>(() =>
     this.master.countries().map(c => ({ value: c.name, label: `${c.flag_emoji} ${c.name}` })));
 
+  hobbyChipOptions = computed<ChipOption[]>(() =>
+    this.master.hobbies().map(h => ({ value: h.name, label: h.name })));
+
   constructor(
     private fb: FormBuilder,
     private empSvc: CandidateService,
@@ -155,6 +158,7 @@ export class CandidateRegisterComponent implements OnInit, OnDestroy {
       dial_code:     ['+1'],
       phone:         [''],
       bio:           ['', Validators.maxLength(2000)],
+      hobbies:       [[] as string[]],
 
       job_title:        [''],
       occupation:       [''],
@@ -241,9 +245,8 @@ export class CandidateRegisterComponent implements OnInit, OnDestroy {
         'job_title','occupation','industry','years_experience','linkedin_url',
         'salary_min','salary_max','salary_currency','salary_type','notice_period_id',
         'current_country','current_city','nationality','target_locations',
-        'email','password',
-      ];
-      const patch: Record<string, unknown> = {};
+        'email','password','hobbies',
+      ];      const patch: Record<string, unknown> = {};
       for (const k of scalarKeys) {
         if (draft[k] !== undefined && draft[k] !== null && draft[k] !== '') patch[k] = draft[k];
       }
@@ -426,6 +429,7 @@ export class CandidateRegisterComponent implements OnInit, OnDestroy {
       current_city:     raw.current_city    || undefined,
       nationality:      raw.nationality     || undefined,
       target_locations: Array.isArray(raw.target_locations) ? raw.target_locations : [],
+      hobbies: Array.isArray(raw.hobbies) ? raw.hobbies : [],
       skills, languages, experience, education,
     };
 

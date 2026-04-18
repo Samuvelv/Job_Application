@@ -1,6 +1,5 @@
 // src/app/core/services/master-data.service.ts
-import { Injectable, signal, computed } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
+import { Injectable, signal, computed } from '@angular/core';import { HttpClient } from '@angular/common/http';
 import { environment } from '../../../environments/environment';
 import { firstValueFrom } from 'rxjs';
 
@@ -20,6 +19,7 @@ export interface MasterDegree       { id: number; name: string; }
 export interface MasterFieldOfStudy { id: number; name: string; }
 export interface MasterCurrency     { id: number; code: string; name: string; symbol: string; }
 export interface MasterNoticePeriod { id: number; label: string; days: number; }
+export interface MasterHobby        { id: number; name: string; }
 
 @Injectable({ providedIn: 'root' })
 export class MasterDataService {
@@ -35,6 +35,7 @@ export class MasterDataService {
   fieldsOfStudy  = signal<MasterFieldOfStudy[]>([]);
   currencies     = signal<MasterCurrency[]>([]);
   noticePeriods  = signal<MasterNoticePeriod[]>([]);
+  hobbies        = signal<MasterHobby[]>([]);
 
   // Cities are loaded on-demand per selected country
   private cityCache = new Map<number, MasterCity[]>();
@@ -49,7 +50,7 @@ export class MasterDataService {
     if (this.loaded) return;
     this.loaded = true;
 
-    const [countries, jobTitles, occupations, industries, languages, degrees, fieldsOfStudy, currencies, noticePeriods] =
+    const [countries, jobTitles, occupations, industries, languages, degrees, fieldsOfStudy, currencies, noticePeriods, hobbies] =
       await Promise.all([
         firstValueFrom(this.http.get<MasterCountry[]>(`${this.base}/countries`)),
         firstValueFrom(this.http.get<MasterJobTitle[]>(`${this.base}/job-titles`)),
@@ -60,6 +61,7 @@ export class MasterDataService {
         firstValueFrom(this.http.get<MasterFieldOfStudy[]>(`${this.base}/fields-of-study`)),
         firstValueFrom(this.http.get<MasterCurrency[]>(`${this.base}/currencies`)),
         firstValueFrom(this.http.get<MasterNoticePeriod[]>(`${this.base}/notice-periods`)),
+        firstValueFrom(this.http.get<MasterHobby[]>(`${this.base}/hobbies`)),
       ]);
 
     this.countries.set(countries);
@@ -71,6 +73,7 @@ export class MasterDataService {
     this.fieldsOfStudy.set(fieldsOfStudy);
     this.currencies.set(currencies);
     this.noticePeriods.set(noticePeriods);
+    this.hobbies.set(hobbies);
   }
 
   /** Load cities for a given country_id (cached) */

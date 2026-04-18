@@ -11,6 +11,7 @@ import {
   getFieldsOfStudy,
   getCurrencies,
   getNoticePeriods,
+  getHobbies,
 } from './master.controller';
 
 const router = Router();
@@ -26,5 +27,6 @@ router.get('/degrees',          getDegrees);
 router.get('/fields-of-study',  getFieldsOfStudy);
 router.get('/currencies',       getCurrencies);
 router.get('/notice-periods',   getNoticePeriods);
+router.get('/hobbies',          getHobbies);
 
 export default router;

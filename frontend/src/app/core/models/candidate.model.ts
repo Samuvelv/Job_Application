@@ -66,6 +66,7 @@ export interface Candidate {
   current_city?: string;
   nationality?: string;
   target_locations?: string[];
+  hobbies?: string[];
 
   // Salary
   salary_min?: number;

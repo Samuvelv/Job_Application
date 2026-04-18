@@ -89,3 +89,11 @@ export async function getNoticePeriods(_req: Request, res: Response, next: NextF
     res.json(rows);
   } catch (err) { next(err); }
 }
+
+// ── Hobbies ───────────────────────────────────────────────────────────────────
+export async function getHobbies(_req: Request, res: Response, next: NextFunction) {
+  try {
+    const rows = await db('master_hobbies').select('id', 'name').orderBy('name');
+    res.json(rows);
+  } catch (err) { next(err); }
+}

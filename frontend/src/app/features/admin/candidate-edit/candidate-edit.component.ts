@@ -129,6 +129,9 @@ export class CandidateEditComponent implements OnInit {
   targetLocationChipOptions = computed<ChipOption[]>(() =>
     this.master.countries().map(c => ({ value: c.name, label: `${c.flag_emoji} ${c.name}` })));
 
+  hobbyChipOptions = computed<ChipOption[]>(() =>
+    this.master.hobbies().map(h => ({ value: h.name, label: h.name })));
+
   constructor(
     private fb: FormBuilder,
     private route: ActivatedRoute,
@@ -221,8 +224,7 @@ export class CandidateEditComponent implements OnInit {
   addLanguage(): void    { this.languages.push(this.fb.group({ language: ['', Validators.required], proficiency: [''] }, { validators: langGroupValidator })); }
   removeLanguage(i: number): void { this.languages.removeAt(i); }
 
-  addExperience(): void {
-    this.experience.push(this.fb.group({
+  addExperience(): void {    this.experience.push(this.fb.group({
       company_name: [''], job_title: [''], start_date: [''],
       end_date: [''], description: [''], location: [''],
     }));
@@ -333,6 +335,7 @@ export class CandidateEditComponent implements OnInit {
       current_city:     [emp.current_city ?? ''],
       nationality:      [emp.nationality ?? ''],
       target_locations: [Array.isArray(emp.target_locations) ? emp.target_locations : []],
+      hobbies:          [Array.isArray(emp.hobbies) ? emp.hobbies : []],
 
       skills: this.fb.array(
         emp.skills?.length
@@ -396,6 +399,7 @@ export class CandidateEditComponent implements OnInit {
       current_city:  raw.current_city    || undefined,
       nationality:   raw.nationality     || undefined,
       target_locations: Array.isArray(raw.target_locations) ? raw.target_locations : [],
+      hobbies: Array.isArray(raw.hobbies) ? raw.hobbies : [],
       skills:    raw.skills.filter((s: any) => s.skill_name?.trim()),
       languages: raw.languages.filter((l: any) => l.language?.trim()),
       experience: raw.experience.filter((e: any) => e.company_name?.trim() || e.job_title?.trim()),

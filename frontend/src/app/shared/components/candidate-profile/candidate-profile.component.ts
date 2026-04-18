@@ -211,6 +211,30 @@ type Tab = 'overview' | 'experience' | 'education' | 'documents';
               </div>
             }
 
+            <!-- Hobbies Card -->
+            @if (candidate.hobbies?.length) {
+              <div class="profile-section-card mb-3">
+                <div class="profile-section-card__header">
+                  <div class="profile-section-card__header-icon"
+                    style="background:var(--th-gradient-primary)">
+                    <i class="bi bi-controller"></i>
+                  </div>
+                  <h6>Hobbies &amp; Interests</h6>
+                </div>
+                <div class="profile-section-card__body">
+                  <div class="d-flex flex-wrap gap-2">
+                    @for (hobby of candidate.hobbies; track hobby) {
+                      <span style="display:inline-flex;align-items:center;gap:.3rem;padding:.3rem .75rem;
+                        background:var(--th-primary-soft);color:var(--th-primary);border-radius:999px;
+                        font-size:.75rem;font-weight:600;border:1px solid rgba(99,102,241,.2)">
+                        {{ hobby }}
+                      </span>
+                    }
+                  </div>
+                </div>
+              </div>
+            }
+
             <!-- Salary Card -->
             @if (candidate.salary_min || candidate.salary_max) {
               <div class="profile-section-card mb-3">

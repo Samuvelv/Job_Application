@@ -3,6 +3,7 @@ import { Knex } from 'knex';
 
 export async function seed(knex: Knex): Promise<void> {
   // Clear in reverse FK order
+  await knex('master_hobbies').del();
   await knex('master_notice_periods').del();
   await knex('master_currencies').del();
   await knex('master_fields_of_study').del();
@@ -825,5 +826,49 @@ export async function seed(knex: Knex): Promise<void> {
     { label: '4 Months',                    days: 120 },
     { label: '6 Months',                    days: 180 },
     { label: 'More than 6 Months',          days: 181 },
+  ]);
+
+  // ── 11. HOBBIES ───────────────────────────────────────────────────────────────
+  await knex('master_hobbies').insert([
+    { name: 'Reading'             },
+    { name: 'Writing'             },
+    { name: 'Music'               },
+    { name: 'Playing Guitar'      },
+    { name: 'Singing'             },
+    { name: 'Drawing & Sketching' },
+    { name: 'Painting'            },
+    { name: 'Photography'         },
+    { name: 'Videography'         },
+    { name: 'Gaming'              },
+    { name: 'Cooking'             },
+    { name: 'Baking'              },
+    { name: 'Travel'              },
+    { name: 'Hiking'              },
+    { name: 'Camping'             },
+    { name: 'Cycling'             },
+    { name: 'Running'             },
+    { name: 'Swimming'            },
+    { name: 'Fitness & Gym'       },
+    { name: 'Yoga & Meditation'   },
+    { name: 'Football / Soccer'   },
+    { name: 'Basketball'          },
+    { name: 'Cricket'             },
+    { name: 'Tennis'              },
+    { name: 'Badminton'           },
+    { name: 'Chess'               },
+    { name: 'Dancing'             },
+    { name: 'Movies & TV Shows'   },
+    { name: 'Podcasts'            },
+    { name: 'Fashion & Style'     },
+    { name: 'Technology'          },
+    { name: 'Coding & Programming'},
+    { name: 'Volunteering'        },
+    { name: 'Gardening'           },
+    { name: 'DIY & Crafts'        },
+    { name: 'Board Games'         },
+    { name: 'Astronomy'           },
+    { name: 'Fishing'             },
+    { name: 'Martial Arts'        },
+    { name: 'Languages Learning'  },
   ]);
 }
