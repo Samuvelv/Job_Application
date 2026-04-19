@@ -64,7 +64,9 @@ export class AppComponent {
       .pipe(filter(e => e instanceof NavigationEnd))
       .subscribe((e) => {
         const url = (e as NavigationEnd).urlAfterRedirects;
-        const isPublic = PUBLIC_ROUTES.some(r => url.startsWith(r));
+        const isPublic = PUBLIC_ROUTES.some(r =>
+          r === '/' ? url === '/' : url.startsWith(r)
+        );
         this.showShell.set(auth.isLoggedIn() && !isPublic);
       });
   }
