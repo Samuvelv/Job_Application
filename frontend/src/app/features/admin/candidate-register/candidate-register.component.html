@@ -13,8 +13,18 @@
 
 <!-- Alerts -->
 @if (successMsg) {
-  <div class="alert alert-success d-flex align-items-center gap-2">
-    <i class="bi bi-check-circle-fill"></i> {{ successMsg }}
+  <div class="reg-success-banner">
+    <div class="reg-success-banner__icon">
+      <i class="bi bi-check-circle-fill"></i>
+    </div>
+    <div class="reg-success-banner__body">
+      <div class="reg-success-banner__title">{{ successMsg }}</div>
+      @if (createdCandidateNumber) {
+        <div class="reg-success-banner__code-row">
+          Candidate ID: <span class="reg-success-banner__code">{{ createdCandidateNumber }}</span>
+        </div>
+      }
+    </div>
   </div>
 }
 @if (errorMsg) {

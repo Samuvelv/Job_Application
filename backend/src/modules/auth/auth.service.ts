@@ -25,6 +25,14 @@ export async function login(
   const valid = await bcrypt.compare(password, user.password_hash);
   if (!valid) throw new AppError(401, 'Invalid email or password');
 
+  // For recruiters, check access expiry
+  if (user.role === 'recruiter') {
+    const recruiter = await db('recruiters').where({ user_id: user.id }).select('access_expires_at').first();
+    if (recruiter && new Date(recruiter.access_expires_at) < new Date()) {
+      throw new AppError(403, 'Your access has expired. Please contact the administrator.');
+    }
+  }
+
   const accessToken = signAccessToken({ sub: user.id, role: user.role });
   const refreshToken = await issueRefreshToken(user.id);
 

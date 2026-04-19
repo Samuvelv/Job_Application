@@ -11,7 +11,6 @@ import { EmptyStateComponent } from '../../../shared/components/empty-state/empt
 import { CandidateFilterSidebarComponent } from '../../../shared/components/candidate-filter-sidebar/candidate-filter-sidebar.component';
 import { ToastService } from '../../../core/services/toast.service';
 import { ConfirmDialogService } from '../../../core/services/confirm-dialog.service';
-
 @Component({
   selector: 'app-candidate-list',
   standalone: true,
@@ -91,6 +90,7 @@ import { ConfirmDialogService } from '../../../core/services/confirm-dialog.serv
               <table class="table table-hover align-middle mb-0">
                 <thead class="table-light">
                   <tr>
+                    <th>#</th>
                     <th>Candidate</th>
                     <th>Job Title</th>
                     <th>Industry</th>
@@ -103,6 +103,11 @@ import { ConfirmDialogService } from '../../../core/services/confirm-dialog.serv
                 <tbody>
                   @for (emp of candidates; track emp.id) {
                     <tr>
+                      <td>
+                        @if (emp.candidate_number) {
+                          <span class="autocode-badge">{{ emp.candidate_number }}</span>
+                        }
+                      </td>
                       <td>
                         <div class="d-flex align-items-center gap-2">
                           @if (emp.profile_photo_url) {
@@ -324,14 +329,18 @@ export class CandidateListComponent implements OnInit {
   }
 
   resendCreds(emp: Candidate): void {
-    this.confirm.confirm({ title: 'Resend Credentials', message: `Resend login credentials to ${emp.email}?`, confirmLabel: 'Send', confirmClass: 'btn-primary' })
-      .then(ok => {
-        if (!ok) return;
-        this.empSvc.resendCredentials(emp.id).subscribe({
-          next:  () => this.toast.show('Credentials sent!', 'success'),
-          error: (err) => this.toast.show(err?.error?.message ?? 'Failed to send', 'error'),
-        });
+    this.confirm.confirm({
+      title: 'Resend Credentials',
+      message: `Resend login credentials to ${emp.email}?`,
+      confirmLabel: 'Send',
+      confirmClass: 'btn-primary',
+    }).then(ok => {
+      if (!ok) return;
+      this.empSvc.resendCredentials(emp.id).subscribe({
+        next:  () => this.toast.show('Credentials sent!', 'success'),
+        error: (err) => this.toast.show(err?.error?.message ?? 'Failed to send', 'error'),
       });
+    });
   }
 
   deleteCandidate(emp: Candidate): void {

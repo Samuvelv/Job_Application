@@ -1,7 +1,7 @@
 // src/app/features/admin/recruiter-list/recruiter-list.component.ts
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
+import { ReactiveFormsModule, FormBuilder, FormGroup, Validators, AbstractControl, ValidationErrors } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { catchError, of } from 'rxjs';
 import { RecruiterService } from '../../../core/services/recruiter.service';
@@ -10,6 +10,13 @@ import { ToastService } from '../../../core/services/toast.service';
 import { ConfirmDialogService } from '../../../core/services/confirm-dialog.service';
 import { PageHeaderComponent } from '../../../shared/components/page-header/page-header.component';
 import { EmptyStateComponent } from '../../../shared/components/empty-state/empty-state.component';
+
+function passwordsMatchValidator(g: AbstractControl): ValidationErrors | null {
+  const pw  = g.get('new_password')?.value;
+  const cpw = g.get('confirm_password')?.value;
+  if (!pw) return null; // password optional — no match check if empty
+  return pw === cpw ? null : { passwordsMismatch: true };
+}
 
 @Component({
   selector: 'app-recruiter-list',
@@ -114,9 +121,11 @@ import { EmptyStateComponent } from '../../../shared/components/empty-state/empt
           <table class="table table-hover align-middle mb-0">
             <thead class="table-light">
               <tr>
+                <th class="small">#</th>
                 <th class="small">Name</th>
                 <th class="small">Company</th>
                 <th class="small">Email</th>
+                <th class="small">Expires</th>
                 <th class="small">Status</th>
                 <th class="small">Actions</th>
               </tr>
@@ -124,9 +133,23 @@ import { EmptyStateComponent } from '../../../shared/components/empty-state/empt
             <tbody>
               @for (rec of recruiters; track rec.id) {
                 <tr>
+                  <td>
+                    @if (rec.recruiter_number) {
+                      <span class="autocode-badge">{{ rec.recruiter_number }}</span>
+                    }
+                  </td>
                   <td class="fw-semibold small">{{ rec.contact_name }}</td>
                   <td class="small text-muted">{{ rec.company_name || '—' }}</td>
                   <td class="small">{{ rec.email }}</td>
+                  <td class="small">
+                    <span [class.text-danger]="isExpired(rec.access_expires_at)"
+                          [class.text-muted]="!isExpired(rec.access_expires_at)">
+                      {{ rec.access_expires_at | date:'dd MMM yyyy' }}
+                      @if (isExpired(rec.access_expires_at)) {
+                        <span class="badge bg-danger ms-1">Expired</span>
+                      }
+                    </span>
+                  </td>
                   <td>
                     <span class="badge rounded-pill"
                       [class.bg-success]="rec.is_active"
@@ -147,13 +170,9 @@ import { EmptyStateComponent } from '../../../shared/components/empty-state/empt
                       </button>
                       <div class="tbl-actions__sep"></div>
                       <button class="tbl-actions__btn tbl-actions__btn--token"
-                        (click)="resendCredentials(rec)" [disabled]="resendLoading === rec.id"
+                        (click)="resendCredentials(rec)"
                         title="Resend login credentials">
-                        @if (resendLoading === rec.id) {
-                          <span class="spinner-border spinner-border-sm"></span>
-                        } @else {
-                          <i class="bi bi-envelope"></i>
-                        }
+                        <i class="bi bi-envelope"></i>
                         Resend
                       </button>
                       <div class="tbl-actions__sep"></div>
@@ -191,45 +210,158 @@ import { EmptyStateComponent } from '../../../shared/components/empty-state/empt
     <!-- ── Edit Recruiter Panel (slide-in overlay) ── -->
     @if (editingRecruiter) {
       <div class="file-preview-overlay" (click)="closeEdit()">
-        <div class="edit-panel" (click)="$event.stopPropagation()">
-          <div class="edit-panel__header">
-            <div>
-              <div class="fw-bold">Edit Recruiter</div>
-              <div class="text-muted small">{{ editingRecruiter.email }}</div>
+        <div class="rec-edit-panel" (click)="$event.stopPropagation()">
+
+          <!-- Header -->
+          <div class="rec-edit-panel__header">
+            <div class="rec-edit-panel__avatar">
+              {{ editingRecruiter.contact_name.charAt(0).toUpperCase() }}
+            </div>
+            <div class="rec-edit-panel__title-group">
+              <div class="rec-edit-panel__title">Edit Recruiter</div>
+              <div class="rec-edit-panel__subtitle">{{ editingRecruiter.contact_name }}</div>
             </div>
             <button type="button" class="file-preview-dialog__close" (click)="closeEdit()">
               <i class="bi bi-x-lg"></i>
             </button>
           </div>
-          <div class="edit-panel__body">
+
+          <!-- Scrollable body -->
+          <div class="rec-edit-panel__body">
             <form [formGroup]="editForm" (ngSubmit)="saveEdit()">
-              <div class="mb-3">
-                <label class="form-label fw-semibold">Contact Name <span class="text-danger">*</span></label>
-                <input formControlName="contact_name" class="form-control"
-                  [class.is-invalid]="editInvalid('contact_name')">
-                @if (editInvalid('contact_name')) {
-                  <div class="invalid-feedback">Contact name is required.</div>
+
+              <!-- ── Section: Profile ── -->
+              <div class="rep-section">
+                <div class="rep-section__label">
+                  <i class="bi bi-person"></i> Profile
+                </div>
+                <div class="mb-3">
+                  <label class="form-label">Contact Name <span class="text-danger">*</span></label>
+                  <input formControlName="contact_name" class="form-control"
+                    placeholder="Full name"
+                    [class.is-invalid]="editInvalid('contact_name')">
+                  @if (editInvalid('contact_name')) {
+                    <div class="invalid-feedback">Contact name is required.</div>
+                  }
+                </div>
+                <div class="mb-0">
+                  <label class="form-label">Company Name <span class="rep-optional">optional</span></label>
+                  <input formControlName="company_name" class="form-control" placeholder="e.g. Acme Corp">
+                </div>
+              </div>
+
+              <!-- ── Section: Access Expiry ── -->
+              <div class="rep-section">
+                <div class="rep-section__label">
+                  <i class="bi bi-clock-history"></i> Extend Access
+                </div>
+                <div class="mb-2">
+                  <label class="form-label">Duration <span class="rep-optional">leave blank to keep current</span></label>
+                  <div class="rep-duration-row">
+                    <input type="number" formControlName="duration_value" class="form-control rep-duration-num"
+                      placeholder="e.g. 6" min="1">
+                    <select formControlName="duration_unit" class="form-select rep-duration-unit">
+                      <option value="">— Unit —</option>
+                      <option value="hours">Hours</option>
+                      <option value="days">Days</option>
+                      <option value="weeks">Weeks</option>
+                      <option value="months">Months</option>
+                      <option value="years">Years</option>
+                    </select>
+                  </div>
+                </div>
+                @if (expiryPreview) {
+                  <div class="rep-expiry-preview">
+                    <i class="bi bi-calendar-check"></i>
+                    New expiry: <strong>{{ expiryPreview }}</strong>
+                  </div>
+                } @else if (editingRecruiter.access_expires_at) {
+                  <div class="rep-expiry-current" [class.rep-expiry-current--expired]="isExpired(editingRecruiter.access_expires_at)">
+                    <i class="bi bi-calendar{{ isExpired(editingRecruiter.access_expires_at) ? '-x' : '2' }}"></i>
+                    Current expiry: <strong>{{ editingRecruiter.access_expires_at | date:'dd MMM yyyy, HH:mm' }}</strong>
+                    @if (isExpired(editingRecruiter.access_expires_at)) {
+                      <span class="badge bg-danger ms-1" style="font-size:.65rem">Expired</span>
+                    }
+                  </div>
                 }
               </div>
-              <div class="mb-4">
-                <label class="form-label fw-semibold">Company Name</label>
-                <input formControlName="company_name" class="form-control" placeholder="Optional">
+
+              <!-- ── Section: Credentials ── -->
+              <div class="rep-section">
+                <div class="rep-section__label">
+                  <i class="bi bi-shield-lock"></i> Credentials
+                </div>
+
+                <!-- Current password (read-only) -->
+                <div class="mb-3">
+                  <label class="form-label">Current Password</label>
+                  <div class="rep-pw-wrap">
+                    <input [type]="showCurrentPw ? 'text' : 'password'"
+                      class="form-control rep-pw-input"
+                      [value]="editingRecruiter.plain_password ?? ''" readonly>
+                    <button type="button" class="rep-pw-eye" (click)="showCurrentPw = !showCurrentPw"
+                      [title]="showCurrentPw ? 'Hide' : 'Show'">
+                      <i class="bi" [class.bi-eye]="!showCurrentPw" [class.bi-eye-slash]="showCurrentPw"></i>
+                    </button>
+                  </div>
+                </div>
+
+                <!-- New password -->
+                <div class="mb-3">
+                  <label class="form-label">New Password <span class="rep-optional">optional</span></label>
+                  <div class="rep-pw-wrap">
+                    <input [type]="showNewPw ? 'text' : 'password'" formControlName="new_password"
+                      class="form-control rep-pw-input" placeholder="Min 8 characters"
+                      [class.is-invalid]="editInvalid('new_password')">
+                    <button type="button" class="rep-pw-eye" (click)="showNewPw = !showNewPw"
+                      [title]="showNewPw ? 'Hide' : 'Show'">
+                      <i class="bi" [class.bi-eye]="!showNewPw" [class.bi-eye-slash]="showNewPw"></i>
+                    </button>
+                  </div>
+                  @if (editInvalid('new_password')) {
+                    <div class="rep-field-error">Minimum 8 characters.</div>
+                  }
+                </div>
+
+                <!-- Confirm password -->
+                <div class="mb-0">
+                  <label class="form-label">Confirm New Password</label>
+                  <div class="rep-pw-wrap">
+                    <input [type]="showConfirmPw ? 'text' : 'password'" formControlName="confirm_password"
+                      class="form-control rep-pw-input" placeholder="Repeat new password"
+                      [class.is-invalid]="editForm.hasError('passwordsMismatch') && editForm.get('confirm_password')?.touched">
+                    <button type="button" class="rep-pw-eye" (click)="showConfirmPw = !showConfirmPw"
+                      [title]="showConfirmPw ? 'Hide' : 'Show'">
+                      <i class="bi" [class.bi-eye]="!showConfirmPw" [class.bi-eye-slash]="showConfirmPw"></i>
+                    </button>
+                  </div>
+                  @if (editForm.hasError('passwordsMismatch') && editForm.get('confirm_password')?.touched) {
+                    <div class="rep-field-error">Passwords do not match.</div>
+                  }
+                </div>
               </div>
+
+              <!-- Error -->
               @if (editError) {
-                <div class="alert alert-danger small py-2">{{ editError }}</div>
+                <div class="alert alert-danger small py-2 mb-3">
+                  <i class="bi bi-exclamation-triangle me-1"></i>{{ editError }}
+                </div>
               }
-              <div class="d-flex gap-2">
-                <button type="button" class="btn btn-outline-secondary flex-grow-1" (click)="closeEdit()">
+
+              <!-- Footer actions -->
+              <div class="rec-edit-panel__footer">
+                <button type="button" class="btn btn-outline-secondary" (click)="closeEdit()">
                   Cancel
                 </button>
-                <button type="submit" class="btn btn-primary flex-grow-1" [disabled]="editSaving">
+                <button type="submit" class="btn btn-primary" [disabled]="editSaving">
                   @if (editSaving) {
                     <span class="spinner-border spinner-border-sm me-1"></span> Saving…
                   } @else {
-                    <i class="bi bi-check-lg me-1"></i> Save
+                    <i class="bi bi-check-lg me-1"></i> Save Changes
                   }
                 </button>
               </div>
+
             </form>
           </div>
         </div>
@@ -241,7 +373,6 @@ export class RecruiterListComponent implements OnInit {
   recruiters: Recruiter[] = [];
   pagination = { page: 1, limit: 20, total: 0, pages: 0 };
   loading = false;
-  resendLoading: string | null = null;
   advOpen = false;
 
   filterForm: FormGroup;
@@ -251,6 +382,9 @@ export class RecruiterListComponent implements OnInit {
   editForm!: FormGroup;
   editSaving = false;
   editError  = '';
+  showCurrentPw = false;
+  showNewPw     = false;
+  showConfirmPw = false;
 
   constructor(
     private fb: FormBuilder,
@@ -277,6 +411,30 @@ export class RecruiterListComponent implements OnInit {
   get hasAnyFilter(): boolean {
     const v = this.filterForm.value;
     return Object.values(v).some(x => x !== null && x !== '' && x !== undefined);
+  }
+
+  isExpired(dateStr: string): boolean {
+    return new Date(dateStr) < new Date();
+  }
+
+  get expiryPreview(): string {
+    const val  = this.editForm?.get('duration_value')?.value;
+    const unit = this.editForm?.get('duration_unit')?.value;
+    if (!val || !unit || val < 1) return '';
+    const dt = this.computeExpiry(val, unit);
+    return dt.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+  }
+
+  private computeExpiry(value: number, unit: string): Date {
+    const dt = new Date();
+    switch (unit) {
+      case 'hours':  dt.setHours(dt.getHours() + value);        break;
+      case 'days':   dt.setDate(dt.getDate() + value);           break;
+      case 'weeks':  dt.setDate(dt.getDate() + value * 7);       break;
+      case 'months': dt.setMonth(dt.getMonth() + value);         break;
+      case 'years':  dt.setFullYear(dt.getFullYear() + value);   break;
+    }
+    return dt;
   }
 
   search(): void {
@@ -327,10 +485,17 @@ export class RecruiterListComponent implements OnInit {
   openEdit(rec: Recruiter): void {
     this.editingRecruiter = rec;
     this.editError        = '';
+    this.showCurrentPw    = false;
+    this.showNewPw        = false;
+    this.showConfirmPw    = false;
     this.editForm = this.fb.group({
-      contact_name: [rec.contact_name, Validators.required],
-      company_name: [rec.company_name ?? ''],
-    });
+      contact_name:    [rec.contact_name, Validators.required],
+      company_name:    [rec.company_name ?? ''],
+      duration_value:  [null as number | null],
+      duration_unit:   [''],
+      new_password:    ['', [Validators.minLength(8)]],
+      confirm_password:[''],
+    }, { validators: passwordsMatchValidator });
   }
 
   closeEdit(): void {
@@ -349,11 +514,20 @@ export class RecruiterListComponent implements OnInit {
     if (!this.editingRecruiter) return;
     this.editSaving = true;
     this.editError  = '';
+
     const val = this.editForm.value;
-    this.recruiterService.update(this.editingRecruiter.id, {
+    const payload: Record<string, unknown> = {
       contact_name: val.contact_name,
-      company_name: val.company_name || undefined,
-    }).subscribe({
+      company_name: val.company_name || null,
+    };
+
+    if (val.new_password) payload['new_password'] = val.new_password;
+
+    if (val.duration_value && val.duration_unit) {
+      payload['access_expires_at'] = this.computeExpiry(val.duration_value, val.duration_unit).toISOString();
+    }
+
+    this.recruiterService.update(this.editingRecruiter.id, payload as any).subscribe({
       next: () => {
         this.editSaving = false;
         this.toast.success('Recruiter updated');
@@ -367,17 +541,18 @@ export class RecruiterListComponent implements OnInit {
     });
   }
 
-  resendCredentials(rec: Recruiter): void {
-    this.resendLoading = rec.id;
+  // ── Resend credentials ──────────────────────────────────────────────────────
+  async resendCredentials(rec: Recruiter): Promise<void> {
+    const ok = await this.confirm.confirm({
+      title: 'Resend Credentials',
+      message: `Resend login credentials to ${rec.email}?`,
+      confirmLabel: 'Send',
+      confirmClass: 'btn-primary',
+    });
+    if (!ok) return;
     this.recruiterService.resendCredentials(rec.id).subscribe({
-      next: () => {
-        this.resendLoading = null;
-        this.toast.success(`Credentials resent to ${rec.email}`);
-      },
-      error: (err) => {
-        this.resendLoading = null;
-        this.toast.error(err?.error?.message ?? 'Failed to resend credentials');
-      },
+      next: () => this.toast.success(`Credentials sent to ${rec.email}`),
+      error: (err) => this.toast.error(err?.error?.message ?? 'Failed to resend credentials'),
     });
   }
 

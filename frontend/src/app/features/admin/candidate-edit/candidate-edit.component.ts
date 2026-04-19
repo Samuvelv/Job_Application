@@ -29,6 +29,13 @@ function langGroupValidator(g: AbstractControl): ValidationErrors | null {
   return null;
 }
 
+function passwordsMatchValidator(g: AbstractControl): ValidationErrors | null {
+  const pw  = g.get('new_password')?.value;
+  const cpw = g.get('confirm_password')?.value;
+  if (!pw) return null;
+  return pw === cpw ? null : { passwordsMismatch: true };
+}
+
 @Component({
   selector: 'app-candidate-edit',
   standalone: true,
@@ -47,6 +54,11 @@ export class CandidateEditComponent implements OnInit {
 
   mediaLoading: Record<string, boolean> = {};
   certDeleting: number | null = null;
+
+  // Password section visibility toggles
+  showCurrentPw = false;
+  showNewPw     = false;
+  showConfirmPw = false;
 
   previewOpen = false;
   previewType: 'image' | 'video' | 'pdf' | null = null;
@@ -340,12 +352,12 @@ export class CandidateEditComponent implements OnInit {
       skills: this.fb.array(
         emp.skills?.length
           ? emp.skills.map(s => this.fb.group({ skill_name: [s.skill_name ?? '', Validators.required], proficiency: [s.proficiency ?? ''] }, { validators: skillGroupValidator }))
-          : [this.fb.group({ skill_name: ['', Validators.required], proficiency: [''] }, { validators: skillGroupValidator })]
+          : []
       ),
       languages: this.fb.array(
         emp.languages?.length
           ? emp.languages.map(l => this.fb.group({ language: [l.language ?? '', Validators.required], proficiency: [l.proficiency ?? ''] }, { validators: langGroupValidator }))
-          : [this.fb.group({ language: ['', Validators.required], proficiency: [''] }, { validators: langGroupValidator })]
+          : []
       ),
       experience: this.fb.array(
         emp.experience?.length
@@ -365,7 +377,11 @@ export class CandidateEditComponent implements OnInit {
             }))
           : [this.fb.group({ institution: [''], degree: [''], field_of_study: [''], start_year: [null as number | null], end_year: [null as number | null], location: [''] })]
       ),
-    });
+
+      // Credentials (optional)
+      new_password:     ['', [Validators.minLength(8)]],
+      confirm_password: [''],
+    }, { validators: passwordsMatchValidator });
   }
 
   // ── Submit ────────────────────────────────────────────────────────────────
@@ -400,6 +416,7 @@ export class CandidateEditComponent implements OnInit {
       nationality:   raw.nationality     || undefined,
       target_locations: Array.isArray(raw.target_locations) ? raw.target_locations : [],
       hobbies: Array.isArray(raw.hobbies) ? raw.hobbies : [],
+      new_password: raw.new_password || undefined,
       skills:    raw.skills.filter((s: any) => s.skill_name?.trim()),
       languages: raw.languages.filter((l: any) => l.language?.trim()),
       experience: raw.experience.filter((e: any) => e.company_name?.trim() || e.job_title?.trim()),

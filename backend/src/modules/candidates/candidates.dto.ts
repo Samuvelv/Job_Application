@@ -97,6 +97,8 @@ export const UpdateCandidateSchema = CreateCandidateSchema
     profile_photo_url: z.string().optional().nullable(),
     resume_url:        z.string().optional().nullable(),
     intro_video_url:   z.string().optional().nullable(),
+    new_password:      z.string().min(8, 'Password must be at least 8 characters').max(100).optional(),
+    profile_status:    z.enum(['active', 'inactive', 'pending_edit']).optional(),
   })
   .partial();
 

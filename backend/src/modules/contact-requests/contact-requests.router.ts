@@ -1,0 +1,62 @@
+// src/modules/contact-requests/contact-requests.router.ts
+import { Router, Request, Response, NextFunction } from 'express';
+import { authenticate } from '../../middleware/authenticate';
+import { authorize }    from '../../middleware/authorize';
+import * as svc from './contact-requests.service';
+import { ReviewContactRequestSchema } from './contact-requests.dto';
+import { getRecruiterByUserId } from '../recruiters/recruiters.service';
+
+const router = Router();
+router.use(authenticate);
+
+// Recruiter: submit a request for a candidate's contact info
+router.post('/:candidateId',
+  authorize('recruiter'),
+  async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const recruiter = await getRecruiterByUserId(req.user!.sub);
+      const row = await svc.createContactRequest(recruiter.id, req.params['candidateId'] as string);
+      res.status(201).json({ request: row });
+    } catch (err) { next(err); }
+  },
+);
+
+// Recruiter: get own requests (to check status per candidate)
+router.get('/me',
+  authorize('recruiter'),
+  async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const recruiter = await getRecruiterByUserId(req.user!.sub);
+      const requests = await svc.getMyContactRequests(recruiter.id);
+      res.json({ requests });
+    } catch (err) { next(err); }
+  },
+);
+
+// Admin: list all contact requests
+router.get('/',
+  authorize('admin'),
+  async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const page   = Math.max(1, Number(req.query['page'])  || 1);
+      const limit  = Math.max(1, Number(req.query['limit']) || 20);
+      const status = (req.query['status'] as string) || undefined;
+      const result = await svc.listContactRequests({ status, page, limit });
+      res.json(result);
+    } catch (err) { next(err); }
+  },
+);
+
+// Admin: approve or reject a request
+router.put('/:id/review',
+  authorize('admin'),
+  async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const dto     = ReviewContactRequestSchema.parse(req.body);
+      const updated = await svc.reviewContactRequest(req.params['id'] as string, dto);
+      res.json({ request: updated });
+    } catch (err) { next(err); }
+  },
+);
+
+export default router;

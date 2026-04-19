@@ -44,6 +44,7 @@ export interface Candidate {
   id: string;
   user_id: string;
   email?: string;
+  candidate_number?: string;
 
   // Personal
   first_name: string;
@@ -81,6 +82,8 @@ export interface Candidate {
 
   // Status
   profile_status?: string;
+  plain_password?: string;
+  contact_locked?: boolean;
 
   // Relations
   skills?: Skill[];

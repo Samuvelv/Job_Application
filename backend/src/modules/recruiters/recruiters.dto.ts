@@ -2,14 +2,18 @@
 import { z } from 'zod';
 
 export const CreateRecruiterSchema = z.object({
-  email:        z.string().email(),
-  contact_name: z.string().min(1).max(200),
-  company_name: z.string().max(200).optional(),
+  email:             z.string().email(),
+  contact_name:      z.string().min(1).max(200),
+  company_name:      z.string().max(200).optional(),
+  password:          z.string().min(8, 'Password must be at least 8 characters').max(100),
+  access_expires_at: z.string().datetime({ message: 'access_expires_at must be a valid ISO datetime' }),
 });
 
 export const UpdateRecruiterSchema = z.object({
-  contact_name: z.string().min(1).max(200).optional(),
-  company_name: z.string().max(200).optional(),
+  contact_name:      z.string().min(1).max(200).optional(),
+  company_name:      z.string().max(200).optional(),
+  new_password:      z.string().min(8, 'Password must be at least 8 characters').max(100).optional(),
+  access_expires_at: z.string().datetime().optional(),
 });
 
 export const RecruiterFilterSchema = z.object({

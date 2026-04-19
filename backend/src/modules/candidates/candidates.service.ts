@@ -47,10 +47,15 @@ export async function createCandidate(dto: CreateCandidateDto, createdByAdminId:
       is_active:     true,
     });
 
-    // 2. Create candidate profile
+    // 2. Generate candidate number from sequence
+    const [{ nextval: seqVal }] = await trx.raw(`SELECT nextval('candidates_seq')`).then((r: any) => r.rows);
+    const candidateNumber = `CAND-${String(seqVal).padStart(4, '0')}`;
+
+    // 3. Create candidate profile
     await trx('candidates').insert({
       id:               candidateId,
       user_id:          userId,
+      candidate_number: candidateNumber,
       first_name:       dto.first_name,
       last_name:        dto.last_name,
       date_of_birth:    dto.date_of_birth    ?? null,
@@ -74,6 +79,7 @@ export async function createCandidate(dto: CreateCandidateDto, createdByAdminId:
       salary_type:     dto.salary_type     ?? null,
       notice_period_id: dto.notice_period_id ?? null,
       profile_status:  'active',
+      plain_password:  dto.password,
     });
 
     // 3. Insert related arrays
@@ -89,12 +95,28 @@ export async function createCandidate(dto: CreateCandidateDto, createdByAdminId:
     }
     if (dto.experience?.length) {
       await trx('candidate_experience').insert(
-        dto.experience.map((e) => ({ candidate_id: candidateId, ...e })),
+        dto.experience.map((e) => ({
+          candidate_id: candidateId,
+          company_name: e.company_name || null,
+          job_title:    e.job_title    || null,
+          start_date:   e.start_date   || null,
+          end_date:     e.end_date     || null,
+          description:  e.description  || null,
+          location:     e.location     || null,
+        })),
       );
     }
     if (dto.education?.length) {
       await trx('candidate_education').insert(
-        dto.education.map((e) => ({ candidate_id: candidateId, ...e })),
+        dto.education.map((e) => ({
+          candidate_id: candidateId,
+          institution:  e.institution  || null,
+          degree:       e.degree       || null,
+          field_of_study: e.field_of_study || null,
+          start_year:   e.start_year   || null,
+          end_year:     e.end_year     || null,
+          location:     e.location     || null,
+        })),
       );
     }
     if (dto.certificates?.length) {
@@ -123,11 +145,12 @@ export async function listCandidates(filters: CandidateFilterDto) {
   let query = db('candidates as e')
     .join('users as u', 'u.id', 'e.user_id')
     .select(
-      'e.id', 'e.first_name', 'e.last_name', 'e.job_title',
+      'e.id', 'e.candidate_number', 'e.first_name', 'e.last_name', 'e.job_title',
       'e.industry', 'e.occupation', 'e.current_country', 'e.current_city',
       'e.years_experience', 'e.salary_min', 'e.salary_max', 'e.salary_currency',
       'e.profile_photo_url', 'e.profile_status', 'e.intro_video_url', 'e.created_at',
       'e.nationality', 'e.target_locations', 'e.date_of_birth', 'e.gender',
+      'e.plain_password',
       'u.email', 'u.is_active',
     )
     .where('u.is_active', true);
@@ -259,7 +282,6 @@ export async function getCandidateById(id: string) {
     .where('e.id', id)
     .select('e.*', 'u.email', 'u.is_active')
     .first();
-
   if (!candidate) throw new AppError(404, 'Candidate not found');
 
   const relations = await fetchRelations(id);
@@ -284,8 +306,15 @@ export async function updateCandidate(id: string, dto: UpdateCandidateDto) {
   await db.transaction(async (trx) => {
     // Update core fields
     const {
-      skills, languages, experience, education, certificates, ...coreFields
+      skills, languages, experience, education, certificates, new_password, ...coreFields
     } = dto;
+
+    // Handle password change
+    if (new_password) {
+      const hash = await bcrypt.hash(new_password, 12);
+      await trx('users').where({ id: candidate.user_id }).update({ password_hash: hash });
+      (coreFields as any).plain_password = new_password;
+    }
 
     if (Object.keys(coreFields).length) {
       await trx('candidates')
@@ -307,12 +336,32 @@ export async function updateCandidate(id: string, dto: UpdateCandidateDto) {
     if (experience !== undefined) {
       await trx('candidate_experience').where({ candidate_id: id }).delete();
       if (experience.length)
-        await trx('candidate_experience').insert(experience.map((e) => ({ candidate_id: id, ...e })));
+        await trx('candidate_experience').insert(
+          experience.map((e) => ({
+            candidate_id: id,
+            company_name: e.company_name || null,
+            job_title:    e.job_title    || null,
+            start_date:   e.start_date   || null,
+            end_date:     e.end_date     || null,
+            description:  e.description  || null,
+            location:     e.location     || null,
+          })),
+        );
     }
     if (education !== undefined) {
       await trx('candidate_education').where({ candidate_id: id }).delete();
       if (education.length)
-        await trx('candidate_education').insert(education.map((e) => ({ candidate_id: id, ...e })));
+        await trx('candidate_education').insert(
+          education.map((e) => ({
+            candidate_id:   id,
+            institution:    e.institution    || null,
+            degree:         e.degree         || null,
+            field_of_study: e.field_of_study || null,
+            start_year:     e.start_year     || null,
+            end_year:       e.end_year       || null,
+            location:       e.location       || null,
+          })),
+        );
     }
     if (certificates !== undefined) {
       await trx('candidate_certificates').where({ candidate_id: id }).delete();
@@ -360,25 +409,19 @@ export async function addCertificateFile(
 
 // ── Resend credentials ─────────────────────────────────────────────────────────
 
-export async function resendCredentials(candidateId: string) {
+export async function resendCredentials(candidateId: string): Promise<void> {
   const candidate = await db('candidates as e')
     .join('users as u', 'u.id', 'e.user_id')
     .where('e.id', candidateId)
-    .select('u.id as user_id', 'u.email', 'e.first_name', 'e.last_name')
+    .select('u.email', 'e.first_name', 'e.last_name', 'e.plain_password')
     .first();
 
   if (!candidate) throw new AppError(404, 'Candidate not found');
-
-  // Generate a new temp password
-  const tempPassword = Math.random().toString(36).slice(-10) + 'A1!';
-  const hash = await bcrypt.hash(tempPassword, 12);
-  await db('users')
-    .where({ id: candidate.user_id })
-    .update({ password_hash: hash });
+  if (!candidate.plain_password) throw new AppError(400, 'No stored password for this candidate. Please set a new password via the edit form first.');
 
   await sendCandidateCredentials(
     candidate.email,
-    tempPassword,
+    candidate.plain_password,
     `${candidate.first_name} ${candidate.last_name}`,
   );
 }

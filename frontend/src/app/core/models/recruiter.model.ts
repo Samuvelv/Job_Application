@@ -3,11 +3,13 @@
 export interface Recruiter {
   id: string;
   user_id: string;
+  recruiter_number?: string;
   email: string;
   contact_name: string;
   company_name?: string;
   access_expires_at: string;
   is_active: boolean;
+  plain_password?: string;
   has_active_token?: boolean;
   token_expires_at?: string | null;
   created_at?: string;

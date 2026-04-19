@@ -43,6 +43,9 @@ type Tab = 'overview' | 'experience' | 'education' | 'documents';
               <h2 class="profile-hero-v2__name mb-0">
                 {{ candidate.first_name }} {{ candidate.last_name }}
               </h2>
+              @if (candidate.candidate_number) {
+                <span class="autocode-badge autocode-badge--lg">{{ candidate.candidate_number }}</span>
+              }
               <span class="badge rounded-pill px-3 py-2"
                 [class.badge-status-active]="candidate.profile_status === 'active'"
                 [class.badge-status-pending]="candidate.profile_status === 'pending_edit'"
@@ -70,12 +73,22 @@ type Tab = 'overview' | 'experience' | 'education' | 'documents';
                   {{ candidate.current_city }}{{ candidate.current_city && candidate.current_country ? ', ' : '' }}{{ candidate.current_country }}
                 </span>
               }
-              @if (candidate.email) {
+              <!-- Email chip -->
+              @if (contactLocked) {
+                <span class="profile-hero-v2__meta-chip contact-locked-chip">
+                  <i class="bi bi-lock-fill"></i>Email hidden
+                </span>
+              } @else if (candidate.email) {
                 <span class="profile-hero-v2__meta-chip">
                   <i class="bi bi-envelope-fill"></i>{{ candidate.email }}
                 </span>
               }
-              @if (candidate.phone) {
+              <!-- Phone chip -->
+              @if (contactLocked) {
+                <span class="profile-hero-v2__meta-chip contact-locked-chip">
+                  <i class="bi bi-lock-fill"></i>Phone hidden
+                </span>
+              } @else if (candidate.phone) {
                 <span class="profile-hero-v2__meta-chip">
                   <i class="bi bi-telephone-fill"></i>{{ candidate.phone }}
                 </span>
@@ -102,7 +115,12 @@ type Tab = 'overview' | 'experience' | 'education' | 'documents';
                 <i class="bi bi-camera-video-fill"></i>Intro Video
               </a>
             }
-            @if (candidate.linkedin_url) {
+            <!-- LinkedIn -->
+            @if (contactLocked) {
+              <span class="profile-hero-v2__action-btn contact-locked-btn">
+                <i class="bi bi-lock-fill"></i>LinkedIn hidden
+              </span>
+            } @else if (candidate.linkedin_url) {
               <a [href]="candidate.linkedin_url" target="_blank"
                 class="profile-hero-v2__action-btn profile-hero-v2__action-btn--linkedin">
                 <i class="bi bi-linkedin"></i>LinkedIn
@@ -153,12 +171,22 @@ type Tab = 'overview' | 'experience' | 'education' | 'documents';
                 <h6>Contact Info</h6>
               </div>
               <div class="profile-section-card__body">
-                @if (candidate.phone) {
-                  <div class="info-pill-row">
-                    <div class="info-pill-row__icon"><i class="bi bi-telephone-fill"></i></div>
-                    <div class="info-pill-row__label">Phone</div>
-                    <div class="info-pill-row__value">{{ candidate.phone }}</div>
+                @if (contactLocked) {
+                  <div class="contact-locked-card">
+                    <div class="contact-locked-card__icon"><i class="bi bi-lock-fill"></i></div>
+                    <div class="contact-locked-card__text">
+                      <div class="contact-locked-card__title">Contact Info Hidden</div>
+                      <div class="contact-locked-card__sub">Request access to view email, phone and LinkedIn.</div>
+                    </div>
                   </div>
+                } @else {
+                  @if (candidate.phone) {
+                    <div class="info-pill-row">
+                      <div class="info-pill-row__icon"><i class="bi bi-telephone-fill"></i></div>
+                      <div class="info-pill-row__label">Phone</div>
+                      <div class="info-pill-row__value">{{ candidate.phone }}</div>
+                    </div>
+                  }
                 }
                 @if (candidate.nationality) {
                   <div class="info-pill-row">
@@ -618,6 +646,7 @@ type Tab = 'overview' | 'experience' | 'education' | 'documents';
 })
 export class CandidateProfileComponent {
   @Input() candidate: Candidate | null = null;
+  @Input() contactLocked = false;
 
   activeTab = signal<Tab>('overview');
 

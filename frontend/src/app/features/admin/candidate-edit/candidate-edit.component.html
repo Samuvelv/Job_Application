@@ -609,6 +609,75 @@
       </div>
     </div>
 
+    <!-- ── Credentials ── -->
+    <div class="form-card mb-4">
+      <h5 class="card-section-header card-section-header--success mb-4"><i class="bi bi-shield-lock"></i> Credentials</h5>
+      <div class="row g-3">
+
+        <!-- Current Password (read-only) -->
+        <div class="col-12">
+          <div class="rep-section" style="margin-bottom:0">
+            <div class="rep-section__label">
+              <i class="bi bi-key"></i> Current Password
+            </div>
+            <div class="rep-pw-wrap">
+              <input [type]="showCurrentPw ? 'text' : 'password'"
+                class="form-control rep-pw-input"
+                [value]="candidate?.plain_password ?? ''" readonly>
+              <button type="button" class="rep-pw-eye"
+                (click)="showCurrentPw = !showCurrentPw"
+                [title]="showCurrentPw ? 'Hide' : 'Show'">
+                <i class="bi" [class.bi-eye]="!showCurrentPw" [class.bi-eye-slash]="showCurrentPw"></i>
+              </button>
+            </div>
+            @if (!candidate?.plain_password) {
+              <div class="form-text text-warning mt-1">
+                <i class="bi bi-exclamation-triangle me-1"></i>
+                No stored password — candidate was created before credential tracking was enabled. Set a new password below to store it.
+              </div>
+            }
+          </div>
+        </div>
+
+        <!-- New Password -->
+        <div class="col-md-6">
+          <label class="form-label fw-semibold">New Password <span class="text-muted fw-normal small">(optional)</span></label>
+          <div class="rep-pw-wrap">
+            <input [type]="showNewPw ? 'text' : 'password'" formControlName="new_password"
+              class="form-control rep-pw-input" placeholder="Min 8 characters"
+              [class.is-invalid]="invalid('new_password')">
+            <button type="button" class="rep-pw-eye"
+              (click)="showNewPw = !showNewPw"
+              [title]="showNewPw ? 'Hide' : 'Show'">
+              <i class="bi" [class.bi-eye]="!showNewPw" [class.bi-eye-slash]="showNewPw"></i>
+            </button>
+          </div>
+          @if (invalid('new_password')) {
+            <div class="rep-field-error"><i class="bi bi-exclamation-circle"></i> Minimum 8 characters.</div>
+          }
+        </div>
+
+        <!-- Confirm Password -->
+        <div class="col-md-6">
+          <label class="form-label fw-semibold">Confirm New Password</label>
+          <div class="rep-pw-wrap">
+            <input [type]="showConfirmPw ? 'text' : 'password'" formControlName="confirm_password"
+              class="form-control rep-pw-input" placeholder="Repeat new password"
+              [class.is-invalid]="form.hasError('passwordsMismatch') && form.get('confirm_password')?.touched">
+            <button type="button" class="rep-pw-eye"
+              (click)="showConfirmPw = !showConfirmPw"
+              [title]="showConfirmPw ? 'Hide' : 'Show'">
+              <i class="bi" [class.bi-eye]="!showConfirmPw" [class.bi-eye-slash]="showConfirmPw"></i>
+            </button>
+          </div>
+          @if (form.hasError('passwordsMismatch') && form.get('confirm_password')?.touched) {
+            <div class="rep-field-error"><i class="bi bi-exclamation-circle"></i> Passwords do not match.</div>
+          }
+        </div>
+
+      </div>
+    </div>
+
     <!-- ── Actions ── -->
     <div class="d-flex gap-3 justify-content-end mt-2 mb-5">
       <a [routerLink]="['/admin/candidates', candidateId]" class="btn btn-outline-secondary">

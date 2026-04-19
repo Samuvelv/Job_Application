@@ -7,6 +7,8 @@ import {
   CandidateFilterSchema,
 } from './candidates.dto';
 import { logAudit } from '../../services/audit.service';
+import { isContactUnlocked } from '../contact-requests/contact-requests.service';
+import { getRecruiterByUserId } from '../recruiters/recruiters.service';
 
 const p = (v: string | string[]): string => (Array.isArray(v) ? v[0] : v);
 
@@ -26,6 +28,10 @@ export async function list(req: Request, res: Response, next: NextFunction): Pro
   try {
     const filters = CandidateFilterSchema.parse(req.query);
     const result  = await svc.listCandidates(filters);
+    // Strip sensitive fields from recruiter responses
+    if (req.user!.role === 'recruiter') {
+      result.data = result.data.map(({ plain_password, ...rest }: any) => rest);
+    }
     res.json(result);
   } catch (err) { next(err); }
 }
@@ -38,7 +44,24 @@ export async function getOne(req: Request, res: Response, next: NextFunction): P
       if (emp.id !== id) { res.status(403).json({ message: 'Access denied' }); return; }
       res.json({ candidate: emp }); return;
     }
+
     const candidate = await svc.getCandidateById(id);
+
+    // Recruiters: mask contact fields unless they have an approved unlock request
+    if (req.user!.role === 'recruiter') {
+      const recruiter = await getRecruiterByUserId(req.user!.sub);
+      const unlocked  = await isContactUnlocked(recruiter.id, id);
+      const masked    = {
+        ...candidate,
+        plain_password: undefined, // never expose to recruiters
+        contact_locked: !unlocked,
+        email:       unlocked ? candidate.email       : null,
+        phone:       unlocked ? candidate.phone       : null,
+        linkedin_url:unlocked ? candidate.linkedin_url: null,
+      };
+      res.json({ candidate: masked }); return;
+    }
+
     res.json({ candidate });
   } catch (err) { next(err); }
 }

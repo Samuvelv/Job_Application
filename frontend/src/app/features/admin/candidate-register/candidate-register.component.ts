@@ -43,6 +43,7 @@ export class CandidateRegisterComponent implements OnInit, OnDestroy {
   submitted   = false;
   errorMsg    = '';
   successMsg  = '';
+  createdCandidateNumber = '';
   draftSaved  = false;
 
   pendingPhoto?:  File;
@@ -442,8 +443,9 @@ export class CandidateRegisterComponent implements OnInit, OnDestroy {
         await this.uploadPendingFiles(id);
         this.clearDraft();
         this.loading    = false;
-        this.successMsg = `Candidate ${res.candidate.first_name} registered successfully! Credentials emailed.`;
-        setTimeout(() => this.router.navigate(['/admin/candidates']), 2000);
+        this.createdCandidateNumber = res.candidate.candidate_number ?? '';
+        this.successMsg = `${res.candidate.first_name} ${res.candidate.last_name} registered successfully! Credentials emailed.`;
+        setTimeout(() => this.router.navigate(['/admin/candidates']), 3000);
       },
       error: (err) => {
         this.loading  = false;

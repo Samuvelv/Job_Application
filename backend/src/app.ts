@@ -17,6 +17,7 @@ import auditLogsRouter   from './modules/audit-logs/audit-logs.router';
 import uploadsRouter     from './modules/uploads/uploads.router';
 import statsRouter      from './modules/stats/stats.router';
 import masterRouter     from './modules/master/master.router';
+import contactRequestsRouter from './modules/contact-requests/contact-requests.router';
 
 const app = express();
 
@@ -50,8 +51,9 @@ app.use('/api/v1/recruiters',    recruitersRouter);
 app.use('/api/v1/edit-requests', editRequestsRouter);
 app.use('/api/v1/audit-logs',   auditLogsRouter);
 app.use('/api/v1',               uploadsRouter);   // /files/:type/:filename + /candidates/:id/files/:type
-app.use('/api/v1/stats',         statsRouter);
-app.use('/api/v1/master',        masterRouter);
+app.use('/api/v1/stats',            statsRouter);
+app.use('/api/v1/master',           masterRouter);
+app.use('/api/v1/contact-requests', contactRequestsRouter);
 
 // ── Global error handler (must be last) ───────────────────────────────────────
 app.use(errorHandler);

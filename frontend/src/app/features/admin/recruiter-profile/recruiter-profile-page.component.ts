@@ -26,12 +26,8 @@ import { ConfirmDialogService } from '../../../core/services/confirm-dialog.serv
           </button>
           <div class="tbl-actions__sep"></div>
           <button class="tbl-actions__btn tbl-actions__btn--token"
-            (click)="resendCredentials()" [disabled]="resendLoading">
-            @if (resendLoading) {
-              <span class="spinner-border spinner-border-sm me-1"></span>
-            } @else {
-              <i class="bi bi-envelope me-1"></i>
-            }
+            (click)="resendCredentials()">
+            <i class="bi bi-envelope me-1"></i>
             Resend Credentials
           </button>
           <div class="tbl-actions__sep"></div>
@@ -69,6 +65,9 @@ import { ConfirmDialogService } from '../../../core/services/confirm-dialog.serv
           <div class="rp-hero__info">
             <div class="rp-hero__name-row">
               <h2 class="rp-hero__name">{{ recruiter.contact_name }}</h2>
+              @if (recruiter.recruiter_number) {
+                <span class="autocode-badge autocode-badge--lg">{{ recruiter.recruiter_number }}</span>
+              }
               <span class="rp-hero__status-badge"
                 [class.rp-hero__status-badge--active]="recruiter.is_active"
                 [class.rp-hero__status-badge--inactive]="!recruiter.is_active">
@@ -88,6 +87,13 @@ import { ConfirmDialogService } from '../../../core/services/confirm-dialog.serv
             <div class="rp-hero__chips">
               <span class="rp-hero__chip">
                 <i class="bi bi-envelope-fill"></i>{{ recruiter.email }}
+              </span>
+              <span class="rp-hero__chip" [class.text-danger]="isExpired(recruiter.access_expires_at)">
+                <i class="bi bi-clock"></i>
+                Access expires: {{ recruiter.access_expires_at | date:'dd MMM yyyy, HH:mm' }}
+                @if (isExpired(recruiter.access_expires_at)) {
+                  <span class="badge bg-danger ms-1">Expired</span>
+                }
               </span>
               <span class="rp-hero__chip">
                 <i class="bi bi-calendar3"></i>Joined {{ recruiter.created_at | date:'dd MMM yyyy' }}
@@ -284,16 +290,89 @@ import { ConfirmDialogService } from '../../../core/services/confirm-dialog.serv
               </button>
             </div>
             <div class="edit-panel__body">
+              <!-- Basic fields -->
               <div class="mb-3">
                 <label class="form-label fw-semibold">Contact Name <span class="text-danger">*</span></label>
                 <input class="form-control" [(ngModel)]="editName"
                   [class.is-invalid]="editSubmitted && !editName.trim()">
                 <div class="invalid-feedback">Contact name is required.</div>
               </div>
-              <div class="mb-4">
+              <div class="mb-3">
                 <label class="form-label fw-semibold">Company Name</label>
                 <input class="form-control" [(ngModel)]="editCompany" placeholder="Optional">
               </div>
+
+              <!-- Access Duration -->
+              <div class="mb-3">
+                <label class="form-label fw-semibold">Extend Access Duration</label>
+                <div class="d-flex gap-2">
+                  <input type="number" [(ngModel)]="editDurationValue" class="form-control"
+                    placeholder="e.g. 6" min="1" style="width:100px;flex-shrink:0"
+                    (ngModelChange)="onDurationChange()">
+                  <select class="form-select" [(ngModel)]="editDurationUnit"
+                    (ngModelChange)="onDurationChange()">
+                    <option value="">— Unit —</option>
+                    <option value="hours">Hours</option>
+                    <option value="days">Days</option>
+                    <option value="weeks">Weeks</option>
+                    <option value="months">Months</option>
+                    <option value="years">Years</option>
+                  </select>
+                </div>
+                @if (editExpiryPreview) {
+                  <div class="form-text text-info mt-1">
+                    <i class="bi bi-clock me-1"></i>Expires on: {{ editExpiryPreview }}
+                  </div>
+                }
+                <div class="form-text text-muted">Leave blank to keep current expiry.</div>
+              </div>
+
+              <!-- Credentials -->
+              <hr class="my-3">
+              <div class="mb-2">
+                <label class="form-label fw-semibold small text-uppercase text-muted" style="letter-spacing:.05em">Credentials</label>
+              </div>
+              <div class="mb-3">
+                <label class="form-label fw-semibold">Current Password</label>
+                <div class="input-group">
+                  <input [type]="showCurrentPw ? 'text' : 'password'"
+                    class="form-control" [value]="recruiter.plain_password ?? ''" readonly
+                    style="background:#f8f9fa">
+                  <button type="button" class="btn btn-outline-secondary"
+                    (click)="showCurrentPw = !showCurrentPw">
+                    <i class="bi" [class.bi-eye]="!showCurrentPw" [class.bi-eye-slash]="showCurrentPw"></i>
+                  </button>
+                </div>
+              </div>
+              <div class="mb-3">
+                <label class="form-label fw-semibold">New Password <span class="text-muted fw-normal">(optional)</span></label>
+                <div class="input-group">
+                  <input [type]="showNewPw ? 'text' : 'password'" [(ngModel)]="editNewPassword"
+                    class="form-control" placeholder="Min 8 characters">
+                  <button type="button" class="btn btn-outline-secondary"
+                    (click)="showNewPw = !showNewPw">
+                    <i class="bi" [class.bi-eye]="!showNewPw" [class.bi-eye-slash]="showNewPw"></i>
+                  </button>
+                </div>
+                @if (editSubmitted && editNewPassword && editNewPassword.length < 8) {
+                  <div class="text-danger small mt-1">Minimum 8 characters.</div>
+                }
+              </div>
+              <div class="mb-4">
+                <label class="form-label fw-semibold">Confirm New Password</label>
+                <div class="input-group">
+                  <input [type]="showConfirmPw ? 'text' : 'password'" [(ngModel)]="editConfirmPassword"
+                    class="form-control" placeholder="Repeat new password">
+                  <button type="button" class="btn btn-outline-secondary"
+                    (click)="showConfirmPw = !showConfirmPw">
+                    <i class="bi" [class.bi-eye]="!showConfirmPw" [class.bi-eye-slash]="showConfirmPw"></i>
+                  </button>
+                </div>
+                @if (editSubmitted && editNewPassword && editNewPassword !== editConfirmPassword) {
+                  <div class="text-danger small mt-1">Passwords do not match.</div>
+                }
+              </div>
+
               @if (editError) {
                 <div class="alert alert-danger small py-2">{{ editError }}</div>
               }
@@ -324,7 +403,6 @@ export class RecruiterProfilePageComponent implements OnInit {
   shortlist: ShortlistEntry[] = [];
   loadError = '';
   shortlistLoading = false;
-  resendLoading = false;
 
   // Edit panel state
   editOpen = false;
@@ -333,6 +411,18 @@ export class RecruiterProfilePageComponent implements OnInit {
   editSaving = false;
   editError = '';
   editSubmitted = false;
+
+  // Duration picker state
+  editDurationValue: number | null = null;
+  editDurationUnit = '';
+  editExpiryPreview = '';
+
+  // Password state
+  editNewPassword = '';
+  editConfirmPassword = '';
+  showCurrentPw = false;
+  showNewPw     = false;
+  showConfirmPw = false;
 
   constructor(
     private route: ActivatedRoute,
@@ -345,6 +435,10 @@ export class RecruiterProfilePageComponent implements OnInit {
     this.recruiterId = this.route.snapshot.paramMap.get('id') ?? '';
     if (!this.recruiterId) { this.loadError = 'Invalid recruiter ID.'; return; }
     this.load();
+  }
+
+  isExpired(dateStr: string): boolean {
+    return new Date(dateStr) < new Date();
   }
 
   private load(): void {
@@ -368,11 +462,19 @@ export class RecruiterProfilePageComponent implements OnInit {
   // ── Edit ────────────────────────────────────────────────────────────────────
   openEdit(): void {
     if (!this.recruiter) return;
-    this.editName      = this.recruiter.contact_name;
-    this.editCompany   = this.recruiter.company_name ?? '';
-    this.editError     = '';
-    this.editSubmitted = false;
-    this.editOpen      = true;
+    this.editName          = this.recruiter.contact_name;
+    this.editCompany       = this.recruiter.company_name ?? '';
+    this.editError         = '';
+    this.editSubmitted     = false;
+    this.editDurationValue = null;
+    this.editDurationUnit  = '';
+    this.editExpiryPreview = '';
+    this.editNewPassword   = '';
+    this.editConfirmPassword = '';
+    this.showCurrentPw     = false;
+    this.showNewPw         = false;
+    this.showConfirmPw     = false;
+    this.editOpen          = true;
   }
 
   closeEdit(): void {
@@ -382,15 +484,50 @@ export class RecruiterProfilePageComponent implements OnInit {
     this.editSubmitted = false;
   }
 
+  onDurationChange(): void {
+    if (this.editDurationValue && this.editDurationUnit && this.editDurationValue >= 1) {
+      const dt = this.computeExpiry(this.editDurationValue, this.editDurationUnit);
+      this.editExpiryPreview = dt.toLocaleDateString('en-GB', {
+        day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit',
+      });
+    } else {
+      this.editExpiryPreview = '';
+    }
+  }
+
+  private computeExpiry(value: number, unit: string): Date {
+    const dt = new Date();
+    switch (unit) {
+      case 'hours':  dt.setHours(dt.getHours() + value);        break;
+      case 'days':   dt.setDate(dt.getDate() + value);           break;
+      case 'weeks':  dt.setDate(dt.getDate() + value * 7);       break;
+      case 'months': dt.setMonth(dt.getMonth() + value);         break;
+      case 'years':  dt.setFullYear(dt.getFullYear() + value);   break;
+    }
+    return dt;
+  }
+
   saveEdit(): void {
     this.editSubmitted = true;
     if (!this.editName.trim()) return;
+    if (this.editNewPassword && this.editNewPassword.length < 8) return;
+    if (this.editNewPassword && this.editNewPassword !== this.editConfirmPassword) return;
+
     this.editSaving = true;
     this.editError  = '';
-    this.recruiterSvc.update(this.recruiterId, {
+
+    const payload: Record<string, unknown> = {
       contact_name: this.editName.trim(),
-      company_name: this.editCompany.trim() || undefined,
-    }).subscribe({
+      company_name: this.editCompany.trim() || null,
+    };
+
+    if (this.editNewPassword) payload['new_password'] = this.editNewPassword;
+
+    if (this.editDurationValue && this.editDurationUnit) {
+      payload['access_expires_at'] = this.computeExpiry(this.editDurationValue, this.editDurationUnit).toISOString();
+    }
+
+    this.recruiterSvc.update(this.recruiterId, payload as any).subscribe({
       next: (res) => {
         this.recruiter = res.recruiter;
         this.editSaving = false;
@@ -405,18 +542,18 @@ export class RecruiterProfilePageComponent implements OnInit {
   }
 
   // ── Resend credentials ────────────────────────────────────────────────────────
-  resendCredentials(): void {
+  async resendCredentials(): Promise<void> {
     if (!this.recruiter) return;
-    this.resendLoading = true;
+    const ok = await this.confirm.confirm({
+      title: 'Resend Credentials',
+      message: `Resend login credentials to ${this.recruiter.email}?`,
+      confirmLabel: 'Send',
+      confirmClass: 'btn-primary',
+    });
+    if (!ok) return;
     this.recruiterSvc.resendCredentials(this.recruiterId).subscribe({
-      next: () => {
-        this.resendLoading = false;
-        this.toast.success('Credentials resent to ' + this.recruiter!.email);
-      },
-      error: (err) => {
-        this.resendLoading = false;
-        this.toast.error(err?.error?.message ?? 'Failed to resend credentials');
-      },
+      next: () => this.toast.success('Credentials sent to ' + this.recruiter!.email),
+      error: (err) => this.toast.error(err?.error?.message ?? 'Failed to resend credentials'),
     });
   }
 

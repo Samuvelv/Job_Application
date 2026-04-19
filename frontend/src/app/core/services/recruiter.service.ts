@@ -33,6 +33,8 @@ export class RecruiterService {
     email: string;
     contact_name: string;
     company_name?: string;
+    password: string;
+    access_expires_at: string;
   }): Observable<{ recruiter: Recruiter }> {
     return this.http.post<{ recruiter: Recruiter }>(this.api, data);
   }
@@ -41,7 +43,12 @@ export class RecruiterService {
     return this.http.delete<{ message: string }>(`${this.api}/${id}`);
   }
 
-  update(id: string, data: { contact_name?: string; company_name?: string }): Observable<{ recruiter: Recruiter }> {
+  update(id: string, data: {
+    contact_name?: string;
+    company_name?: string;
+    new_password?: string;
+    access_expires_at?: string;
+  }): Observable<{ recruiter: Recruiter }> {
     return this.http.put<{ recruiter: Recruiter }>(`${this.api}/${id}`, data);
   }
 
