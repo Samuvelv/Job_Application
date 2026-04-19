@@ -18,6 +18,7 @@ import uploadsRouter     from './modules/uploads/uploads.router';
 import statsRouter      from './modules/stats/stats.router';
 import masterRouter     from './modules/master/master.router';
 import contactRequestsRouter from './modules/contact-requests/contact-requests.router';
+import volunteersRouter      from './modules/volunteers/volunteers.router';
 
 const app = express();
 
@@ -54,6 +55,7 @@ app.use('/api/v1',               uploadsRouter);   // /files/:type/:filename + /
 app.use('/api/v1/stats',            statsRouter);
 app.use('/api/v1/master',           masterRouter);
 app.use('/api/v1/contact-requests', contactRequestsRouter);
+app.use('/api/v1/volunteers',       volunteersRouter);
 
 // ── Global error handler (must be last) ───────────────────────────────────────
 app.use(errorHandler);

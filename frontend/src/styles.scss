@@ -7408,3 +7408,24 @@ body {
   &:hover .phone-number-input:not(:focus) { border-color: var(--th-primary); }
 }
 
+
+// ── Volunteer list ──────────────────────────────────────────────
+.vol-role-chip {
+  display: inline-block;
+  padding: .15rem .55rem;
+  border-radius: 99px;
+  background: rgba(99, 102, 241, .12);
+  color: var(--th-primary);
+  font-size: .75rem;
+  font-weight: 600;
+  letter-spacing: .02em;
+  white-space: nowrap;
+}
+
+.vol-notes-clamp {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  word-break: break-word;
+}

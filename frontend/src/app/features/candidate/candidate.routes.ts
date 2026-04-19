@@ -22,4 +22,9 @@ export const candidateRoutes: Routes = [
     loadComponent: () =>
       import('./edit-request/edit-request.component').then((m) => m.EditRequestComponent),
   },
+  {
+    path: 'volunteers',
+    loadComponent: () =>
+      import('./volunteers/volunteer-browse.component').then((m) => m.VolunteerBrowseComponent),
+  },
 ];

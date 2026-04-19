@@ -62,6 +62,7 @@ export class SidebarComponent {
           { label: 'Candidates',     icon: 'bi-people-fill',        route: '/admin/candidates' },
           { label: 'Recruiters',    icon: 'bi-person-badge-fill',  route: '/admin/recruiters' },
           { label: 'Edit Requests', icon: 'bi-pencil-square',      route: '/admin/edit-requests' },
+          { label: 'Volunteers',    icon: 'bi-people-fill',        route: '/admin/volunteers' },
           { label: 'Audit Logs',    icon: 'bi-journal-text',       route: '/admin/audit-logs' },
         ];
       case 'candidate':
@@ -69,6 +70,7 @@ export class SidebarComponent {
           { label: 'Dashboard',    icon: 'bi-grid-1x2-fill', route: '/candidate/dashboard' },
           { label: 'My Profile',   icon: 'bi-person-circle', route: '/candidate/profile' },
           { label: 'Request Edit', icon: 'bi-pencil',        route: '/candidate/edit-request' },
+          { label: 'Volunteers',   icon: 'bi-people-fill',  route: '/candidate/volunteers' },
         ];
       case 'recruiter':
         return [
