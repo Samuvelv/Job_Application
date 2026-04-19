@@ -10,7 +10,7 @@ import { CommonModule } from '@angular/common';
 import { ConfirmDialogComponent } from './shared/components/confirm-dialog/confirm-dialog.component';
 import { filter } from 'rxjs';
 
-const PUBLIC_ROUTES = ['/login', '/unauthorized'];
+const PUBLIC_ROUTES = ['/', '/login', '/unauthorized'];
 
 @Component({
   selector: 'app-root',
