@@ -7,13 +7,13 @@ import {
   FormGroup,
   Validators,
 } from '@angular/forms';
-import { Router } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
 import { AuthService } from '../../../core/services/auth.service';
 
 @Component({
   selector: 'app-login',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule],
+  imports: [CommonModule, ReactiveFormsModule, RouterLink],
   template: `
     <div class="auth-wrapper">
 
@@ -32,16 +32,12 @@ import { AuthService } from '../../../core/services/auth.service';
       <div class="auth-particle auth-particle--5"></div>
       <div class="auth-particle auth-particle--6"></div>
 
-      <!-- Two-column split -->
-      <div class="auth-split" style="position:relative;z-index:1">
+      <!-- Centered login card -->
+      <div class="auth-split auth-split--centered" style="position:relative;z-index:1">
 
-        <!-- Left panel — illustration -->
-        <div class="auth-illustration-panel">
-          <div class="auth-wordmark mb-1">TalentHub</div>
-          <div class="auth-tagline mb-2">Your smart hiring platform</div>
-
-          <!-- Premium platform illustration SVG — relevant to both job seekers & recruiters -->
-          <svg class="auth-hero-svg" viewBox="0 0 520 420" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+        <!-- Left panel removed -->
+        <div style="display:none">
+          <svg viewBox="0 0 1 1" aria-hidden="true">
             <defs>
               <linearGradient id="grad-bar-indigo" x1="0%" y1="0%" x2="100%" y2="0%">
                 <stop offset="0%" stop-color="#6366f1"/>
@@ -199,19 +195,27 @@ import { AuthService } from '../../../core/services/auth.service';
 
         </div>
 
-        <!-- Right panel — login card -->
-        <div class="auth-card w-100">
+        <!-- Login card -->
+        <div class="auth-card auth-card--solo">
 
-          <!-- Card heading -->
-          <div class="mb-4">
-            <div class="auth-card-title">Welcome back</div>
-            <div class="auth-card-sub">Sign in to your account to continue</div>
+          <!-- Logo -->
+          <div class="auth-card-logo">
+            <div class="auth-card-logo__icon">
+              <i class="bi bi-briefcase-fill"></i>
+            </div>
+            <div class="auth-card-logo__name">Talent<span>Hub</span></div>
+          </div>
+
+          <!-- Heading -->
+          <div class="auth-card-heading">
+            <div class="auth-card-title">Welcome to TalentHub</div>
+            <div class="auth-card-sub">Sign in to your account</div>
           </div>
 
           <!-- Error alert -->
           @if (errorMsg) {
-            <div class="auth-alert mb-4" role="alert">
-              <i class="bi bi-exclamation-circle-fill" style="color:#f87171;flex-shrink:0;margin-top:.05rem"></i>
+            <div class="auth-alert mb-3" role="alert">
+              <i class="bi bi-exclamation-circle-fill" style="color:#f87171;flex-shrink:0"></i>
               <span class="flex-grow-1">{{ errorMsg }}</span>
               <button type="button" class="btn-close btn-sm" (click)="errorMsg = ''"></button>
             </div>
@@ -277,10 +281,15 @@ import { AuthService } from '../../../core/services/auth.service';
               }
             </div>
 
-            <!-- Submit -->
+            <!-- Forgot password -->
+            <div class="auth-forgot">
+              <a href="#" class="auth-forgot__link" (click)="showForgotPopup = true; $event.preventDefault()">Forgot password?</a>
+            </div>
+
+            <!-- Sign In button -->
             <button
               type="submit"
-              class="btn btn-primary-gradient w-100 mt-2"
+              class="btn btn-primary-gradient w-100 mt-3"
               [disabled]="loading"
             >
               @if (loading) {
@@ -293,22 +302,79 @@ import { AuthService } from '../../../core/services/auth.service';
 
           </form>
 
+          <!-- Divider -->
+          <div class="auth-divider">
+            <span></span>
+            <p>Not registered yet?</p>
+            <span></span>
+          </div>
+
+          <!-- Not registered section -->
+          <div class="auth-register-note">
+            <p class="auth-register-note__text">
+              Registration is by invitation only.<br>
+              Contact our team to apply.
+            </p>
+            <div class="auth-register-note__btns">
+              <a
+                class="auth-register-note__btn auth-register-note__btn--whatsapp"
+                href="https://wa.me/919360454326?text=Hi%2C%20I%20would%20like%20to%20register%20on%20TalentHub"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                <i class="bi bi-whatsapp"></i> WhatsApp
+              </a>
+              <a
+                class="auth-register-note__btn auth-register-note__btn--contact"
+                href="#contact"
+              >
+                <i class="bi bi-envelope-fill"></i> Contact Us
+              </a>
+            </div>
+          </div>
+
           <!-- Footer -->
-          <p class="auth-footer-note mt-4 mb-0">
+          <p class="auth-footer-note mt-3 mb-0">
             <i class="bi bi-shield-lock-fill me-1"></i>Access is managed by your administrator.
           </p>
 
-        </div><!-- /auth-card (right panel) -->
+        </div><!-- /auth-card -->
       </div><!-- /auth-split -->
+
+      <!-- Forgot password popup -->
+      @if (showForgotPopup) {
+        <div class="auth-popup-overlay" (click)="showForgotPopup = false">
+          <div class="auth-popup" (click)="$event.stopPropagation()">
+            <div class="auth-popup__icon">
+              <i class="bi bi-shield-lock-fill"></i>
+            </div>
+            <h4 class="auth-popup__title">Password Reset</h4>
+            <p class="auth-popup__msg">
+              Password resets are managed by our admin team only.<br>
+              Please contact us and we'll get it sorted for you.
+            </p>
+            <button class="auth-popup__btn" (click)="onForgotOk()">
+              Okay, Contact Admin
+            </button>
+          </div>
+        </div>
+      }
+
     </div>
   `,
 })
 export class LoginComponent implements OnInit {
   form!: FormGroup;
-  loading   = false;
-  submitted = false;
-  errorMsg  = '';
+  loading      = false;
+  submitted    = false;
+  errorMsg     = '';
   showPassword = false;
+  showForgotPopup = false;
+
+  onForgotOk(): void {
+    this.showForgotPopup = false;
+    this.router.navigate(['/'], { fragment: 'contact' });
+  }
 
   constructor(
     private fb: FormBuilder,

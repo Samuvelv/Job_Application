@@ -75,26 +75,23 @@ import { ToastService } from '../../core/services/toast.service';
   <!-- Dot background -->
   <div class="lp-hero__dots"></div>
 
+
   <div class="lp-container lp-hero__inner">
 
     <!-- Left: copy -->
     <div class="lp-hero__copy">
-      <div class="lp-hero__badge">
+      <!-- <div class="lp-hero__badge">
         <span class="lp-hero__badge-dot"></span>
         The Smart Hiring Platform
-      </div>
+      </div> -->
 
       <h1 class="lp-hero__headline">
-        Connect
-        <span class="lp-hero__headline-gradient"> Top Talent</span><br>
-        with the Right<br>
-        <span class="lp-hero__headline-gradient">Opportunity</span>
+        <span class="lp-hero__headline-line1">Find Your <span class="lp-hero__headline-gradient">Sponsored Job Abroad</span></span>
+        <span class="lp-hero__headline-line2"><span class="lp-hero__headline-gradient">We Handle Everything</span> For You</span>
       </h1>
 
       <p class="lp-hero__sub">
-        TalentHub bridges the gap between skilled professionals and the companies
-        that need them — with smart matching, transparent profiles, and a seamless
-        hiring experience for everyone.
+        Register once. Our team personally matches your profile to visa-sponsored employers across Europe, UK, Canada, Australia and more. One-time registration fee. No hidden charges. Zero stress.
       </p>
 
       <div class="lp-hero__ctas">
@@ -104,6 +101,66 @@ import { ToastService } from '../../core/services/toast.service';
         <a class="lp-btn-outline lp-btn--lg" routerLink="/login">
           <i class="bi bi-building me-2"></i>Hire Talent
         </a>
+      </div>
+
+      <!-- Country flags row -->
+      <div class="lp-countries">
+        <div class="lp-countries__header">
+          <span class="lp-countries__dot"></span>
+          <p class="lp-countries__label">We connect candidates to sponsor-licensed employers in</p>
+          <span class="lp-countries__dot"></span>
+        </div>
+        <div class="lp-countries__track-wrap">
+          <div class="lp-countries__row">
+            <div class="lp-countries__item">
+              <div class="lp-countries__flag-wrap"><img src="https://flagcdn.com/w40/de.png" alt="Germany"></div>
+              <span class="lp-countries__name">Germany</span>
+            </div>
+            <div class="lp-countries__item">
+              <div class="lp-countries__flag-wrap"><img src="https://flagcdn.com/w40/gb.png" alt="UK"></div>
+              <span class="lp-countries__name">UK</span>
+            </div>
+            <div class="lp-countries__item">
+              <div class="lp-countries__flag-wrap"><img src="https://flagcdn.com/w40/nl.png" alt="Netherlands"></div>
+              <span class="lp-countries__name">Netherlands</span>
+            </div>
+            <div class="lp-countries__item">
+              <div class="lp-countries__flag-wrap"><img src="https://flagcdn.com/w40/ca.png" alt="Canada"></div>
+              <span class="lp-countries__name">Canada</span>
+            </div>
+            <div class="lp-countries__item">
+              <div class="lp-countries__flag-wrap"><img src="https://flagcdn.com/w40/au.png" alt="Australia"></div>
+              <span class="lp-countries__name">Australia</span>
+            </div>
+            <div class="lp-countries__item">
+              <div class="lp-countries__flag-wrap"><img src="https://flagcdn.com/w40/pt.png" alt="Portugal"></div>
+              <span class="lp-countries__name">Portugal</span>
+            </div>
+            <div class="lp-countries__item">
+              <div class="lp-countries__flag-wrap"><img src="https://flagcdn.com/w40/sg.png" alt="Singapore"></div>
+              <span class="lp-countries__name">Singapore</span>
+            </div>
+            <div class="lp-countries__item">
+              <div class="lp-countries__flag-wrap"><img src="https://flagcdn.com/w40/my.png" alt="Malaysia"></div>
+              <span class="lp-countries__name">Malaysia</span>
+            </div>
+            <div class="lp-countries__item">
+              <div class="lp-countries__flag-wrap"><img src="https://flagcdn.com/w40/nz.png" alt="New Zealand"></div>
+              <span class="lp-countries__name">New Zealand</span>
+            </div>
+            <div class="lp-countries__item">
+              <div class="lp-countries__flag-wrap"><img src="https://flagcdn.com/w40/ae.png" alt="Gulf Countries"></div>
+              <span class="lp-countries__name">Gulf Countries</span>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <div class="lp-hero__trust-badge">
+        <span class="lp-hero__trust-lock">
+          <i class="bi bi-shield-lock-fill"></i>
+        </span>
+        <span class="lp-hero__trust-text">Verified candidates &amp; employers only — <strong>fully secure platform</strong></span>
       </div>
 
       <!-- Floating mini stats -->
@@ -122,68 +179,6 @@ import { ToastService } from '../../core/services/toast.service';
           <span class="lp-hero__mini-stat-num">98%</span>
           <span class="lp-hero__mini-stat-label">Satisfaction</span>
         </div>
-      </div>
-    </div>
-
-    <!-- Right: mock dashboard card -->
-    <div class="lp-hero__visual">
-
-      <!-- Floating pill 1 -->
-      <div class="lp-hero__float-pill lp-hero__float-pill--1">
-        <i class="bi bi-check-circle-fill"></i> Profile Matched!
-      </div>
-
-      <!-- Main card -->
-      <div class="lp-hero__card">
-        <div class="lp-hero__card-header">
-          <div class="lp-hero__card-avatar lp-hero__card-avatar--lg">
-            <i class="bi bi-person-fill"></i>
-        </div>
-          <div class="lp-hero__card-info">
-            <div class="lp-hero__card-name">Alex Johnson</div>
-            <div class="lp-hero__card-role">Senior Frontend Developer</div>
-          </div>
-          <div class="lp-hero__card-badge">Available</div>
-        </div>
-
-        <div class="lp-hero__card-body">
-          <div class="lp-hero__card-skills">
-            <span>Angular</span><span>TypeScript</span><span>Node.js</span><span>+4</span>
-        </div>
-
-          <div class="lp-hero__card-progress-label">
-            <span>Profile Strength</span><span class="lp-hero__card-progress-pct">92%</span>
-          </div>
-          <div class="lp-hero__card-progress-track">
-            <div class="lp-hero__card-progress-fill" style="width:92%"></div>
-          </div>
-
-          <!-- Mini candidate rows -->
-          <div class="lp-hero__card-rows">
-            @for (c of mockCandidates; track c.name) {
-              <div class="lp-hero__card-row">
-                <div class="lp-hero__card-avatar lp-hero__card-avatar--sm" [style.background]="c.color">
-                  {{ c.initials }}
-                </div>
-                <div class="lp-hero__card-row-info">
-                  <div class="lp-hero__card-row-name">{{ c.name }}</div>
-                  <div class="lp-hero__card-row-role">{{ c.role }}</div>
-                </div>
-                <div class="lp-hero__card-row-match">{{ c.match }}</div>
-              </div>
-            }
-          </div>
-        </div>
-      </div>
-
-      <!-- Floating pill 2 -->
-      <div class="lp-hero__float-pill lp-hero__float-pill--2">
-        <i class="bi bi-lightning-charge-fill"></i> 12 New Matches
-      </div>
-
-      <!-- Floating pill 3 -->
-      <div class="lp-hero__float-pill lp-hero__float-pill--3">
-        <i class="bi bi-briefcase-fill"></i> 3 Interview Requests
       </div>
     </div>
 
@@ -250,8 +245,8 @@ import { ToastService } from '../../core/services/toast.service';
   <div class="lp-container">
     <div class="lp-section-header">
       <div class="lp-section-eyebrow">Process</div>
-      <h2 class="lp-section-title">Your journey in simple steps</h2>
-      <p class="lp-section-sub">Whether you're looking for work or looking to hire, we've made the process effortless.</p>
+      <h2 class="lp-section-title">How It Works — 3 Simple Steps</h2>
+      <p class="lp-section-sub">Register once and let our team do the heavy lifting — from profile building to employer introductions.</p>
     </div>
 
     <!-- Tab toggle -->
@@ -350,8 +345,30 @@ import { ToastService } from '../../core/services/toast.service';
       <!-- Info column -->
       <div class="lp-contact__info">
         <div class="lp-contact__info-card">
+          <!-- Contact channels -->
           <div class="lp-contact__info-items">
-            @for (item of contactInfo; track item.label) {
+            @for (item of contactInfoChannels; track item.label) {
+              <div class="lp-contact__info-item">
+                <div class="lp-contact__info-icon">
+                  <i class="bi {{ item.icon }}"></i>
+                </div>
+                <div>
+                  <div class="lp-contact__info-label">{{ item.label }}</div>
+                  @if (item.href) {
+                    <a class="lp-contact__info-value lp-contact__info-link" [href]="item.href" target="_blank" rel="noopener noreferrer">{{ item.value }}</a>
+                  } @else {
+                    <div class="lp-contact__info-value">{{ item.value }}</div>
+                  }
+                </div>
+              </div>
+            }
+          </div>
+
+          <div class="lp-contact__divider"></div>
+
+          <!-- Location & hours -->
+          <div class="lp-contact__info-items">
+            @for (item of contactInfoDetails; track item.label) {
               <div class="lp-contact__info-item">
                 <div class="lp-contact__info-icon">
                   <i class="bi {{ item.icon }}"></i>
@@ -367,19 +384,19 @@ import { ToastService } from '../../core/services/toast.service';
           <div class="lp-contact__divider"></div>
 
           <p class="lp-contact__tagline">
-            TalentHub connects the right people with the right opportunities. 
-            Reach out — we're happy to help.
+            We help you find your sponsored job abroad — personally, professionally, step by step.
+            Reach out in Tamil or English, we're here for you.
           </p>
 
           <div class="lp-contact__social">
-            <a class="lp-contact__social-btn" href="#" title="LinkedIn">
-              <i class="bi bi-linkedin"></i>
+            <a class="lp-contact__social-btn" href="https://wa.me/919360454326" target="_blank" title="WhatsApp">
+              <i class="bi bi-whatsapp"></i>
             </a>
-            <a class="lp-contact__social-btn" href="#" title="Twitter/X">
-              <i class="bi bi-twitter-x"></i>
+            <a class="lp-contact__social-btn" href="https://www.youtube.com/@namakal2london" target="_blank" title="YouTube">
+              <i class="bi bi-youtube"></i>
             </a>
-            <a class="lp-contact__social-btn" href="#" title="Instagram">
-              <i class="bi bi-instagram"></i>
+            <a class="lp-contact__social-btn" href="mailto:ntlcustomerservicecenter@gmail.com" title="Email">
+              <i class="bi bi-envelope-fill"></i>
             </a>
           </div>
         </div>
@@ -585,9 +602,9 @@ export class LandingComponent implements OnInit, OnDestroy {
   ];
 
   candidateSteps = [
-    { icon: 'bi-person-plus-fill',   title: 'Create Your Profile',      desc: 'Sign up and build a comprehensive profile showcasing your skills, experience, and career goals.' },
-    { icon: 'bi-search',             title: 'Get Discovered',           desc: 'Recruiters search for talent like you. Your profile is matched to relevant opportunities automatically.' },
-    { icon: 'bi-chat-dots-fill',     title: 'Connect & Interview',      desc: 'Approve contact requests from interested recruiters and take your next career step with confidence.' },
+    { icon: 'bi-person-plus-fill',       title: 'Register & Pay',                      desc: 'Create your account and complete your registration. Our team will contact you within 24 hours to begin your profile setup.' },
+    { icon: 'bi-people-fill',            title: 'We Build & Match Your Profile',       desc: 'Our team personally reviews your background, builds your professional profile, and matches you to visa-sponsored employers in your chosen country.' },
+    { icon: 'bi-send-fill',              title: 'We Make the Introduction',            desc: 'We forward your profile directly to matched employers, arrange the interview introduction, and guide you through the visa process step by step.' },
   ];
 
   recruiterSteps = [
@@ -619,11 +636,17 @@ export class LandingComponent implements OnInit, OnDestroy {
     },
   ];
 
-  contactInfo = [
-    { icon: 'bi-envelope-fill',    label: 'Email',    value: 'hello@talenthub.io' },
-    { icon: 'bi-telephone-fill',   label: 'Phone',    value: '+1 (555) 000-0000' },
-    { icon: 'bi-geo-alt-fill',     label: 'Location', value: 'San Francisco, CA · Remote-first' },
-    { icon: 'bi-clock-fill',       label: 'Hours',    value: 'Mon – Fri · 9 AM – 6 PM PST' },
+  contactInfoChannels = [
+    { icon: 'bi-whatsapp',       label: 'WhatsApp', value: '+91 93604 54326',                      href: 'https://wa.me/919360454326?text=Hi%2C%20I%20would%20like%20to%20know%20more%20about%20TalentHub' },
+    { icon: 'bi-telephone-fill', label: 'Call Us',  value: '+91 82485 38157',                      href: 'tel:+918248538157' },
+    { icon: 'bi-envelope-fill',  label: 'Email',    value: 'ntlcustomerservicecenter@gmail.com',   href: 'mailto:ntlcustomerservicecenter@gmail.com' },
+    { icon: 'bi-youtube',        label: 'YouTube',  value: '@namakal2london',                      href: 'https://www.youtube.com/@namakal2london' },
+  ];
+
+  contactInfoDetails = [
+    { icon: 'bi-geo-alt-fill', label: 'Location', value: 'UK  |  Namakkal, Tamil Nadu, India' },
+    { icon: 'bi-clock-fill',   label: 'Hours',    value: 'Monday – Saturday · 10:00 AM – 6:00 PM IST' },
+    { icon: 'bi-translate',    label: 'Support',  value: 'Tamil & English — both available' },
   ];
 
   // ── Lifecycle ──────────────────────────────────────────────────────────────
