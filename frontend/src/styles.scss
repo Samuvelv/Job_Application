@@ -7715,15 +7715,13 @@ html { scroll-behavior: smooth; }
   to   { transform: translate(40px, -30px) scale(1.12); }
 }
 
-// Grid overlay
-.lp-hero__grid {
-  position: absolute;
-  inset: 0;
-  background-image:
-    linear-gradient(rgba(255,255,255,.04) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(255,255,255,.04) 1px, transparent 1px);
-  background-size: 48px 48px;
-  pointer-events: none;
+// Dot background (replaces grid lines)
+.lp-hero__dots {
+  position: absolute; inset: 0; pointer-events: none;
+  background-image: radial-gradient(circle, rgba(255,255,255,.13) 1px, transparent 1px);
+  background-size: 28px 28px;
+  mask-image: radial-gradient(ellipse 80% 80% at 50% 50%, black 40%, transparent 100%);
+  -webkit-mask-image: radial-gradient(ellipse 80% 80% at 50% 50%, black 40%, transparent 100%);
 }
 
 // Hero inner
@@ -7864,7 +7862,7 @@ html { scroll-behavior: smooth; }
     width: 48px; height: 48px;
     background: var(--th-gradient-primary);
     font-size: 1.25rem;
-  }
+}
   &--sm {
     width: 32px; height: 32px;
     font-size: .7rem;

@@ -72,8 +72,8 @@ import { ToastService } from '../../core/services/toast.service';
   <div class="lp-hero__orb lp-hero__orb--2"></div>
   <div class="lp-hero__orb lp-hero__orb--3"></div>
   <div class="lp-hero__orb lp-hero__orb--4"></div>
-  <!-- Grid overlay -->
-  <div class="lp-hero__grid"></div>
+  <!-- Dot background -->
+  <div class="lp-hero__dots"></div>
 
   <div class="lp-container lp-hero__inner">
 
@@ -138,7 +138,7 @@ import { ToastService } from '../../core/services/toast.service';
         <div class="lp-hero__card-header">
           <div class="lp-hero__card-avatar lp-hero__card-avatar--lg">
             <i class="bi bi-person-fill"></i>
-          </div>
+        </div>
           <div class="lp-hero__card-info">
             <div class="lp-hero__card-name">Alex Johnson</div>
             <div class="lp-hero__card-role">Senior Frontend Developer</div>
@@ -149,7 +149,7 @@ import { ToastService } from '../../core/services/toast.service';
         <div class="lp-hero__card-body">
           <div class="lp-hero__card-skills">
             <span>Angular</span><span>TypeScript</span><span>Node.js</span><span>+4</span>
-          </div>
+        </div>
 
           <div class="lp-hero__card-progress-label">
             <span>Profile Strength</span><span class="lp-hero__card-progress-pct">92%</span>
