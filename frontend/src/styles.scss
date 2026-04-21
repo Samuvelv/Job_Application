@@ -883,6 +883,7 @@ body {
   border-radius: var(--th-radius);
   box-shadow: var(--th-shadow-lg);
   padding: .375rem;
+  z-index: 1055;
 
   .dropdown-item {
     border-radius: var(--th-radius-sm);
@@ -4602,8 +4603,11 @@ body {
   border-radius: var(--th-radius-lg);
   padding: 2rem;
   position: relative;
-  // overflow: visible so absolutely-positioned dropdowns can escape the card
+  z-index: 0;
   box-shadow: var(--th-shadow-sm);
+
+  &:has(.ss-wrap.ss-open),
+  &:has(.cms-wrap.cms-open) { z-index: 10; }
 
   &::before { display: none; }
 }
@@ -6351,6 +6355,11 @@ body {
   border-radius: var(--th-radius-lg);
   box-shadow: var(--th-shadow-card);
   transition: var(--th-transition);
+  position: relative;
+  z-index: 0;
+
+  &:has(.ss-wrap.ss-open),
+  &:has(.cms-wrap.cms-open) { z-index: 10; }
 
   &:hover {
     box-shadow: var(--th-shadow-card-hover);
@@ -6374,7 +6383,11 @@ body {
   margin-bottom: 1.25rem;
   box-shadow: var(--th-shadow-card);
   position: relative;
+  z-index: 0;
   overflow: hidden;
+
+  &:has(.ss-wrap.ss-open),
+  &:has(.cms-wrap.cms-open) { z-index: 10; overflow: visible; }
 
   &::before { display: none; }
 
@@ -6407,7 +6420,12 @@ body {
   padding: 2rem;
   box-shadow: var(--th-shadow-card);
   position: relative;
-  // overflow: visible so absolutely-positioned dropdowns can escape the card
+  z-index: 0;
+
+  // Lift the card above siblings when a dropdown inside it is open,
+  // so the dropdown escapes the backdrop-filter stacking context.
+  &:has(.ss-wrap.ss-open),
+  &:has(.cms-wrap.cms-open) { z-index: 10; }
 
   &::before { display: none; }
 
@@ -7221,7 +7239,9 @@ body {
 .ss-wrap {
   position: relative;
   width: 100%;
+  z-index: 1;
 
+  &.ss-open { z-index: 1060; }
   &.ss-disabled { opacity: .6; pointer-events: none; }
 }
 .ss-trigger {
@@ -7264,7 +7284,9 @@ body {
 .cms-wrap {
   position: relative;
   width: 100%;
+  z-index: 1;
 
+  &.cms-open { z-index: 1060; }
   &.cms-disabled { opacity: .6; pointer-events: none; }
 }
 .cms-trigger {
