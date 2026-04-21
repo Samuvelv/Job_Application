@@ -4003,6 +4003,23 @@ body {
   &:hover { background: rgba(239,68,68,.08); }
 }
 
+.cfs-sidebar__close {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  background: none;
+  border: none;
+  border-radius: var(--th-radius-sm);
+  color: var(--th-text-muted);
+  cursor: pointer;
+  transition: background .15s, color .15s;
+  font-size: .875rem;
+
+  &:hover { background: var(--th-surface-raised); color: var(--th-text); }
+}
+
 // ── Filter sections ───────────────────────────────────────────────────────────
 .cfs-section {
   border-bottom: 1px solid var(--th-border);

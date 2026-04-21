@@ -83,10 +83,7 @@ const PROFILE_STATUS_OPTIONS: SelectOption[] = [
   imports: [CommonModule, ReactiveFormsModule, TagInputComponent, ChipMultiSelectComponent, SearchableSelectComponent],
   template: `
     <!-- ── Backdrop ──────────────────────────────────────────────────────────── -->
-    <div class="cfs-backdrop"
-      [class.cfs-backdrop--visible]="sidebarOpen()"
-      (click)="closeSidebar()">
-    </div>
+    <div class="cfs-backdrop" [class.cfs-backdrop--visible]="sidebarOpen()"></div>
 
     <!-- ── Right-side off-canvas panel ───────────────────────────────────────── -->
     <aside class="cfs-sidebar"
@@ -107,8 +104,9 @@ const PROFILE_STATUS_OPTIONS: SelectOption[] = [
               Clear all
             </button>
           }
-          <button type="button" class="d-lg-none btn-close btn-close-sm" aria-label="Close"
-            style="font-size:.75rem" (click)="closeSidebar()"></button>
+          <button type="button" class="cfs-sidebar__close" aria-label="Close" (click)="closeSidebar()">
+            <i class="bi bi-x-lg"></i>
+          </button>
         </div>
       </div>
 
@@ -426,6 +424,7 @@ export class CandidateFilterSidebarComponent implements OnInit, OnDestroy {
   form!: FormGroup;
   sidebarOpen = signal(false);
 
+  private lastAppliedSnapshot: any = null;
   private destroy$ = new Subject<void>();
 
   constructor(private fb: FormBuilder) {}
@@ -472,11 +471,15 @@ export class CandidateFilterSidebarComponent implements OnInit, OnDestroy {
   }
 
   openSidebar(): void {
+    this.lastAppliedSnapshot = this.form.value;
     this.sidebarOpen.set(true);
     this.sidebarToggled.emit(true);
   }
 
   closeSidebar(): void {
+    if (this.lastAppliedSnapshot !== null) {
+      this.form.reset(this.lastAppliedSnapshot);
+    }
     this.sidebarOpen.set(false);
     this.sidebarToggled.emit(false);
   }
@@ -533,12 +536,13 @@ export class CandidateFilterSidebarComponent implements OnInit, OnDestroy {
     if (v.hasVideo)           f.hasVideo       = 'true';
     if (v.profileStatus)      f.profileStatus  = v.profileStatus;
 
+    this.lastAppliedSnapshot = this.form.value;
     this.filtersApplied.emit(f);
     if (window.innerWidth < 992) this.closeSidebar();
   }
 
   clearAll(): void {
-    this.form.reset({
+    const empty = {
       industryList: [], educationLevelList: [], languageList: [], skillTags: [],
       yearsExpMin: null, yearsExpMax: null, occupation: '',
       currentCountry: '', currentCity: '', nationality: '', targetCountry: '',
@@ -546,7 +550,9 @@ export class CandidateFilterSidebarComponent implements OnInit, OnDestroy {
       salaryMin: null, salaryMax: null, ageMin: null, ageMax: null,
       gender: null, visaStatus: null, availability: null,
       hasVideo: false, profileStatus: null,
-    });
+    };
+    this.form.reset(empty);
+    this.lastAppliedSnapshot = empty;
     this.filtersApplied.emit({});
   }
 
