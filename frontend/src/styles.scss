@@ -44,7 +44,7 @@
   --th-gradient-teal:     linear-gradient(135deg, #14b8a6 0%, #0d9488 100%);
   --th-gradient-orange:   linear-gradient(135deg, #f97316 0%, #ea580c 100%);
   --th-gradient-rose:     linear-gradient(135deg, #f43f5e 0%, #e11d48 100%);
-  --th-gradient-sidebar:  linear-gradient(180deg, #1a1740 0%, #1a1740 100%);
+  --th-gradient-sidebar:  linear-gradient(180deg, #ffffff 0%, #ffffff 100%);
   --th-gradient-auth:     linear-gradient(135deg, #1e1b4b 0%, #312e81 25%, #4f46e5 50%, #7c3aed 75%, #6d28d9 100%);
 
   // Surface — cleaner whites
@@ -208,15 +208,15 @@ body {
   position: fixed;
   top: 0; left: 0; right: 0;
   height: var(--th-topbar-height);
-  background: #1a1740;
-  border-bottom: 1px solid rgba(255,255,255,.06);
+  background: #ffffff;
+  border-bottom: 1px solid #e5e7eb;
   display: flex;
   align-items: center;
   justify-content: space-between;
   padding: 0 1.5rem;
   z-index: 200;
   gap: .75rem;
-  box-shadow: none;
+  box-shadow: 0 1px 4px rgba(0,0,0,.06);
   transition: background .3s ease;
 }
 
@@ -226,33 +226,49 @@ body {
   box-shadow: none;
 }
 
+[data-theme='dark'] .topbar-brand {
+  color: #ffffff;
+  &:hover { color: #ffffff; }
+}
+
+[data-theme='dark'] .topbar-icon-btn {
+  border-color: rgba(255,255,255,.12);
+  background: rgba(255,255,255,.08);
+  color: rgba(255,255,255,.7);
+  &:hover {
+    background: rgba(255,255,255,.15);
+    border-color: rgba(255,255,255,.22);
+    color: #ffffff;
+  }
+}
+
 // ── Topbar elements ───────────────────────────────────────────────────────────
 .topbar-brand {
   font-size: 1.0625rem;
   font-weight: 800;
-  color: #ffffff;
+  color: var(--th-primary);
   text-decoration: none;
   display: flex; align-items: center; gap: .5rem;
   white-space: nowrap;
   letter-spacing: -.02em;
-  &:hover { opacity: .85; text-decoration: none; color: #ffffff; }
+  &:hover { opacity: .85; text-decoration: none; color: var(--th-primary); }
 }
 
 .topbar-icon-btn {
   width: 36px; height: 36px;
   display: inline-flex; align-items: center; justify-content: center;
   border-radius: var(--th-radius);
-  border: 1px solid rgba(255,255,255,.12);
-  background: rgba(255,255,255,.08);
-  color: rgba(255,255,255,.7);
+  border: 1px solid #e5e7eb;
+  background: #f9fafb;
+  color: #6b7280;
   font-size: .9375rem;
   cursor: pointer;
   transition: var(--th-transition);
 
   &:hover {
-    background: rgba(255,255,255,.15);
-    border-color: rgba(255,255,255,.22);
-    color: #ffffff;
+    background: #f3f4f6;
+    border-color: #d1d5db;
+    color: #111827;
   }
 }
 
@@ -289,20 +305,20 @@ body {
   left: 0;
   bottom: 0;
   width: var(--th-sidebar-width);
-  background: #1a1740;
-  border-right: none;
+  background: #ffffff;
+  border-right: 1px solid #e5e7eb;
   overflow-y: auto;
   overflow-x: hidden;
   z-index: 150;
   display: flex;
   flex-direction: column;
   transition: transform .25s cubic-bezier(.4,0,.2,1), width .25s cubic-bezier(.4,0,.2,1);
-  box-shadow: 1px 0 0 rgba(255,255,255,.05);
+  box-shadow: none;
 
   // Scrollbar styling
   &::-webkit-scrollbar { width: 3px; }
   &::-webkit-scrollbar-track { background: transparent; }
-  &::-webkit-scrollbar-thumb { background: rgba(255,255,255,.15); border-radius: 4px; }
+  &::-webkit-scrollbar-thumb { background: #d1d5db; border-radius: 4px; }
 
   @media (max-width: 991.98px) {
     transform: translateX(-100%);
@@ -317,6 +333,63 @@ body {
   box-shadow: 1px 0 0 rgba(255,255,255,.04);
 }
 
+[data-theme='dark'] .sidebar-logo { color: #ffffff; }
+
+[data-theme='dark'] .sidebar-brand .badge-role-admin     { background: rgba(255,255,255,.12); color: #c7d2fe; }
+[data-theme='dark'] .sidebar-brand .badge-role-candidate { background: rgba(16,185,129,.22);  color: #6ee7b7; }
+[data-theme='dark'] .sidebar-brand .badge-role-recruiter { background: rgba(245,158,11,.22);  color: #fcd34d; }
+
+[data-theme='dark'] .sidebar-link {
+  color: rgba(255,255,255,.58);
+  i { color: rgba(255,255,255,.55); }
+
+  &:hover {
+    background: rgba(255,255,255,.08);
+    color: rgba(255,255,255,.9);
+    i { color: rgba(255,255,255,.85); }
+  }
+
+  &.active {
+    background: rgba(99,102,241,.32);
+    color: #ffffff;
+    i { color: #a5b4fc; }
+  }
+}
+
+[data-theme='dark'] .sidebar-link .bi-grid-1x2-fill      { color: #67e8f9; }
+[data-theme='dark'] .sidebar-link .bi-people-fill        { color: #86efac; }
+[data-theme='dark'] .sidebar-link .bi-person-circle      { color: #86efac; }
+[data-theme='dark'] .sidebar-link .bi-person-badge-fill  { color: #fbbf24; }
+[data-theme='dark'] .sidebar-link .bi-pencil-square      { color: #f9a8d4; }
+[data-theme='dark'] .sidebar-link .bi-pencil             { color: #f9a8d4; }
+[data-theme='dark'] .sidebar-link .bi-journal-text       { color: #a5b4fc; }
+[data-theme='dark'] .sidebar-link .bi-search             { color: #67e8f9; }
+[data-theme='dark'] .sidebar-link .bi-bookmark-star-fill { color: #fbbf24; }
+
+[data-theme='dark'] .sidebar-link.active .bi-grid-1x2-fill,
+[data-theme='dark'] .sidebar-link.active .bi-people-fill,
+[data-theme='dark'] .sidebar-link.active .bi-person-circle,
+[data-theme='dark'] .sidebar-link.active .bi-person-badge-fill,
+[data-theme='dark'] .sidebar-link.active .bi-pencil-square,
+[data-theme='dark'] .sidebar-link.active .bi-pencil,
+[data-theme='dark'] .sidebar-link.active .bi-journal-text,
+[data-theme='dark'] .sidebar-link.active .bi-search,
+[data-theme='dark'] .sidebar-link.active .bi-bookmark-star-fill { color: #a5b4fc; filter: none; }
+
+[data-theme='dark'] .sidebar-section-label { color: rgba(255,255,255,.32); }
+
+[data-theme='dark'] .sidebar-collapse-wrap { border-top-color: rgba(255,255,255,.07); }
+
+[data-theme='dark'] .sidebar-collapse-btn {
+  color: rgba(255,255,255,.38);
+  i { color: rgba(165,180,252,.5); }
+  &:hover {
+    background: rgba(255,255,255,.07);
+    color: rgba(255,255,255,.75);
+    i { color: #a5b4fc; }
+  }
+}
+
 // ── Sidebar brand area ────────────────────────────────────────────────────────
 .sidebar-brand {
   padding: 1.25rem 1rem 1.125rem;
@@ -329,7 +402,7 @@ body {
 .sidebar-logo {
   font-size: 1.0625rem;
   font-weight: 800;
-  color: #fff;
+  color: var(--th-primary);
   letter-spacing: -.015em;
 }
 
@@ -341,18 +414,18 @@ body {
   font-weight: 700;
 }
 
-// Sidebar role badges (white-based for dark sidebar bg)
+// Sidebar role badges (light sidebar bg)
 .sidebar-brand .badge-role-admin {
-  background: rgba(255,255,255,.12);
-  color: #c7d2fe;
+  background: rgba(99,102,241,.12);
+  color: #4338ca;
 }
 .sidebar-brand .badge-role-candidate {
-  background: rgba(16,185,129,.22);
-  color: #6ee7b7;
+  background: rgba(16,185,129,.12);
+  color: #065f46;
 }
 .sidebar-brand .badge-role-recruiter {
-  background: rgba(245,158,11,.22);
-  color: #fcd34d;
+  background: rgba(245,158,11,.12);
+  color: #92400e;
 }
 
 // ── Sidebar navigation ───────────────────────────────────────────────────────
@@ -373,7 +446,7 @@ body {
   gap: .625rem;
   padding: .55rem .875rem;
   border-radius: 8px;
-  color: rgba(255,255,255,.58);
+  color: #6b7280;
   font-size: .8125rem;
   font-weight: 500;
   text-decoration: none;
@@ -385,60 +458,49 @@ body {
     flex-shrink: 0;
     width: 20px;
     text-align: center;
-    opacity: .7;
     transition: var(--th-transition);
-    color: rgba(255,255,255,.55);
+    color: #9ca3af;
   }
   span { flex: 1; }
 
   &:hover {
-    background: rgba(255,255,255,.08);
-    color: rgba(255,255,255,.90);
-    i { opacity: 1; color: rgba(255,255,255,.85); }
+    background: #f3f4f6;
+    color: #111827;
+    i { color: #6b7280; }
   }
 
   &.active {
-    background: rgba(99,102,241,.32);
-    color: #fff;
+    background: rgba(99,102,241,.1);
+    color: var(--th-primary);
     font-weight: 600;
 
-    i {
-      opacity: 1;
-      color: #a5b4fc;
-    }
+    i { color: var(--th-primary); }
 
     &::before { display: none; }
   }
 }
 
-// Per-icon accent colors (matched to route semantics)
-// Dashboard
-.sidebar-link .bi-grid-1x2-fill       { color: #67e8f9; }  // cyan
-// Candidates / profile
-.sidebar-link .bi-people-fill         { color: #86efac; }  // green
-.sidebar-link .bi-person-circle       { color: #86efac; }
-// Recruiters
-.sidebar-link .bi-person-badge-fill   { color: #fbbf24; }  // amber
-// Edit requests / pencil
-.sidebar-link .bi-pencil-square       { color: #f9a8d4; }  // pink
-.sidebar-link .bi-pencil              { color: #f9a8d4; }
-// Audit logs
-.sidebar-link .bi-journal-text        { color: #a5b4fc; }  // indigo
-// Search
-.sidebar-link .bi-search              { color: #67e8f9; }  // cyan
-// Shortlist
-.sidebar-link .bi-bookmark-star-fill  { color: #fbbf24; }  // amber
+// Per-icon accent colors (light sidebar)
+.sidebar-link .bi-grid-1x2-fill       { color: #06b6d4; }
+.sidebar-link .bi-people-fill         { color: #10b981; }
+.sidebar-link .bi-person-circle       { color: #10b981; }
+.sidebar-link .bi-person-badge-fill   { color: #f59e0b; }
+.sidebar-link .bi-pencil-square       { color: #ec4899; }
+.sidebar-link .bi-pencil              { color: #ec4899; }
+.sidebar-link .bi-journal-text        { color: #6366f1; }
+.sidebar-link .bi-search              { color: #06b6d4; }
+.sidebar-link .bi-bookmark-star-fill  { color: #f59e0b; }
 
-// Active state: brighten the per-icon color
-.sidebar-link.active .bi-grid-1x2-fill      { color: #a5f3fc; filter: drop-shadow(0 0 6px rgba(103,232,249,.5)); }
-.sidebar-link.active .bi-people-fill        { color: #bbf7d0; filter: drop-shadow(0 0 6px rgba(134,239,172,.5)); }
-.sidebar-link.active .bi-person-circle      { color: #bbf7d0; filter: drop-shadow(0 0 6px rgba(134,239,172,.5)); }
-.sidebar-link.active .bi-person-badge-fill  { color: #fde68a; filter: drop-shadow(0 0 6px rgba(251,191,36,.5)); }
-.sidebar-link.active .bi-pencil-square      { color: #fbcfe8; filter: drop-shadow(0 0 6px rgba(249,168,212,.5)); }
-.sidebar-link.active .bi-pencil             { color: #fbcfe8; filter: drop-shadow(0 0 6px rgba(249,168,212,.5)); }
-.sidebar-link.active .bi-journal-text       { color: #c7d2fe; filter: drop-shadow(0 0 6px rgba(165,180,252,.5)); }
-.sidebar-link.active .bi-search             { color: #a5f3fc; filter: drop-shadow(0 0 6px rgba(103,232,249,.5)); }
-.sidebar-link.active .bi-bookmark-star-fill { color: #fde68a; filter: drop-shadow(0 0 6px rgba(251,191,36,.5)); }
+// Active state: use primary color for all icons
+.sidebar-link.active .bi-grid-1x2-fill,
+.sidebar-link.active .bi-people-fill,
+.sidebar-link.active .bi-person-circle,
+.sidebar-link.active .bi-person-badge-fill,
+.sidebar-link.active .bi-pencil-square,
+.sidebar-link.active .bi-pencil,
+.sidebar-link.active .bi-journal-text,
+.sidebar-link.active .bi-search,
+.sidebar-link.active .bi-bookmark-star-fill { color: var(--th-primary); filter: none; }
 
 // Old class kept for backward compatibility (in case any component references it)
 .sidebar-nav-link {
@@ -450,7 +512,7 @@ body {
   font-weight: 700;
   letter-spacing: .08em;
   text-transform: uppercase;
-  color: rgba(255,255,255,.32);
+  color: #9ca3af;
   padding: 1.25rem .875rem .35rem;
   display: flex;
   align-items: center;
@@ -552,7 +614,7 @@ body {
 // ── Sidebar collapse toggle button ───────────────────────────────────────────
 .sidebar-collapse-wrap {
   padding: .5rem .5rem;
-  border-top: 1px solid rgba(255,255,255,.07);
+  border-top: 1px solid #e5e7eb;
   margin-top: auto;
 
   // Hide on mobile — collapse is desktop-only
@@ -570,7 +632,7 @@ body {
   border: none;
   background: transparent;
   border-radius: var(--th-radius);
-  color: rgba(255,255,255,.38);
+  color: #9ca3af;
   font-size: .8125rem;
   font-weight: 500;
   cursor: pointer;
@@ -581,14 +643,14 @@ body {
     flex-shrink: 0;
     width: 20px;
     text-align: center;
-    color: rgba(165,180,252,.5);
+    color: #9ca3af;
     transition: var(--th-transition);
   }
 
   &:hover {
-    background: rgba(255,255,255,.07);
-    color: rgba(255,255,255,.75);
-    i { color: #a5b4fc; }
+    background: #f3f4f6;
+    color: #374151;
+    i { color: var(--th-primary); }
   }
 }
 
