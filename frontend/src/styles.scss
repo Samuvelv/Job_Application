@@ -78,7 +78,8 @@
   --th-sidebar-width:            240px;
   --th-sidebar-collapsed-width:  72px;
   --th-topbar-height:            62px;
-
+  --th-field-height:             38px;
+  --th-field-height-sm:          38px;
   // Shape — consistent, refined
   --th-radius-sm:       4px;
   --th-radius:          8px;
@@ -743,7 +744,7 @@ body {
   color: var(--th-text);
   font-size: .9375rem;
   padding: .5rem .875rem;
-  min-height: 42px;
+  min-height: var(--th-field-height);
   transition: var(--th-transition);
   &:focus {
     border-color: var(--th-primary);
@@ -759,7 +760,7 @@ body {
 .form-control-sm, .form-select-sm {
   font-size: .875rem;
   padding: .4rem .75rem;
-  min-height: 36px;
+  min-height: var(--th-field-height-sm);
 }
 
 .input-group-text {
@@ -1411,7 +1412,7 @@ body {
   border: 1px solid var(--th-border);
   border-radius: var(--th-radius);
   padding: .375rem .625rem;
-  min-height: 42px;
+  min-height: var(--th-field-height);
   cursor: text;
   background: var(--th-surface);
   transition: var(--th-transition);
@@ -1468,7 +1469,7 @@ body {
   flex-wrap: wrap;
   align-items: center;
   gap: .35rem;
-  min-height: 42px;
+  min-height: var(--th-field-height);
   padding: .375rem .625rem;
   background: var(--th-input-bg, var(--th-surface));
   border: 1px solid var(--th-border);
@@ -4077,7 +4078,7 @@ body {
   border: 1px solid var(--th-border);
   border-radius: .375rem;
   padding: .35rem .5rem;
-  min-height: 36px;
+  min-height: var(--th-field-height-sm);
   display: flex;
   flex-wrap: wrap;
   gap: .25rem;
@@ -7248,13 +7249,13 @@ body {
   display: flex;
   align-items: center;
   gap: .4rem;
-  padding: .55rem .85rem;
+  padding: .5rem .875rem;
   background: var(--th-surface-2);
   border: 1px solid var(--th-border);
   border-radius: var(--th-radius);
   cursor: pointer;
   transition: border-color .15s, box-shadow .15s;
-  min-height: 2.45rem;
+  min-height: var(--th-field-height);
   user-select: none;
 
   &:hover { border-color: var(--th-primary); }
@@ -7294,12 +7295,12 @@ body {
   align-items: center;
   flex-wrap: wrap;
   gap: .35rem;
-  padding: .4rem .75rem .4rem .6rem;
+  padding: .5rem .875rem;
   background: var(--th-surface-2);
   border: 1px solid var(--th-border);
   border-radius: var(--th-radius);
   cursor: pointer;
-  min-height: 2.45rem;
+  min-height: var(--th-field-height);
   transition: border-color .15s, box-shadow .15s;
   user-select: none;
 
@@ -7363,7 +7364,7 @@ body {
     // Trigger: left segment of the joined group
     .ss-trigger {
       height: 100%;
-      min-height: 38px;
+      min-height: var(--th-field-height);
       border-right: none;
       border-radius: var(--th-radius) 0 0 var(--th-radius);
       padding: 0 .45rem 0 .65rem;
@@ -7402,7 +7403,7 @@ body {
   .phone-number-input {
     flex: 1 1 0;
     min-width: 0;
-    height: 38px;
+    height: var(--th-field-height);
     background: var(--th-surface-2);
     border: 1px solid var(--th-border);
     border-left: none;
