@@ -4,6 +4,7 @@ import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { AuthService } from '../../../core/services/auth.service';
 import { StatsService, RecruiterStats } from '../../../core/services/stats.service';
+import { RecruiterService } from '../../../core/services/recruiter.service';
 
 @Component({
   selector: 'app-recruiter-dashboard',
@@ -15,8 +16,8 @@ import { StatsService, RecruiterStats } from '../../../core/services/stats.servi
       <div class="d-flex align-items-start justify-content-between flex-wrap gap-3">
         <div>
           <div class="dash-hero__greeting">Recruiter Portal</div>
-          <h1 class="dash-hero__title mb-0">Good {{ timeOfDay() }},</h1>
-          <div class="dash-hero__subtitle mt-1">{{ email() }}</div>
+           <h1 class="dash-hero__title mb-0">Good {{ timeOfDay() }},</h1>
+           <div class="dash-hero__subtitle mt-1">{{ contactName() }}</div>
           <div class="dash-hero__meta">
             <span class="dash-hero__chip">
               <i class="bi bi-calendar3"></i>{{ today() }}
@@ -208,15 +209,28 @@ import { StatsService, RecruiterStats } from '../../../core/services/stats.servi
 export class RecruiterDashboardComponent implements OnInit {
   stats   = signal<RecruiterStats | null>(null);
   loading = signal(true);
+  contactName = signal<string>('');
 
   readonly searchTags = ['Skills', 'Location', 'Experience', 'Industry', 'Salary'];
 
   constructor(
     private auth: AuthService,
     private statsService: StatsService,
+    private recruiterService: RecruiterService,
   ) {}
 
   ngOnInit(): void {
+    // Load recruiter profile for contact name
+    this.recruiterService.getMyProfile().subscribe({
+      next: (res) => {
+        this.contactName.set(res.recruiter.contact_name);
+      },
+      error: () => {
+        // Fallback to email if profile fetch fails
+        this.contactName.set(this.auth.currentUser()?.email ?? '');
+      },
+    });
+
     this.statsService.getRecruiterStats().subscribe({
       next:  s => { this.stats.set(s); this.loading.set(false); },
       error: () => this.loading.set(false),

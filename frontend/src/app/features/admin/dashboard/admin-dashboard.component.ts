@@ -15,8 +15,9 @@ import { StatsService, AdminStats } from '../../../core/services/stats.service';
       <div class="d-flex align-items-start justify-content-between flex-wrap gap-3">
         <div>
           <div class="dash-hero__greeting">Admin Portal</div>
-          <h1 class="dash-hero__title mb-0">Good {{ timeOfDay() }},</h1>
-          <div class="dash-hero__subtitle mt-1">{{ email() }}</div>
+           <h1 class="dash-hero__title mb-0">Good {{ timeOfDay() }},</h1>
+           <!-- <div class="dash-hero__subtitle mt-1">{{ adminName() }}</div> -->
+           <div class="dash-hero__subtitle mt-1">Dinesh</div>
           <div class="dash-hero__meta">
             <span class="dash-hero__chip">
               <i class="bi bi-calendar3"></i>{{ today() }}
@@ -239,6 +240,15 @@ export class AdminDashboardComponent implements OnInit {
   }
 
   email(): string { return this.auth.currentUser()?.email ?? ''; }
+
+  adminName(): string {
+    // Extract name from email (part before @) if available
+    const email = this.auth.currentUser()?.email ?? '';
+    if (email) {
+      return email.split('@')[0];
+    }
+    return 'Administrator';
+  }
 
   timeOfDay(): string {
     const h = new Date().getHours();

@@ -4,6 +4,7 @@ import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { AuthService } from '../../../core/services/auth.service';
 import { StatsService, CandidateStats } from '../../../core/services/stats.service';
+import { CandidateService } from '../../../core/services/candidate.service';
 
 @Component({
   selector: 'app-candidate-dashboard',
@@ -15,8 +16,8 @@ import { StatsService, CandidateStats } from '../../../core/services/stats.servi
       <div class="d-flex align-items-start justify-content-between flex-wrap gap-3">
         <div>
           <div class="dash-hero__greeting">Candidate Portal</div>
-          <h1 class="dash-hero__title mb-0">Good {{ timeOfDay() }},</h1>
-          <div class="dash-hero__subtitle mt-1">{{ email() }}</div>
+           <h1 class="dash-hero__title mb-0">Good {{ timeOfDay() }},</h1>
+           <div class="dash-hero__subtitle mt-1">{{ userName() }}</div>
           <div class="dash-hero__meta">
             <span class="dash-hero__chip">
               <i class="bi bi-calendar3"></i>{{ today() }}
@@ -213,15 +214,29 @@ import { StatsService, CandidateStats } from '../../../core/services/stats.servi
 export class CandidateDashboardComponent implements OnInit {
   stats   = signal<CandidateStats | null>(null);
   loading = signal(true);
+  userName = signal<string>('');
 
   readonly circumference = 2 * Math.PI * 33; // r = 33
 
   constructor(
     private auth: AuthService,
     private statsService: StatsService,
+    private candidateService: CandidateService,
   ) {}
 
   ngOnInit(): void {
+    // Load candidate profile for user name
+    this.candidateService.getMyProfile().subscribe({
+      next: (res) => {
+        const { first_name, last_name } = res.candidate;
+        this.userName.set(`${first_name} ${last_name}`.trim());
+      },
+      error: () => {
+        // Fallback to email if profile fetch fails
+        this.userName.set(this.auth.currentUser()?.email ?? '');
+      },
+    });
+
     this.statsService.getCandidateStats().subscribe({
       next:  s => { this.stats.set(s); this.loading.set(false); },
       error: () => this.loading.set(false),
