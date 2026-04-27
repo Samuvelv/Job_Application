@@ -365,6 +365,7 @@ body {
 [data-theme='dark'] .sidebar-link .bi-journal-text       { color: #a5b4fc; }
 [data-theme='dark'] .sidebar-link .bi-search             { color: #67e8f9; }
 [data-theme='dark'] .sidebar-link .bi-bookmark-star-fill { color: #fbbf24; }
+[data-theme='dark'] .sidebar-link .bi-envelope-fill      { color: #7dd3fc; }
 
 [data-theme='dark'] .sidebar-link.active .bi-grid-1x2-fill,
 [data-theme='dark'] .sidebar-link.active .bi-people-fill,
@@ -374,7 +375,8 @@ body {
 [data-theme='dark'] .sidebar-link.active .bi-pencil,
 [data-theme='dark'] .sidebar-link.active .bi-journal-text,
 [data-theme='dark'] .sidebar-link.active .bi-search,
-[data-theme='dark'] .sidebar-link.active .bi-bookmark-star-fill { color: #a5b4fc; filter: none; }
+[data-theme='dark'] .sidebar-link.active .bi-bookmark-star-fill,
+[data-theme='dark'] .sidebar-link.active .bi-envelope-fill { color: #a5b4fc; filter: none; }
 
 [data-theme='dark'] .sidebar-section-label { color: rgba(255,255,255,.32); }
 
@@ -490,6 +492,7 @@ body {
 .sidebar-link .bi-journal-text        { color: #6366f1; }
 .sidebar-link .bi-search              { color: #06b6d4; }
 .sidebar-link .bi-bookmark-star-fill  { color: #f59e0b; }
+.sidebar-link .bi-envelope-fill       { color: #0ea5e9; }
 
 // Active state: use primary color for all icons
 .sidebar-link.active .bi-grid-1x2-fill,
@@ -500,7 +503,8 @@ body {
 .sidebar-link.active .bi-pencil,
 .sidebar-link.active .bi-journal-text,
 .sidebar-link.active .bi-search,
-.sidebar-link.active .bi-bookmark-star-fill { color: var(--th-primary); filter: none; }
+.sidebar-link.active .bi-bookmark-star-fill,
+.sidebar-link.active .bi-envelope-fill { color: var(--th-primary); filter: none; }
 
 // Old class kept for backward compatibility (in case any component references it)
 .sidebar-nav-link {
@@ -5430,6 +5434,76 @@ body {
 }
 
 // ══════════════════════════════════════════════════════════════════════════════
+//  TODAY BAR — quick stats summary strip
+// ══════════════════════════════════════════════════════════════════════════════
+.today-bar {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1rem;
+
+  &__item {
+    border-radius: 14px;
+    padding: 1.1rem 1.25rem;
+    border: 1px solid transparent;
+    box-shadow: 0 2px 8px rgba(0,0,0,.05);
+    transition: box-shadow .18s;
+
+    &:hover { box-shadow: 0 4px 14px rgba(0,0,0,.09); }
+
+    &--blue {
+      background: rgba(99,102,241,.07);
+      border-color: rgba(99,102,241,.15);
+      .today-bar__value { color: #4338ca; }
+    }
+    &--green {
+      background: rgba(16,185,129,.07);
+      border-color: rgba(16,185,129,.15);
+      .today-bar__value { color: #065f46; }
+    }
+    &--cyan {
+      background: rgba(6,182,212,.07);
+      border-color: rgba(6,182,212,.15);
+      .today-bar__value { color: #0e7490; }
+    }
+  }
+
+  &__label {
+    font-size: .72rem;
+    font-weight: 600;
+    letter-spacing: .03em;
+    text-transform: uppercase;
+    color: var(--th-text-secondary);
+    margin-bottom: .35rem;
+  }
+
+  &__value {
+    font-size: 1.75rem;
+    font-weight: 700;
+    line-height: 1;
+  }
+
+  // Tablet: 2 columns
+  @media (max-width: 768px) {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  // Mobile: 1 column
+  @media (max-width: 480px) {
+    grid-template-columns: 1fr;
+  }
+}
+
+// Dark mode
+[data-theme='dark'] {
+  .today-bar__item {
+    box-shadow: 0 2px 8px rgba(0,0,0,.25);
+    &--blue  { background: rgba(99,102,241,.12);  border-color: rgba(99,102,241,.22); .today-bar__value { color: #a5b4fc; } }
+    &--green { background: rgba(16,185,129,.12);  border-color: rgba(16,185,129,.22); .today-bar__value { color: #6ee7b7; } }
+    &--cyan  { background: rgba(6,182,212,.12);   border-color: rgba(6,182,212,.22);  .today-bar__value { color: #67e8f9; } }
+  }
+}
+
+// ══════════════════════════════════════════════════════════════════════════════
 //  BENTO GRID — asymmetric dashboard grid
 // ══════════════════════════════════════════════════════════════════════════════
 .bento-grid {
@@ -8163,6 +8237,68 @@ html { scroll-behavior: smooth; }
   gap: .75rem;
   @media (max-width: 768px) { display: none; }
 }
+.lp-nav__signin {
+  font-size: .875rem;
+  font-weight: 600;
+  color: rgba(255,255,255,.85);
+  text-decoration: none;
+  transition: var(--th-transition);
+  &:hover { color: #fff; }
+  .lp-nav--scrolled & { color: var(--th-text-secondary); &:hover { color: var(--th-primary); } }
+}
+// ── Register button ──────────────────────────────────────────────────────────
+.lp-nav__register-wrap {
+  position: relative;
+}
+.lp-nav__register-chevron {
+  font-size: .65rem;
+  margin-left: .3rem;
+  transition: transform 200ms ease;
+}
+.lp-nav__register-btn--open .lp-nav__register-chevron {
+  transform: rotate(180deg);
+}
+
+// ── Register dropdown ─────────────────────────────────────────────────────────
+.lp-reg-drop {
+  position: absolute;
+  top: calc(100% + .5rem);
+  right: 0;
+  min-width: 200px;
+  background: var(--th-surface);
+  border: 1px solid var(--th-border);
+  border-radius: var(--th-radius-lg);
+  box-shadow: 0 6px 24px rgba(0,0,0,.12), 0 2px 6px rgba(0,0,0,.06);
+  padding: .35rem;
+  z-index: 1000;
+  animation: lp-reg-drop-in 160ms cubic-bezier(.16,1,.3,1);
+}
+.lp-reg-drop__option {
+  display: flex;
+  align-items: center;
+  gap: .65rem;
+  padding: .65rem .85rem;
+  border-radius: calc(var(--th-radius-lg) - 2px);
+  text-decoration: none;
+  transition: background 150ms ease;
+  &:hover { background: var(--th-surface-2); }
+  &:focus-visible { outline: 2px solid var(--th-primary); outline-offset: 1px; }
+}
+.lp-reg-drop__icon {
+  font-size: 1rem;
+  &--candidate { color: var(--th-primary); }
+  &--recruiter  { color: var(--th-orange);  }
+}
+.lp-reg-drop__title {
+  font-size: .875rem;
+  font-weight: 600;
+  color: var(--th-text);
+  white-space: nowrap;
+}
+@keyframes lp-reg-drop-in {
+  from { opacity: 0; transform: translateY(-6px) scale(.98); }
+  to   { opacity: 1; transform: translateY(0)    scale(1);   }
+}
 .lp-nav__theme-btn {
   width: 36px; height: 36px;
   border-radius: 50%;
@@ -8719,7 +8855,7 @@ html { scroll-behavior: smooth; }
 }
 .lp-stats__grid {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(3, 1fr);
   gap: 1.5rem;
   @media (max-width: 768px) { grid-template-columns: repeat(2, 1fr); }
   @media (max-width: 400px) { grid-template-columns: 1fr; }
@@ -8753,6 +8889,17 @@ html { scroll-behavior: smooth; }
   font-size: .8rem; font-weight: 600;
   color: var(--th-text-secondary);
   text-transform: uppercase; letter-spacing: .06em;
+}
+
+.lp-skeleton {
+  background: linear-gradient(90deg, var(--th-border) 25%, var(--th-surface-raised, var(--th-border)) 50%, var(--th-border) 75%);
+  background-size: 200% 100%;
+  animation: lp-shimmer 1.4s infinite;
+  display: block;
+}
+@keyframes lp-shimmer {
+  0%   { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
 }
 
 // ══════════════════════════════════════════════
@@ -8821,6 +8968,55 @@ html { scroll-behavior: smooth; }
     border-radius: 99px;
     padding: .18rem .65rem;
   }
+}
+
+// ══════════════════════════════════════════════
+//  WHY TALENTHUB IS DIFFERENT
+// ══════════════════════════════════════════════
+.lp-why {
+  background: var(--lp-section-alt);
+  padding: 5rem 0;
+}
+.lp-why__card {
+  background: var(--th-surface);
+  border-radius: var(--th-radius-xl);
+  padding: 2rem;
+  box-shadow: var(--th-shadow-card);
+  display: flex;
+  flex-direction: column;
+  gap: .75rem;
+  transition: transform 250ms ease, box-shadow 250ms ease, border-color 250ms ease;
+  border: 1px solid transparent;
+  &:hover {
+    transform: translateY(-6px);
+    box-shadow: var(--th-shadow-card-hover);
+    border-color: var(--th-border);
+  }
+}
+.lp-why__icon {
+  width: 48px;
+  height: 48px;
+  border-radius: var(--th-radius-lg);
+  background: var(--th-primary-soft);
+  color: var(--th-primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.35rem;
+  flex-shrink: 0;
+}
+.lp-why__title {
+  font-size: 1.1rem;
+  font-weight: 800;
+  color: var(--th-text);
+  line-height: 1.3;
+  margin: 0;
+}
+.lp-why__desc {
+  font-size: .875rem;
+  color: var(--th-text-secondary);
+  line-height: 1.7;
+  margin: 0;
 }
 
 // ══════════════════════════════════════════════

@@ -4,6 +4,8 @@ import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { AuthService } from '../../../core/services/auth.service';
 import { StatsService, AdminStats } from '../../../core/services/stats.service';
+import { ContactSubmissionService } from '../../../core/services/contact-submission.service';
+import { ContactSubmission } from '../../../core/models/contact-submission.model';
 
 @Component({
   selector: 'app-admin-dashboard',
@@ -15,9 +17,7 @@ import { StatsService, AdminStats } from '../../../core/services/stats.service';
       <div class="d-flex align-items-start justify-content-between flex-wrap gap-3">
         <div>
           <div class="dash-hero__greeting">Admin Portal</div>
-           <h1 class="dash-hero__title mb-0">Good {{ timeOfDay() }},</h1>
-           <!-- <div class="dash-hero__subtitle mt-1">{{ adminName() }}</div> -->
-           <div class="dash-hero__subtitle mt-1">Dinesh</div>
+           <h1 class="dash-hero__title mb-0">Good {{ timeOfDay() }}{{ adminName() ? ', ' + adminName() : '' }}</h1>
           <div class="dash-hero__meta">
             <span class="dash-hero__chip">
               <i class="bi bi-calendar3"></i>{{ today() }}
@@ -45,6 +45,40 @@ import { StatsService, AdminStats } from '../../../core/services/stats.service';
             </span>
           }
         </a>
+      </div>
+    </div>
+
+    <!-- ── Today's Summary Bar ──────────────────────────────────────────── -->
+    <div class="today-bar mb-4">
+      <div class="today-bar__item today-bar__item--blue">
+        <div class="today-bar__label">New Registrations Today</div>
+        <div class="today-bar__value">
+          @if (loading()) {
+            <span class="skeleton" style="width:48px;height:28px;display:inline-block"></span>
+          } @else {
+            {{ stats()?.registrationsToday ?? '—' }}
+          }
+        </div>
+      </div>
+      <div class="today-bar__item today-bar__item--green">
+        <div class="today-bar__label">Profiles Forwarded Today</div>
+        <div class="today-bar__value">
+          @if (loading()) {
+            <span class="skeleton" style="width:48px;height:28px;display:inline-block"></span>
+          } @else {
+            {{ stats()?.profilesForwardedToday ?? '—' }}
+          }
+        </div>
+      </div>
+      <div class="today-bar__item today-bar__item--cyan">
+        <div class="today-bar__label">Audit Log Entries Today</div>
+        <div class="today-bar__value">
+          @if (loading()) {
+            <span class="skeleton" style="width:48px;height:28px;display:inline-block"></span>
+          } @else {
+            {{ stats()?.auditLogsToday ?? '—' }}
+          }
+        </div>
       </div>
     </div>
 
@@ -150,6 +184,32 @@ import { StatsService, AdminStats } from '../../../core/services/stats.service';
 
     </div>
 
+    <!-- ── Contact Submissions summary card ─────────────────────────────── -->
+    <!-- <a routerLink="/admin/contact-submissions" class="nav-link-card nav-link-card--primary mb-2"
+       style="text-decoration:none">
+      <div class="nav-link-card__icon">
+        <i class="bi bi-envelope-fill"></i>
+      </div>
+      <div class="nav-link-card__body">
+        <div class="nav-link-card__title">Contact Requests</div>
+        <div class="nav-link-card__desc">
+          @if (submissionsLoading()) {
+            Loading…
+          } @else {
+            {{ submissionTotal() }} total
+            @if (unreadCount() > 0) { · {{ unreadCount() }} unread }
+          }
+        </div>
+      </div>
+      @if (unreadCount() > 0) {
+        <span class="nav-link-card__badge"
+          style="background:var(--th-primary-soft);color:var(--th-primary)">
+          {{ unreadCount() }} new
+        </span>
+      }
+      <i class="bi bi-chevron-right nav-link-card__arrow"></i>
+    </a> -->
+
     <!-- ── Quick Actions ────────────────────────────────────────────────── -->
     <div class="mb-3">
       <div class="section-title">
@@ -220,16 +280,50 @@ import { StatsService, AdminStats } from '../../../core/services/stats.service';
         </span>
         <i class="bi bi-chevron-right nav-link-card__arrow"></i>
       </a>
+
+      <a routerLink="/admin/volunteers" class="nav-link-card nav-link-card--purple">
+        <div class="nav-link-card__icon">
+          <i class="bi bi-hand-thumbs-up-fill"></i>
+        </div>
+        <div class="nav-link-card__body">
+          <div class="nav-link-card__title">Manage Volunteers</div>
+          <div class="nav-link-card__desc">View and manage volunteer profiles</div>
+        </div>
+        <i class="bi bi-chevron-right nav-link-card__arrow"></i>
+      </a>
+
+      <a routerLink="/admin/contact-submissions" class="nav-link-card nav-link-card--primary">
+        <div class="nav-link-card__icon">
+          <i class="bi bi-envelope-fill"></i>
+        </div>
+        <div class="nav-link-card__body">
+          <div class="nav-link-card__title">Contact Requests</div>
+          <div class="nav-link-card__desc">Review new candidate and recruiter requests</div>
+        </div>
+        @if (unreadCount() > 0) {
+          <span class="nav-link-card__badge"
+            style="background:var(--th-primary-soft);color:var(--th-primary)">
+            {{ unreadCount() }} unread
+          </span>
+        }
+        <i class="bi bi-chevron-right nav-link-card__arrow"></i>
+      </a>
     </div>
   `,
 })
 export class AdminDashboardComponent implements OnInit {
-  stats   = signal<AdminStats | null>(null);
-  loading = signal(true);
+  stats              = signal<AdminStats | null>(null);
+  loading            = signal(true);
+  submissions        = signal<ContactSubmission[]>([]);
+  submissionsLoading = signal(true);
+
+  unreadCount     = computed(() => this.submissions().filter(s => !s.is_read).length);
+  submissionTotal = computed(() => this.submissions().length);
 
   constructor(
     private auth: AuthService,
     private statsService: StatsService,
+    private contactSvc: ContactSubmissionService,
   ) {}
 
   ngOnInit(): void {
@@ -237,17 +331,17 @@ export class AdminDashboardComponent implements OnInit {
       next:  s => { this.stats.set(s); this.loading.set(false); },
       error: () => this.loading.set(false),
     });
+
+    this.contactSvc.list(1, 50).subscribe({
+      next:  r => { this.submissions.set(r.data); this.submissionsLoading.set(false); },
+      error: () => this.submissionsLoading.set(false),
+    });
   }
 
   email(): string { return this.auth.currentUser()?.email ?? ''; }
 
   adminName(): string {
-    // Extract name from email (part before @) if available
-    const email = this.auth.currentUser()?.email ?? '';
-    if (email) {
-      return email.split('@')[0];
-    }
-    return 'Administrator';
+    return this.auth.currentUser()?.name ?? '';
   }
 
   timeOfDay(): string {

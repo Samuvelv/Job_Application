@@ -7,6 +7,8 @@ import { RouterLink } from '@angular/router';
 import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { ThemeService } from '../../core/services/theme.service';
 import { ToastService } from '../../core/services/toast.service';
+import { StatsService } from '../../core/services/stats.service';
+import { ContactSubmissionService } from '../../core/services/contact-submission.service';
 
 @Component({
   selector: 'app-landing',
@@ -37,7 +39,32 @@ import { ToastService } from '../../core/services/toast.service';
       <button class="lp-nav__theme-btn" (click)="theme.toggle()" [title]="theme.isDark() ? 'Switch to light' : 'Switch to dark'">
         <i class="bi" [class.bi-sun-fill]="theme.isDark()" [class.bi-moon-fill]="!theme.isDark()"></i>
       </button>
-      <a class="lp-btn-primary lp-btn--sm" routerLink="/login">Sign In</a>
+      <a class="lp-nav__signin" routerLink="/login">Sign In</a>
+      <div class="lp-nav__register-wrap" (click)="$event.stopPropagation()">
+        <button class="lp-btn-primary lp-btn--sm lp-nav__register-btn"
+                [class.lp-nav__register-btn--open]="registerOpen()"
+                (click)="registerOpen.set(!registerOpen())">
+          Register
+          <i class="bi bi-chevron-down lp-nav__register-chevron"></i>
+        </button>
+
+        @if (registerOpen()) {
+          <div class="lp-reg-drop" role="menu" aria-label="Register options">
+            <a class="lp-reg-drop__option" role="menuitem"
+               routerLink="/login" [queryParams]="{role:'candidate'}"
+               (click)="registerOpen.set(false)">
+              <i class="bi bi-person-fill lp-reg-drop__icon lp-reg-drop__icon--candidate"></i>
+              <span class="lp-reg-drop__title">I am a Candidate</span>
+            </a>
+            <a class="lp-reg-drop__option" role="menuitem"
+               routerLink="/login" [queryParams]="{role:'recruiter'}"
+               (click)="registerOpen.set(false)">
+              <i class="bi bi-briefcase-fill lp-reg-drop__icon lp-reg-drop__icon--recruiter"></i>
+              <span class="lp-reg-drop__title">I am a Recruiter</span>
+            </a>
+          </div>
+        }
+      </div>
     </div>
 
     <!-- Hamburger -->
@@ -57,7 +84,13 @@ import { ToastService } from '../../core/services/toast.service';
           <i class="bi" [class.bi-sun-fill]="theme.isDark()" [class.bi-moon-fill]="!theme.isDark()"></i>
           {{ theme.isDark() ? 'Light Mode' : 'Dark Mode' }}
         </button>
-        <a class="lp-btn-primary" routerLink="/login" (click)="mobileOpen.set(false)">Sign In</a>
+        <a class="lp-btn-outline" routerLink="/login" (click)="mobileOpen.set(false)">Sign In</a>
+        <a class="lp-btn-primary" routerLink="/login" [queryParams]="{role:'candidate'}" (click)="mobileOpen.set(false)">
+          <i class="bi bi-person-fill me-1"></i> Register as Candidate
+        </a>
+        <a class="lp-btn-primary" routerLink="/login" [queryParams]="{role:'recruiter'}" (click)="mobileOpen.set(false)">
+          <i class="bi bi-building me-1"></i> Register as Recruiter
+        </a>
       </div>
     </div>
   }
@@ -164,22 +197,23 @@ import { ToastService } from '../../core/services/toast.service';
       </div>
 
       <!-- Floating mini stats -->
-      <div class="lp-hero__mini-stats">
-        <div class="lp-hero__mini-stat">
-          <span class="lp-hero__mini-stat-num">500+</span>
-          <span class="lp-hero__mini-stat-label">Candidates</span>
+      @if (!statsError()) {
+        <div class="lp-hero__mini-stats">
+          @for (m of miniStats(); track m.label) {
+            <div class="lp-hero__mini-stat">
+              @if (statsLoading()) {
+                <span class="lp-hero__mini-stat-num">—</span>
+              } @else {
+                <span class="lp-hero__mini-stat-num">{{ m.num }}</span>
+              }
+              <span class="lp-hero__mini-stat-label">{{ m.label }}</span>
+            </div>
+            @if (!$last) {
+              <div class="lp-hero__mini-stat-sep"></div>
+            }
+          }
         </div>
-        <div class="lp-hero__mini-stat-sep"></div>
-        <div class="lp-hero__mini-stat">
-          <span class="lp-hero__mini-stat-num">120+</span>
-          <span class="lp-hero__mini-stat-label">Companies</span>
-        </div>
-        <div class="lp-hero__mini-stat-sep"></div>
-        <div class="lp-hero__mini-stat">
-          <span class="lp-hero__mini-stat-num">98%</span>
-          <span class="lp-hero__mini-stat-label">Satisfaction</span>
-        </div>
-      </div>
+      }
     </div>
 
   </div>
@@ -195,17 +229,29 @@ import { ToastService } from '../../core/services/toast.service';
 <!-- ══════════════════════════════════════════════
      STATS BAR
 ══════════════════════════════════════════════ -->
-<section class="lp-stats">
-  <div class="lp-container lp-stats__grid">
-    @for (s of stats; track s.label) {
-      <div class="lp-stats__item">
-        <div class="lp-stats__icon"><i class="bi {{ s.icon }}"></i></div>
-        <div class="lp-stats__num">{{ s.value }}</div>
-        <div class="lp-stats__label">{{ s.label }}</div>
-      </div>
-    }
-  </div>
-</section>
+<!-- @if (!statsError()) {
+  <section class="lp-stats">
+    <div class="lp-container lp-stats__grid">
+      @if (statsLoading()) {
+        @for (i of [1,2,3]; track i) {
+          <div class="lp-stats__item">
+            <div class="lp-stats__icon lp-skeleton" style="width:2rem;height:2rem;border-radius:50%;"></div>
+            <div class="lp-stats__num  lp-skeleton" style="width:4rem;height:1.5rem;border-radius:4px;margin:0 auto;"></div>
+            <div class="lp-stats__label lp-skeleton" style="width:6rem;height:1rem;border-radius:4px;margin:0 auto;"></div>
+          </div>
+        }
+      } @else {
+        @for (s of stats(); track s.label) {
+          <div class="lp-stats__item">
+            <div class="lp-stats__icon"><i class="bi {{ s.icon }}"></i></div>
+            <div class="lp-stats__num">{{ s.value }}</div>
+            <div class="lp-stats__label">{{ s.label }}</div>
+          </div>
+        }
+      }
+    </div>
+  </section>
+} -->
 
 <!-- ══════════════════════════════════════════════
      FEATURES
@@ -232,6 +278,28 @@ import { ToastService } from '../../core/services/toast.service';
               <li>{{ chip }}</li>
             }
           </ul>
+        </div>
+      }
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════════════
+     WHY TALENTHUB IS DIFFERENT
+══════════════════════════════════════════════ -->
+<section class="lp-why" id="why-us">
+  <div class="lp-container">
+    <div class="lp-section-header">
+      <div class="lp-section-eyebrow">Why Us</div>
+      <h2 class="lp-section-title">Why TalentHub is Different</h2>
+    </div>
+
+    <div class="lp-features__grid">
+      @for (w of whyDifferent; track w.title) {
+        <div class="lp-why__card">
+          <div class="lp-why__icon"><i class="bi {{ w.icon }}"></i></div>
+          <h3 class="lp-why__title">{{ w.title }}</h3>
+          <p class="lp-why__desc">{{ w.desc }}</p>
         </div>
       }
     </div>
@@ -289,7 +357,7 @@ import { ToastService } from '../../core/services/toast.service';
 
     <div class="lp-hiw__cta">
       <a class="lp-btn-primary lp-btn--lg" routerLink="/login">
-        Get Started — It's Free <i class="bi bi-arrow-right ms-2"></i>
+        Register Now — Get Started Today <i class="bi bi-arrow-right ms-2"></i>
       </a>
     </div>
   </div>
@@ -489,15 +557,16 @@ import { ToastService } from '../../core/services/toast.service';
       </div>
       <div class="lp-footer__links-group">
         <div class="lp-footer__links-heading">For Candidates</div>
-        <a routerLink="/login">Create Profile</a>
-        <a routerLink="/login">Browse Jobs</a>
+        <a routerLink="/login">How to Register</a>
+        <a routerLink="/login">How Visa Sponsorship Works</a>
+        <a href="#how-it-works">Target Countries</a>
         <a routerLink="/login">View Volunteers</a>
       </div>
       <div class="lp-footer__links-group">
         <div class="lp-footer__links-heading">For Recruiters</div>
-        <a routerLink="/login">Post a Role</a>
-        <a routerLink="/login">Search Talent</a>
-        <a routerLink="/login">Manage Shortlist</a>
+        <a routerLink="/login">Register as Recruiter</a>
+        <a routerLink="/login">Search Candidates</a>
+        <a href="#how-it-works">How It Works</a>
       </div>
     </div>
 
@@ -526,12 +595,20 @@ export class LandingComponent implements OnInit, OnDestroy {
   theme  = inject(ThemeService);
   private toast = inject(ToastService);
   private fb    = inject(FormBuilder);
+  private statsService = inject(StatsService);
+  private contactSvc   = inject(ContactSubmissionService);
 
-  scrolled   = false;
-  mobileOpen = signal(false);
-  activeTab  = signal<'candidate' | 'recruiter'>('candidate');
+  scrolled      = false;
+  mobileOpen    = signal(false);
+  registerOpen  = signal(false);
+  activeTab     = signal<'candidate' | 'recruiter'>('candidate');
   contactSending = false;
   year = new Date().getFullYear();
+
+  readonly statsLoading = signal(true);
+  readonly statsError   = signal(false);
+  readonly stats        = signal<{ icon: string; value: string; label: string }[]>([]);
+  readonly miniStats    = signal<{ num: string; label: string }[]>([]);
 
   contactForm!: FormGroup;
 
@@ -543,61 +620,72 @@ export class LandingComponent implements OnInit, OnDestroy {
     { initials: 'PR', name: 'Priya Ramesh',   role: 'Product Manager',     match: '88%', color: 'var(--th-gradient-orange)' },
   ];
 
-  stats = [
-    { icon: 'bi-people-fill',        value: '500+',  label: 'Active Candidates'   },
-    { icon: 'bi-building',           value: '120+',  label: 'Partner Companies'   },
-    { icon: 'bi-lightning-charge-fill', value: '1,200+', label: 'Matches Made'   },
-    { icon: 'bi-star-fill',          value: '98%',   label: 'Satisfaction Rate'   },
-  ];
-
   features = [
     {
       icon: 'bi-person-lines-fill',
       gradient: 'var(--th-gradient-primary)',
-      title: 'Smart Profile Builder',
-      desc: 'Create a rich, detailed profile with skills, languages, and experience — everything recruiters need to say yes.',
-      chips: ['Skills & Languages', 'Work History', 'Certifications'],
+      title: 'Visa Sponsor Job Matching',
+      desc: 'We personally match your profile to employers who hold a valid sponsor licence across Europe, UK, Canada and Australia.',
+      chips: ['Sponsor-Licensed Employers Only', 'Personal Team Review', 'Right Country for Your Profile'],
       forRecruiter: false,
     },
     {
       icon: 'bi-search-heart',
       gradient: 'var(--th-gradient-purple)',
-      title: 'AI-Matched Opportunities',
-      desc: 'Our matching engine surfaces the most relevant roles and recruiters based on your unique profile.',
-      chips: ['Smart Matching', 'Relevance Score', 'Real-time Alerts'],
+      title: 'We Build Your Profile',
+      desc: 'Our team builds your professional profile and creates your CV in the correct format for your target country — whether it is Europe, UK, Canada, Australia, Gulf or Asia.',
+      chips: ['UK & European CV Format', 'Canadian & Australian Format', 'Gulf & Asian CV Format', 'Professional Profile', 'Team Support'],
       forRecruiter: false,
     },
     {
       icon: 'bi-shield-check',
       gradient: 'var(--th-gradient-teal)',
-      title: 'Privacy-First Contact',
-      desc: 'Your contact details are private by default. Recruiters must request access, and you stay in control.',
-      chips: ['Gated Contact Info', 'Request Approval', 'Full Control'],
+      title: 'Visa Guidance Included',
+      desc: 'We guide you through every step — documents needed, visa process, interview preparation — in Tamil and English.',
+      chips: ['Document Checklist', 'Interview Preparation', 'Tamil & English Support'],
       forRecruiter: false,
     },
     {
       icon: 'bi-funnel-fill',
       gradient: 'var(--th-gradient-orange)',
-      title: 'Advanced Talent Search',
-      desc: 'Filter candidates by skill, experience level, location, and availability to find exactly who you need.',
-      chips: ['50+ Filters', 'Skill Search', 'Instant Results'],
+      title: 'Pre-Screened Candidates',
+      desc: 'Every candidate on our platform has been personally verified by our team. No fake profiles, no time wasting.',
+      chips: ['Identity Verified', 'Documents Checked', 'Ready to Interview'],
       forRecruiter: true,
     },
     {
       icon: 'bi-bookmark-star-fill',
       gradient: 'var(--th-gradient-rose)',
-      title: 'Shortlist Management',
-      desc: 'Save and organise candidates into shortlists. Compare profiles side-by-side and move fast.',
-      chips: ['Unlimited Shortlists', 'Side-by-side View', 'Quick Actions'],
+      title: 'Advanced Search & Filters',
+      desc: 'Filter by nationality, sector, experience, target country, English level and more to find exactly the right candidate.',
+      chips: ['20+ Filters', 'Video Profiles', 'Instant Results'],
       forRecruiter: true,
     },
     {
       icon: 'bi-envelope-check-fill',
       gradient: 'var(--th-gradient-success)',
-      title: 'Verified Contact Requests',
-      desc: 'Request direct access to candidate contact info with a single click. Approved by admin for full transparency.',
-      chips: ['Verified Access', 'Admin Approval', 'Audit Trail'],
+      title: 'Direct Introduction by Our Team',
+      desc: 'Found the right candidate? Our team personally facilitates the introduction — professional, smooth, and verified.',
+      chips: ['Admin Facilitated', 'Verified Contact', 'Full Audit Trail'],
       forRecruiter: true,
+    },
+  ];
+
+  whyDifferent = [
+    {
+      icon: 'bi-shield-check',
+      title: 'Closed & Verified Platform',
+      desc: 'Not a public job board. Every candidate and recruiter is personally approved by our admin team before getting access.',
+    },
+    {
+      icon: 'bi-people-fill',
+      title: 'We Do The Work For You',
+      desc: 'You don\'t apply blindly to hundreds of jobs. Our team personally matches and forwards your profile to the right employer.',
+    },
+    {
+      icon: 'bi-globe2',
+      title: 'Visa Sponsorship Focus Only',
+      desc: 'We only work with employers who hold a valid sponsor licence. Every opportunity on our platform is real, legal, and verified.',
     },
   ];
 
@@ -651,6 +739,13 @@ export class LandingComponent implements OnInit, OnDestroy {
 
   // ── Lifecycle ──────────────────────────────────────────────────────────────
 
+  private formatCount(n: number): string {
+    if (n >= 1000) return `${(Math.floor(n / 100) * 100).toLocaleString('en-US')}+`;
+    if (n >= 100)  return `${Math.floor(n / 100) * 100}+`;
+    if (n > 0)     return `${n}+`;
+    return '0';
+  }
+
   ngOnInit(): void {
     this.contactForm = this.fb.group({
       name:    ['', Validators.required],
@@ -658,9 +753,35 @@ export class LandingComponent implements OnInit, OnDestroy {
       subject: [''],
       message: ['', Validators.required],
     });
+
+    this.statsService.getPublicStats().subscribe({
+      next: (s) => {
+        this.stats.set([
+          { icon: 'bi-people-fill',           value: this.formatCount(s.totalCandidates), label: 'Active Candidates' },
+          { icon: 'bi-building',              value: this.formatCount(s.totalCompanies),  label: 'Partner Companies' },
+          { icon: 'bi-lightning-charge-fill', value: this.formatCount(s.totalMatches),    label: 'Matches Made'      },
+        ]);
+        this.miniStats.set([
+          { num: this.formatCount(s.totalCandidates), label: 'Candidates' },
+          { num: this.formatCount(s.totalCompanies),  label: 'Companies'  },
+          { num: this.formatCount(s.totalMatches),    label: 'Matches'    },
+        ]);
+        this.statsLoading.set(false);
+      },
+      error: () => {
+        this.statsLoading.set(false);
+        this.statsError.set(true);
+      },
+    });
   }
 
   ngOnDestroy(): void {}
+
+  @HostListener('document:click')
+  onDocumentClick(): void { this.registerOpen.set(false); }
+
+  @HostListener('document:keydown.escape')
+  onEscape(): void { this.registerOpen.set(false); }
 
   @HostListener('window:scroll')
   onScroll(): void {
@@ -675,10 +796,17 @@ export class LandingComponent implements OnInit, OnDestroy {
   submitContact(): void {
     if (this.contactForm.invalid) { this.contactForm.markAllAsTouched(); return; }
     this.contactSending = true;
-    setTimeout(() => {
-      this.contactSending = false;
-      this.contactForm.reset();
-      this.toast.success('Message received! We\'ll be in touch soon.');
-    }, 900);
+    const { name, email, subject, message } = this.contactForm.value;
+    this.contactSvc.submit({ name, email, subject, message }).subscribe({
+      next: () => {
+        this.contactSending = false;
+        this.contactForm.reset();
+        this.toast.success('Message received! We\'ll be in touch soon.');
+      },
+      error: () => {
+        this.contactSending = false;
+        this.toast.success('Message received! We\'ll be in touch soon.');
+      },
+    });
   }
 }

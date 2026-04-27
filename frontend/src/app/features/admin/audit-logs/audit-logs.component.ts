@@ -42,9 +42,9 @@ import { PageHeaderComponent } from '../../../shared/components/page-header/page
                 formControlName="resource" placeholder="e.g. candidate">
             </div>
             <div class="col-md-3">
-              <label class="form-label small mb-1">User Email / ID</label>
+              <label class="form-label small mb-1">User</label>
               <input type="text" class="form-control form-control-sm"
-                formControlName="userSearch" placeholder="Paste user UUID…">
+                formControlName="userSearch" placeholder="Search by user ID…">
             </div>
             <div class="col-md-2">
               <label class="form-label small mb-1">From</label>
@@ -98,13 +98,8 @@ import { PageHeaderComponent } from '../../../shared/components/page-header/page
                       <td class="text-nowrap text-muted" style="font-size:.75rem">
                         {{ log.created_at | date:'dd MMM yyyy, HH:mm:ss' }}
                       </td>
-                      <td>
-                        @if (log.user_email) {
-                          <span class="d-block fw-semibold">{{ log.user_email }}</span>
-                          <span class="text-muted" style="font-size:.7rem">{{ log.user_id }}</span>
-                        } @else {
-                          <span class="text-muted">—</span>
-                        }
+                      <td class="fw-semibold">
+                        {{ log.user_name || 'Admin' }}
                       </td>
                       <td>
                         <span class="badge rounded-pill"

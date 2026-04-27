@@ -30,3 +30,12 @@ export async function recruiterStats(req: Request, res: Response, next: NextFunc
     next(err);
   }
 }
+
+export async function publicStats(_req: Request, res: Response, next: NextFunction) {
+  try {
+    const data = await statsService.getPublicStats();
+    res.json(data);
+  } catch (err) {
+    next(err);
+  }
+}

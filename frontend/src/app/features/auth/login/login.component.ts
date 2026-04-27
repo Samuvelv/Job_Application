@@ -312,8 +312,7 @@ import { AuthService } from '../../../core/services/auth.service';
           <!-- Not registered section -->
           <div class="auth-register-note">
             <p class="auth-register-note__text">
-              Registration is by invitation only.<br>
-              Contact our team to apply.
+              Registration is managed by our team. Contact us via WhatsApp or the form below to apply.
             </p>
             <div class="auth-register-note__btns">
               <a

@@ -15,8 +15,9 @@ export async function login(
 ): Promise<{ accessToken: string; refreshToken: string; user: Record<string, unknown> }> {
   const user = await db('users as u')
     .join('roles as r', 'r.id', 'u.role_id')
+    .leftJoin('admins as a', 'a.user_id', 'u.id')
     .where('u.email', email.toLowerCase().trim())
-    .select('u.id', 'u.email', 'u.password_hash', 'u.is_active', 'r.name as role')
+    .select('u.id', 'u.email', 'u.password_hash', 'u.is_active', 'r.name as role', 'a.first_name')
     .first();
 
   if (!user) throw new AppError(401, 'Invalid email or password');
@@ -39,7 +40,7 @@ export async function login(
   return {
     accessToken,
     refreshToken,
-    user: { id: user.id, email: user.email, role: user.role },
+    user: { id: user.id, email: user.email, role: user.role, name: user.first_name ?? null },
   };
 }
 

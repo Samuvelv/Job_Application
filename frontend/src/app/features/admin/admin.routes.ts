@@ -58,6 +58,11 @@ export const adminRoutes: Routes = [
       import('./audit-logs/audit-logs.component').then((m) => m.AuditLogsComponent),
   },
   {
+    path: 'contact-submissions',
+    loadComponent: () =>
+      import('./contact-submissions/contact-submissions-page.component').then((m) => m.ContactSubmissionsPageComponent),
+  },
+  {
     path: 'volunteers',
     loadComponent: () =>
       import('./volunteers/volunteer-list.component').then((m) => m.VolunteerListComponent),

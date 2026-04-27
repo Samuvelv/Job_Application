@@ -4,18 +4,28 @@ import { db } from '../../config/db';
 const toCount = (row: any): number => Number(row?.count ?? 0);
 
 export async function getAdminStats() {
-  const [candidates, recruiters, pendingEdits, auditLogsToday] = await Promise.all([
+  const [
+    candidates, recruiters, pendingEdits, auditLogsToday,
+    registrationsToday, profilesForwardedToday,
+  ] = await Promise.all([
     db('candidates').count('id as count').first(),
     db('users').where({ role_id: db('roles').select('id').where({ name: 'recruiter' }) }).count('id as count').first(),
     db('profile_edit_requests').where({ status: 'pending' }).count('id as count').first(),
     db('audit_logs').whereRaw('DATE(created_at) = CURRENT_DATE').count('id as count').first(),
+    db('candidates').whereRaw('DATE(created_at) = CURRENT_DATE').count('id as count').first(),
+    db('contact_unlock_requests')
+      .where({ status: 'approved' })
+      .whereRaw('DATE(reviewed_at) = CURRENT_DATE')
+      .count('id as count').first(),
   ]);
 
   return {
-    candidates:      toCount(candidates),
-    recruiters:     toCount(recruiters),
-    pendingEdits:   toCount(pendingEdits),
-    auditLogsToday: toCount(auditLogsToday),
+    candidates:             toCount(candidates),
+    recruiters:             toCount(recruiters),
+    pendingEdits:           toCount(pendingEdits),
+    auditLogsToday:         toCount(auditLogsToday),
+    registrationsToday:     toCount(registrationsToday),
+    profilesForwardedToday: toCount(profilesForwardedToday),
   };
 }
 
@@ -85,5 +95,18 @@ export async function getRecruiterStats(userId: string) {
   return {
     shortlistCount:      toCount(shortlistCount),
     candidatesAvailable: toCount(candidatesAvailable),
+  };
+}
+
+export async function getPublicStats() {
+  const [candidatesRow, companiesRow, matchesRow] = await Promise.all([
+    db('candidates').count('id as count').first(),
+    db('recruiters').count('id as count').first(),
+    db('shortlists').count('id as count').first(),
+  ]);
+  return {
+    totalCandidates: toCount(candidatesRow),
+    totalCompanies:  toCount(companiesRow),
+    totalMatches:    toCount(matchesRow),
   };
 }

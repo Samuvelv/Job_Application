@@ -6,10 +6,12 @@ import * as ctrl from './stats.controller';
 
 const router = Router();
 
+router.get('/public', ctrl.publicStats);
+
 router.use(authenticate);
 
-router.get('/admin',    authorize('admin'),    ctrl.adminStats);
+router.get('/admin',     authorize('admin'),     ctrl.adminStats);
 router.get('/candidate', authorize('candidate'), ctrl.candidateStats);
-router.get('/recruiter',authorize('recruiter'),ctrl.recruiterStats);
+router.get('/recruiter', authorize('recruiter'), ctrl.recruiterStats);
 
 export default router;

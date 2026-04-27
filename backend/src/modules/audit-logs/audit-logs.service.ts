@@ -7,11 +7,14 @@ export async function listAuditLogs(filters: AuditLogFilterDto) {
   const offset = (page - 1) * limit;
 
   let query = db('audit_logs as al')
-    .leftJoin('users as u', 'u.id', 'al.user_id')
+    .leftJoin('users as u',      'u.id',      'al.user_id')
+    .leftJoin('admins as adm',   'adm.user_id', 'al.user_id')
+    .leftJoin('candidates as c', 'c.user_id', 'al.user_id')
+    .leftJoin('recruiters as r', 'r.user_id', 'al.user_id')
     .select(
       'al.id',
       'al.user_id',
-      'u.email as user_email',
+      db.raw(`COALESCE(adm.first_name, c.first_name, r.contact_name) AS user_name`),
       'al.action',
       'al.resource',
       'al.resource_id',
