@@ -15,6 +15,11 @@ router.post('/',
   ctrl.create,
 );
 
+router.post('/bulk-action',
+  authorize('admin'),
+  ctrl.bulkActionHandler,
+);
+
 router.get('/',
   authorize('admin', 'recruiter'),
   ctrl.list,
@@ -33,6 +38,11 @@ router.post('/:id/resend-credentials',
 router.put('/:id',
   authorize('admin'),
   ctrl.update,
+);
+
+router.get('/export',
+  authorize('admin'),
+  ctrl.exportCsv,
 );
 
 // ── Candidate self-view ────────────────────────────────────────────────────────

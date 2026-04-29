@@ -1,0 +1,9 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(grep -E \"\\\\.\\(ts|scss\\)$\")",
+      "Bash(node -e ' *)",
+      "Bash(npx knex *)"
+    ]
+  }
+}

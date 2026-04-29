@@ -12,6 +12,7 @@ import { MasterDataService } from '../../../core/services/master-data.service';
 import { SearchableSelectComponent, SelectOption } from '../../../shared/components/searchable-select/searchable-select.component';
 import { ChipMultiSelectComponent, ChipOption } from '../../../shared/components/chip-multi-select/chip-multi-select.component';
 import { Candidate, Certificate } from '../../../core/models/candidate.model';
+import { REGISTRATION_FEE_STATUS_OPTIONS, CV_FORMAT_OPTIONS } from '../../../core/constants/candidate-options';
 
 function skillGroupValidator(g: AbstractControl): ValidationErrors | null {
   const name = g.get('skill_name')?.value?.trim();
@@ -103,6 +104,8 @@ export class CandidateEditComponent implements OnInit {
     { value: 'inactive',     label: 'Inactive'     },
     { value: 'pending_edit', label: 'Pending Edit' },
   ];
+  readonly registrationFeeStatusOptions = REGISTRATION_FEE_STATUS_OPTIONS;
+  readonly cvFormatOptions = CV_FORMAT_OPTIONS;
 
   // ── Computed SelectOption arrays ──────────────────────────────────────────
   countryOptions    = computed<SelectOption[]>(() =>
@@ -330,7 +333,9 @@ export class CandidateEditComponent implements OnInit {
       dial_code:     [dialCode],
       phone:         [phoneNumber],
       bio:           [emp.bio ?? '', Validators.maxLength(2000)],
-      profile_status:[emp.profile_status ?? 'active'],
+      profile_status:          [emp.profile_status          ?? 'active'],
+      registration_fee_status: [emp.registration_fee_status ?? 'pending_payment'],
+      cv_format:               [emp.cv_format               ?? 'not_yet_created'],
 
       job_title:        [emp.job_title ?? ''],
       occupation:       [emp.occupation ?? ''],
@@ -400,7 +405,9 @@ export class CandidateEditComponent implements OnInit {
       gender:        raw.gender          || undefined,
       phone:         phone               || undefined,
       bio:           raw.bio             || undefined,
-      profile_status: raw.profile_status || undefined,
+      profile_status:          raw.profile_status          || undefined,
+      registration_fee_status: raw.registration_fee_status || undefined,
+      cv_format:               raw.cv_format               || undefined,
       job_title:     raw.job_title       || undefined,
       occupation:    raw.occupation      || undefined,
       industry:      raw.industry        || undefined,

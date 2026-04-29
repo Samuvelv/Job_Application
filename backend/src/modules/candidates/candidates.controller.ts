@@ -5,6 +5,7 @@ import {
   CreateCandidateSchema,
   UpdateCandidateSchema,
   CandidateFilterSchema,
+  BulkActionSchema,
 } from './candidates.dto';
 import { logAudit } from '../../services/audit.service';
 import { isContactUnlocked } from '../contact-requests/contact-requests.service';
@@ -107,5 +108,74 @@ export async function resendCreds(req: Request, res: Response, next: NextFunctio
       resource: 'candidate', resourceId: id, ipAddress: req.ip,
     });
     res.json({ message: 'Credentials resent successfully' });
+  } catch (err) { next(err); }
+}
+
+export async function bulkActionHandler(req: Request, res: Response, next: NextFunction): Promise<void> {
+  try {
+    const dto = BulkActionSchema.parse(req.body);
+    const result = await svc.bulkAction(dto.candidateIds, dto.action, dto.payload);
+    await logAudit({
+      userId: req.user!.sub,
+      action: `BULK_${dto.action.toUpperCase()}`,
+      resource: 'candidate',
+      ipAddress: req.ip,
+      metadata: { count: result.updated, action: dto.action },
+    });
+    res.json({ message: `${result.updated} candidate${result.updated === 1 ? '' : 's'} updated`, updated: result.updated });
+  } catch (err) { next(err); }
+}
+
+const CV_FORMAT_LABELS: Record<string, string> = {
+  uk_format:         'UK Format',
+  european_format:   'European Format',
+  canadian_format:   'Canadian Format',
+  australian_format: 'Australian Format',
+  gulf_format:       'Gulf Format',
+  asian_format:      'Asian Format',
+  not_yet_created:   'Not Yet Created',
+};
+
+function csvEscape(val: unknown): string {
+  if (val == null) return '';
+  const str = String(val);
+  if (str.includes('"') || str.includes(',') || str.includes('\n') || str.includes('\r')) {
+    return `"${str.replace(/"/g, '""')}"`;
+  }
+  return str;
+}
+
+export async function exportCsv(req: Request, res: Response, next: NextFunction): Promise<void> {
+  try {
+    const filters = CandidateFilterSchema.parse(req.query);
+    const rows = await svc.exportCandidates(filters);
+
+    const headers = [
+      'Candidate No', 'First Name', 'Last Name', 'Email', 'Phone',
+      'Current Country', 'Target Countries', 'Profile Status',
+      'Registration Fee Status', 'CV Format', 'Created Date',
+    ];
+
+    const lines = [
+      headers.join(','),
+      ...(rows as any[]).map((r) => [
+        csvEscape(r.candidate_number),
+        csvEscape(r.first_name),
+        csvEscape(r.last_name),
+        csvEscape(r.email),
+        csvEscape(r.phone),
+        csvEscape(r.current_country),
+        csvEscape(Array.isArray(r.target_locations) ? r.target_locations.join('; ') : r.target_locations),
+        csvEscape(r.profile_status),
+        csvEscape(r.registration_fee_status),
+        csvEscape(r.cv_format ? (CV_FORMAT_LABELS[r.cv_format] ?? r.cv_format) : ''),
+        csvEscape(r.created_at ? new Date(r.created_at).toISOString().slice(0, 10) : ''),
+      ].join(',')),
+    ];
+
+    const filename = `candidates-${new Date().toISOString().slice(0, 10)}.csv`;
+    res.setHeader('Content-Type', 'text/csv; charset=utf-8');
+    res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+    res.send(lines.join('\r\n'));
   } catch (err) { next(err); }
 }

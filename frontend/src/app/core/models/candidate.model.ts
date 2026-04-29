@@ -79,9 +79,12 @@ export interface Candidate {
   // Files
   resume_url?: string;
   intro_video_url?: string;
+  english_level?: string;
 
   // Status
   profile_status?: string;
+  registration_fee_status?: string;
+  cv_format?: string;
   plain_password?: string;
   contact_locked?: boolean;
 
@@ -130,6 +133,10 @@ export interface CandidateFilters {
   availability?: string;
   hasVideo?: 'true' | 'false';
   profileStatus?: string;
+  registrationFeeStatus?: string;
+  cvFormat?: string;
+  // Sort
+  sortBy?: string;
   // Pagination
   page?: number;
   limit?: number;

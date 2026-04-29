@@ -27,6 +27,17 @@ export class CandidateService {
     return this.http.get<PaginatedCandidates>(this.api, { params });
   }
 
+  // ── Export CSV ───────────────────────────────────────────────────────────
+  exportCsv(filters: CandidateFilters = {}): Observable<Blob> {
+    let params = new HttpParams();
+    Object.entries(filters).forEach(([k, v]) => {
+      if (v !== undefined && v !== null && v !== '') {
+        params = params.set(k, Array.isArray(v) ? v.join(',') : String(v));
+      }
+    });
+    return this.http.get(`${this.api}/export`, { params, responseType: 'blob' });
+  }
+
   // ── Get one ───────────────────────────────────────────────────────────────
   getById(id: string): Observable<{ candidate: Candidate }> {
     return this.http.get<{ candidate: Candidate }>(`${this.api}/${id}`);
@@ -44,6 +55,18 @@ export class CandidateService {
   // ── Update ────────────────────────────────────────────────────────────────
   update(id: string, data: Partial<Candidate>): Observable<{ candidate: Candidate }> {
     return this.http.put<{ candidate: Candidate }>(`${this.api}/${id}`, data);
+  }
+
+  // ── Bulk action ───────────────────────────────────────────────────────────
+  bulkAction(
+    candidateIds: string[],
+    action: 'mark_fee_paid' | 'change_status',
+    payload?: { profile_status?: string },
+  ): Observable<{ message: string; updated: number }> {
+    return this.http.post<{ message: string; updated: number }>(
+      `${this.api}/bulk-action`,
+      { candidateIds, action, payload },
+    );
   }
 
   // ── Delete ────────────────────────────────────────────────────────────────

@@ -286,6 +286,37 @@ type Tab = 'overview' | 'experience' | 'education' | 'documents';
               </div>
             }
 
+            <!-- Admin Info Card -->
+            @if (candidate.registration_fee_status) {
+              <div class="profile-section-card mb-3">
+                <div class="profile-section-card__header">
+                  <div class="profile-section-card__header-icon"
+                    style="background:var(--th-gradient-warning)">
+                    <i class="bi bi-shield-fill-check"></i>
+                  </div>
+                  <h6>Admin Info</h6>
+                </div>
+                <div class="profile-section-card__body">
+                  <div class="info-pill-row">
+                    <div class="info-pill-row__icon"
+                      style="background:var(--th-amber-soft);color:var(--th-amber)">
+                      <i class="bi bi-credit-card-fill"></i>
+                    </div>
+                    <div class="info-pill-row__label">Registration Fee</div>
+                    <div class="info-pill-row__value">
+                      <span class="badge rounded-pill"
+                        [class.badge-status-active]="candidate.registration_fee_status === 'paid'"
+                        [class.badge-status-pending]="candidate.registration_fee_status === 'pending_payment'"
+                        [class.badge-status-inactive]="candidate.registration_fee_status === 'waived'">
+                        {{ candidate.registration_fee_status === 'paid' ? 'Paid' :
+                           candidate.registration_fee_status === 'pending_payment' ? 'Pending' : 'Waived' }}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            }
+
             <!-- Languages Card -->
             @if (candidate.languages?.length) {
               <div class="profile-section-card">
@@ -386,6 +417,16 @@ type Tab = 'overview' | 'experience' | 'education' | 'documents';
                         color:var(--th-muted);font-weight:600;margin-bottom:.3rem">Job Title</div>
                       <div style="font-size:.875rem;font-weight:600;color:var(--th-text)">
                         {{ candidate.job_title || '—' }}
+                      </div>
+                    </div>
+                  </div>
+                  <div class="col-sm-6">
+                    <div style="padding:.75rem;background:var(--th-surface-raised);border-radius:var(--th-radius);
+                      border:1px solid var(--th-border)">
+                      <div style="font-size:.7rem;text-transform:uppercase;letter-spacing:.06em;
+                        color:var(--th-muted);font-weight:600;margin-bottom:.3rem">CV Format</div>
+                      <div style="font-size:.875rem;font-weight:600;color:var(--th-text)">
+                        {{ candidate.cv_format ? (cvFormatLabels[candidate.cv_format] || candidate.cv_format) : '—' }}
                       </div>
                     </div>
                   </div>
@@ -649,6 +690,16 @@ export class CandidateProfileComponent {
   @Input() contactLocked = false;
 
   activeTab = signal<Tab>('overview');
+
+  readonly cvFormatLabels: Record<string, string> = {
+    uk_format:         'UK Format',
+    european_format:   'European Format',
+    canadian_format:   'Canadian Format',
+    australian_format: 'Australian Format',
+    gulf_format:       'Gulf Format',
+    asian_format:      'Asian Format',
+    not_yet_created:   'Not Yet Created',
+  };
 
   tabs: { id: Tab; label: string; icon: string }[] = [
     { id: 'overview',    label: 'Overview',    icon: 'bi-person-fill'       },

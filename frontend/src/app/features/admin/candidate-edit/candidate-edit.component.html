@@ -257,6 +257,15 @@
             [allowClear]="false">
           </app-searchable-select>
         </div>
+        <div class="col-md-6">
+          <label class="form-label">Registration Fee Status</label>
+          <app-searchable-select
+            formControlName="registration_fee_status"
+            [options]="registrationFeeStatusOptions"
+            placeholder="Select status…"
+            [allowClear]="false">
+          </app-searchable-select>
+        </div>
       </div>
     </div>
 
@@ -335,6 +344,15 @@
             formControlName="salary_type"
             [options]="salaryTypeOptions"
             placeholder="Select type…"
+            [allowClear]="false">
+          </app-searchable-select>
+        </div>
+        <div class="col-md-6">
+          <label class="form-label">CV Format</label>
+          <app-searchable-select
+            formControlName="cv_format"
+            [options]="cvFormatOptions"
+            placeholder="Select format…"
             [allowClear]="false">
           </app-searchable-select>
         </div>

@@ -80,6 +80,13 @@ export const CreateCandidateSchema = z.object({
   // Availability
   notice_period_id: z.coerce.number().int().positive().optional().nullable(),
 
+  // Admin controls
+  registration_fee_status: z.enum(['paid', 'pending_payment', 'waived']).optional(),
+  cv_format: z.enum([
+    'uk_format', 'european_format', 'canadian_format', 'australian_format',
+    'gulf_format', 'asian_format', 'not_yet_created',
+  ]).optional(),
+
   // Relations (arrays)
   skills:      z.array(SkillSchema).optional(),
   languages:   z.array(LanguageSchema).optional(),
@@ -94,11 +101,11 @@ export const CreateCandidateSchema = z.object({
 export const UpdateCandidateSchema = CreateCandidateSchema
   .omit({ email: true, password: true })
   .extend({
-    profile_photo_url: z.string().optional().nullable(),
-    resume_url:        z.string().optional().nullable(),
-    intro_video_url:   z.string().optional().nullable(),
-    new_password:      z.string().min(8, 'Password must be at least 8 characters').max(100).optional(),
-    profile_status:    z.enum(['active', 'inactive', 'pending_edit']).optional(),
+    profile_photo_url:        z.string().optional().nullable(),
+    resume_url:               z.string().optional().nullable(),
+    intro_video_url:          z.string().optional().nullable(),
+    new_password:             z.string().min(8, 'Password must be at least 8 characters').max(100).optional(),
+    profile_status:           z.enum(['active', 'inactive', 'pending_edit']).optional(),
   })
   .partial();
 
@@ -132,18 +139,34 @@ export const CandidateFilterSchema = z.object({
   ageMin:          z.coerce.number().optional(),
   ageMax:          z.coerce.number().optional(),
   // Status / flags
-  gender:          z.string().optional(),
-  visaStatus:      z.string().optional(),   // 'has_visa' | 'needs_sponsorship' | 'citizen'
-  availability:    z.string().optional(),   // 'immediate' | '1_month' | '3_months'
-  hasVideo:        z.enum(['true','false']).optional(),
-  profileStatus:   z.string().optional(),
+  gender:                  z.string().optional(),
+  visaStatus:              z.string().optional(),   // 'has_visa' | 'needs_sponsorship' | 'citizen'
+  availability:            z.string().optional(),   // 'immediate' | '1_month' | '3_months'
+  hasVideo:                z.enum(['true','false']).optional(),
+  profileStatus:           z.string().optional(),
+  registrationFeeStatus:   z.enum(['paid', 'pending_payment', 'waived']).optional(),
+  cvFormat:                z.enum([
+    'uk_format', 'european_format', 'canadian_format', 'australian_format',
+    'gulf_format', 'asian_format', 'not_yet_created',
+  ]).optional(),
   // Legacy compat
   yearsExperience: z.coerce.number().optional(),
+  // Sort
+  sortBy: z.enum(['newest', 'oldest', 'completion', 'updated', 'alphabetical']).default('newest'),
   // Pagination
   page:            z.coerce.number().int().min(1).default(1),
   limit:           z.coerce.number().int().min(1).max(100).default(20),
 });
 
+export const BulkActionSchema = z.object({
+  candidateIds: z.array(z.string().uuid()).min(1).max(500),
+  action: z.enum(['mark_fee_paid', 'change_status']),
+  payload: z.object({
+    profile_status: z.enum(['active', 'inactive', 'pending_edit']).optional(),
+  }).optional(),
+});
+
 export type CreateCandidateDto  = z.infer<typeof CreateCandidateSchema>;
 export type UpdateCandidateDto  = z.infer<typeof UpdateCandidateSchema>;
 export type CandidateFilterDto  = z.infer<typeof CandidateFilterSchema>;
+export type BulkActionDto       = z.infer<typeof BulkActionSchema>;

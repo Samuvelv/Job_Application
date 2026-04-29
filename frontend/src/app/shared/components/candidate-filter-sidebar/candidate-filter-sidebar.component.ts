@@ -9,6 +9,7 @@ import { CandidateFilters } from '../../../core/models/candidate.model';
 import { TagInputComponent } from '../tag-input/tag-input.component';
 import { ChipMultiSelectComponent, ChipOption } from '../chip-multi-select/chip-multi-select.component';
 import { SearchableSelectComponent, SelectOption } from '../searchable-select/searchable-select.component';
+import { REGISTRATION_FEE_STATUS_OPTIONS, CV_FORMAT_OPTIONS } from '../../../core/constants/candidate-options';
 
 export type FilterApplyEvent = CandidateFilters;
 
@@ -76,6 +77,7 @@ const PROFILE_STATUS_OPTIONS: SelectOption[] = [
   { value: 'pending_edit', label: 'Pending Edit' },
   { value: 'inactive',     label: 'Inactive' },
 ];
+
 
 @Component({
   selector: 'app-candidate-filter-sidebar',
@@ -376,7 +378,7 @@ const PROFILE_STATUS_OPTIONS: SelectOption[] = [
           </div>
         </div>
 
-        <!-- 15. Profile Status (admin only) -->
+        <!-- 15 & 16. Admin-only status filters -->
         @if (showProfileStatus) {
           <div class="cfs-section">
             <div class="cfs-section__label">
@@ -390,6 +392,38 @@ const PROFILE_STATUS_OPTIONS: SelectOption[] = [
                 formControlName="profileStatus"
                 [options]="PROFILE_STATUS_OPTIONS"
                 placeholder="All statuses">
+              </app-searchable-select>
+            </div>
+          </div>
+
+          <div class="cfs-section">
+            <div class="cfs-section__label">
+              Registration Fee
+              @if (form.get('registrationFeeStatus')?.value) {
+                <span class="cfs-section__active-dot"></span>
+              }
+            </div>
+            <div class="cfs-section__body open">
+              <app-searchable-select
+                formControlName="registrationFeeStatus"
+                [options]="REGISTRATION_FEE_STATUS_OPTIONS"
+                placeholder="All payment statuses">
+              </app-searchable-select>
+            </div>
+          </div>
+
+          <div class="cfs-section">
+            <div class="cfs-section__label">
+              CV Format
+              @if (form.get('cvFormat')?.value) {
+                <span class="cfs-section__active-dot"></span>
+              }
+            </div>
+            <div class="cfs-section__body open">
+              <app-searchable-select
+                formControlName="cvFormat"
+                [options]="CV_FORMAT_OPTIONS"
+                placeholder="All formats">
               </app-searchable-select>
             </div>
           </div>
@@ -419,7 +453,9 @@ export class CandidateFilterSidebarComponent implements OnInit, OnDestroy {
   readonly VISA_OPTIONS             = VISA_OPTIONS;
   readonly AVAILABILITY_OPTIONS     = AVAILABILITY_OPTIONS;
   readonly CURRENCY_OPTIONS         = CURRENCY_OPTIONS;
-  readonly PROFILE_STATUS_OPTIONS   = PROFILE_STATUS_OPTIONS;
+  readonly PROFILE_STATUS_OPTIONS             = PROFILE_STATUS_OPTIONS;
+  readonly REGISTRATION_FEE_STATUS_OPTIONS    = REGISTRATION_FEE_STATUS_OPTIONS;
+  readonly CV_FORMAT_OPTIONS                  = CV_FORMAT_OPTIONS;
 
   form!: FormGroup;
   sidebarOpen = signal(false);
@@ -457,11 +493,13 @@ export class CandidateFilterSidebarComponent implements OnInit, OnDestroy {
       ageMin:             [null],
       ageMax:             [null],
       // Flags (single searchable-select or toggle)
-      gender:             [null],
-      visaStatus:         [null],
-      availability:       [null],
-      hasVideo:           [false],
-      profileStatus:      [null],
+      gender:                  [null],
+      visaStatus:              [null],
+      availability:            [null],
+      hasVideo:                [false],
+      profileStatus:           [null],
+      registrationFeeStatus:   [null],
+      cvFormat:                [null],
     });
   }
 
@@ -505,6 +543,8 @@ export class CandidateFilterSidebarComponent implements OnInit, OnDestroy {
     if (v.availability)               n++;
     if (v.hasVideo)                   n++;
     if (v.profileStatus)              n++;
+    if (v.registrationFeeStatus)      n++;
+    if (v.cvFormat)                   n++;
     return n;
   }
 
@@ -533,8 +573,10 @@ export class CandidateFilterSidebarComponent implements OnInit, OnDestroy {
     if (v.gender)             f.gender         = v.gender;
     if (v.visaStatus)         f.visaStatus     = v.visaStatus;
     if (v.availability)       f.availability   = v.availability;
-    if (v.hasVideo)           f.hasVideo       = 'true';
-    if (v.profileStatus)      f.profileStatus  = v.profileStatus;
+    if (v.hasVideo)                 f.hasVideo              = 'true';
+    if (v.profileStatus)            f.profileStatus         = v.profileStatus;
+    if (v.registrationFeeStatus)    f.registrationFeeStatus = v.registrationFeeStatus;
+    if (v.cvFormat)                 f.cvFormat              = v.cvFormat;
 
     this.lastAppliedSnapshot = this.form.value;
     this.filtersApplied.emit(f);
@@ -549,7 +591,7 @@ export class CandidateFilterSidebarComponent implements OnInit, OnDestroy {
       university: '', fieldOfStudy: null, salaryCurrency: null,
       salaryMin: null, salaryMax: null, ageMin: null, ageMax: null,
       gender: null, visaStatus: null, availability: null,
-      hasVideo: false, profileStatus: null,
+      hasVideo: false, profileStatus: null, registrationFeeStatus: null, cvFormat: null,
     };
     this.form.reset(empty);
     this.lastAppliedSnapshot = empty;

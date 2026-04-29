@@ -77,9 +77,11 @@ export async function createCandidate(dto: CreateCandidateDto, createdByAdminId:
       salary_max:      dto.salary_max      ?? null,
       salary_currency: dto.salary_currency ?? null,
       salary_type:     dto.salary_type     ?? null,
-      notice_period_id: dto.notice_period_id ?? null,
-      profile_status:  'active',
-      plain_password:  dto.password,
+      notice_period_id:        dto.notice_period_id ?? null,
+      profile_status:          'active',
+      registration_fee_status: dto.registration_fee_status ?? 'pending_payment',
+      cv_format:               dto.cv_format               ?? 'not_yet_created',
+      plain_password:          dto.password,
     });
 
     // 3. Insert related arrays
@@ -136,29 +138,20 @@ export async function createCandidate(dto: CreateCandidateDto, createdByAdminId:
   return getCandidateById(candidateId);
 }
 
-// ── List / Filter ─────────────────────────────────────────────────────────────
+// ── Base query (shared by list + export) ──────────────────────────────────────
 
-export async function listCandidates(filters: CandidateFilterDto) {
-  const { page, limit } = filters;
-  const offset = (page - 1) * limit;
-
-  let query = db('candidates as e')
+function buildBaseQuery() {
+  return db('candidates as e')
     .join('users as u', 'u.id', 'e.user_id')
-    .select(
-      'e.id', 'e.candidate_number', 'e.first_name', 'e.last_name', 'e.job_title',
-      'e.industry', 'e.occupation', 'e.current_country', 'e.current_city',
-      'e.years_experience', 'e.salary_min', 'e.salary_max', 'e.salary_currency',
-      'e.profile_photo_url', 'e.profile_status', 'e.intro_video_url', 'e.created_at',
-      'e.nationality', 'e.target_locations', 'e.date_of_birth', 'e.gender',
-      'e.plain_password',
-      'u.email', 'u.is_active',
-    )
     .where('u.is_active', true);
+}
 
-  // ── Full-text search ───────────────────────────────────────────────────────
+// ── Filter helper (shared by list + export) ───────────────────────────────────
+
+function applyFilters(query: any, filters: CandidateFilterDto): any {
   if (filters.search) {
     const term = `%${filters.search}%`;
-    query = query.where((b) =>
+    query = query.where((b: any) =>
       b.whereILike('e.first_name', term)
        .orWhereILike('e.last_name', term)
        .orWhereILike('u.email', term)
@@ -166,83 +159,66 @@ export async function listCandidates(filters: CandidateFilterDto) {
        .orWhereILike('e.occupation', term),
     );
   }
-
-  // ── Professional ──────────────────────────────────────────────────────────
   if (filters.occupation) query = query.whereILike('e.occupation', `%${filters.occupation}%`);
-
   if (filters.industry) {
-    const list = filters.industry.split(',').map(s => s.trim()).filter(Boolean);
+    const list = filters.industry.split(',').map((s: string) => s.trim()).filter(Boolean);
     if (list.length === 1) query = query.whereILike('e.industry', `%${list[0]}%`);
-    else query = query.where((b) => { list.forEach(i => b.orWhereILike('e.industry', `%${i}%`)); });
+    else query = query.where((b: any) => { list.forEach((i: string) => b.orWhereILike('e.industry', `%${i}%`)); });
   }
-
   const minExp = filters.yearsExpMin ?? filters.yearsExperience;
   if (minExp != null) query = query.where('e.years_experience', '>=', minExp);
   if (filters.yearsExpMax != null) query = query.where('e.years_experience', '<=', filters.yearsExpMax);
-
-  // ── Location ──────────────────────────────────────────────────────────────
   if (filters.currentCountry) {
-    const list = filters.currentCountry.split(',').map(s => s.trim()).filter(Boolean);
+    const list = filters.currentCountry.split(',').map((s: string) => s.trim()).filter(Boolean);
     if (list.length === 1) query = query.whereILike('e.current_country', `%${list[0]}%`);
-    else query = query.where((b) => { list.forEach(c => b.orWhereILike('e.current_country', `%${c}%`)); });
+    else query = query.where((b: any) => { list.forEach((c: string) => b.orWhereILike('e.current_country', `%${c}%`)); });
   }
   if (filters.currentCity) query = query.whereILike('e.current_city', `%${filters.currentCity}%`);
-
   if (filters.nationality) {
-    const list = filters.nationality.split(',').map(s => s.trim()).filter(Boolean);
+    const list = filters.nationality.split(',').map((s: string) => s.trim()).filter(Boolean);
     if (list.length === 1) query = query.whereILike('e.nationality', `%${list[0]}%`);
-    else query = query.where((b) => { list.forEach(n => b.orWhereILike('e.nationality', `%${n}%`)); });
+    else query = query.where((b: any) => { list.forEach((n: string) => b.orWhereILike('e.nationality', `%${n}%`)); });
   }
-
-  // ── Education ─────────────────────────────────────────────────────────────
   if (filters.university) {
-    query = query.whereIn('e.id', (sub) =>
+    query = query.whereIn('e.id', (sub: any) =>
       sub.select('candidate_id').from('candidate_education')
          .whereILike('institution', `%${filters.university}%`),
     );
   }
   if (filters.fieldOfStudy) {
-    query = query.whereIn('e.id', (sub) =>
+    query = query.whereIn('e.id', (sub: any) =>
       sub.select('candidate_id').from('candidate_education')
          .whereILike('field_of_study', `%${filters.fieldOfStudy}%`),
     );
   }
   if (filters.educationLevel) {
-    const levels = filters.educationLevel.split(',').map(s => s.trim().toLowerCase()).filter(Boolean);
+    const levels = filters.educationLevel.split(',').map((s: string) => s.trim().toLowerCase()).filter(Boolean);
     if (levels.length) {
-      query = query.whereIn('e.id', (sub) => {
-        sub.select('candidate_id').from('candidate_education').where((b) => {
-          levels.forEach(l => b.orWhereILike('degree', `%${l}%`));
+      query = query.whereIn('e.id', (sub: any) => {
+        sub.select('candidate_id').from('candidate_education').where((b: any) => {
+          levels.forEach((l: string) => b.orWhereILike('degree', `%${l}%`));
         });
       });
     }
   }
-
-  // ── Skills ────────────────────────────────────────────────────────────────
   if (filters.skills) {
-    const skillList = filters.skills.split(',').map(s => s.trim()).filter(Boolean);
+    const skillList = filters.skills.split(',').map((s: string) => s.trim()).filter(Boolean);
     if (skillList.length) {
-      query = query.whereIn('e.id', (sub) =>
+      query = query.whereIn('e.id', (sub: any) =>
         sub.select('candidate_id').from('candidate_skills').whereIn('skill_name', skillList),
       );
     }
   }
-
-  // ── Languages ─────────────────────────────────────────────────────────────
   if (filters.languages) {
-    const langList = filters.languages.split(',').map(l => l.trim()).filter(Boolean);
+    const langList = filters.languages.split(',').map((l: string) => l.trim()).filter(Boolean);
     if (langList.length) {
-      query = query.whereIn('e.id', (sub) =>
+      query = query.whereIn('e.id', (sub: any) =>
         sub.select('candidate_id').from('candidate_languages').whereIn('language', langList),
       );
     }
   }
-
-  // ── Salary ────────────────────────────────────────────────────────────────
   if (filters.salaryMin) query = query.where('e.salary_min', '>=', filters.salaryMin);
   if (filters.salaryMax) query = query.where('e.salary_max', '<=', filters.salaryMax);
-
-  // ── Age ───────────────────────────────────────────────────────────────────
   if (filters.ageMin != null) {
     const maxDob = new Date();
     maxDob.setFullYear(maxDob.getFullYear() - filters.ageMin);
@@ -253,17 +229,66 @@ export async function listCandidates(filters: CandidateFilterDto) {
     minDob.setFullYear(minDob.getFullYear() - filters.ageMax - 1);
     query = query.where('e.date_of_birth', '>=', minDob.toISOString().slice(0, 10));
   }
+  if (filters.gender)                query = query.where('e.gender', filters.gender);
+  if (filters.profileStatus)         query = query.where('e.profile_status', filters.profileStatus);
+  if (filters.registrationFeeStatus) query = query.where('e.registration_fee_status', filters.registrationFeeStatus);
+  if (filters.cvFormat)              query = query.where('e.cv_format', filters.cvFormat);
+  if (filters.hasVideo === 'true')   query = query.whereNotNull('e.intro_video_url');
+  if (filters.hasVideo === 'false')  query = query.whereNull('e.intro_video_url');
+  return query;
+}
 
-  // ── Flags ─────────────────────────────────────────────────────────────────
-  if (filters.gender)        query = query.where('e.gender', filters.gender);
-  if (filters.profileStatus) query = query.where('e.profile_status', filters.profileStatus);
-  if (filters.hasVideo === 'true')  query = query.whereNotNull('e.intro_video_url');
-  if (filters.hasVideo === 'false') query = query.whereNull('e.intro_video_url');
+// ── Sort helper ───────────────────────────────────────────────────────────────
 
-  // Total count (same filters, no pagination)
+function applySortOrder(query: any, sortBy: string): any {
+  switch (sortBy) {
+    case 'oldest':
+      return query.orderBy('e.created_at', 'asc');
+    case 'completion':
+      return query.orderByRaw(`
+        (15
+          + CASE WHEN e.profile_photo_url IS NOT NULL THEN 15 ELSE 0 END
+          + CASE WHEN e.job_title IS NOT NULL AND e.job_title <> '' THEN 10 ELSE 0 END
+          + CASE WHEN e.industry IS NOT NULL AND e.industry <> '' THEN 10 ELSE 0 END
+          + CASE WHEN e.current_country IS NOT NULL AND e.current_country <> '' THEN 10 ELSE 0 END
+          + CASE WHEN e.nationality IS NOT NULL AND e.nationality <> '' THEN 5 ELSE 0 END
+          + CASE WHEN e.years_experience IS NOT NULL THEN 10 ELSE 0 END
+          + CASE WHEN EXISTS (SELECT 1 FROM candidate_languages cl WHERE cl.candidate_id = e.id AND LOWER(cl.language) = 'english') THEN 10 ELSE 0 END
+          + CASE WHEN e.intro_video_url IS NOT NULL THEN 10 ELSE 0 END
+          + CASE WHEN e.target_locations IS NOT NULL AND array_length(e.target_locations, 1) > 0 THEN 5 ELSE 0 END
+        ) DESC
+      `);
+    case 'updated':
+      return query.orderBy('e.updated_at', 'desc');
+    case 'alphabetical':
+      return query.orderBy('e.first_name', 'asc').orderBy('e.last_name', 'asc');
+    default: // 'newest'
+      return query.orderBy('e.created_at', 'desc');
+  }
+}
+
+// ── List / Filter ─────────────────────────────────────────────────────────────
+
+export async function listCandidates(filters: CandidateFilterDto) {
+  const { page, limit } = filters;
+  const offset = (page - 1) * limit;
+
+  let query = buildBaseQuery().select(
+      'e.id', 'e.candidate_number', 'e.first_name', 'e.last_name', 'e.job_title',
+      'e.industry', 'e.occupation', 'e.current_country', 'e.current_city',
+      'e.years_experience', 'e.salary_min', 'e.salary_max', 'e.salary_currency',
+      'e.profile_photo_url', 'e.profile_status', 'e.intro_video_url', 'e.created_at',
+      'e.nationality', 'e.target_locations', 'e.date_of_birth', 'e.gender',
+      'e.plain_password', 'e.registration_fee_status', 'e.cv_format',
+      'u.email', 'u.is_active',
+      db.raw(`(SELECT cl.proficiency FROM candidate_languages cl WHERE cl.candidate_id = e.id AND LOWER(cl.language) = 'english' LIMIT 1) as english_level`),
+    );
+
+  query = applyFilters(query, filters);
+
   const countQuery = query.clone().clearSelect().count('e.id as total').first();
   const [rows, countRow] = await Promise.all([
-    query.orderBy('e.created_at', 'desc').limit(limit).offset(offset),
+    applySortOrder(query, filters.sortBy).limit(limit).offset(offset),
     countQuery,
   ]);
 
@@ -272,6 +297,21 @@ export async function listCandidates(filters: CandidateFilterDto) {
     data: rows,
     pagination: { page, limit, total, pages: Math.ceil(total / limit) },
   };
+}
+
+// ── Export / CSV ──────────────────────────────────────────────────────────────
+
+export async function exportCandidates(filters: CandidateFilterDto) {
+  let query = buildBaseQuery().select(
+      'e.candidate_number', 'e.first_name', 'e.last_name',
+      'u.email', 'e.phone',
+      'e.current_country', 'e.target_locations',
+      'e.profile_status', 'e.registration_fee_status', 'e.cv_format',
+      'e.created_at',
+    );
+
+  query = applyFilters(query, filters);
+  return query.orderBy('e.created_at', 'desc');
 }
 
 // ── Get by ID ─────────────────────────────────────────────────────────────────
@@ -405,6 +445,36 @@ export async function addCertificateFile(
     name,
     file_url: relativePath,
   });
+}
+
+// ── Bulk actions ─────────────────────────────────────────────────────────────
+
+export async function bulkAction(
+  candidateIds: string[],
+  action: 'mark_fee_paid' | 'change_status',
+  payload?: { profile_status?: string },
+): Promise<{ updated: number }> {
+  if (!candidateIds.length) return { updated: 0 };
+
+  switch (action) {
+    case 'mark_fee_paid':
+      await db('candidates')
+        .whereIn('id', candidateIds)
+        .update({ registration_fee_status: 'paid', updated_at: new Date() });
+      return { updated: candidateIds.length };
+
+    case 'change_status': {
+      const status = payload?.profile_status;
+      if (!status) throw new AppError(400, 'payload.profile_status is required for change_status');
+      await db('candidates')
+        .whereIn('id', candidateIds)
+        .update({ profile_status: status, updated_at: new Date() });
+      return { updated: candidateIds.length };
+    }
+
+    default:
+      throw new AppError(400, `Unknown bulk action: ${action}`);
+  }
 }
 
 // ── Resend credentials ─────────────────────────────────────────────────────────

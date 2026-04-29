@@ -234,6 +234,15 @@
             [allowClear]="false">
           </app-searchable-select>
         </div>
+        <div class="col-md-6">
+          <label class="form-label">CV Format</label>
+          <app-searchable-select
+            formControlName="cv_format"
+            [options]="cvFormatOptions"
+            placeholder="Select format…"
+            [allowClear]="false">
+          </app-searchable-select>
+        </div>
 
         <!-- Skills -->
         <div class="col-12 mt-3">
@@ -657,6 +666,19 @@
             [class.is-invalid]="submitted && ctrl('password').invalid"
             placeholder="Min 8 characters">
           <div class="invalid-feedback">Password must be at least 8 characters.</div>
+        </div>
+      </div>
+
+      <!-- Admin Controls -->
+      <div class="row g-3 mt-1">
+        <div class="col-md-6">
+          <label class="form-label">Registration Fee Status</label>
+          <app-searchable-select
+            formControlName="registration_fee_status"
+            [options]="registrationFeeStatusOptions"
+            placeholder="Select status…"
+            [allowClear]="false">
+          </app-searchable-select>
         </div>
       </div>
 
