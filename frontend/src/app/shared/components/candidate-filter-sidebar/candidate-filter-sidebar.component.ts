@@ -142,12 +142,12 @@ const PROFILE_STATUS_OPTIONS: SelectOption[] = [
           <div class="cfs-section__body open">
             <div class="cfs-range-row">
               <input type="number" class="form-control form-control-sm" formControlName="yearsExpMin"
-                placeholder="Min" min="0" max="50">
+                placeholder="Min" min="0" max="25">
               <span>–</span>
               <input type="number" class="form-control form-control-sm" formControlName="yearsExpMax"
-                placeholder="Max" min="0" max="50">
+                placeholder="Max" min="0" max="25">
             </div>
-            <div class="cfs-range-labels mt-1"><span>0 yrs</span><span>50 yrs</span></div>
+            <div class="cfs-range-labels mt-1"><span>0 yrs</span><span>25 yrs</span></div>
           </div>
         </div>
 
@@ -375,6 +375,16 @@ const PROFILE_STATUS_OPTIONS: SelectOption[] = [
                 <span class="cfs-toggle__track"></span>
               </label>
             </div>
+            <div class="cfs-toggle-row mt-2">
+              <span class="cfs-toggle-label">
+                Has CV Uploaded
+                <span class="cfs-field-hint">Only show profiles with CV uploaded</span>
+              </span>
+              <label class="cfs-toggle">
+                <input type="checkbox" formControlName="hasCV">
+                <span class="cfs-toggle__track"></span>
+              </label>
+            </div>
           </div>
         </div>
 
@@ -497,6 +507,7 @@ export class CandidateFilterSidebarComponent implements OnInit, OnDestroy {
       visaStatus:              [null],
       availability:            [null],
       hasVideo:                [false],
+      hasCV:                   [false],
       profileStatus:           [null],
       registrationFeeStatus:   [null],
       cvFormat:                [null],
@@ -542,6 +553,7 @@ export class CandidateFilterSidebarComponent implements OnInit, OnDestroy {
     if (v.visaStatus)                 n++;
     if (v.availability)               n++;
     if (v.hasVideo)                   n++;
+    if (v.hasCV)                      n++;
     if (v.profileStatus)              n++;
     if (v.registrationFeeStatus)      n++;
     if (v.cvFormat)                   n++;
@@ -574,6 +586,7 @@ export class CandidateFilterSidebarComponent implements OnInit, OnDestroy {
     if (v.visaStatus)         f.visaStatus     = v.visaStatus;
     if (v.availability)       f.availability   = v.availability;
     if (v.hasVideo)                 f.hasVideo              = 'true';
+    if (v.hasCV)                    f.hasCV                 = 'true';
     if (v.profileStatus)            f.profileStatus         = v.profileStatus;
     if (v.registrationFeeStatus)    f.registrationFeeStatus = v.registrationFeeStatus;
     if (v.cvFormat)                 f.cvFormat              = v.cvFormat;
@@ -591,7 +604,7 @@ export class CandidateFilterSidebarComponent implements OnInit, OnDestroy {
       university: '', fieldOfStudy: null, salaryCurrency: null,
       salaryMin: null, salaryMax: null, ageMin: null, ageMax: null,
       gender: null, visaStatus: null, availability: null,
-      hasVideo: false, profileStatus: null, registrationFeeStatus: null, cvFormat: null,
+      hasVideo: false, hasCV: false, profileStatus: null, registrationFeeStatus: null, cvFormat: null,
     };
     this.form.reset(empty);
     this.lastAppliedSnapshot = empty;

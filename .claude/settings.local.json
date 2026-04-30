@@ -3,7 +3,8 @@
     "allow": [
       "Bash(grep -E \"\\\\.\\(ts|scss\\)$\")",
       "Bash(node -e ' *)",
-      "Bash(npx knex *)"
+      "Bash(npx knex *)",
+      "Bash(grep -v \"//\")"
     ]
   }
 }

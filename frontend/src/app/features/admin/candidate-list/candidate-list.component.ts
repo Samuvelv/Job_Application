@@ -43,6 +43,18 @@ import { SORT_OPTIONS } from '../../../core/constants/candidate-options';
         <button type="button" class="filter-search-btn" (click)="doSearch()">
           <i class="bi bi-search"></i> Search
         </button>
+        <!-- Sort By -->
+        <div class="cl-sort-wrap">
+          <i class="bi bi-sort-down cl-sort-wrap__icon"></i>
+          <select class="form-select form-select-sm cl-sort-select"
+            [formControl]="sortCtrl"
+            (change)="onSortChange()"
+            title="Sort candidates">
+            @for (opt of SORT_OPTIONS; track opt.value) {
+              <option [value]="opt.value">{{ opt.label }}</option>
+            }
+          </select>
+        </div>
         <button type="button" class="cfs-toggle-sidebar-btn"
           [class.active]="sidebarVisible"
           (click)="toggleSidebar()">
@@ -637,9 +649,10 @@ export class CandidateListComponent implements OnInit {
     this.selectedIds.clear();
     const params: CandidateFilters = {
       ...this.sidebarFilters,
-      search: this.searchCtrl.value || undefined,
-      page:   this.pagination.page,
-      limit:  20,
+      search:  this.searchCtrl.value || undefined,
+      sortBy:  this.sortCtrl.value   || 'newest',
+      page:    this.pagination.page,
+      limit:   20,
     };
     this.empSvc.list(params).subscribe({
       next:  res => { this.candidates = res.data; this.pagination = res.pagination; this.loading = false; },

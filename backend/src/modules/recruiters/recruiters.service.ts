@@ -64,10 +64,14 @@ export async function createRecruiter(dto: CreateRecruiterDto, createdByAdminId:
 // ── List recruiters ───────────────────────────────────────────────────────────
 
 export async function listRecruiters(filters: RecruiterFilterDto) {
-  const { search, company, isActive, page, limit } = filters;
+  const { page, limit } = filters;
   const offset = (page - 1) * limit;
 
   const applyFilters = (b: any) => {
+    const { search, company, isActive, companyCountry, industry,
+            hasSponsorLicence, sponsorCountry, accountStatus,
+            joinedFrom, joinedTo, lastActive } = filters;
+
     if (search) {
       b.where((inner: any) =>
         inner.whereILike('r.contact_name', `%${search}%`)
@@ -76,7 +80,51 @@ export async function listRecruiters(filters: RecruiterFilterDto) {
       );
     }
     if (company) b.whereILike('r.company_name', `%${company}%`);
-    if (isActive !== undefined) b.where('u.is_active', isActive === 'true');
+
+    // Legacy isActive (still respected if accountStatus not set)
+    if (isActive !== undefined && !accountStatus) {
+      b.where('u.is_active', isActive === 'true');
+    }
+
+    if (companyCountry) b.whereILike('r.company_country', `%${companyCountry}%`);
+
+    if (industry) {
+      const list = industry.split(',').map((s: string) => s.trim()).filter(Boolean);
+      if (list.length === 1) b.whereILike('r.industry', `%${list[0]}%`);
+      else b.where((inner: any) => { list.forEach((i: string) => inner.orWhereILike('r.industry', `%${i}%`)); });
+    }
+
+    if (hasSponsorLicence) b.where('r.has_sponsor_licence', hasSponsorLicence);
+
+    if (sponsorCountry) {
+      const countries = sponsorCountry.split(',').map((s: string) => s.trim()).filter(Boolean);
+      if (countries.length) {
+        b.whereRaw(`r.sponsor_licence_countries && ?::text[]`, [countries]);
+      }
+    }
+
+    if (accountStatus) {
+      if (accountStatus === 'active')   b.where('u.is_active', true).where('r.access_expires_at', '>', db.fn.now());
+      if (accountStatus === 'inactive') b.where('u.is_active', false);
+      if (accountStatus === 'expired')  b.where('r.access_expires_at', '<=', db.fn.now());
+    }
+
+    if (joinedFrom) b.where('r.created_at', '>=', new Date(joinedFrom));
+    if (joinedTo) {
+      const to = new Date(joinedTo);
+      to.setDate(to.getDate() + 1); // include the whole end day
+      b.where('r.created_at', '<', to);
+    }
+
+    if (lastActive) {
+      const days = lastActive === '7_days' ? 7 : lastActive === '30_days' ? 30 : 90;
+      b.whereExists(
+        db('recruiter_access_tokens as rat')
+          .whereRaw('rat.recruiter_id = r.id')
+          .where('rat.created_at', '>=', db.raw(`NOW() - INTERVAL '${days} days'`))
+          .select(db.raw('1')),
+      );
+    }
   };
 
   let query = db('recruiters as r')
@@ -87,11 +135,20 @@ export async function listRecruiters(filters: RecruiterFilterDto) {
       'r.user_id',
       'u.email',
       'r.contact_name',
+      'r.contact_job_title',
       'r.company_name',
+      'r.company_logo_url',
+      'r.company_country',
+      'r.industry',
+      'r.has_sponsor_licence',
+      'r.sponsor_licence_countries',
       'r.access_expires_at',
       'r.plain_password',
       'u.is_active',
       'r.created_at',
+      db.raw(`(SELECT COUNT(*)::int FROM shortlists s WHERE s.recruiter_id = r.id) AS shortlists_count`),
+      db.raw(`(SELECT COUNT(*)::int FROM contact_unlock_requests cur WHERE cur.recruiter_id = r.id) AS contact_requests_count`),
+      db.raw(`(SELECT MAX(rat.created_at) FROM recruiter_access_tokens rat WHERE rat.recruiter_id = r.id) AS last_login_at`),
     )
     .modify(applyFilters);
 
@@ -129,6 +186,11 @@ export async function updateRecruiter(id: string, dto: UpdateRecruiterDto) {
     patch['plain_password'] = dto.new_password;
   }
 
+  // Handle active toggle (stored on users table)
+  if (dto.is_active !== undefined) {
+    await db('users').where({ id: existing.user_id }).update({ is_active: dto.is_active });
+  }
+
   if (Object.keys(patch).length > 0) {
     await db('recruiters').where({ id }).update({ ...patch });
   }
@@ -144,11 +206,20 @@ export async function getRecruiterById(id: string) {
       'r.user_id',
       'u.email',
       'r.contact_name',
+      'r.contact_job_title',
       'r.company_name',
+      'r.company_logo_url',
+      'r.company_country',
+      'r.industry',
+      'r.has_sponsor_licence',
+      'r.sponsor_licence_countries',
       'r.access_expires_at',
       'r.plain_password',
       'u.is_active',
       'r.created_at',
+      db.raw(`(SELECT COUNT(*)::int FROM shortlists s WHERE s.recruiter_id = r.id) AS shortlists_count`),
+      db.raw(`(SELECT COUNT(*)::int FROM contact_unlock_requests cur WHERE cur.recruiter_id = r.id) AS contact_requests_count`),
+      db.raw(`(SELECT MAX(rat.created_at) FROM recruiter_access_tokens rat WHERE rat.recruiter_id = r.id) AS last_login_at`),
     )
     .where('r.id', id)
     .first();

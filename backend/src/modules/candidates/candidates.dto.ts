@@ -143,6 +143,7 @@ export const CandidateFilterSchema = z.object({
   visaStatus:              z.string().optional(),   // 'has_visa' | 'needs_sponsorship' | 'citizen'
   availability:            z.string().optional(),   // 'immediate' | '1_month' | '3_months'
   hasVideo:                z.enum(['true','false']).optional(),
+  hasCV:                   z.enum(['true','false']).optional(),
   profileStatus:           z.string().optional(),
   registrationFeeStatus:   z.enum(['paid', 'pending_payment', 'waived']).optional(),
   cvFormat:                z.enum([

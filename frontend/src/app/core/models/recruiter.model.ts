@@ -6,12 +6,21 @@ export interface Recruiter {
   recruiter_number?: string;
   email: string;
   contact_name: string;
+  contact_job_title?: string;
   company_name?: string;
+  company_logo_url?: string;
+  company_country?: string;
+  industry?: string;
+  has_sponsor_licence?: 'yes' | 'no' | 'unknown';
+  sponsor_licence_countries?: string[];
   access_expires_at: string;
   is_active: boolean;
   plain_password?: string;
   has_active_token?: boolean;
   token_expires_at?: string | null;
+  shortlists_count?: number;
+  contact_requests_count?: number;
+  last_login_at?: string;
   created_at?: string;
 }
 
@@ -33,9 +42,17 @@ export interface ShortlistEntry {
 }
 
 export interface RecruiterFilters {
-  search?:   string;
-  company?:  string;
-  isActive?: 'true' | 'false';
-  page?:     number;
-  limit?:    number;
+  search?:            string;
+  company?:           string;
+  isActive?:          'true' | 'false';   // legacy
+  companyCountry?:    string;
+  industry?:          string;             // comma-sep
+  hasSponsorLicence?: 'yes' | 'no' | 'unknown';
+  sponsorCountry?:    string;             // comma-sep
+  accountStatus?:     'active' | 'inactive' | 'expired';
+  joinedFrom?:        string;             // YYYY-MM-DD
+  joinedTo?:          string;             // YYYY-MM-DD
+  lastActive?:        '7_days' | '30_days' | '90_days';
+  page?:              number;
+  limit?:             number;
 }

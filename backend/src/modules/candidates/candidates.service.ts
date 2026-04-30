@@ -235,6 +235,7 @@ function applyFilters(query: any, filters: CandidateFilterDto): any {
   if (filters.cvFormat)              query = query.where('e.cv_format', filters.cvFormat);
   if (filters.hasVideo === 'true')   query = query.whereNotNull('e.intro_video_url');
   if (filters.hasVideo === 'false')  query = query.whereNull('e.intro_video_url');
+  if (filters.hasCV === 'true')      query = query.whereNotNull('e.resume_url');
   return query;
 }
 

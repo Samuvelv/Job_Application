@@ -132,6 +132,7 @@ export interface CandidateFilters {
   visaStatus?: string;
   availability?: string;
   hasVideo?: 'true' | 'false';
+  hasCV?: 'true' | 'false';
   profileStatus?: string;
   registrationFeeStatus?: string;
   cvFormat?: string;

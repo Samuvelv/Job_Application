@@ -5,11 +5,13 @@ import { ReactiveFormsModule, FormBuilder, FormGroup, Validators, AbstractContro
 import { RouterLink } from '@angular/router';
 import { catchError, of } from 'rxjs';
 import { RecruiterService } from '../../../core/services/recruiter.service';
+import { MasterDataService } from '../../../core/services/master-data.service';
 import { Recruiter } from '../../../core/models/recruiter.model';
 import { ToastService } from '../../../core/services/toast.service';
 import { ConfirmDialogService } from '../../../core/services/confirm-dialog.service';
 import { PageHeaderComponent } from '../../../shared/components/page-header/page-header.component';
 import { EmptyStateComponent } from '../../../shared/components/empty-state/empty-state.component';
+import { RecruiterCardComponent } from '../../../shared/components/recruiter-card/recruiter-card.component';
 
 function passwordsMatchValidator(g: AbstractControl): ValidationErrors | null {
   const pw  = g.get('new_password')?.value;
@@ -21,7 +23,7 @@ function passwordsMatchValidator(g: AbstractControl): ValidationErrors | null {
 @Component({
   selector: 'app-recruiter-list',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, RouterLink, PageHeaderComponent, EmptyStateComponent],
+  imports: [CommonModule, ReactiveFormsModule, RouterLink, PageHeaderComponent, EmptyStateComponent, RecruiterCardComponent],
   template: `
     <!-- Header -->
     <app-page-header
@@ -72,22 +74,88 @@ function passwordsMatchValidator(g: AbstractControl): ValidationErrors | null {
         <!-- Advanced panel -->
         <div class="filter-card__advanced" [class.is-open]="advOpen">
           <div class="filter-card__advanced-inner">
-            <div class="row g-2">
+
+            <!-- ── Company ─────────────────────────────────────────────── -->
+            <p class="filter-card__group-label">Company</p>
+            <div class="row g-2 mb-3">
               <div class="col-sm-6 col-md-4 col-lg-3">
                 <label class="filter-card__section-label">Company Name</label>
                 <input type="text" class="form-control form-control-sm"
                   formControlName="company" placeholder="e.g. Acme Corp">
               </div>
               <div class="col-sm-6 col-md-4 col-lg-3">
-                <label class="filter-card__section-label">Status</label>
-                <select class="form-select form-select-sm" formControlName="isActive">
-                  <option value="">All Statuses</option>
-                  <option value="true">Active</option>
-                  <option value="false">Inactive</option>
+                <label class="filter-card__section-label">Company Country</label>
+                <input type="text" class="form-control form-control-sm"
+                  formControlName="companyCountry" placeholder="e.g. United Kingdom">
+              </div>
+              <div class="col-sm-6 col-md-4 col-lg-3">
+                <label class="filter-card__section-label">Industry / Sector</label>
+                <select class="form-select form-select-sm" formControlName="industry">
+                  <option value="">All Industries</option>
+                  @for (opt of INDUSTRY_OPTIONS; track opt) {
+                    <option [value]="opt">{{ opt }}</option>
+                  }
                 </select>
               </div>
             </div>
-            <div class="mt-3 d-flex gap-2">
+
+            <!-- ── Sponsor Licence ─────────────────────────────────────── -->
+            <p class="filter-card__group-label">Sponsor Licence</p>
+            <div class="row g-2 mb-3">
+              <div class="col-sm-6 col-md-4 col-lg-3">
+                <label class="filter-card__section-label">Holds Sponsor Licence</label>
+                <select class="form-select form-select-sm" formControlName="hasSponsorLicence">
+                  <option value="">Any</option>
+                  <option value="yes">Yes</option>
+                  <option value="no">No</option>
+                  <option value="unknown">Unknown</option>
+                </select>
+              </div>
+              <div class="col-sm-6 col-md-4 col-lg-3">
+                <label class="filter-card__section-label">Sponsor Licence Country</label>
+                <select class="form-select form-select-sm" formControlName="sponsorCountry">
+                  <option value="">Any Country</option>
+                  @for (opt of SPONSOR_COUNTRY_OPTIONS; track opt) {
+                    <option [value]="opt">{{ opt }}</option>
+                  }
+                </select>
+              </div>
+            </div>
+
+            <!-- ── Status & Activity ───────────────────────────────────── -->
+            <p class="filter-card__group-label">Status &amp; Activity</p>
+            <div class="row g-2 mb-3">
+              <div class="col-sm-6 col-md-4 col-lg-3">
+                <label class="filter-card__section-label">Account Status</label>
+                <select class="form-select form-select-sm" formControlName="accountStatus">
+                  <option value="">All Statuses</option>
+                  <option value="active">Active</option>
+                  <option value="inactive">Inactive</option>
+                  <option value="expired">Expired Access</option>
+                </select>
+              </div>
+              <div class="col-sm-6 col-md-4 col-lg-3">
+                <label class="filter-card__section-label">Last Active</label>
+                <select class="form-select form-select-sm" formControlName="lastActive">
+                  <option value="">Any Time</option>
+                  <option value="7_days">Within 7 days</option>
+                  <option value="30_days">Within 30 days</option>
+                  <option value="90_days">Within 90 days</option>
+                </select>
+              </div>
+              <div class="col-sm-6 col-md-4 col-lg-3">
+                <label class="filter-card__section-label">Date Joined — From</label>
+                <input type="date" class="form-control form-control-sm"
+                  formControlName="joinedFrom">
+              </div>
+              <div class="col-sm-6 col-md-4 col-lg-3">
+                <label class="filter-card__section-label">Date Joined — To</label>
+                <input type="date" class="form-control form-control-sm"
+                  formControlName="joinedTo">
+              </div>
+            </div>
+
+            <div class="d-flex gap-2">
               <button type="submit" class="filter-search-btn">
                 <i class="bi bi-search"></i> Apply Filters
               </button>
@@ -97,13 +165,14 @@ function passwordsMatchValidator(g: AbstractControl): ValidationErrors | null {
                 </button>
               }
             </div>
+
           </div>
         </div>
 
       </form>
     </div>
 
-    <!-- Table -->
+    <!-- Results -->
     @if (loading) {
       <div class="loading-state">
         <div class="spinner-border"></div>
@@ -112,82 +181,122 @@ function passwordsMatchValidator(g: AbstractControl): ValidationErrors | null {
     } @else if (recruiters.length === 0) {
       <app-empty-state
         icon="bi-people"
-        title="No recruiters found"
-        subtitle="Add your first recruiter to get started."
+        title="No recruiters yet"
+        subtitle="Get started by adding your first recruiter."
+        actionLabel="Add your first recruiter"
+        actionRoute="/admin/recruiters/create"
       />
     } @else {
-      <div class="section-card">
-        <div class="table-responsive">
-          <table class="table table-hover align-middle mb-0">
-            <thead class="table-light">
-              <tr>
-                <th class="small">#</th>
-                <th class="small">Name</th>
-                <th class="small">Company</th>
-                <th class="small">Email</th>
-                <th class="small">Expires</th>
-                <th class="small">Status</th>
-                <th class="small">Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              @for (rec of recruiters; track rec.id) {
-                <tr>
-                  <td>
-                    @if (rec.recruiter_number) {
-                      <span class="autocode-badge">{{ rec.recruiter_number }}</span>
-                    }
-                  </td>
-                  <td class="fw-semibold small">{{ rec.contact_name }}</td>
-                  <td class="small text-muted">{{ rec.company_name || '—' }}</td>
-                  <td class="small">{{ rec.email }}</td>
-                  <td class="small">
-                    <span [class.text-danger]="isExpired(rec.access_expires_at)"
-                          [class.text-muted]="!isExpired(rec.access_expires_at)">
-                      {{ rec.access_expires_at | date:'dd MMM yyyy' }}
-                      @if (isExpired(rec.access_expires_at)) {
-                        <span class="badge bg-danger ms-1">Expired</span>
-                      }
-                    </span>
-                  </td>
-                  <td>
-                    <span class="badge rounded-pill"
-                      [class.bg-success]="rec.is_active"
-                      [class.bg-secondary]="!rec.is_active">
-                      {{ rec.is_active ? 'Active' : 'Inactive' }}
-                    </span>
-                  </td>
-                  <td>
-                    <div class="tbl-actions">
-                      <a [routerLink]="['/admin/recruiters', rec.id]"
-                        class="tbl-actions__btn tbl-actions__btn--view tbl-actions__btn--icon"
-                        title="View recruiter">
-                        <i class="bi bi-eye"></i>
-                      </a>
-                      <button class="tbl-actions__btn tbl-actions__btn--edit tbl-actions__btn--icon"
-                        (click)="openEdit(rec)" title="Edit recruiter">
-                        <i class="bi bi-pencil"></i>
-                      </button>
-                      <div class="tbl-actions__sep"></div>
-                      <button class="tbl-actions__btn tbl-actions__btn--token"
-                        (click)="resendCredentials(rec)"
-                        title="Resend login credentials">
-                        <i class="bi bi-envelope"></i>
-                        Resend
-                      </button>
-                      <div class="tbl-actions__sep"></div>
-                      <button class="tbl-actions__btn tbl-actions__btn--danger tbl-actions__btn--icon"
-                        (click)="deleteRecruiter(rec)" title="Delete recruiter">
-                        <i class="bi bi-trash"></i>
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-              }
-            </tbody>
-          </table>
+
+      <!-- View toggle -->
+      <div class="d-flex justify-content-between align-items-center mb-3">
+        <small class="text-muted">{{ pagination.total }} recruiter{{ pagination.total === 1 ? '' : 's' }}</small>
+        <div class="cl-view-toggle">
+          <button type="button" class="cl-view-toggle__btn"
+            [class.cl-view-toggle__btn--active]="viewMode === 'list'"
+            (click)="viewMode = 'list'" title="List view">
+            <i class="bi bi-list-ul"></i>
+          </button>
+          <button type="button" class="cl-view-toggle__btn"
+            [class.cl-view-toggle__btn--active]="viewMode === 'grid'"
+            (click)="viewMode = 'grid'" title="Grid view">
+            <i class="bi bi-grid-3x3-gap-fill"></i>
+          </button>
         </div>
       </div>
+
+      <!-- ══ LIST VIEW ══ -->
+      @if (viewMode === 'list') {
+        <div class="section-card">
+          <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+              <thead class="table-light">
+                <tr>
+                  <th class="small">#</th>
+                  <th class="small">Name</th>
+                  <th class="small">Company</th>
+                  <th class="small">Email</th>
+                  <th class="small">Expires</th>
+                  <th class="small">Status</th>
+                  <th class="small">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (rec of recruiters; track rec.id) {
+                  <tr>
+                    <td>
+                      @if (rec.recruiter_number) {
+                        <span class="autocode-badge">{{ rec.recruiter_number }}</span>
+                      }
+                    </td>
+                    <td class="fw-semibold small">{{ rec.contact_name }}</td>
+                    <td class="small text-muted">{{ rec.company_name || '—' }}</td>
+                    <td class="small">{{ rec.email }}</td>
+                    <td class="small">
+                      <span [class.text-danger]="isExpired(rec.access_expires_at)"
+                            [class.text-muted]="!isExpired(rec.access_expires_at)">
+                        {{ rec.access_expires_at | date:'dd MMM yyyy' }}
+                        @if (isExpired(rec.access_expires_at)) {
+                          <span class="badge bg-danger ms-1">Expired</span>
+                        }
+                      </span>
+                    </td>
+                    <td>
+                      <span class="badge rounded-pill"
+                        [class.bg-success]="rec.is_active"
+                        [class.bg-secondary]="!rec.is_active">
+                        {{ rec.is_active ? 'Active' : 'Inactive' }}
+                      </span>
+                    </td>
+                    <td>
+                      <div class="tbl-actions">
+                        <a [routerLink]="['/admin/recruiters', rec.id]"
+                          class="tbl-actions__btn tbl-actions__btn--view tbl-actions__btn--icon"
+                          title="View recruiter">
+                          <i class="bi bi-eye"></i>
+                        </a>
+                        <button class="tbl-actions__btn tbl-actions__btn--edit tbl-actions__btn--icon"
+                          (click)="openEdit(rec)" title="Edit recruiter">
+                          <i class="bi bi-pencil"></i>
+                        </button>
+                        <div class="tbl-actions__sep"></div>
+                        <button class="tbl-actions__btn tbl-actions__btn--token"
+                          (click)="resendCredentials(rec)"
+                          title="Resend login credentials">
+                          <i class="bi bi-envelope"></i>
+                          Resend
+                        </button>
+                        <div class="tbl-actions__sep"></div>
+                        <button class="tbl-actions__btn tbl-actions__btn--danger tbl-actions__btn--icon"
+                          (click)="deleteRecruiter(rec)" title="Delete recruiter">
+                          <i class="bi bi-trash"></i>
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+        </div>
+      }
+
+      <!-- ══ GRID VIEW ══ -->
+      @if (viewMode === 'grid') {
+        <div class="rc-grid">
+          @for (rec of recruiters; track rec.id) {
+            <app-recruiter-card
+              [recruiter]="rec"
+              (edit)="openEdit(rec)"
+              (delete)="deleteRecruiter(rec)"
+              (resendCreds)="resendCredentials(rec)"
+              (toggleActive)="toggleActive(rec)">
+            </app-recruiter-card>
+          }
+        </div>
+      }
+
+      <!-- Pagination (shared) -->
       @if (pagination.pages > 1) {
         <nav class="mt-3 d-flex justify-content-center">
           <ul class="pagination pagination-sm mb-0">
@@ -370,10 +479,20 @@ function passwordsMatchValidator(g: AbstractControl): ValidationErrors | null {
   `,
 })
 export class RecruiterListComponent implements OnInit {
+  readonly INDUSTRY_OPTIONS = [
+    'Healthcare', 'IT', 'Engineering', 'Finance',
+    'Care', 'Education', 'Hospitality', 'Construction',
+  ];
+  readonly SPONSOR_COUNTRY_OPTIONS = [
+    'United Kingdom', 'Germany', 'Netherlands', 'Canada', 'Australia',
+    'United States', 'France', 'Ireland', 'New Zealand', 'Singapore',
+  ];
+
   recruiters: Recruiter[] = [];
   pagination = { page: 1, limit: 20, total: 0, pages: 0 };
   loading = false;
   advOpen = false;
+  viewMode: 'list' | 'grid' = 'list';
 
   filterForm: FormGroup;
 
@@ -389,23 +508,35 @@ export class RecruiterListComponent implements OnInit {
   constructor(
     private fb: FormBuilder,
     private recruiterService: RecruiterService,
+    private master: MasterDataService,
     private toast: ToastService,
     private confirm: ConfirmDialogService,
   ) {
     this.filterForm = this.fb.group({
-      search:   [''],
-      company:  [''],
-      isActive: [''],
+      search:             [''],
+      company:            [''],
+      companyCountry:     [''],
+      industry:           [''],
+      hasSponsorLicence:  [''],
+      sponsorCountry:     [''],
+      accountStatus:      [''],
+      lastActive:         [''],
+      joinedFrom:         [''],
+      joinedTo:           [''],
     });
   }
 
   ngOnInit(): void {
+    this.master.loadAll();
     this.load();
   }
 
   get activeAdvCount(): number {
     const v = this.filterForm.value;
-    return [v.company, v.isActive].filter(x => x !== null && x !== '' && x !== undefined).length;
+    return [
+      v.company, v.companyCountry, v.industry, v.hasSponsorLicence,
+      v.sponsorCountry, v.accountStatus, v.lastActive, v.joinedFrom, v.joinedTo,
+    ].filter(x => x !== null && x !== '' && x !== undefined).length;
   }
 
   get hasAnyFilter(): boolean {
@@ -446,11 +577,18 @@ export class RecruiterListComponent implements OnInit {
     this.loading = true;
     const v = this.filterForm.value;
     this.recruiterService.list({
-      search:   v.search   || undefined,
-      company:  v.company  || undefined,
-      isActive: v.isActive || undefined,
-      page:     this.pagination.page,
-      limit:    this.pagination.limit,
+      search:            v.search            || undefined,
+      company:           v.company           || undefined,
+      companyCountry:    v.companyCountry    || undefined,
+      industry:          v.industry          || undefined,
+      hasSponsorLicence: v.hasSponsorLicence || undefined,
+      sponsorCountry:    v.sponsorCountry    || undefined,
+      accountStatus:     v.accountStatus     || undefined,
+      lastActive:        v.lastActive        || undefined,
+      joinedFrom:        v.joinedFrom        || undefined,
+      joinedTo:          v.joinedTo          || undefined,
+      page:              this.pagination.page,
+      limit:             this.pagination.limit,
     })
       .pipe(catchError(() => of(null)))
       .subscribe((res) => {
@@ -463,7 +601,11 @@ export class RecruiterListComponent implements OnInit {
   }
 
   clearFilters(): void {
-    this.filterForm.reset({ search: '', company: '', isActive: '' });
+    this.filterForm.reset({
+      search: '', company: '', companyCountry: '', industry: '',
+      hasSponsorLicence: '', sponsorCountry: '', accountStatus: '',
+      lastActive: '', joinedFrom: '', joinedTo: '',
+    });
     this.pagination.page = 1;
     this.load();
   }
@@ -567,6 +709,21 @@ export class RecruiterListComponent implements OnInit {
     this.recruiterService.delete(rec.id).subscribe({
       next: () => { this.toast.success('Recruiter deleted'); this.load(); },
       error: (err) => this.toast.error(err?.error?.message ?? 'Failed to delete'),
+    });
+  }
+
+  async toggleActive(rec: Recruiter): Promise<void> {
+    const activate = !rec.is_active;
+    const ok = await this.confirm.confirm({
+      title:        activate ? 'Activate Recruiter' : 'Deactivate Recruiter',
+      message:      `${activate ? 'Activate' : 'Deactivate'} ${rec.contact_name}?`,
+      confirmLabel: activate ? 'Activate' : 'Deactivate',
+      confirmClass: activate ? 'btn-success' : 'btn-warning',
+    });
+    if (!ok) return;
+    this.recruiterService.update(rec.id, { is_active: activate }).subscribe({
+      next: () => { this.toast.success(`Recruiter ${activate ? 'activated' : 'deactivated'}`); this.load(); },
+      error: (err) => this.toast.error(err?.error?.message ?? 'Failed to update status'),
     });
   }
 }

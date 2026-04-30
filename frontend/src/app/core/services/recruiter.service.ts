@@ -45,9 +45,10 @@ export class RecruiterService {
 
   update(id: string, data: {
     contact_name?: string;
-    company_name?: string;
+    company_name?: string | null;
     new_password?: string;
     access_expires_at?: string;
+    is_active?: boolean;
   }): Observable<{ recruiter: Recruiter }> {
     return this.http.put<{ recruiter: Recruiter }>(`${this.api}/${id}`, data);
   }
