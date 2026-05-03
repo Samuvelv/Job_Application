@@ -10,11 +10,12 @@ import { ToastService } from '../../../core/services/toast.service';
 import { PageHeaderComponent } from '../../../shared/components/page-header/page-header.component';
 import { EmptyStateComponent } from '../../../shared/components/empty-state/empty-state.component';
 import { EditRequestCardComponent } from '../../../shared/components/edit-request-card/edit-request-card.component';
+import { ContactRequestCardComponent } from '../../../shared/components/contact-request-card/contact-request-card.component';
 
 @Component({
   selector: 'app-edit-requests',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, PageHeaderComponent, EmptyStateComponent, EditRequestCardComponent],
+  imports: [CommonModule, ReactiveFormsModule, PageHeaderComponent, EmptyStateComponent, EditRequestCardComponent, ContactRequestCardComponent],
   template: `
     <app-page-header
       title="Requests"
@@ -131,88 +132,17 @@ import { EditRequestCardComponent } from '../../../shared/components/edit-reques
           subtitle="Contact info requests from recruiters will appear here."
         />
       } @else {
-        <div class="d-flex flex-column gap-3">
+        <div class="row g-3">
           @for (req of contactRequests; track req.id) {
-            <div class="request-card"
-              [class.request-card--pending]="req.status === 'pending'"
-              [class.request-card--approved]="req.status === 'approved'"
-              [class.request-card--rejected]="req.status === 'rejected'">
-
-              <div class="d-flex justify-content-between align-items-start mb-3">
-                <div class="d-flex gap-3 align-items-start flex-wrap">
-                  <!-- Recruiter -->
-                  <div class="contact-req-party">
-                    <div class="contact-req-party__label">Recruiter</div>
-                    <div class="contact-req-party__name">{{ req.recruiter_name }}</div>
-                    @if (req.recruiter_company) {
-                      <div class="contact-req-party__sub">{{ req.recruiter_company }}</div>
-                    }
-                    <div class="contact-req-party__email">{{ req.recruiter_email }}</div>
-                  </div>
-                  <div class="contact-req-arrow"><i class="bi bi-arrow-right"></i></div>
-                  <!-- Candidate -->
-                  <div class="contact-req-party">
-                    <div class="contact-req-party__label">Candidate</div>
-                    <div class="contact-req-party__name">
-                      {{ req.candidate_first_name }} {{ req.candidate_last_name }}
-                      @if (req.candidate_number) {
-                        <span class="autocode-badge ms-1">{{ req.candidate_number }}</span>
-                      }
-                    </div>
-                    @if (req.candidate_job_title) {
-                      <div class="contact-req-party__sub">{{ req.candidate_job_title }}</div>
-                    }
-                    <div class="contact-req-party__email">{{ req.candidate_email }}</div>
-                  </div>
-                </div>
-                <div class="d-flex flex-column align-items-end gap-1">
-                  <span class="badge rounded-pill px-3 py-2"
-                    [class.badge-status-pending]="req.status === 'pending'"
-                    [class.badge-status-active]="req.status === 'approved'"
-                    [class.bg-danger]="req.status === 'rejected'">
-                    {{ req.status | titlecase }}
-                  </span>
-                  <div class="text-muted" style="font-size:.73rem">
-                    <i class="bi bi-clock me-1"></i>{{ req.created_at | date:'dd MMM yyyy, HH:mm' }}
-                    @if (req.reviewed_at) { · Reviewed {{ req.reviewed_at | date:'dd MMM yyyy' }} }
-                  </div>
-                </div>
-              </div>
-
-              @if (req.admin_note) {
-                <div class="alert alert-light py-2 small mb-3">
-                  <i class="bi bi-chat-left-text me-1"></i>
-                  <strong>Admin note:</strong> {{ req.admin_note }}
-                </div>
-              }
-
-              @if (req.status === 'pending') {
-                @if (contactReviewingId === req.id) {
-                  <div class="request-card__review" [formGroup]="reviewForm">
-                    <div class="mb-3">
-                      <label class="form-label small fw-semibold">Admin Note (optional)</label>
-                      <textarea formControlName="admin_note" class="form-control form-control-sm"
-                        rows="2" placeholder="Reason for rejection, or approval comment…"></textarea>
-                    </div>
-                    <div class="d-flex gap-2">
-                      <button class="btn btn-sm btn-success" (click)="confirmContactReview(req.id, 'approved')"
-                        [disabled]="reviewSubmitting">
-                        <i class="bi bi-check2 me-1"></i>{{ reviewSubmitting ? '…' : 'Approve' }}
-                      </button>
-                      <button class="btn btn-sm btn-danger" (click)="confirmContactReview(req.id, 'rejected')"
-                        [disabled]="reviewSubmitting">
-                        <i class="bi bi-x me-1"></i>{{ reviewSubmitting ? '…' : 'Reject' }}
-                      </button>
-                      <button class="btn btn-sm btn-outline-secondary" (click)="cancelReview()">Cancel</button>
-                    </div>
-                  </div>
-                } @else {
-                  <button class="btn btn-sm btn-outline-primary" (click)="startContactReview(req.id)">
-                    <i class="bi bi-eye me-1"></i>Review
-                  </button>
-                }
-              }
-
+            <div class="col-xxl-3 col-lg-4 col-md-6 col-12">
+              <app-contact-request-card
+                [request]="req"
+                [isAdmin]="true"
+                [isRecruiter]="false"
+                (approved)="onContactApproved($event)"
+                (rejected)="onContactRejected($event)"
+                (cancelled)="onContactReviewCancelled()">
+              </app-contact-request-card>
             </div>
           }
         </div>
@@ -457,6 +387,40 @@ export class EditRequestsComponent implements OnInit {
   }
 
   onEditReviewCancelled(): void {
+    this.reviewSubmitting = false;
+  }
+
+  onContactApproved(event: { id: string; adminNote?: string }): void {
+    this.reviewSubmitting = true;
+    this.contactRequestService.review(event.id, { status: 'approved', admin_note: event.adminNote }).subscribe({
+      next: () => {
+        this.reviewSubmitting = false;
+        this.toast.success('Request approved');
+        this.loadContactRequests();
+      },
+      error: (err) => {
+        this.reviewSubmitting = false;
+        this.toast.error(err?.error?.message ?? 'Failed to review');
+      },
+    });
+  }
+
+  onContactRejected(event: { id: string; adminNote?: string }): void {
+    this.reviewSubmitting = true;
+    this.contactRequestService.review(event.id, { status: 'rejected', admin_note: event.adminNote }).subscribe({
+      next: () => {
+        this.reviewSubmitting = false;
+        this.toast.success('Request rejected');
+        this.loadContactRequests();
+      },
+      error: (err) => {
+        this.reviewSubmitting = false;
+        this.toast.error(err?.error?.message ?? 'Failed to review');
+      },
+    });
+  }
+
+  onContactReviewCancelled(): void {
     this.reviewSubmitting = false;
   }
 
