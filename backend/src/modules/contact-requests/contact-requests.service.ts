@@ -1,6 +1,7 @@
 // src/modules/contact-requests/contact-requests.service.ts
 import { db } from '../../config/db';
 import { AppError } from '../../middleware/errorHandler';
+import { sendContactRequestApprovedNotification, sendContactRequestRejectedNotification } from '../../services/email.service';
 import type { ReviewContactRequestDto } from './contact-requests.dto';
 
 // ── Create a request (recruiter → admin) ────────────────────────────────────
@@ -90,6 +91,40 @@ export async function reviewContactRequest(id: string, dto: ReviewContactRequest
       reviewed_at: new Date(),
     })
     .returning('*');
+
+  // Fetch recruiter and candidate details for email notification
+  const recruiter = await db('recruiters as r')
+    .join('users as u', 'u.id', 'r.user_id')
+    .select('r.contact_name', 'u.email')
+    .where('r.id', req.recruiter_id)
+    .first();
+
+  const candidate = await db('candidates')
+    .select('first_name', 'last_name')
+    .where('id', req.candidate_id)
+    .first();
+
+  if (recruiter && candidate) {
+    const recruiterName = recruiter.contact_name;
+    const recruiterEmail = recruiter.email;
+    const candidateName = `${candidate.first_name} ${candidate.last_name}`;
+
+    if (dto.status === 'approved') {
+      // Send approval notification (non-fatal)
+      sendContactRequestApprovedNotification(
+        recruiterEmail,
+        recruiterName,
+        candidateName,
+      ).catch(() => { /* non-fatal */ });
+    } else {
+      // Send rejection notification (non-fatal)
+      sendContactRequestRejectedNotification(
+        recruiterEmail,
+        recruiterName,
+      ).catch(() => { /* non-fatal */ });
+    }
+  }
+
   return updated;
 }
 

@@ -221,3 +221,46 @@ export async function sendAdminContactRequestNotification(
     `,
   });
 }
+
+export async function sendContactRequestApprovedNotification(
+  recruiterEmail: string,
+  recruiterName: string,
+  candidateName: string,
+): Promise<void> {
+  await sendMail({
+    to: recruiterEmail,
+    subject: '✅ Contact Request Approved',
+    html: `
+      <h2>Hello ${recruiterName},</h2>
+      <p>Your request to contact <strong>${candidateName}</strong> has been <strong style="color:#16a34a;">approved</strong>.</p>
+      <p style="font-size:16px;line-height:1.6;color:#111827;">Their contact details are now visible on their profile. You can reach out to them directly.</p>
+      <p style="margin-top:24px;">
+        <a href="${env.FRONTEND_URL}/recruiter/candidates" style="background:#4f46e5;color:#fff;padding:12px 24px;border-radius:6px;text-decoration:none;display:inline-block;">
+          View Candidate Profile
+        </a>
+      </p>
+      <p style="color:#888;font-size:12px;margin-top:20px;">If you have any questions, please reach out to our support team.</p>
+    `,
+  });
+}
+
+export async function sendContactRequestRejectedNotification(
+  recruiterEmail: string,
+  recruiterName: string,
+): Promise<void> {
+  await sendMail({
+    to: recruiterEmail,
+    subject: '📋 Contact Request Reviewed',
+    html: `
+      <h2>Hello ${recruiterName},</h2>
+      <p>Your contact request has been <strong style="color:#dc2626;">reviewed</strong>.</p>
+      <p style="font-size:16px;line-height:1.6;color:#111827;">This candidate is not available for direct contact at this time.</p>
+      <p style="margin-top:24px;">
+        <a href="${env.FRONTEND_URL}/recruiter/dashboard" style="background:#4f46e5;color:#fff;padding:12px 24px;border-radius:6px;text-decoration:none;display:inline-block;">
+          Return to Dashboard
+        </a>
+      </p>
+      <p style="color:#888;font-size:12px;margin-top:20px;">If you have any questions, please reach out to our support team.</p>
+    `,
+  });
+}
