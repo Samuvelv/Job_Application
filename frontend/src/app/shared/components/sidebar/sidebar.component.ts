@@ -1,14 +1,16 @@
 // src/app/shared/components/sidebar/sidebar.component.ts
-import { Component, computed } from '@angular/core';
+import { Component, computed, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink, RouterLinkActive } from '@angular/router';
 import { AuthService } from '../../../core/services/auth.service';
 import { SidebarService } from '../../../core/services/sidebar.service';
+import { NotificationService } from '../../../core/services/notification.service';
 
 interface NavItem {
   label: string;
   icon: string;  // Bootstrap Icons class e.g. 'bi-grid-1x2-fill'
   route: string;
+  badge?: () => number; // Optional badge count
 }
 
 @Component({
@@ -29,7 +31,12 @@ interface NavItem {
                routerLinkActive="active"
                [title]="sidebar.isCollapsed() ? item.label : ''"
                (click)="sidebar.close()">
-              <i class="bi {{ item.icon }}"></i>
+              <div class="sidebar-link__icon-wrapper">
+                <i class="bi {{ item.icon }}"></i>
+                @if (item.badge && item.badge() > 0) {
+                  <span class="sidebar-link__badge">{{ item.badge() }}</span>
+                }
+              </div>
               <span class="sidebar-link-label">{{ item.label }}</span>
             </a>
           </li>
@@ -51,7 +58,7 @@ interface NavItem {
     </nav>
   `,
 })
-export class SidebarComponent {
+export class SidebarComponent implements OnDestroy {
   private role = computed(() => this.auth.currentUser()?.role ?? '');
 
   navItems = computed<NavItem[]>(() => {
@@ -61,8 +68,8 @@ export class SidebarComponent {
           { label: 'Dashboard',     icon: 'bi-grid-1x2-fill',     route: '/admin/dashboard' },
           { label: 'Candidates',     icon: 'bi-people-fill',        route: '/admin/candidates' },
           { label: 'Recruiters',    icon: 'bi-person-badge-fill',  route: '/admin/recruiters' },
-          { label: 'Edit Requests',      icon: 'bi-pencil-square',      route: '/admin/edit-requests' },
-          { label: 'Contact Requests',  icon: 'bi-envelope-fill',      route: '/admin/contact-submissions' },
+          { label: 'Edit Requests',      icon: 'bi-pencil-square',      route: '/admin/edit-requests', badge: () => this.notifications.pendingEdits() },
+          { label: 'Contact Requests',  icon: 'bi-envelope-fill',      route: '/admin/contact-submissions', badge: () => this.notifications.pendingContactRequests() },
           { label: 'Volunteers',        icon: 'bi-people-fill',        route: '/admin/volunteers' },
           { label: 'Audit Logs',        icon: 'bi-journal-text',       route: '/admin/audit-logs' },
         ];
@@ -87,5 +94,11 @@ export class SidebarComponent {
   constructor(
     private auth: AuthService,
     public sidebar: SidebarService,
+    public notifications: NotificationService,
   ) {}
+
+  ngOnDestroy(): void {
+    this.notifications.stopPolling();
+  }
 }
+

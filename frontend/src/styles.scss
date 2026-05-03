@@ -482,6 +482,38 @@ body {
   }
 }
 
+// Icon wrapper for badge positioning
+.sidebar-link__icon-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
+}
+
+// Badge on top-right of icon
+.sidebar-link__badge {
+  position: absolute;
+  top: -6px;
+  right: -8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 4px;
+  background: #ef4444;
+  color: #fff;
+  font-size: 0.65rem;
+  font-weight: 700;
+  border-radius: 9px;
+  border: 2px solid #fff;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12);
+  line-height: 1;
+}
+
 // Per-icon accent colors (light sidebar)
 .sidebar-link .bi-grid-1x2-fill       { color: #06b6d4; }
 .sidebar-link .bi-people-fill         { color: #10b981; }
@@ -606,6 +638,23 @@ body {
 
     .sidebar-link.active .sidebar-link-label {
       opacity: 1;
+    }
+
+    // Icon wrapper in collapsed mode
+    .sidebar-link__icon-wrapper {
+      width: 24px;
+      height: 24px;
+    }
+
+    // Badge in collapsed mode (positioned at top-right)
+    .sidebar-link__badge {
+      top: -4px;
+      right: -4px;
+      min-width: 16px;
+      height: 16px;
+      padding: 0 3px;
+      font-size: 0.55rem;
+      border-width: 1px;
     }
   }
 

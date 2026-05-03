@@ -110,3 +110,15 @@ export async function getPublicStats() {
     totalMatches:    toCount(matchesRow),
   };
 }
+
+export async function getNotificationCounts() {
+  const [pendingEditsRow, pendingContactRequestsRow] = await Promise.all([
+    db('profile_edit_requests').where({ status: 'pending' }).count('id as count').first(),
+    db('contact_submissions').where({ is_read: false }).count('id as count').first(),
+  ]);
+
+  return {
+    pendingEdits: toCount(pendingEditsRow),
+    pendingContactRequests: toCount(pendingContactRequestsRow),
+  };
+}

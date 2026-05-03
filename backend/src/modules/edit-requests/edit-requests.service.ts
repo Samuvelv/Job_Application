@@ -3,7 +3,7 @@ import { v4 as uuidv4 } from 'uuid';
 import { db } from '../../config/db';
 import { AppError } from '../../middleware/errorHandler';
 import { updateCandidate } from '../candidates/candidates.service';
-import { sendEditRequestStatus } from '../../services/email.service';
+import { sendEditRequestStatus, sendAdminEditRequestNotification } from '../../services/email.service';
 import type {
   SubmitEditRequestDto,
   ReviewEditRequestDto,
@@ -58,6 +58,12 @@ export async function submitEditRequest(
   await db('candidates')
     .where({ id: candidate.id })
     .update({ profile_status: 'pending_edit', updated_at: new Date() });
+
+  // Send admin notification (non-fatal)
+  sendAdminEditRequestNotification(
+    `${candidate.first_name} ${candidate.last_name}`,
+    candidate.email,
+  ).catch(() => { /* non-fatal */ });
 
   return getEditRequestById(id);
 }

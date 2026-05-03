@@ -27,6 +27,7 @@ const envSchema = z.object({
   SMTP_USER: z.string().optional(),
   SMTP_PASS: z.string().optional(),
   EMAIL_FROM: z.string().optional(),
+  ADMIN_EMAIL: z.string().optional(),
 
   APP_URL: z.string().default('http://localhost:3000'),
   FRONTEND_URL: z.string().default('http://localhost:4200'),

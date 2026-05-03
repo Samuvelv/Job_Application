@@ -1,9 +1,10 @@
 // src/app/features/admin/dashboard/admin-dashboard.component.ts
-import { Component, signal, OnInit, computed } from '@angular/core';
+import { Component, signal, OnInit, computed, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { AuthService } from '../../../core/services/auth.service';
 import { StatsService, AdminStats } from '../../../core/services/stats.service';
+import { NotificationService } from '../../../core/services/notification.service';
 import { ContactSubmissionService } from '../../../core/services/contact-submission.service';
 import { ContactSubmission } from '../../../core/models/contact-submission.model';
 
@@ -311,7 +312,7 @@ import { ContactSubmission } from '../../../core/models/contact-submission.model
     </div>
   `,
 })
-export class AdminDashboardComponent implements OnInit {
+export class AdminDashboardComponent implements OnInit, OnDestroy {
   stats              = signal<AdminStats | null>(null);
   loading            = signal(true);
   submissions        = signal<ContactSubmission[]>([]);
@@ -324,6 +325,7 @@ export class AdminDashboardComponent implements OnInit {
     private auth: AuthService,
     private statsService: StatsService,
     private contactSvc: ContactSubmissionService,
+    public notifications: NotificationService,
   ) {}
 
   ngOnInit(): void {
@@ -336,6 +338,10 @@ export class AdminDashboardComponent implements OnInit {
       next:  r => { this.submissions.set(r.data); this.submissionsLoading.set(false); },
       error: () => this.submissionsLoading.set(false),
     });
+  }
+
+  ngOnDestroy(): void {
+    this.notifications.stopPolling();
   }
 
   email(): string { return this.auth.currentUser()?.email ?? ''; }

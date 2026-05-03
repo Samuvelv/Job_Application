@@ -1,4 +1,5 @@
 import { db } from '../../config/db';
+import { sendAdminContactRequestNotification } from '../../services/email.service';
 
 export interface CreateSubmissionDto {
   name:     string;
@@ -18,6 +19,13 @@ export async function createSubmission(data: CreateSubmissionDto) {
       message: data.message.trim(),
     })
     .returning('*');
+
+  // Send admin notification (non-fatal)
+  sendAdminContactRequestNotification(
+    data.name.trim(),
+    data.email.trim().toLowerCase(),
+  ).catch(() => { /* non-fatal */ });
+
   return row;
 }
 

@@ -39,3 +39,12 @@ export async function publicStats(_req: Request, res: Response, next: NextFuncti
     next(err);
   }
 }
+
+export async function notificationCounts(req: Request, res: Response, next: NextFunction) {
+  try {
+    const data = await statsService.getNotificationCounts();
+    res.json(data);
+  } catch (err) {
+    next(err);
+  }
+}

@@ -133,16 +133,91 @@ export async function sendEditRequestStatus(
   status: 'approved' | 'rejected',
   adminNote?: string,
 ): Promise<void> {
-  const statusText = status === 'approved' ? 'Approved' : 'Rejected';
-  const color = status === 'approved' ? '#16a34a' : '#dc2626';
+  const isApproved = status === 'approved';
+  
+  let html = `
+    <h2>Hello ${name},</h2>
+  `;
+
+  if (isApproved) {
+    html += `
+      <p>Your profile update request has been <strong style="color:#16a34a;">approved</strong>.</p>
+      <p style="font-size:16px;line-height:1.6;color:#111827;">Your profile has been updated with the changes you requested.</p>
+    `;
+  } else {
+    html += `
+      <p>Your profile update request has been <strong style="color:#dc2626;">reviewed</strong>.</p>
+      <p style="font-size:16px;line-height:1.6;color:#111827;">Please contact our team for more information.</p>
+      ${adminNote ? `<p style="background:#fef3c7;padding:12px;border-left:4px solid #f59e0b;border-radius:4px;"><strong>Note from Admin:</strong><br/>${adminNote}</p>` : ''}
+    `;
+  }
+
+  html += `
+    <p style="margin-top:24px;">
+      <a href="${env.FRONTEND_URL}/candidate/profile" style="background:#4f46e5;color:#fff;padding:12px 24px;border-radius:6px;text-decoration:none;display:inline-block;">
+        View Your Profile
+      </a>
+    </p>
+    <p style="color:#888;font-size:12px;margin-top:20px;">If you have any questions, please reach out to our support team.</p>
+  `;
+
+  const subject = isApproved 
+    ? '✅ Your Profile Update Request Has Been Approved'
+    : '📋 Your Profile Update Request Has Been Reviewed';
+
   await sendMail({
     to: email,
-    subject: `Your Profile Edit Request has been ${statusText}`,
+    subject,
+    html,
+  });
+}
+
+export async function sendAdminEditRequestNotification(
+  candidateName: string,
+  candidateEmail: string,
+): Promise<void> {
+  if (!env.ADMIN_EMAIL) {
+    console.warn('⚠️  ADMIN_EMAIL not configured, skipping admin notification');
+    return;
+  }
+
+  await sendMail({
+    to: env.ADMIN_EMAIL,
+    subject: '📝 New Profile Edit Request Received',
     html: `
-      <h2>Hello ${name},</h2>
-      <p>Your profile edit request has been <strong style="color:${color};">${statusText}</strong>.</p>
-      ${adminNote ? `<p><strong>Admin Note:</strong> ${adminNote}</p>` : ''}
-      <p>Visit your profile at <a href="${env.FRONTEND_URL}/candidate/profile">${env.FRONTEND_URL}/candidate/profile</a></p>
+      <h2>New Profile Edit Request</h2>
+      <p>A candidate has submitted a new profile edit request.</p>
+      <table style="border-collapse:collapse;margin:16px 0;">
+        <tr><td style="padding:8px;font-weight:bold;">Candidate:</td><td style="padding:8px;">${candidateName}</td></tr>
+        <tr><td style="padding:8px;font-weight:bold;">Email:</td><td style="padding:8px;">${candidateEmail}</td></tr>
+        <tr><td style="padding:8px;font-weight:bold;">Time:</td><td style="padding:8px;">${new Date().toUTCString()}</td></tr>
+      </table>
+      <p><a href="${env.FRONTEND_URL}/admin/edit-requests" style="background:#4f46e5;color:#fff;padding:12px 24px;border-radius:6px;text-decoration:none;">Review Requests</a></p>
+    `,
+  });
+}
+
+export async function sendAdminContactRequestNotification(
+  recruiterName: string,
+  recruiterEmail: string,
+): Promise<void> {
+  if (!env.ADMIN_EMAIL) {
+    console.warn('⚠️  ADMIN_EMAIL not configured, skipping admin notification');
+    return;
+  }
+
+  await sendMail({
+    to: env.ADMIN_EMAIL,
+    subject: '💬 New Contact Request Received',
+    html: `
+      <h2>New Contact Request</h2>
+      <p>A recruiter has submitted a new contact request.</p>
+      <table style="border-collapse:collapse;margin:16px 0;">
+        <tr><td style="padding:8px;font-weight:bold;">Recruiter:</td><td style="padding:8px;">${recruiterName}</td></tr>
+        <tr><td style="padding:8px;font-weight:bold;">Email:</td><td style="padding:8px;">${recruiterEmail}</td></tr>
+        <tr><td style="padding:8px;font-weight:bold;">Time:</td><td style="padding:8px;">${new Date().toUTCString()}</td></tr>
+      </table>
+      <p><a href="${env.FRONTEND_URL}/admin/contact-submissions" style="background:#4f46e5;color:#fff;padding:12px 24px;border-radius:6px;text-decoration:none;">Review Submissions</a></p>
     `,
   });
 }
