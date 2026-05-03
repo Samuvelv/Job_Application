@@ -9,11 +9,12 @@ import { ContactRequest } from '../../../core/models/contact-request.model';
 import { ToastService } from '../../../core/services/toast.service';
 import { PageHeaderComponent } from '../../../shared/components/page-header/page-header.component';
 import { EmptyStateComponent } from '../../../shared/components/empty-state/empty-state.component';
+import { EditRequestCardComponent } from '../../../shared/components/edit-request-card/edit-request-card.component';
 
 @Component({
   selector: 'app-edit-requests',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, PageHeaderComponent, EmptyStateComponent],
+  imports: [CommonModule, ReactiveFormsModule, PageHeaderComponent, EmptyStateComponent, EditRequestCardComponent],
   template: `
     <app-page-header
       title="Requests"
@@ -69,78 +70,17 @@ import { EmptyStateComponent } from '../../../shared/components/empty-state/empt
           subtitle="Edit requests submitted by candidates will appear here."
         />
       } @else {
-        <div class="d-flex flex-column gap-3">
+        <div class="row g-3">
           @for (req of editRequests; track req.id) {
-            <div class="request-card"
-              [class.request-card--pending]="req.status === 'pending'"
-              [class.request-card--approved]="req.status === 'approved'"
-              [class.request-card--rejected]="req.status === 'rejected'">
-              <div class="d-flex justify-content-between align-items-start mb-3">
-                <div>
-                  <span class="fw-semibold">{{ req.first_name }} {{ req.last_name }}</span>
-                  <span class="text-muted small ms-2">{{ req.email }}</span>
-                  <div class="text-muted small mt-1">
-                    <i class="bi bi-clock me-1"></i>Submitted {{ req.created_at | date:'dd MMM yyyy, HH:mm' }}
-                    @if (req.reviewed_at) { · Reviewed {{ req.reviewed_at | date:'dd MMM yyyy' }} }
-                  </div>
-                </div>
-                <span class="badge rounded-pill px-3 py-2"
-                  [class.badge-status-pending]="req.status === 'pending'"
-                  [class.badge-status-active]="req.status === 'approved'"
-                  [class.bg-danger]="req.status === 'rejected'">
-                  {{ req.status | titlecase }}
-                </span>
-              </div>
-
-              <div class="mb-3">
-                <h6 class="small fw-bold text-muted text-uppercase mb-2">Requested Changes</h6>
-                <div class="request-card__changes">
-                  <table class="table table-sm table-borderless mb-0">
-                    <tbody>
-                      @for (entry of getEditChanges(req); track entry.key) {
-                        <tr>
-                          <td class="fw-semibold text-muted pe-3" style="width:180px">{{ entry.label }}</td>
-                          <td>{{ entry.display }}</td>
-                        </tr>
-                      }
-                    </tbody>
-                  </table>
-                </div>
-              </div>
-
-              @if (req.admin_note) {
-                <div class="alert alert-light py-2 small mb-3">
-                  <i class="bi bi-chat-left-text me-1"></i>
-                  <strong>Admin note:</strong> {{ req.admin_note }}
-                </div>
-              }
-
-              @if (req.status === 'pending') {
-                @if (editReviewingId === req.id) {
-                  <div class="request-card__review" [formGroup]="reviewForm">
-                    <div class="mb-3">
-                      <label class="form-label small fw-semibold">Admin Note (optional)</label>
-                      <textarea formControlName="admin_note" class="form-control form-control-sm"
-                        rows="2" placeholder="Reason for rejection, or approval comment…"></textarea>
-                    </div>
-                    <div class="d-flex gap-2">
-                      <button class="btn btn-sm btn-success" (click)="confirmEditReview(req.id, 'approved')"
-                        [disabled]="reviewSubmitting">
-                        <i class="bi bi-check2 me-1"></i>{{ reviewSubmitting ? '…' : 'Approve' }}
-                      </button>
-                      <button class="btn btn-sm btn-danger" (click)="confirmEditReview(req.id, 'rejected')"
-                        [disabled]="reviewSubmitting">
-                        <i class="bi bi-x me-1"></i>{{ reviewSubmitting ? '…' : 'Reject' }}
-                      </button>
-                      <button class="btn btn-sm btn-outline-secondary" (click)="cancelReview()">Cancel</button>
-                    </div>
-                  </div>
-                } @else {
-                  <button class="btn btn-sm btn-outline-primary" (click)="startEditReview(req.id)">
-                    <i class="bi bi-eye me-1"></i>Review
-                  </button>
-                }
-              }
+            <div class="col-xxl-3 col-lg-4 col-md-6 col-12">
+              <app-edit-request-card
+                [request]="req"
+                [isAdmin]="true"
+                [isRecruiter]="false"
+                (approved)="onEditApproved($event)"
+                (rejected)="onEditRejected($event)"
+                (cancelled)="onEditReviewCancelled()">
+              </app-edit-request-card>
             </div>
           }
         </div>
@@ -484,6 +424,40 @@ export class EditRequestsComponent implements OnInit {
         this.toast.error(err?.error?.message ?? 'Failed to review');
       },
     });
+  }
+
+  onEditApproved(event: { id: string; adminNote?: string }): void {
+    this.reviewSubmitting = true;
+    this.editRequestService.review(event.id, { status: 'approved', admin_note: event.adminNote }).subscribe({
+      next: () => {
+        this.reviewSubmitting = false;
+        this.toast.success('Request approved');
+        this.loadEditRequests();
+      },
+      error: (err) => {
+        this.reviewSubmitting = false;
+        this.toast.error(err?.error?.message ?? 'Failed to review');
+      },
+    });
+  }
+
+  onEditRejected(event: { id: string; adminNote?: string }): void {
+    this.reviewSubmitting = true;
+    this.editRequestService.review(event.id, { status: 'rejected', admin_note: event.adminNote }).subscribe({
+      next: () => {
+        this.reviewSubmitting = false;
+        this.toast.success('Request rejected');
+        this.loadEditRequests();
+      },
+      error: (err) => {
+        this.reviewSubmitting = false;
+        this.toast.error(err?.error?.message ?? 'Failed to review');
+      },
+    });
+  }
+
+  onEditReviewCancelled(): void {
+    this.reviewSubmitting = false;
   }
 
   // ── Shared ────────────────────────────────────────────────────────────────

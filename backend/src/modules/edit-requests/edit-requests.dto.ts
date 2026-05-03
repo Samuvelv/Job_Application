@@ -2,8 +2,10 @@
 import { z } from 'zod';
 import { UpdateCandidateSchema } from '../candidates/candidates.dto';
 
-// Candidate submits this — same shape as UpdateCandidate (all optional fields)
-export const SubmitEditRequestSchema = UpdateCandidateSchema;
+// Candidate submits this — same shape as UpdateCandidate (all optional fields) + reason
+export const SubmitEditRequestSchema = UpdateCandidateSchema.extend({
+  reason: z.string().max(1000).optional().nullable(),
+});
 
 export const ReviewEditRequestSchema = z.object({
   status:     z.enum(['approved', 'rejected']),

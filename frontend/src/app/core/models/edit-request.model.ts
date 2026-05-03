@@ -6,7 +6,10 @@ export interface EditRequest {
   first_name?: string;
   last_name?: string;
   email?: string;
+  profile_photo_url?: string;
+  reason?: string;
   requested_data: Record<string, unknown>;
+  old_values?: Record<string, unknown>;
   status: 'pending' | 'approved' | 'rejected';
   admin_note?: string | null;
   created_at: string;

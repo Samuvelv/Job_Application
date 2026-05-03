@@ -30,11 +30,27 @@ export async function submitEditRequest(
     .first();
   if (existing) throw new AppError(409, 'You already have a pending edit request');
 
+  // Extract reason from dto (if provided)
+  const { reason, ...requestedData } = dto;
+
+  // Get current candidate data to store as old values
+  const candidateData = await db('candidates').where({ id: candidate.id }).first();
+  const oldValues: Record<string, unknown> = {};
+  
+  // Extract only the fields that are being changed
+  Object.keys(requestedData).forEach(key => {
+    if (key in candidateData) {
+      oldValues[key] = candidateData[key];
+    }
+  });
+
   const id = uuidv4();
   await db('profile_edit_requests').insert({
     id,
     candidate_id:    candidate.id,
-    requested_data: JSON.stringify(dto),
+    requested_data: JSON.stringify(requestedData),
+    old_values:     JSON.stringify(oldValues),
+    reason:         reason ?? null,
     status:         'pending',
   });
 
@@ -66,11 +82,15 @@ export async function listEditRequests(filters: EditRequestFilterDto) {
       'r.id',
       'r.status',
       'r.admin_note',
+      'r.reason',
+      'r.requested_data',
+      'r.old_values',
       'r.created_at',
       'r.reviewed_at',
       'e.id as candidate_id',
       'e.first_name',
       'e.last_name',
+      'e.profile_photo_url',
       'u.email',
     )
     .orderBy('r.created_at', 'desc')
@@ -98,12 +118,15 @@ export async function getEditRequestById(id: string) {
       'r.id',
       'r.candidate_id',
       'r.requested_data',
+      'r.old_values',
       'r.status',
       'r.admin_note',
+      'r.reason',
       'r.created_at',
       'r.reviewed_at',
       'e.first_name',
       'e.last_name',
+      'e.profile_photo_url',
       'u.email',
     )
     .where('r.id', id)
