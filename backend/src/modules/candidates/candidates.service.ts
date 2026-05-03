@@ -81,6 +81,7 @@ export async function createCandidate(dto: CreateCandidateDto, createdByAdminId:
       profile_status:          'active',
       registration_fee_status: dto.registration_fee_status ?? 'pending_payment',
       cv_format:               dto.cv_format               ?? 'not_yet_created',
+      source:                  dto.source                  ?? 'Other',
       plain_password:          dto.password,
     });
 
@@ -236,6 +237,11 @@ function applyFilters(query: any, filters: CandidateFilterDto): any {
   if (filters.hasVideo === 'true')   query = query.whereNotNull('e.intro_video_url');
   if (filters.hasVideo === 'false')  query = query.whereNull('e.intro_video_url');
   if (filters.hasCV === 'true')      query = query.whereNotNull('e.resume_url');
+  if (filters.source) {
+    const sources = filters.source.split(',').map((s: string) => s.trim()).filter(Boolean);
+    if (sources.length === 1) query = query.where('e.source', sources[0]);
+    else if (sources.length > 1) query = query.whereIn('e.source', sources);
+  }
   return query;
 }
 
@@ -280,7 +286,7 @@ export async function listCandidates(filters: CandidateFilterDto) {
       'e.years_experience', 'e.salary_min', 'e.salary_max', 'e.salary_currency',
       'e.profile_photo_url', 'e.profile_status', 'e.intro_video_url', 'e.created_at',
       'e.nationality', 'e.target_locations', 'e.date_of_birth', 'e.gender',
-      'e.plain_password', 'e.registration_fee_status', 'e.cv_format',
+      'e.plain_password', 'e.registration_fee_status', 'e.cv_format', 'e.source',
       'u.email', 'u.is_active',
       db.raw(`(SELECT cl.proficiency FROM candidate_languages cl WHERE cl.candidate_id = e.id AND LOWER(cl.language) = 'english' LIMIT 1) as english_level`),
     );

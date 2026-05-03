@@ -68,8 +68,13 @@ import { MasterDataService } from '../../../core/services/master-data.service';
         </div>
         <div class="rc-card__metric-sep"></div>
         <div class="rc-card__metric">
+          <span class="rc-card__metric-val">{{ recruiter.profiles_viewed_count ?? 0 }}</span>
+          <span class="rc-card__metric-lbl"><i class="bi bi-eye-fill"></i> Profiles Viewed</span>
+        </div>
+        <div class="rc-card__metric-sep"></div>
+        <div class="rc-card__metric">
           <span class="rc-card__metric-val">{{ recruiter.contact_requests_count ?? 0 }}</span>
-          <span class="rc-card__metric-lbl"><i class="bi bi-chat-dots-fill"></i> Contacts</span>
+          <span class="rc-card__metric-lbl"><i class="bi bi-chat-dots-fill"></i> Requests Made</span>
         </div>
       </div>
 
@@ -83,8 +88,13 @@ import { MasterDataService } from '../../../core/services/master-data.service';
         }
         <span class="rc-card__dot">·</span>
         <span>
-          <i class="bi bi-activity"></i>
-          {{ relativeTime(recruiter.last_login_at) }}
+          <i class="bi bi-clock"></i>
+          Last Login:
+          @if (recruiter.last_login_at) {
+            {{ recruiter.last_login_at | date:'dd MMM yyyy' }}
+          } @else {
+            Never
+          }
         </span>
       </div>
 
@@ -164,17 +174,4 @@ export class RecruiterCardComponent {
     }
   }
 
-  relativeTime(dateStr: string | undefined): string {
-    if (!dateStr) return 'Never logged in';
-    const diff  = Date.now() - new Date(dateStr).getTime();
-    const days  = Math.floor(diff / 86_400_000);
-    if (days === 0) return 'Active today';
-    if (days === 1) return 'Active 1 day ago';
-    if (days < 30)  return `Active ${days} days ago`;
-    const months = Math.floor(days / 30);
-    if (months === 1) return 'Active 1 month ago';
-    if (months < 12)  return `Active ${months} months ago`;
-    const years = Math.floor(months / 12);
-    return `Active ${years} yr${years > 1 ? 's' : ''} ago`;
-  }
 }

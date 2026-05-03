@@ -80,6 +80,7 @@ export interface Candidate {
   resume_url?: string;
   intro_video_url?: string;
   english_level?: string;
+  source?: string;
 
   // Status
   profile_status?: string;
@@ -133,6 +134,7 @@ export interface CandidateFilters {
   availability?: string;
   hasVideo?: 'true' | 'false';
   hasCV?: 'true' | 'false';
+  source?: string;          // comma-sep
   profileStatus?: string;
   registrationFeeStatus?: string;
   cvFormat?: string;

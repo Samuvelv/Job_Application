@@ -25,3 +25,19 @@ export const CV_FORMAT_OPTIONS: SelectOption[] = [
   { value: 'asian_format',      label: 'Asian Format'      },
   { value: 'not_yet_created',   label: 'Not Yet Created'   },
 ];
+
+export const SOURCE_OPTIONS: SelectOption[] = [
+  { value: 'Instagram',       label: 'Instagram'       },
+  { value: 'YouTube',         label: 'YouTube'         },
+  { value: 'WhatsApp',        label: 'WhatsApp'        },
+  { value: 'Friend Referral', label: 'Friend Referral' },
+  { value: 'Other',           label: 'Other'           },
+];
+
+export const RECRUITER_SORT_OPTIONS: SortOption[] = [
+  { value: 'newest',       label: 'Newest First'     },
+  { value: 'oldest',       label: 'Oldest First'     },
+  { value: 'most_active',  label: 'Most Active'      },
+  { value: 'alphabetical', label: 'Alphabetical A–Z' },
+  { value: 'last_active',  label: 'Last Active'      },
+];

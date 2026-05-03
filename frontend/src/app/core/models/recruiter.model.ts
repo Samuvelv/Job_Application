@@ -10,9 +10,16 @@ export interface Recruiter {
   company_name?: string;
   company_logo_url?: string;
   company_country?: string;
+  company_city?: string;
+  company_website?: string;
   industry?: string;
+  phone?: string;
   has_sponsor_licence?: 'yes' | 'no' | 'unknown';
+  sponsor_licence_number?: string;
   sponsor_licence_countries?: string[];
+  target_nationalities?: string[];
+  hires_per_year?: string;
+  admin_notes?: string;
   access_expires_at: string;
   is_active: boolean;
   plain_password?: string;
@@ -20,6 +27,7 @@ export interface Recruiter {
   token_expires_at?: string | null;
   shortlists_count?: number;
   contact_requests_count?: number;
+  profiles_viewed_count?: number;
   last_login_at?: string;
   created_at?: string;
 }
@@ -53,6 +61,7 @@ export interface RecruiterFilters {
   joinedFrom?:        string;             // YYYY-MM-DD
   joinedTo?:          string;             // YYYY-MM-DD
   lastActive?:        '7_days' | '30_days' | '90_days';
+  sortBy?:            string;
   page?:              number;
   limit?:             number;
 }

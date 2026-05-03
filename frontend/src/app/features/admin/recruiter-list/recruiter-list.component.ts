@@ -1,17 +1,20 @@
 // src/app/features/admin/recruiter-list/recruiter-list.component.ts
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { ReactiveFormsModule, FormBuilder, FormGroup, Validators, AbstractControl, ValidationErrors } from '@angular/forms';
+import { ReactiveFormsModule, FormBuilder, FormGroup, FormControl, Validators, AbstractControl, ValidationErrors } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { catchError, of } from 'rxjs';
 import { RecruiterService } from '../../../core/services/recruiter.service';
 import { MasterDataService } from '../../../core/services/master-data.service';
 import { Recruiter } from '../../../core/models/recruiter.model';
+import { RECRUITER_SORT_OPTIONS } from '../../../core/constants/candidate-options';
 import { ToastService } from '../../../core/services/toast.service';
 import { ConfirmDialogService } from '../../../core/services/confirm-dialog.service';
 import { PageHeaderComponent } from '../../../shared/components/page-header/page-header.component';
 import { EmptyStateComponent } from '../../../shared/components/empty-state/empty-state.component';
 import { RecruiterCardComponent } from '../../../shared/components/recruiter-card/recruiter-card.component';
+import { SearchableSelectComponent, SelectOption } from '../../../shared/components/searchable-select/searchable-select.component';
+import { ChipMultiSelectComponent, ChipOption } from '../../../shared/components/chip-multi-select/chip-multi-select.component';
 
 function passwordsMatchValidator(g: AbstractControl): ValidationErrors | null {
   const pw  = g.get('new_password')?.value;
@@ -23,7 +26,7 @@ function passwordsMatchValidator(g: AbstractControl): ValidationErrors | null {
 @Component({
   selector: 'app-recruiter-list',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, RouterLink, PageHeaderComponent, EmptyStateComponent, RecruiterCardComponent],
+  imports: [CommonModule, ReactiveFormsModule, RouterLink, PageHeaderComponent, EmptyStateComponent, RecruiterCardComponent, SearchableSelectComponent, ChipMultiSelectComponent],
   template: `
     <!-- Header -->
     <app-page-header
@@ -36,42 +39,73 @@ function passwordsMatchValidator(g: AbstractControl): ValidationErrors | null {
       </a>
     </app-page-header>
 
-    <!-- Filter card -->
-    <div class="filter-card">
-      <form [formGroup]="filterForm" (ngSubmit)="search()">
-
-        <!-- Basic row -->
-        <div class="filter-card__search-row">
-          <div class="filter-card__search-input-wrap">
-            <i class="bi bi-search"></i>
-            <input type="text" class="form-control form-control-sm"
-              formControlName="search"
-              placeholder="Search name, company, email…"
-              (keydown.enter)="search()">
-          </div>
-          <div class="filter-card__actions">
-            <button type="submit" class="filter-search-btn">
-              <i class="bi bi-search"></i> Search
-            </button>
-            <button type="button" class="filter-card__adv-toggle"
-              [class.is-open]="advOpen"
-              (click)="advOpen = !advOpen">
-              <i class="bi bi-sliders2"></i>
-              Advanced
-              @if (activeAdvCount > 0) {
-                <span class="filter-card__badge">{{ activeAdvCount }}</span>
-              }
-              <i class="bi bi-chevron-down adv-toggle__caret"></i>
-            </button>
-            @if (hasAnyFilter) {
-              <button type="button" class="filter-clear-btn" (click)="clearFilters()">
-                <i class="bi bi-x-lg"></i> Clear
-              </button>
+    <!-- ── Top bar ──────────────────────────────────────────────────────────── -->
+    <div class="cfs-topbar mb-3">
+      <div class="cfs-topbar__search">
+        <i class="bi bi-search"></i>
+        <input type="text" class="form-control form-control-sm"
+          [formControl]="searchCtrl"
+          placeholder="Search name, company, email…"
+          (keydown.enter)="search()">
+      </div>
+      <div class="cfs-topbar__actions">
+        <button type="button" class="filter-search-btn" (click)="search()">
+          <i class="bi bi-search"></i> Search
+        </button>
+        <!-- Sort By -->
+        <div class="cl-sort-wrap">
+          <i class="bi bi-sort-down cl-sort-wrap__icon"></i>
+          <select class="form-select form-select-sm cl-sort-select"
+            [formControl]="sortCtrl"
+            (change)="onSortChange()"
+            title="Sort recruiters">
+            @for (opt of RECRUITER_SORT_OPTIONS; track opt.value) {
+              <option [value]="opt.value">{{ opt.label }}</option>
             }
-          </div>
+          </select>
         </div>
+        <button type="button" class="cfs-toggle-sidebar-btn"
+          [class.active]="advOpen"
+          (click)="advOpen = !advOpen">
+          <i class="bi bi-sliders2"></i>
+          <span class="d-none d-sm-inline">Filters</span>
+          @if (activeAdvCount > 0) {
+            <span class="cfs-filter-badge">{{ activeAdvCount }}</span>
+          }
+        </button>
+        <button type="button" class="cfs-export-btn"
+          (click)="exportCsv()" [disabled]="exporting"
+          title="Export filtered recruiters to CSV">
+          @if (exporting) {
+            <span class="spinner-border spinner-border-sm" role="status"></span>
+          } @else {
+            <i class="bi bi-download"></i>
+          }
+          <span class="d-none d-sm-inline ms-1">Export CSV</span>
+        </button>
+        <div class="cl-view-toggle">
+          <button type="button" class="cl-view-toggle__btn"
+            [class.cl-view-toggle__btn--active]="viewMode === 'list'"
+            (click)="viewMode = 'list'" title="List view">
+            <i class="bi bi-list-ul"></i>
+          </button>
+          <button type="button" class="cl-view-toggle__btn"
+            [class.cl-view-toggle__btn--active]="viewMode === 'grid'"
+            (click)="viewMode = 'grid'" title="Grid view">
+            <i class="bi bi-grid-3x3-gap-fill"></i>
+          </button>
+        </div>
+        @if (hasAnyFilter) {
+          <button type="button" class="filter-clear-btn" (click)="clearFilters()">
+            <i class="bi bi-x-lg"></i> Clear
+          </button>
+        }
+      </div>
+    </div>
 
-        <!-- Advanced panel -->
+    <!-- Advanced filters panel -->
+    <div *ngIf="advOpen" class="filter-card mb-3">
+      <form [formGroup]="filterForm" (ngSubmit)="search()">
         <div class="filter-card__advanced" [class.is-open]="advOpen">
           <div class="filter-card__advanced-inner">
 
@@ -168,9 +202,37 @@ function passwordsMatchValidator(g: AbstractControl): ValidationErrors | null {
 
           </div>
         </div>
-
       </form>
     </div>
+
+    <!-- ── Bulk Action Bar ─────────────────────────────────────────────────── -->
+    @if (selectionCount > 0) {
+      <div class="cl-bulk-bar mb-3">
+        <span class="cl-bulk-bar__count">
+          <i class="bi bi-check2-square me-1"></i>
+          {{ selectionCount }} recruiter{{ selectionCount === 1 ? '' : 's' }} selected
+        </span>
+        <div class="cl-bulk-bar__actions">
+          <button type="button" class="btn btn-sm btn-outline-secondary"
+            (click)="bulkExportCsv()" [disabled]="bulkProcessing"
+            title="Export selected to CSV">
+            <i class="bi bi-download me-1"></i>Export
+          </button>
+          <button type="button" class="btn btn-sm btn-success"
+            (click)="bulkActivate()" [disabled]="bulkProcessing">
+            <i class="bi bi-check-circle me-1"></i>Activate
+          </button>
+          <button type="button" class="btn btn-sm btn-warning"
+            (click)="bulkDeactivate()" [disabled]="bulkProcessing">
+            <i class="bi bi-pause-circle me-1"></i>Deactivate
+          </button>
+          <button type="button" class="btn btn-sm btn-link text-muted"
+            (click)="clearSelection()">
+            <i class="bi bi-x-lg"></i>
+          </button>
+        </div>
+      </div>
+    }
 
     <!-- Results -->
     @if (loading) {
@@ -188,23 +250,6 @@ function passwordsMatchValidator(g: AbstractControl): ValidationErrors | null {
       />
     } @else {
 
-      <!-- View toggle -->
-      <div class="d-flex justify-content-between align-items-center mb-3">
-        <small class="text-muted">{{ pagination.total }} recruiter{{ pagination.total === 1 ? '' : 's' }}</small>
-        <div class="cl-view-toggle">
-          <button type="button" class="cl-view-toggle__btn"
-            [class.cl-view-toggle__btn--active]="viewMode === 'list'"
-            (click)="viewMode = 'list'" title="List view">
-            <i class="bi bi-list-ul"></i>
-          </button>
-          <button type="button" class="cl-view-toggle__btn"
-            [class.cl-view-toggle__btn--active]="viewMode === 'grid'"
-            (click)="viewMode = 'grid'" title="Grid view">
-            <i class="bi bi-grid-3x3-gap-fill"></i>
-          </button>
-        </div>
-      </div>
-
       <!-- ══ LIST VIEW ══ -->
       @if (viewMode === 'list') {
         <div class="section-card">
@@ -212,6 +257,12 @@ function passwordsMatchValidator(g: AbstractControl): ValidationErrors | null {
             <table class="table table-hover align-middle mb-0">
               <thead class="table-light">
                 <tr>
+                  <th style="width:36px">
+                    <input type="checkbox" class="form-check-input"
+                      [checked]="isAllSelected()"
+                      [indeterminate]="isIndeterminate()"
+                      (change)="toggleSelectAll()">
+                  </th>
                   <th class="small">#</th>
                   <th class="small">Name</th>
                   <th class="small">Company</th>
@@ -223,7 +274,13 @@ function passwordsMatchValidator(g: AbstractControl): ValidationErrors | null {
               </thead>
               <tbody>
                 @for (rec of recruiters; track rec.id) {
-                  <tr>
+                  <tr [class.table-active]="isSelected(rec.id)">
+                    <td>
+                      <input type="checkbox" class="form-check-input"
+                        [checked]="isSelected(rec.id)"
+                        (change)="toggleSelect(rec.id)"
+                        (click)="$event.stopPropagation()">
+                    </td>
                     <td>
                       @if (rec.recruiter_number) {
                         <span class="autocode-badge">{{ rec.recruiter_number }}</span>
@@ -285,13 +342,21 @@ function passwordsMatchValidator(g: AbstractControl): ValidationErrors | null {
       @if (viewMode === 'grid') {
         <div class="rc-grid">
           @for (rec of recruiters; track rec.id) {
-            <app-recruiter-card
-              [recruiter]="rec"
-              (edit)="openEdit(rec)"
-              (delete)="deleteRecruiter(rec)"
-              (resendCreds)="resendCredentials(rec)"
-              (toggleActive)="toggleActive(rec)">
-            </app-recruiter-card>
+            <div style="position:relative">
+              <div style="position:absolute;top:10px;left:10px;z-index:10">
+                <input type="checkbox" class="form-check-input"
+                  [checked]="isSelected(rec.id)"
+                  (change)="toggleSelect(rec.id)"
+                  (click)="$event.stopPropagation()">
+              </div>
+              <app-recruiter-card
+                [recruiter]="rec"
+                (edit)="openEdit(rec)"
+                (delete)="deleteRecruiter(rec)"
+                (resendCreds)="resendCredentials(rec)"
+                (toggleActive)="toggleActive(rec)">
+              </app-recruiter-card>
+            </div>
           }
         </div>
       }
@@ -356,6 +421,101 @@ function passwordsMatchValidator(g: AbstractControl): ValidationErrors | null {
                 <div class="mb-0">
                   <label class="form-label">Company Name <span class="rep-optional">optional</span></label>
                   <input formControlName="company_name" class="form-control" placeholder="e.g. Acme Corp">
+                </div>
+              </div>
+
+              <!-- ── Section: Contact Details ── -->
+              <div class="rep-section">
+                <div class="rep-section__label">
+                  <i class="bi bi-envelope"></i> Contact Details
+                </div>
+                <div class="mb-3">
+                  <label class="form-label">Job Title / Role <span class="rep-optional">optional</span></label>
+                  <input formControlName="contact_job_title" class="form-control" placeholder="e.g. Talent Acquisition Manager">
+                </div>
+                <div class="mb-3">
+                  <label class="form-label">Work Email <span class="text-danger">*</span></label>
+                  <input formControlName="email" type="email" class="form-control"
+                    [class.is-invalid]="editInvalid('email')"
+                    placeholder="recruiter@company.com">
+                  @if (editInvalid('email')) {
+                    <div class="invalid-feedback">Valid email is required.</div>
+                  }
+                </div>
+                <div class="mb-0">
+                  <label class="form-label">Phone / WhatsApp <span class="rep-optional">optional</span></label>
+                  <input formControlName="phone" class="form-control" placeholder="+44 7700 900000">
+                </div>
+              </div>
+
+              <!-- ── Section: Company Details ── -->
+              <div class="rep-section">
+                <div class="rep-section__label">
+                  <i class="bi bi-building"></i> Company Details
+                </div>
+                <div class="mb-3">
+                  <label class="form-label">Company Website <span class="rep-optional">optional</span></label>
+                  <input formControlName="company_website" class="form-control" placeholder="https://example.com">
+                </div>
+                <div class="mb-3">
+                  <label class="form-label">Company Country</label>
+                  <app-searchable-select formControlName="company_country" [options]="countryOpts()" placeholder="Select country" />
+                </div>
+                <div class="mb-3">
+                  <label class="form-label">Company City <span class="rep-optional">optional</span></label>
+                  <input formControlName="company_city" class="form-control" placeholder="London">
+                </div>
+                <div class="mb-0">
+                  <label class="form-label">Industry / Sector</label>
+                  <app-searchable-select formControlName="industry" [options]="industryOpts()" placeholder="Select industry" />
+                </div>
+              </div>
+
+              <!-- ── Section: Sponsor Licence ── -->
+              <div class="rep-section">
+                <div class="rep-section__label">
+                  <i class="bi bi-patch-check"></i> Sponsor Licence
+                </div>
+                <div class="mb-3">
+                  <label class="form-label">Holds Sponsor Licence</label>
+                  <select formControlName="has_sponsor_licence" class="form-select">
+                    <option value="">— Select —</option>
+                    <option value="yes">Yes</option>
+                    <option value="no">No</option>
+                    <option value="unknown">Unknown</option>
+                  </select>
+                </div>
+                @if (editSponsorYes) {
+                  <div class="mb-3">
+                    <label class="form-label">Licence Number <span class="rep-optional">optional</span></label>
+                    <input formControlName="sponsor_licence_number" class="form-control" placeholder="e.g. 1Z3GF3C...">
+                  </div>
+                  <div class="mb-0">
+                    <label class="form-label">Licence Countries</label>
+                    <app-chip-multi-select formControlName="sponsor_licence_countries" [options]="nationalityOpts()" placeholder="Select countries" />
+                  </div>
+                }
+              </div>
+
+              <!-- ── Section: Hiring Preferences ── -->
+              <div class="rep-section">
+                <div class="rep-section__label">
+                  <i class="bi bi-people"></i> Hiring Preferences
+                </div>
+                <div class="mb-3">
+                  <label class="form-label">Target Nationalities</label>
+                  <app-chip-multi-select formControlName="target_nationalities" [options]="nationalityOpts()" placeholder="Select nationalities to hire" />
+                </div>
+                <div class="mb-0">
+                  <label class="form-label">Hires Per Year</label>
+                  <select formControlName="hires_per_year" class="form-select">
+                    <option value="">— Select —</option>
+                    <option value="1-5">1 – 5</option>
+                    <option value="6-10">6 – 10</option>
+                    <option value="11-20">11 – 20</option>
+                    <option value="21-50">21 – 50</option>
+                    <option value="51+">51+</option>
+                  </select>
                 </div>
               </div>
 
@@ -450,6 +610,25 @@ function passwordsMatchValidator(g: AbstractControl): ValidationErrors | null {
                 </div>
               </div>
 
+              <!-- ── Section: Account Management ── -->
+              <div class="rep-section">
+                <div class="rep-section__label">
+                  <i class="bi bi-gear"></i> Account Management
+                </div>
+                <div class="mb-3">
+                  <label class="form-label">Account Status</label>
+                  <select formControlName="is_active_str" class="form-select">
+                    <option value="active">Active</option>
+                    <option value="inactive">Inactive</option>
+                  </select>
+                </div>
+                <div class="mb-0">
+                  <label class="form-label">Admin Notes <span class="rep-optional">internal only</span></label>
+                  <textarea formControlName="admin_notes" class="form-control" rows="3"
+                    placeholder="Internal notes — not visible to recruiter"></textarea>
+                </div>
+              </div>
+
               <!-- Error -->
               @if (editError) {
                 <div class="alert alert-danger small py-2 mb-3">
@@ -479,6 +658,18 @@ function passwordsMatchValidator(g: AbstractControl): ValidationErrors | null {
   `,
 })
 export class RecruiterListComponent implements OnInit {
+  readonly RECRUITER_SORT_OPTIONS = RECRUITER_SORT_OPTIONS;
+
+  countryOpts = computed<SelectOption[]>(() =>
+    this.master.countries().map(c => ({ value: c.name, label: `${c.flag_emoji} ${c.name}` }))
+  );
+  industryOpts = computed<SelectOption[]>(() =>
+    this.master.industries().map(i => ({ value: i.name, label: i.name }))
+  );
+  nationalityOpts = computed<ChipOption[]>(() =>
+    this.master.countries().map(c => ({ value: c.name, label: `${c.flag_emoji} ${c.name}` }))
+  );
+
   readonly INDUSTRY_OPTIONS = [
     'Healthcare', 'IT', 'Engineering', 'Finance',
     'Care', 'Education', 'Hospitality', 'Construction',
@@ -494,7 +685,14 @@ export class RecruiterListComponent implements OnInit {
   advOpen = false;
   viewMode: 'list' | 'grid' = 'list';
 
+  searchCtrl = new FormControl('');
+  sortCtrl   = new FormControl('newest');
+  exporting  = false;
   filterForm: FormGroup;
+
+  // Selection state
+  selectedIds = new Set<string>();
+  bulkProcessing = false;
 
   // Edit panel state
   editingRecruiter: Recruiter | null = null;
@@ -513,7 +711,6 @@ export class RecruiterListComponent implements OnInit {
     private confirm: ConfirmDialogService,
   ) {
     this.filterForm = this.fb.group({
-      search:             [''],
       company:            [''],
       companyCountry:     [''],
       industry:           [''],
@@ -540,12 +737,17 @@ export class RecruiterListComponent implements OnInit {
   }
 
   get hasAnyFilter(): boolean {
+    if (this.searchCtrl.value) return true;
     const v = this.filterForm.value;
     return Object.values(v).some(x => x !== null && x !== '' && x !== undefined);
   }
 
   isExpired(dateStr: string): boolean {
     return new Date(dateStr) < new Date();
+  }
+
+  get editSponsorYes(): boolean {
+    return this.editForm?.get('has_sponsor_licence')?.value === 'yes';
   }
 
   get expiryPreview(): string {
@@ -568,6 +770,11 @@ export class RecruiterListComponent implements OnInit {
     return dt;
   }
 
+  onSortChange(): void {
+    this.pagination.page = 1;
+    this.load();
+  }
+
   search(): void {
     this.pagination.page = 1;
     this.load();
@@ -577,7 +784,7 @@ export class RecruiterListComponent implements OnInit {
     this.loading = true;
     const v = this.filterForm.value;
     this.recruiterService.list({
-      search:            v.search            || undefined,
+      search:            this.searchCtrl.value || undefined,
       company:           v.company           || undefined,
       companyCountry:    v.companyCountry    || undefined,
       industry:          v.industry          || undefined,
@@ -587,6 +794,7 @@ export class RecruiterListComponent implements OnInit {
       lastActive:        v.lastActive        || undefined,
       joinedFrom:        v.joinedFrom        || undefined,
       joinedTo:          v.joinedTo          || undefined,
+      sortBy:            this.sortCtrl.value  || 'newest',
       page:              this.pagination.page,
       limit:             this.pagination.limit,
     })
@@ -601,13 +809,143 @@ export class RecruiterListComponent implements OnInit {
   }
 
   clearFilters(): void {
+    this.searchCtrl.setValue('');
     this.filterForm.reset({
-      search: '', company: '', companyCountry: '', industry: '',
+      company: '', companyCountry: '', industry: '',
       hasSponsorLicence: '', sponsorCountry: '', accountStatus: '',
       lastActive: '', joinedFrom: '', joinedTo: '',
     });
+    this.sortCtrl.setValue('newest');
     this.pagination.page = 1;
     this.load();
+  }
+
+  // ── Selection ───────────────────────────────────────────────────────────────
+  get selectionCount(): number { return this.selectedIds.size; }
+
+  isSelected(id: string): boolean { return this.selectedIds.has(id); }
+
+  toggleSelect(id: string): void {
+    if (this.selectedIds.has(id)) this.selectedIds.delete(id);
+    else this.selectedIds.add(id);
+  }
+
+  isAllSelected(): boolean {
+    return this.recruiters.length > 0 && this.recruiters.every(r => this.selectedIds.has(r.id));
+  }
+
+  isIndeterminate(): boolean {
+    return this.selectedIds.size > 0 && !this.isAllSelected();
+  }
+
+  toggleSelectAll(): void {
+    if (this.isAllSelected()) {
+      this.recruiters.forEach(r => this.selectedIds.delete(r.id));
+    } else {
+      this.recruiters.forEach(r => this.selectedIds.add(r.id));
+    }
+  }
+
+  clearSelection(): void { this.selectedIds.clear(); }
+
+  // ── Bulk actions ─────────────────────────────────────────────────────────────
+  async bulkActivate(): Promise<void> {
+    const ids = [...this.selectedIds];
+    const ok = await this.confirm.confirm({
+      title: 'Activate Recruiters',
+      message: `Activate ${ids.length} recruiter${ids.length === 1 ? '' : 's'}?`,
+      confirmLabel: 'Activate', confirmClass: 'btn-success',
+    });
+    if (!ok) return;
+    this.bulkProcessing = true;
+    this.recruiterService.bulkStatus(ids, true).subscribe({
+      next: (res) => {
+        this.toast.success(`${res.updated} recruiter${res.updated === 1 ? '' : 's'} activated`);
+        this.clearSelection();
+        this.bulkProcessing = false;
+        this.load();
+      },
+      error: (err) => {
+        this.toast.error(err?.error?.message ?? 'Bulk activate failed');
+        this.bulkProcessing = false;
+      },
+    });
+  }
+
+  async bulkDeactivate(): Promise<void> {
+    const ids = [...this.selectedIds];
+    const ok = await this.confirm.confirm({
+      title: 'Deactivate Recruiters',
+      message: `Deactivate ${ids.length} recruiter${ids.length === 1 ? '' : 's'}?`,
+      confirmLabel: 'Deactivate', confirmClass: 'btn-warning',
+    });
+    if (!ok) return;
+    this.bulkProcessing = true;
+    debugger
+    this.recruiterService.bulkStatus(ids, false).subscribe({
+      next: (res) => {
+        this.toast.success(`${res.updated} recruiter${res.updated === 1 ? '' : 's'} deactivated`);
+        this.clearSelection();
+        this.bulkProcessing = false;
+        this.load();
+      },
+      error: (err) => {
+        this.toast.error(err?.error?.message ?? 'Bulk deactivate failed');
+        this.bulkProcessing = false;
+      },
+    });
+  }
+
+  bulkExportCsv(): void {
+    if (!this.selectedIds.size) return;
+    this.bulkProcessing = true;
+    this.recruiterService.exportSelected([...this.selectedIds]).subscribe({
+      next: (blob) => {
+        this._downloadBlob(blob, `recruiters-selected-${new Date().toISOString().slice(0, 10)}.csv`);
+        this.bulkProcessing = false;
+      },
+      error: () => {
+        this.toast.error('Export failed. Please try again.');
+        this.bulkProcessing = false;
+      },
+    });
+  }
+
+  exportCsv(): void {
+    if (this.exporting) return;
+    this.exporting = true;
+    const v = this.filterForm.value;
+    this.recruiterService.exportCsv({
+      search:            this.searchCtrl.value || undefined,
+      company:           v.company           || undefined,
+      companyCountry:    v.companyCountry    || undefined,
+      industry:          v.industry          || undefined,
+      hasSponsorLicence: v.hasSponsorLicence || undefined,
+      sponsorCountry:    v.sponsorCountry    || undefined,
+      accountStatus:     v.accountStatus     || undefined,
+      lastActive:        v.lastActive        || undefined,
+      joinedFrom:        v.joinedFrom        || undefined,
+      joinedTo:          v.joinedTo          || undefined,
+    }).subscribe({
+      next: (blob) => {
+        this._downloadBlob(blob, `recruiters-${new Date().toISOString().slice(0, 10)}.csv`);
+        this.exporting = false;
+      },
+      error: () => {
+        this.toast.error('Export failed. Please try again.');
+        this.exporting = false;
+      },
+    });
+  }
+
+  private _downloadBlob(blob: Blob, filename: string): void {
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url; a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
   }
 
   goToPage(page: number): void {
@@ -631,12 +969,34 @@ export class RecruiterListComponent implements OnInit {
     this.showNewPw        = false;
     this.showConfirmPw    = false;
     this.editForm = this.fb.group({
-      contact_name:    [rec.contact_name, Validators.required],
-      company_name:    [rec.company_name ?? ''],
-      duration_value:  [null as number | null],
-      duration_unit:   [''],
-      new_password:    ['', [Validators.minLength(8)]],
-      confirm_password:[''],
+      // Profile
+      contact_name:      [rec.contact_name, Validators.required],
+      company_name:      [rec.company_name ?? ''],
+      // Contact Details
+      contact_job_title: [rec.contact_job_title ?? ''],
+      email:             [rec.email, [Validators.required, Validators.email]],
+      phone:             [rec.phone ?? ''],
+      // Company Details
+      company_website:   [rec.company_website ?? ''],
+      company_country:   [rec.company_country ?? null],
+      company_city:      [rec.company_city ?? ''],
+      industry:          [rec.industry ?? null],
+      // Sponsor Licence
+      has_sponsor_licence:       [rec.has_sponsor_licence ?? ''],
+      sponsor_licence_number:    [rec.sponsor_licence_number ?? ''],
+      sponsor_licence_countries: [rec.sponsor_licence_countries ?? []],
+      // Hiring Preferences
+      target_nationalities: [rec.target_nationalities ?? []],
+      hires_per_year:       [rec.hires_per_year ?? ''],
+      // Account Management
+      is_active_str: [rec.is_active ? 'active' : 'inactive'],
+      admin_notes:   [rec.admin_notes ?? ''],
+      // Access extension
+      duration_value:   [null as number | null],
+      duration_unit:    [''],
+      // Credentials
+      new_password:     ['', [Validators.minLength(8)]],
+      confirm_password: [''],
     }, { validators: passwordsMatchValidator });
   }
 
@@ -658,9 +1018,31 @@ export class RecruiterListComponent implements OnInit {
     this.editError  = '';
 
     const val = this.editForm.value;
+    const sponsorYes = val.has_sponsor_licence === 'yes';
+
     const payload: Record<string, unknown> = {
-      contact_name: val.contact_name,
-      company_name: val.company_name || null,
+      // Profile
+      contact_name:      val.contact_name,
+      company_name:      val.company_name || null,
+      // Contact Details
+      email:             val.email,
+      contact_job_title: val.contact_job_title || null,
+      phone:             val.phone || null,
+      // Company Details
+      company_website:   val.company_website || null,
+      company_country:   val.company_country || null,
+      company_city:      val.company_city || null,
+      industry:          val.industry || null,
+      // Sponsor Licence
+      has_sponsor_licence:       val.has_sponsor_licence || null,
+      sponsor_licence_number:    sponsorYes ? (val.sponsor_licence_number || null) : null,
+      sponsor_licence_countries: sponsorYes ? (val.sponsor_licence_countries?.length ? val.sponsor_licence_countries : null) : null,
+      // Hiring Preferences
+      target_nationalities: val.target_nationalities?.length ? val.target_nationalities : null,
+      hires_per_year:       val.hires_per_year || null,
+      // Account Management
+      is_active:  val.is_active_str !== 'inactive',
+      admin_notes: val.admin_notes || null,
     };
 
     if (val.new_password) payload['new_password'] = val.new_password;

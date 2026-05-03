@@ -11,7 +11,7 @@ import { CandidateService } from '../../../core/services/candidate.service';
 import { MasterDataService } from '../../../core/services/master-data.service';
 import { SearchableSelectComponent, SelectOption } from '../../../shared/components/searchable-select/searchable-select.component';
 import { ChipMultiSelectComponent, ChipOption } from '../../../shared/components/chip-multi-select/chip-multi-select.component';
-import { REGISTRATION_FEE_STATUS_OPTIONS, CV_FORMAT_OPTIONS } from '../../../core/constants/candidate-options';
+import { REGISTRATION_FEE_STATUS_OPTIONS, CV_FORMAT_OPTIONS, SOURCE_OPTIONS } from '../../../core/constants/candidate-options';
 
 const DRAFT_KEY = 'th_register_draft';
 
@@ -103,6 +103,7 @@ export class CandidateRegisterComponent implements OnInit, OnDestroy {
   ];
   readonly registrationFeeStatusOptions = REGISTRATION_FEE_STATUS_OPTIONS;
   readonly cvFormatOptions = CV_FORMAT_OPTIONS;
+  readonly sourceOptions   = SOURCE_OPTIONS;
 
   // ── Computed SelectOption arrays from master data ─────────────────────────
   countryOptions    = computed<SelectOption[]>(() =>
@@ -192,6 +193,7 @@ export class CandidateRegisterComponent implements OnInit, OnDestroy {
 
       registration_fee_status: ['pending_payment'],
       cv_format:               ['not_yet_created'],
+      source:                  ['Other'],
     });
 
     this.addSkill();
@@ -253,7 +255,7 @@ export class CandidateRegisterComponent implements OnInit, OnDestroy {
         'job_title','occupation','industry','years_experience','linkedin_url',
         'salary_min','salary_max','salary_currency','salary_type','notice_period_id',
         'current_country','current_city','nationality','postal_code','target_locations',
-        'email','password','hobbies','registration_fee_status','cv_format',
+        'email','password','hobbies','registration_fee_status','cv_format','source',
       ];      const patch: Record<string, unknown> = {};
       for (const k of scalarKeys) {
         if (draft[k] !== undefined && draft[k] !== null && draft[k] !== '') patch[k] = draft[k];
@@ -441,6 +443,7 @@ export class CandidateRegisterComponent implements OnInit, OnDestroy {
       hobbies: Array.isArray(raw.hobbies) ? raw.hobbies : [],
       registration_fee_status: raw.registration_fee_status || 'pending_payment',
       cv_format:               raw.cv_format               || 'not_yet_created',
+      source:                  raw.source                  || 'Other',
       skills, languages, experience, education,
     };
 

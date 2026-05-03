@@ -32,7 +32,20 @@ export class RecruiterService {
   create(data: {
     email: string;
     contact_name: string;
+    contact_job_title?: string;
     company_name?: string;
+    company_country?: string;
+    company_city?: string;
+    company_website?: string;
+    industry?: string;
+    phone?: string;
+    has_sponsor_licence?: 'yes' | 'no' | 'unknown';
+    sponsor_licence_number?: string;
+    sponsor_licence_countries?: string[];
+    target_nationalities?: string[];
+    hires_per_year?: string;
+    is_active?: boolean;
+    admin_notes?: string;
     password: string;
     access_expires_at: string;
   }): Observable<{ recruiter: Recruiter }> {
@@ -44,13 +57,43 @@ export class RecruiterService {
   }
 
   update(id: string, data: {
+    email?: string;
     contact_name?: string;
+    contact_job_title?: string | null;
     company_name?: string | null;
+    company_country?: string | null;
+    company_city?: string | null;
+    company_website?: string | null;
+    industry?: string | null;
+    phone?: string | null;
+    has_sponsor_licence?: 'yes' | 'no' | 'unknown' | null;
+    sponsor_licence_number?: string | null;
+    sponsor_licence_countries?: string[] | null;
+    target_nationalities?: string[] | null;
+    hires_per_year?: string | null;
+    admin_notes?: string | null;
     new_password?: string;
     access_expires_at?: string;
     is_active?: boolean;
   }): Observable<{ recruiter: Recruiter }> {
     return this.http.put<{ recruiter: Recruiter }>(`${this.api}/${id}`, data);
+  }
+
+  bulkStatus(ids: string[], is_active: boolean): Observable<{ updated: number }> {
+    return this.http.post<{ updated: number }>(`${this.api}/bulk-status`, { ids, is_active });
+  }
+
+  exportSelected(ids: string[]): Observable<Blob> {
+    return this.http.post(`${this.api}/export-selected`, { ids }, { responseType: 'blob' });
+  }
+
+  exportCsv(filters: RecruiterFilters = {}): Observable<Blob> {
+    debugger
+    let params = new HttpParams();
+    Object.entries(filters).forEach(([k, v]) => {
+      if (v !== undefined && v !== null && v !== '') params = params.set(k, String(v));
+    });
+    return this.http.get(`${this.api}/export`, { params, responseType: 'blob' });
   }
 
   // ── Admin: resend credentials ────────────────────────────────────────────────

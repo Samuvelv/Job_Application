@@ -1,5 +1,6 @@
 // src/modules/recruiters/recruiters.controller.ts
 import { Request, Response, NextFunction } from 'express';
+import { z } from 'zod';
 import * as svc from './recruiters.service';
 import {
   CreateRecruiterSchema,
@@ -8,7 +9,22 @@ import {
 } from './recruiters.dto';
 import { logAudit } from '../../services/audit.service';
 
+const BulkStatusSchema = z.object({
+  ids:       z.array(z.string().uuid()).min(1, 'ids must be a non-empty array'),
+  is_active: z.boolean(),
+});
+
+const ExportSelectedSchema = z.object({
+  ids: z.array(z.string().uuid()).min(1, 'ids must be a non-empty array'),
+});
+
 const p = (v: string | string[]): string => (Array.isArray(v) ? v[0] : v);
+
+function csvEscape(v: unknown): string {
+  const s = v == null ? '' : String(v);
+  return (s.includes('"') || s.includes(',') || s.includes('\n'))
+    ? `"${s.replace(/"/g, '""')}"` : s;
+}
 
 // ── Admin: CRUD ───────────────────────────────────────────────────────────────
 
@@ -62,6 +78,94 @@ export async function remove(req: Request, res: Response, next: NextFunction): P
       resource: 'recruiter', resourceId: id, ipAddress: req.ip,
     });
     res.json({ message: 'Recruiter deleted' });
+  } catch (err) { next(err); }
+}
+
+// ── Admin: Export CSV ─────────────────────────────────────────────────────────
+
+export async function exportCsv(req: Request, res: Response, next: NextFunction): Promise<void> {
+  debugger
+  try {
+    const filters = RecruiterFilterSchema.parse(req.query);
+    const rows = await svc.exportRecruiters(filters);
+
+    const headers = [
+      'Recruiter No', 'Contact Name', 'Company', 'Email',
+      'Country', 'Industry', 'Active', 'Access Expires',
+      'Shortlists', 'Unlock Requests', 'Joined Date',
+    ];
+
+    const lines = [
+      headers.join(','),
+      ...(rows as any[]).map((r) => [
+        csvEscape(r.recruiter_number),
+        csvEscape(r.contact_name),
+        csvEscape(r.company_name ?? ''),
+        csvEscape(r.email),
+        csvEscape(r.company_country ?? ''),
+        csvEscape(r.industry ?? ''),
+        csvEscape(r.is_active ? 'Yes' : 'No'),
+        csvEscape(r.access_expires_at ? new Date(r.access_expires_at).toISOString().slice(0, 10) : ''),
+        csvEscape(r.shortlists_count ?? 0),
+        csvEscape(r.unlock_requests_count ?? 0),
+        csvEscape(r.created_at ? new Date(r.created_at).toISOString().slice(0, 10) : ''),
+      ].join(',')),
+    ];
+
+    const filename = `recruiters-${new Date().toISOString().slice(0, 10)}.csv`;
+    res.setHeader('Content-Type', 'text/csv; charset=utf-8');
+    res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+    res.send(lines.join('\r\n'));
+  } catch (err) { next(err); }
+}
+
+// ── Admin: Bulk operations ────────────────────────────────────────────────────
+
+export async function bulkStatus(req: Request, res: Response, next: NextFunction): Promise<void> {
+  debugger
+  try {
+    const { ids, is_active } = BulkStatusSchema.parse(req.body);
+    const result = await svc.bulkUpdateStatus(ids, is_active);
+    await logAudit({
+      userId: req.user!.sub,
+      action: is_active ? 'BULK_ACTIVATE_RECRUITERS' : 'BULK_DEACTIVATE_RECRUITERS',
+      resource: 'recruiter', resourceId: ids.join(','), ipAddress: req.ip,
+    });
+    res.json(result);
+  } catch (err) { next(err); }
+}
+
+export async function exportSelected(req: Request, res: Response, next: NextFunction): Promise<void> {
+  try {
+    const { ids } = ExportSelectedSchema.parse(req.body);
+    const rows = await svc.exportSelectedRecruiters(ids);
+
+    const headers = [
+      'Recruiter No', 'Contact Name', 'Company', 'Email',
+      'Country', 'Industry', 'Active', 'Access Expires',
+      'Shortlists', 'Unlock Requests', 'Joined Date',
+    ];
+    const lines = [
+      headers.join(','),
+      ...(rows as any[]).map((r) => [
+        csvEscape(r.recruiter_number),
+        csvEscape(r.contact_name),
+        csvEscape(r.company_name ?? ''),
+        csvEscape(r.email),
+        csvEscape(r.company_country ?? ''),
+        csvEscape(r.industry ?? ''),
+        csvEscape(r.is_active ? 'Yes' : 'No'),
+        csvEscape(r.access_expires_at ? new Date(r.access_expires_at).toISOString().slice(0, 10) : ''),
+        csvEscape(r.shortlists_count ?? 0),
+        csvEscape(r.unlock_requests_count ?? 0),
+        csvEscape(r.created_at ? new Date(r.created_at).toISOString().slice(0, 10) : ''),
+      ].join(',')),
+    ];
+
+    const filename = `recruiters-selected-${new Date().toISOString().slice(0, 10)}.csv`;
+    res.setHeader('Content-Type', 'text/csv; charset=utf-8');
+    res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+    res.send(lines.join('\r\n'));
   } catch (err) { next(err); }
 }
 

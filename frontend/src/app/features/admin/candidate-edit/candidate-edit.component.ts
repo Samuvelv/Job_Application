@@ -12,7 +12,7 @@ import { MasterDataService } from '../../../core/services/master-data.service';
 import { SearchableSelectComponent, SelectOption } from '../../../shared/components/searchable-select/searchable-select.component';
 import { ChipMultiSelectComponent, ChipOption } from '../../../shared/components/chip-multi-select/chip-multi-select.component';
 import { Candidate, Certificate } from '../../../core/models/candidate.model';
-import { REGISTRATION_FEE_STATUS_OPTIONS, CV_FORMAT_OPTIONS } from '../../../core/constants/candidate-options';
+import { REGISTRATION_FEE_STATUS_OPTIONS, CV_FORMAT_OPTIONS, SOURCE_OPTIONS } from '../../../core/constants/candidate-options';
 
 function skillGroupValidator(g: AbstractControl): ValidationErrors | null {
   const name = g.get('skill_name')?.value?.trim();
@@ -106,6 +106,7 @@ export class CandidateEditComponent implements OnInit {
   ];
   readonly registrationFeeStatusOptions = REGISTRATION_FEE_STATUS_OPTIONS;
   readonly cvFormatOptions = CV_FORMAT_OPTIONS;
+  readonly sourceOptions   = SOURCE_OPTIONS;
 
   // ── Computed SelectOption arrays ──────────────────────────────────────────
   countryOptions    = computed<SelectOption[]>(() =>
@@ -336,6 +337,7 @@ export class CandidateEditComponent implements OnInit {
       profile_status:          [emp.profile_status          ?? 'active'],
       registration_fee_status: [emp.registration_fee_status ?? 'pending_payment'],
       cv_format:               [emp.cv_format               ?? 'not_yet_created'],
+      source:                  [emp.source                  ?? 'Other'],
 
       job_title:        [emp.job_title ?? ''],
       occupation:       [emp.occupation ?? ''],
@@ -408,6 +410,7 @@ export class CandidateEditComponent implements OnInit {
       profile_status:          raw.profile_status          || undefined,
       registration_fee_status: raw.registration_fee_status || undefined,
       cv_format:               raw.cv_format               || undefined,
+      source:                  raw.source                  || undefined,
       job_title:     raw.job_title       || undefined,
       occupation:    raw.occupation      || undefined,
       industry:      raw.industry        || undefined,

@@ -680,6 +680,15 @@
             [allowClear]="false">
           </app-searchable-select>
         </div>
+        <div class="col-md-6">
+          <label class="form-label">Source / How They Found Us</label>
+          <app-searchable-select
+            formControlName="source"
+            [options]="sourceOptions"
+            placeholder="Select source…"
+            [allowClear]="false">
+          </app-searchable-select>
+        </div>
       </div>
 
       <!-- Summary -->

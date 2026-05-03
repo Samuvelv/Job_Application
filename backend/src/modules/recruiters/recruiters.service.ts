@@ -9,6 +9,16 @@ import type { CreateRecruiterDto, UpdateRecruiterDto, RecruiterFilterDto } from 
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
+function applyRecruiterSortOrder(query: any, sortBy: string): any {
+  switch (sortBy) {
+    case 'oldest':       return query.orderBy('r.created_at', 'asc');
+    case 'most_active':  return query.orderBy('shortlists_count', 'desc').orderBy('contact_requests_count', 'desc');
+    case 'alphabetical': return query.orderBy('r.contact_name', 'asc');
+    case 'last_active':  return query.orderByRaw('last_login_at DESC NULLS LAST').orderBy('r.created_at', 'desc');
+    default:             return query.orderBy('r.created_at', 'desc'); // newest
+  }
+}
+
 async function getRoleId(roleName: string): Promise<number> {
   const role = await db('roles').where({ name: roleName }).first();
   if (!role) throw new AppError(500, `Role "${roleName}" not found. Run seeds first.`);
@@ -34,7 +44,7 @@ export async function createRecruiter(dto: CreateRecruiterDto, createdByAdminId:
       email:         dto.email.toLowerCase(),
       password_hash: passwordHash,
       role_id:       recruiterRoleId,
-      is_active:     true,
+      is_active:     dto.is_active ?? true,
     });
 
     // Generate recruiter number from sequence
@@ -45,8 +55,20 @@ export async function createRecruiter(dto: CreateRecruiterDto, createdByAdminId:
       id:               recruiterId,
       user_id:          userId,
       recruiter_number: recruiterNumber,
-      company_name:     dto.company_name ?? null,
       contact_name:     dto.contact_name,
+      contact_job_title: dto.contact_job_title ?? null,
+      company_name:     dto.company_name ?? null,
+      company_country:  dto.company_country ?? null,
+      company_city:     dto.company_city ?? null,
+      company_website:  dto.company_website ?? null,
+      industry:         dto.industry ?? null,
+      phone:            dto.phone ?? null,
+      has_sponsor_licence:       dto.has_sponsor_licence ?? null,
+      sponsor_licence_number:    dto.sponsor_licence_number ?? null,
+      sponsor_licence_countries: dto.sponsor_licence_countries ?? null,
+      target_nationalities:      dto.target_nationalities ?? null,
+      hires_per_year:   dto.hires_per_year ?? null,
+      admin_notes:      dto.admin_notes ?? null,
       created_by:       createdByAdminId,
       plain_password:   dto.password,
       access_expires_at: new Date(dto.access_expires_at),
@@ -61,13 +83,10 @@ export async function createRecruiter(dto: CreateRecruiterDto, createdByAdminId:
   return { recruiter };
 }
 
-// ── List recruiters ───────────────────────────────────────────────────────────
+// ── Filter builder (shared by list + export) ─────────────────────────────────
 
-export async function listRecruiters(filters: RecruiterFilterDto) {
-  const { page, limit } = filters;
-  const offset = (page - 1) * limit;
-
-  const applyFilters = (b: any) => {
+function buildApplyFilters(filters: RecruiterFilterDto) {
+  return (b: any) => {
     const { search, company, isActive, companyCountry, industry,
             hasSponsorLicence, sponsorCountry, accountStatus,
             joinedFrom, joinedTo, lastActive } = filters;
@@ -81,7 +100,6 @@ export async function listRecruiters(filters: RecruiterFilterDto) {
     }
     if (company) b.whereILike('r.company_name', `%${company}%`);
 
-    // Legacy isActive (still respected if accountStatus not set)
     if (isActive !== undefined && !accountStatus) {
       b.where('u.is_active', isActive === 'true');
     }
@@ -112,7 +130,7 @@ export async function listRecruiters(filters: RecruiterFilterDto) {
     if (joinedFrom) b.where('r.created_at', '>=', new Date(joinedFrom));
     if (joinedTo) {
       const to = new Date(joinedTo);
-      to.setDate(to.getDate() + 1); // include the whole end day
+      to.setDate(to.getDate() + 1);
       b.where('r.created_at', '<', to);
     }
 
@@ -126,6 +144,15 @@ export async function listRecruiters(filters: RecruiterFilterDto) {
       );
     }
   };
+}
+
+// ── List recruiters ───────────────────────────────────────────────────────────
+
+export async function listRecruiters(filters: RecruiterFilterDto) {
+  const { page, limit } = filters;
+  const offset = (page - 1) * limit;
+
+  const applyFilters = buildApplyFilters(filters);
 
   let query = db('recruiters as r')
     .join('users as u', 'u.id', 'r.user_id')
@@ -148,6 +175,7 @@ export async function listRecruiters(filters: RecruiterFilterDto) {
       'r.created_at',
       db.raw(`(SELECT COUNT(*)::int FROM shortlists s WHERE s.recruiter_id = r.id) AS shortlists_count`),
       db.raw(`(SELECT COUNT(*)::int FROM contact_unlock_requests cur WHERE cur.recruiter_id = r.id) AS contact_requests_count`),
+      db.raw(`(SELECT COUNT(*)::int FROM profile_views pv WHERE pv.recruiter_id = r.id) AS profiles_viewed_count`),
       db.raw(`(SELECT MAX(rat.created_at) FROM recruiter_access_tokens rat WHERE rat.recruiter_id = r.id) AS last_login_at`),
     )
     .modify(applyFilters);
@@ -157,7 +185,7 @@ export async function listRecruiters(filters: RecruiterFilterDto) {
     .modify(applyFilters)
     .count('r.id as count');
 
-  const data = await query.orderBy('r.created_at', 'desc').limit(limit).offset(offset);
+  const data = await applyRecruiterSortOrder(query, filters.sortBy).limit(limit).offset(offset);
 
   return {
     data,
@@ -170,14 +198,112 @@ export async function listRecruiters(filters: RecruiterFilterDto) {
   };
 }
 
+// ── Export / CSV ──────────────────────────────────────────────────────────────
+// Schema verified (migration 20240014):
+//   contact_unlock_requests.recruiter_id → FK to recruiters.id  ✓
+//   shortlists.recruiter_id              → FK to recruiters.id  ✓
+// plain_password is intentionally excluded — sensitive field must never appear in exports.
+
+export async function exportRecruiters(filters: RecruiterFilterDto) {
+  debugger
+  const rows = await db('recruiters as r')
+    .join('users as u', 'u.id', 'r.user_id')
+    .select(
+      // --- identity ---
+      'r.id',           // required as correlated-subquery anchor; stripped before return
+      'r.recruiter_number',
+      'r.contact_name',
+      'r.company_name',
+      'u.email',
+      // --- profile (added by migration 20240021) ---
+      'r.company_country',
+      'r.industry',
+      // --- status ---
+      'u.is_active',
+      'r.access_expires_at',
+      'r.created_at',
+      // --- activity counts (correlated subqueries; recruiter_id verified in each table) ---
+      db.raw(
+        `(SELECT COUNT(*)::int FROM shortlists s
+          WHERE s.recruiter_id = r.id) AS shortlists_count`,
+      ),
+      db.raw(
+        `(SELECT COUNT(*)::int FROM contact_unlock_requests cur
+          WHERE cur.recruiter_id = r.id) AS unlock_requests_count`,
+      ),
+    )
+    .modify(buildApplyFilters(filters))
+    .orderBy('r.created_at', 'desc')
+    .limit(10000);
+
+  // Strip the internal anchor column before returning to the controller
+  return rows.map(({ id: _id, ...rest }: any) => rest);
+}
+
+// ── Bulk operations ───────────────────────────────────────────────────────────
+
+export async function bulkUpdateStatus(ids: string[], isActive: boolean): Promise<{ updated: number }> {
+  debugger
+  if (!ids.length) return { updated: 0 };
+  const updated = await db('users')
+    .whereIn('id', db('recruiters').select('user_id').whereIn('id', ids))
+    .update({ is_active: isActive });
+  return { updated };
+}
+
+export async function exportSelectedRecruiters(ids: string[]) {
+  if (!ids.length) return [];
+  const rows = await db('recruiters as r')
+    .join('users as u', 'u.id', 'r.user_id')
+    .select(
+      'r.id',
+      'r.recruiter_number',
+      'r.contact_name',
+      'r.company_name',
+      'u.email',
+      'r.company_country',
+      'r.industry',
+      'u.is_active',
+      'r.access_expires_at',
+      'r.created_at',
+      db.raw(`(SELECT COUNT(*)::int FROM shortlists s WHERE s.recruiter_id = r.id) AS shortlists_count`),
+      db.raw(`(SELECT COUNT(*)::int FROM contact_unlock_requests cur WHERE cur.recruiter_id = r.id) AS unlock_requests_count`),
+    )
+    .whereIn('r.id', ids)
+    .orderBy('r.created_at', 'desc');
+  return rows.map(({ id: _id, ...rest }: any) => rest);
+}
+
 // ── Get single recruiter ──────────────────────────────────────────────────────
 
 export async function updateRecruiter(id: string, dto: UpdateRecruiterDto) {
   const existing = await getRecruiterById(id); // throws 404 if not found
   const patch: Record<string, unknown> = {};
-  if (dto.contact_name      !== undefined) patch['contact_name']      = dto.contact_name;
-  if (dto.company_name      !== undefined) patch['company_name']      = dto.company_name ?? null;
-  if (dto.access_expires_at !== undefined) patch['access_expires_at'] = new Date(dto.access_expires_at);
+  if (dto.contact_name       !== undefined) patch['contact_name']      = dto.contact_name;
+  if (dto.contact_job_title  !== undefined) patch['contact_job_title'] = dto.contact_job_title ?? null;
+  if (dto.company_name       !== undefined) patch['company_name']      = dto.company_name ?? null;
+  if (dto.company_country    !== undefined) patch['company_country']   = dto.company_country ?? null;
+  if (dto.company_city       !== undefined) patch['company_city']      = dto.company_city ?? null;
+  if (dto.company_website    !== undefined) patch['company_website']   = dto.company_website ?? null;
+  if (dto.industry           !== undefined) patch['industry']          = dto.industry ?? null;
+  if (dto.phone              !== undefined) patch['phone']             = dto.phone ?? null;
+  if (dto.has_sponsor_licence       !== undefined) patch['has_sponsor_licence']       = dto.has_sponsor_licence ?? null;
+  if (dto.sponsor_licence_number    !== undefined) patch['sponsor_licence_number']    = dto.sponsor_licence_number ?? null;
+  if (dto.sponsor_licence_countries !== undefined) patch['sponsor_licence_countries'] = dto.sponsor_licence_countries ?? null;
+  if (dto.target_nationalities      !== undefined) patch['target_nationalities']      = dto.target_nationalities ?? null;
+  if (dto.hires_per_year     !== undefined) patch['hires_per_year']    = dto.hires_per_year ?? null;
+  if (dto.admin_notes        !== undefined) patch['admin_notes']       = dto.admin_notes ?? null;
+  if (dto.access_expires_at  !== undefined) patch['access_expires_at'] = new Date(dto.access_expires_at);
+
+  // Handle email change
+  if (dto.email !== undefined) {
+    const emailTaken = await db('users')
+      .where({ email: dto.email.toLowerCase() })
+      .whereNot({ id: existing.user_id })
+      .first();
+    if (emailTaken) throw new AppError(409, 'Email is already registered');
+    await db('users').where({ id: existing.user_id }).update({ email: dto.email.toLowerCase() });
+  }
 
   // Handle password change
   if (dto.new_password) {
@@ -210,9 +336,16 @@ export async function getRecruiterById(id: string) {
       'r.company_name',
       'r.company_logo_url',
       'r.company_country',
+      'r.company_city',
+      'r.company_website',
       'r.industry',
+      'r.phone',
       'r.has_sponsor_licence',
+      'r.sponsor_licence_number',
       'r.sponsor_licence_countries',
+      'r.target_nationalities',
+      'r.hires_per_year',
+      'r.admin_notes',
       'r.access_expires_at',
       'r.plain_password',
       'u.is_active',

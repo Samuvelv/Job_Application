@@ -9,7 +9,7 @@ import { CandidateFilters } from '../../../core/models/candidate.model';
 import { TagInputComponent } from '../tag-input/tag-input.component';
 import { ChipMultiSelectComponent, ChipOption } from '../chip-multi-select/chip-multi-select.component';
 import { SearchableSelectComponent, SelectOption } from '../searchable-select/searchable-select.component';
-import { REGISTRATION_FEE_STATUS_OPTIONS, CV_FORMAT_OPTIONS } from '../../../core/constants/candidate-options';
+import { REGISTRATION_FEE_STATUS_OPTIONS, CV_FORMAT_OPTIONS, SOURCE_OPTIONS } from '../../../core/constants/candidate-options';
 
 export type FilterApplyEvent = CandidateFilters;
 
@@ -437,6 +437,22 @@ const PROFILE_STATUS_OPTIONS: SelectOption[] = [
               </app-searchable-select>
             </div>
           </div>
+
+          <div class="cfs-section">
+            <div class="cfs-section__label">
+              Source / How They Found Us
+              @if (form.get('sourceList')?.value?.length) {
+                <span class="cfs-section__active-dot"></span>
+              }
+            </div>
+            <div class="cfs-section__body open">
+              <app-chip-multi-select
+                formControlName="sourceList"
+                [options]="SOURCE_OPTIONS"
+                placeholder="Select sources…">
+              </app-chip-multi-select>
+            </div>
+          </div>
         }
 
         <!-- Apply button (sticky footer) -->
@@ -466,6 +482,7 @@ export class CandidateFilterSidebarComponent implements OnInit, OnDestroy {
   readonly PROFILE_STATUS_OPTIONS             = PROFILE_STATUS_OPTIONS;
   readonly REGISTRATION_FEE_STATUS_OPTIONS    = REGISTRATION_FEE_STATUS_OPTIONS;
   readonly CV_FORMAT_OPTIONS                  = CV_FORMAT_OPTIONS;
+  readonly SOURCE_OPTIONS                     = SOURCE_OPTIONS as ChipOption[];
 
   form!: FormGroup;
   sidebarOpen = signal(false);
@@ -511,6 +528,7 @@ export class CandidateFilterSidebarComponent implements OnInit, OnDestroy {
       profileStatus:           [null],
       registrationFeeStatus:   [null],
       cvFormat:                [null],
+      sourceList:              [[]],
     });
   }
 
@@ -554,6 +572,7 @@ export class CandidateFilterSidebarComponent implements OnInit, OnDestroy {
     if (v.availability)               n++;
     if (v.hasVideo)                   n++;
     if (v.hasCV)                      n++;
+    if (v.sourceList?.length)         n++;
     if (v.profileStatus)              n++;
     if (v.registrationFeeStatus)      n++;
     if (v.cvFormat)                   n++;
@@ -587,6 +606,7 @@ export class CandidateFilterSidebarComponent implements OnInit, OnDestroy {
     if (v.availability)       f.availability   = v.availability;
     if (v.hasVideo)                 f.hasVideo              = 'true';
     if (v.hasCV)                    f.hasCV                 = 'true';
+    if (v.sourceList?.length)       f.source                = (v.sourceList as string[]).join(',');
     if (v.profileStatus)            f.profileStatus         = v.profileStatus;
     if (v.registrationFeeStatus)    f.registrationFeeStatus = v.registrationFeeStatus;
     if (v.cvFormat)                 f.cvFormat              = v.cvFormat;
@@ -604,7 +624,8 @@ export class CandidateFilterSidebarComponent implements OnInit, OnDestroy {
       university: '', fieldOfStudy: null, salaryCurrency: null,
       salaryMin: null, salaryMax: null, ageMin: null, ageMax: null,
       gender: null, visaStatus: null, availability: null,
-      hasVideo: false, hasCV: false, profileStatus: null, registrationFeeStatus: null, cvFormat: null,
+      hasVideo: false, hasCV: false, sourceList: [],
+      profileStatus: null, registrationFeeStatus: null, cvFormat: null,
     };
     this.form.reset(empty);
     this.lastAppliedSnapshot = empty;

@@ -43,6 +43,9 @@ export const CertificateSchema = z.object({
 
 // ── Create Candidate ───────────────────────────────────────────────────────────
 
+export const SOURCE_VALUES = ['Instagram', 'YouTube', 'WhatsApp', 'Friend Referral', 'Other'] as const;
+export type SourceValue = typeof SOURCE_VALUES[number];
+
 export const CreateCandidateSchema = z.object({
   // Auth
   email:    z.string().email(),
@@ -79,6 +82,9 @@ export const CreateCandidateSchema = z.object({
 
   // Availability
   notice_period_id: z.coerce.number().int().positive().optional().nullable(),
+
+  // Source / How they found us
+  source: z.enum(SOURCE_VALUES).optional(),
 
   // Admin controls
   registration_fee_status: z.enum(['paid', 'pending_payment', 'waived']).optional(),
@@ -144,6 +150,7 @@ export const CandidateFilterSchema = z.object({
   availability:            z.string().optional(),   // 'immediate' | '1_month' | '3_months'
   hasVideo:                z.enum(['true','false']).optional(),
   hasCV:                   z.enum(['true','false']).optional(),
+  source:                  z.string().optional(),   // comma-sep: Instagram,YouTube,...
   profileStatus:           z.string().optional(),
   registrationFeeStatus:   z.enum(['paid', 'pending_payment', 'waived']).optional(),
   cvFormat:                z.enum([

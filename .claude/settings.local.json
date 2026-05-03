@@ -4,7 +4,10 @@
       "Bash(grep -E \"\\\\.\\(ts|scss\\)$\")",
       "Bash(node -e ' *)",
       "Bash(npx knex *)",
-      "Bash(grep -v \"//\")"
+      "Bash(grep -v \"//\")",
+      "Bash(npx tsc *)",
+      "Bash(npx ng *)",
+      "Bash(Get-Content *)"
     ]
   }
 }
