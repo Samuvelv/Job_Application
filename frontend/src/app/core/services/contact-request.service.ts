@@ -26,8 +26,8 @@ export class ContactRequestService {
     return this.http.get<{ requests: ContactRequest[] }>(`${this.api}/me`);
   }
 
-  // Admin: list all requests with optional status filter
-  list(filters: { status?: string; page?: number; limit?: number } = {}): Observable<PaginatedContactRequests> {
+  // Admin: list all requests with optional filters
+  list(filters: { status?: string; search?: string; date_from?: string; date_to?: string; page?: number; limit?: number } = {}): Observable<PaginatedContactRequests> {
     let params = new HttpParams();
     Object.entries(filters).forEach(([k, v]) => {
       if (v !== undefined && v !== null && v !== '') params = params.set(k, String(v));

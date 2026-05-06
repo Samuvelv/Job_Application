@@ -93,6 +93,20 @@ interface FieldChange {
         }
       </div>
 
+      <!-- Date strip -->
+      <div class="card-dates">
+        <span class="card-date">
+          <i class="bi bi-clock"></i>
+          Submitted {{ request.created_at | date:'dd MMM yyyy, HH:mm' }}
+        </span>
+        @if (request.reviewed_at) {
+          <span class="card-date card-date--reviewed">
+            <i class="bi bi-check2-circle"></i>
+            Reviewed {{ request.reviewed_at | date:'dd MMM yyyy' }}
+          </span>
+        }
+      </div>
+
       <!-- Card Footer (Action Buttons) -->
       @if (request.status === 'pending' && (isAdmin || isRecruiter) && !isSubmitting) {
         <div class="card-footer">
@@ -130,8 +144,8 @@ interface FieldChange {
       display: flex;
       flex-direction: column;
       height: 100%;
-      background: var(--th-background, #fff);
-      border: 1px solid var(--th-border, #e5e7eb);
+      background: var(--th-surface);
+      border: 1px solid var(--th-border);
       border-radius: var(--th-radius-lg, 8px);
       box-shadow: var(--th-shadow-card, 0 1px 3px rgba(0, 0, 0, 0.1));
       transition: box-shadow 0.2s ease, transform 0.2s ease;
@@ -146,7 +160,8 @@ interface FieldChange {
     /* ── Header ── */
     .card-header {
       padding: 1rem;
-      border-bottom: 1px solid var(--th-border, #e5e7eb);
+      border-bottom: 1px solid var(--th-border);
+      background: var(--th-surface);
     }
 
     .header-content {
@@ -164,16 +179,16 @@ interface FieldChange {
       height: 48px;
       border-radius: 50%;
       object-fit: cover;
-      background: #f3f4f6;
-      border: 2px solid var(--th-border, #e5e7eb);
+      background: var(--th-surface-2);
+      border: 2px solid var(--th-border);
     }
 
     .avatar-placeholder {
       display: flex;
       align-items: center;
       justify-content: center;
-      background: #f3f4f6;
-      color: #6b7280;
+      background: var(--th-surface-2);
+      color: var(--th-muted);
       font-size: 1.5rem;
     }
 
@@ -186,7 +201,7 @@ interface FieldChange {
       margin: 0;
       font-size: 0.95rem;
       font-weight: 600;
-      color: var(--th-text, #111827);
+      color: var(--th-text);
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
@@ -195,7 +210,7 @@ interface FieldChange {
     .candidate-email {
       margin: 0.25rem 0 0 0;
       font-size: 0.85rem;
-      color: #6b7280;
+      color: var(--th-muted);
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
@@ -216,18 +231,18 @@ interface FieldChange {
     }
 
     .status-pending {
-      background-color: #fef3c7;
-      color: #92400e;
+      background-color: var(--th-warning-soft);
+      color: var(--th-warning);
     }
 
     .status-approved {
-      background-color: #d1fae5;
-      color: #065f46;
+      background-color: var(--th-success-soft);
+      color: var(--th-success);
     }
 
     .status-rejected {
-      background-color: #fee2e2;
-      color: #7f1d1d;
+      background-color: var(--th-danger-soft);
+      color: var(--th-danger);
     }
 
     /* ── Body ── */
@@ -237,6 +252,7 @@ interface FieldChange {
       display: flex;
       flex-direction: column;
       gap: 0.75rem;
+      background: var(--th-surface);
     }
 
     .reason-section {
@@ -248,14 +264,14 @@ interface FieldChange {
       font-size: 0.8rem;
       font-weight: 600;
       text-transform: uppercase;
-      color: #6b7280;
+      color: var(--th-muted);
       letter-spacing: 0.5px;
     }
 
     .reason-text {
       margin: 0.375rem 0 0 0;
       font-size: 0.9rem;
-      color: var(--th-text, #111827);
+      color: var(--th-text);
       line-height: 1.4;
       word-wrap: break-word;
     }
@@ -270,7 +286,7 @@ interface FieldChange {
       font-size: 0.8rem;
       font-weight: 600;
       text-transform: uppercase;
-      color: #6b7280;
+      color: var(--th-muted);
       letter-spacing: 0.5px;
     }
 
@@ -283,21 +299,22 @@ interface FieldChange {
 
     .change-item {
       padding: 0.625rem;
-      background-color: #f9fafb;
-      border: 1px solid var(--th-border, #e5e7eb);
+      background-color: var(--th-surface-2);
+      border: 1px solid var(--th-border);
       border-radius: var(--th-radius, 4px);
       display: flex;
       flex-direction: column;
       gap: 0.375rem;
+      overflow: hidden;
     }
 
     .change-label {
       font-size: 0.8rem;
       font-weight: 600;
-      color: #374151;
+      color: var(--th-text-secondary);
       padding: 0.25rem 0.5rem;
-      background-color: white;
-      border-left: 3px solid #3b82f6;
+      background-color: var(--th-surface);
+      border-left: 3px solid var(--th-info, #0284c7);
       border-radius: 2px;
       display: inline-block;
       width: fit-content;
@@ -313,10 +330,11 @@ interface FieldChange {
 
     .old-value {
       flex: 0 1 auto;
+      min-width: 0;
       padding: 0.375rem 0.5rem;
-      background-color: #fef2f2;
-      border: 1px solid #f3e8e8;
-      color: #7f1d1d;
+      background-color: var(--th-danger-soft);
+      border: 1px solid var(--th-border);
+      color: var(--th-danger);
       border-radius: 3px;
       overflow: hidden;
       text-overflow: ellipsis;
@@ -325,16 +343,17 @@ interface FieldChange {
 
     .arrow {
       flex-shrink: 0;
-      color: #9ca3af;
+      color: var(--th-muted);
       font-weight: bold;
     }
 
     .new-value {
       flex: 0 1 auto;
+      min-width: 0;
       padding: 0.375rem 0.5rem;
-      background-color: #f0fdf4;
-      border: 1px solid #e8f5e9;
-      color: #15803d;
+      background-color: var(--th-success-soft);
+      border: 1px solid var(--th-border);
+      color: var(--th-success);
       border-radius: 3px;
       overflow: hidden;
       text-overflow: ellipsis;
@@ -344,10 +363,10 @@ interface FieldChange {
     .btn-show-more {
       width: 100%;
       padding: 0.5rem 0.75rem;
-      background-color: #f3f4f6;
-      border: 1px solid var(--th-border, #e5e7eb);
+      background-color: var(--th-surface-2);
+      border: 1px solid var(--th-border);
       border-radius: var(--th-radius, 4px);
-      color: var(--th-text, #111827);
+      color: var(--th-text-secondary);
       font-size: 0.8rem;
       font-weight: 500;
       cursor: pointer;
@@ -360,8 +379,9 @@ interface FieldChange {
     }
 
     .btn-show-more:hover {
-      background-color: #e5e7eb;
-      border-color: #d1d5db;
+      background-color: var(--th-surface-raised);
+      border-color: var(--th-border-strong);
+      color: var(--th-text);
     }
 
     .btn-show-more i {
@@ -371,8 +391,8 @@ interface FieldChange {
     .admin-notes-section {
       margin: 0;
       padding: 0.75rem;
-      background-color: #f9fafb;
-      border-left: 3px solid var(--th-border, #e5e7eb);
+      background-color: var(--th-surface-2);
+      border-left: 3px solid var(--th-primary);
       border-radius: var(--th-radius, 4px);
     }
 
@@ -381,14 +401,14 @@ interface FieldChange {
       font-size: 0.8rem;
       font-weight: 600;
       text-transform: uppercase;
-      color: #6b7280;
+      color: var(--th-muted);
       letter-spacing: 0.5px;
     }
 
     .admin-note-text {
       margin: 0.375rem 0 0 0;
       font-size: 0.85rem;
-      color: var(--th-text, #111827);
+      color: var(--th-text);
       line-height: 1.4;
       word-wrap: break-word;
     }
@@ -396,9 +416,40 @@ interface FieldChange {
     /* ── Footer ── */
     .card-footer {
       padding: 1rem;
-      border-top: 1px solid var(--th-border, #e5e7eb);
+      border-top: 1px solid var(--th-border);
+      background: var(--th-surface);
       display: flex;
       gap: 0.5rem;
+    }
+
+    /* ── Date strip ── */
+    .card-dates {
+      padding: 0.6rem 1rem;
+      background: var(--th-surface-2);
+      border-top: 1px solid var(--th-border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.75rem;
+      flex-wrap: wrap;
+    }
+
+    .card-date {
+      display: flex;
+      align-items: center;
+      gap: 0.35rem;
+      font-size: 0.75rem;
+      color: var(--th-muted);
+    }
+
+    .card-date i {
+      font-size: 0.7rem;
+      flex-shrink: 0;
+    }
+
+    .card-date--reviewed {
+      padding-left: 0.75rem;
+      border-left: 1px solid var(--th-border-strong);
     }
 
     .btn-action {
@@ -420,31 +471,33 @@ interface FieldChange {
     }
 
     .btn-success {
-      background-color: #10b981;
+      background-color: var(--th-success, #10b981);
       color: white;
-      border-color: #10b981;
+      border-color: var(--th-success, #10b981);
     }
 
     .btn-success:hover:not(:disabled) {
-      background-color: #059669;
-      border-color: #059669;
+      filter: brightness(0.9);
     }
 
     .btn-danger {
-      background-color: #f43f5e;
+      background-color: var(--th-danger, #f43f5e);
       color: white;
-      border-color: #f43f5e;
+      border-color: var(--th-danger, #f43f5e);
     }
 
     .btn-danger:hover:not(:disabled) {
-      background-color: #e11d48;
-      border-color: #e11d48;
+      filter: brightness(0.9);
     }
 
     .btn-secondary {
-      background-color: #d1d5db;
-      color: var(--th-text, #111827);
-      border-color: #d1d5db;
+      background-color: var(--th-surface-2);
+      color: var(--th-text-secondary);
+      border-color: var(--th-border-strong);
+    }
+
+    .btn-secondary:hover:not(:disabled) {
+      background-color: var(--th-surface-raised);
     }
 
     .btn-action:disabled {

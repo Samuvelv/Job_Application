@@ -109,8 +109,8 @@ import { ConfirmDialogService } from '../../../core/services/confirm-dialog.serv
       display: flex;
       flex-direction: column;
       height: 100%;
-      background: var(--th-background, #fff);
-      border: 1px solid var(--th-border, #e5e7eb);
+      background: var(--th-surface);
+      border: 1px solid var(--th-border);
       border-radius: var(--th-radius-lg, 8px);
       box-shadow: var(--th-shadow-card, 0 1px 3px rgba(0, 0, 0, 0.1));
       transition: box-shadow 0.2s ease, transform 0.2s ease;
@@ -125,7 +125,8 @@ import { ConfirmDialogService } from '../../../core/services/confirm-dialog.serv
     /* ── Header ── */
     .card-header {
       padding: 1rem;
-      border-bottom: 1px solid var(--th-border, #e5e7eb);
+      border-bottom: 1px solid var(--th-border);
+      background: var(--th-surface);
     }
 
     .header-content {
@@ -144,14 +145,14 @@ import { ConfirmDialogService } from '../../../core/services/confirm-dialog.serv
       font-size: 0.75rem;
       font-weight: 700;
       text-transform: uppercase;
-      color: #6b7280;
+      color: var(--th-muted);
       letter-spacing: 0.5px;
       margin-bottom: 0.25rem;
     }
 
     .party-name {
       font-weight: 600;
-      color: var(--th-text, #111827);
+      color: var(--th-text);
       margin-bottom: 0.25rem;
       white-space: nowrap;
       overflow: hidden;
@@ -160,7 +161,7 @@ import { ConfirmDialogService } from '../../../core/services/confirm-dialog.serv
 
     .party-company {
       font-size: 0.85rem;
-      color: #6b7280;
+      color: var(--th-muted);
       margin-bottom: 0.25rem;
       white-space: nowrap;
       overflow: hidden;
@@ -169,7 +170,7 @@ import { ConfirmDialogService } from '../../../core/services/confirm-dialog.serv
 
     .party-title {
       font-size: 0.85rem;
-      color: #6b7280;
+      color: var(--th-muted);
       margin-bottom: 0.25rem;
       white-space: nowrap;
       overflow: hidden;
@@ -178,7 +179,7 @@ import { ConfirmDialogService } from '../../../core/services/confirm-dialog.serv
 
     .party-email {
       font-size: 0.8rem;
-      color: #9ca3af;
+      color: var(--th-text-secondary);
       display: flex;
       align-items: center;
       gap: 0.375rem;
@@ -199,8 +200,8 @@ import { ConfirmDialogService } from '../../../core/services/confirm-dialog.serv
     .candidate-number .badge {
       font-size: 0.7rem;
       padding: 0.25rem 0.5rem;
-      background: #e0e7ff;
-      color: #4338ca;
+      background: var(--th-primary-soft);
+      color: var(--th-primary);
     }
 
     .party-separator {
@@ -208,7 +209,7 @@ import { ConfirmDialogService } from '../../../core/services/confirm-dialog.serv
       display: flex;
       align-items: center;
       justify-content: center;
-      color: #d1d5db;
+      color: var(--th-border-strong);
       font-size: 1.25rem;
       padding: 0 0.5rem;
     }
@@ -216,8 +217,8 @@ import { ConfirmDialogService } from '../../../core/services/confirm-dialog.serv
     /* ── Meta Info ── */
     .card-meta {
       padding: 0.75rem 1rem;
-      background: #f9fafb;
-      border-bottom: 1px solid var(--th-border, #e5e7eb);
+      background: var(--th-surface-2);
+      border-bottom: 1px solid var(--th-border);
       display: flex;
       align-items: center;
       justify-content: space-between;
@@ -236,23 +237,23 @@ import { ConfirmDialogService } from '../../../core/services/confirm-dialog.serv
     }
 
     .status-pending {
-      background-color: #fef3c7;
-      color: #92400e;
+      background-color: var(--th-warning-soft);
+      color: var(--th-warning);
     }
 
     .status-approved {
-      background-color: #d1fae5;
-      color: #065f46;
+      background-color: var(--th-success-soft);
+      color: var(--th-success);
     }
 
     .status-rejected {
-      background-color: #fee2e2;
-      color: #7f1d1d;
+      background-color: var(--th-danger-soft);
+      color: var(--th-danger);
     }
 
     .request-date {
       font-size: 0.8rem;
-      color: #6b7280;
+      color: var(--th-muted);
       display: flex;
       align-items: center;
       gap: 0.5rem;
@@ -265,14 +266,14 @@ import { ConfirmDialogService } from '../../../core/services/confirm-dialog.serv
     .reviewed-date {
       margin-left: 0.5rem;
       padding-left: 0.5rem;
-      border-left: 1px solid #d1d5db;
+      border-left: 1px solid var(--th-border-strong);
     }
 
     /* ── Admin Notes ── */
     .admin-notes-section {
       padding: 0.75rem 1rem;
-      background: #f9fafb;
-      border-bottom: 1px solid var(--th-border, #e5e7eb);
+      background: var(--th-surface-2);
+      border-bottom: 1px solid var(--th-border);
     }
 
     .admin-note-label {
@@ -280,7 +281,7 @@ import { ConfirmDialogService } from '../../../core/services/confirm-dialog.serv
       font-size: 0.75rem;
       font-weight: 700;
       text-transform: uppercase;
-      color: #6b7280;
+      color: var(--th-muted);
       letter-spacing: 0.5px;
       margin-bottom: 0.375rem;
     }
@@ -288,7 +289,7 @@ import { ConfirmDialogService } from '../../../core/services/confirm-dialog.serv
     .admin-note-text {
       margin: 0;
       font-size: 0.85rem;
-      color: var(--th-text, #111827);
+      color: var(--th-text);
       line-height: 1.4;
       word-wrap: break-word;
     }
@@ -298,6 +299,7 @@ import { ConfirmDialogService } from '../../../core/services/confirm-dialog.serv
       padding: 1rem;
       display: flex;
       gap: 0.5rem;
+      background: var(--th-surface);
     }
 
     .btn-action {
@@ -319,31 +321,33 @@ import { ConfirmDialogService } from '../../../core/services/confirm-dialog.serv
     }
 
     .btn-success {
-      background-color: #10b981;
+      background-color: var(--th-success, #10b981);
       color: white;
-      border-color: #10b981;
+      border-color: var(--th-success, #10b981);
     }
 
     .btn-success:hover:not(:disabled) {
-      background-color: #059669;
-      border-color: #059669;
+      filter: brightness(0.9);
     }
 
     .btn-danger {
-      background-color: #f43f5e;
+      background-color: var(--th-danger, #f43f5e);
       color: white;
-      border-color: #f43f5e;
+      border-color: var(--th-danger, #f43f5e);
     }
 
     .btn-danger:hover:not(:disabled) {
-      background-color: #e11d48;
-      border-color: #e11d48;
+      filter: brightness(0.9);
     }
 
     .btn-secondary {
-      background-color: #d1d5db;
-      color: var(--th-text, #111827);
-      border-color: #d1d5db;
+      background-color: var(--th-surface-2);
+      color: var(--th-text-secondary);
+      border-color: var(--th-border-strong);
+    }
+
+    .btn-secondary:hover:not(:disabled) {
+      background-color: var(--th-surface-raised);
     }
 
     .btn-action:disabled {

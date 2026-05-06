@@ -12,10 +12,25 @@ export const ReviewEditRequestSchema = z.object({
   admin_note: z.string().max(1000).optional(),
 });
 
+export const REQUEST_TYPE_GROUPS: Record<string, string[]> = {
+  personal:     ['first_name', 'last_name', 'date_of_birth', 'gender', 'bio', 'phone'],
+  professional: ['job_title', 'occupation', 'industry', 'years_experience', 'linkedin_url'],
+  location:     ['current_country', 'current_city', 'nationality'],
+  salary:       ['salary_min', 'salary_max', 'salary_currency', 'salary_type'],
+  skills:       ['skills'],
+  languages:    ['languages'],
+  experience:   ['experience'],
+  education:    ['education'],
+};
+
 export const EditRequestFilterSchema = z.object({
-  status: z.enum(['pending', 'approved', 'rejected']).optional(),
-  page:   z.coerce.number().int().positive().default(1),
-  limit:  z.coerce.number().int().positive().max(100).default(20),
+  status:       z.enum(['pending', 'approved', 'rejected']).optional(),
+  search:       z.string().trim().optional(),
+  date_from:    z.string().optional(),
+  date_to:      z.string().optional(),
+  request_type: z.enum(['personal', 'professional', 'location', 'salary', 'skills', 'languages', 'experience', 'education']).optional(),
+  page:         z.coerce.number().int().positive().default(1),
+  limit:        z.coerce.number().int().positive().max(100).default(20),
 });
 
 export type SubmitEditRequestDto  = z.infer<typeof SubmitEditRequestSchema>;

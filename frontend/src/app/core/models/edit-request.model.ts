@@ -16,8 +16,14 @@ export interface EditRequest {
   reviewed_at?: string | null;
 }
 
+export type EditRequestType = 'personal' | 'professional' | 'location' | 'salary' | 'skills' | 'languages' | 'experience' | 'education';
+
 export interface EditRequestFilters {
-  status?: 'pending' | 'approved' | 'rejected';
-  page?: number;
-  limit?: number;
+  status?:       'pending' | 'approved' | 'rejected';
+  search?:       string;
+  date_from?:    string;
+  date_to?:      string;
+  request_type?: EditRequestType;
+  page?:         number;
+  limit?:        number;
 }

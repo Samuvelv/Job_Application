@@ -2,7 +2,7 @@
 import { db } from '../../config/db';
 import { AppError } from '../../middleware/errorHandler';
 import { sendContactRequestApprovedNotification, sendContactRequestRejectedNotification } from '../../services/email.service';
-import type { ReviewContactRequestDto } from './contact-requests.dto';
+import type { ReviewContactRequestDto, ContactRequestFilterDto } from './contact-requests.dto';
 
 // ── Create a request (recruiter → admin) ────────────────────────────────────
 
@@ -30,12 +30,8 @@ export async function createContactRequest(recruiterId: string, candidateId: str
 
 // ── List all requests (admin) ────────────────────────────────────────────────
 
-export async function listContactRequests(filters: {
-  status?: string;
-  page: number;
-  limit: number;
-}) {
-  const { page, limit, status } = filters;
+export async function listContactRequests(filters: ContactRequestFilterDto) {
+  const { page, limit, status, search, date_from, date_to } = filters;
   const offset = (page - 1) * limit;
 
   let query = db('contact_unlock_requests as cr')
@@ -63,9 +59,26 @@ export async function listContactRequests(filters: {
 
   if (status) query = query.where('cr.status', status);
 
-  const [{ count }] = await db('contact_unlock_requests as cr')
-    .modify((q) => { if (status) q.where('cr.status', status); })
-    .count('cr.id as count');
+  if (search) {
+    const term = `%${search.toLowerCase()}%`;
+    query = query.where(function () {
+      this.whereRaw(`LOWER(r.contact_name) LIKE ?`, [term])
+          .orWhereRaw(`LOWER(c.first_name || ' ' || c.last_name) LIKE ?`, [term]);
+    });
+  }
+
+  if (date_from) {
+    query = query.where('cr.created_at', '>=', new Date(date_from));
+  }
+
+  if (date_to) {
+    const to = new Date(date_to);
+    to.setHours(23, 59, 59, 999);
+    query = query.where('cr.created_at', '<=', to);
+  }
+
+  const countQuery = query.clone().clearSelect().count('cr.id as count');
+  const [{ count }] = await countQuery;
 
   const data = await query.orderBy('cr.created_at', 'desc').limit(limit).offset(offset);
   const total = Number(count);

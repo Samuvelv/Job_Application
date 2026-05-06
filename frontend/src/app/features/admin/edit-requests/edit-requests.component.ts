@@ -1,10 +1,11 @@
 // src/app/features/admin/edit-requests/edit-requests.component.ts
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { ReactiveFormsModule, FormBuilder, FormGroup } from '@angular/forms';
+import { ReactiveFormsModule, FormBuilder, FormGroup, FormsModule } from '@angular/forms';
+import { Subject, debounceTime, distinctUntilChanged, takeUntil } from 'rxjs';
 import { EditRequestService } from '../../../core/services/edit-request.service';
 import { ContactRequestService } from '../../../core/services/contact-request.service';
-import { EditRequest } from '../../../core/models/edit-request.model';
+import { EditRequest, EditRequestType } from '../../../core/models/edit-request.model';
 import { ContactRequest } from '../../../core/models/contact-request.model';
 import { ToastService } from '../../../core/services/toast.service';
 import { PageHeaderComponent } from '../../../shared/components/page-header/page-header.component';
@@ -15,7 +16,108 @@ import { ContactRequestCardComponent } from '../../../shared/components/contact-
 @Component({
   selector: 'app-edit-requests',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, PageHeaderComponent, EmptyStateComponent, EditRequestCardComponent, ContactRequestCardComponent],
+  imports: [CommonModule, ReactiveFormsModule, FormsModule, PageHeaderComponent, EmptyStateComponent, EditRequestCardComponent, ContactRequestCardComponent],
+  styles: [`
+    .filter-bar {
+      background: var(--th-surface);
+      border: 1px solid var(--th-border);
+      border-radius: 12px;
+      padding: 16px;
+      margin-bottom: 20px;
+    }
+    .filter-bar__row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      align-items: flex-end;
+    }
+    .filter-bar__group {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      flex: 1 1 160px;
+      min-width: 140px;
+    }
+    .filter-bar__group--wide {
+      flex: 2 1 220px;
+    }
+    .filter-bar__label {
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--th-muted);
+    }
+    .filter-bar__input {
+      height: 38px;
+      border-radius: 8px;
+      border: 1px solid var(--th-border-strong);
+      padding: 0 10px;
+      font-size: 14px;
+      background: var(--th-surface-2);
+      color: var(--th-text);
+      transition: border-color 0.15s, background 0.15s;
+      width: 100%;
+    }
+    .filter-bar__input:focus {
+      outline: none;
+      border-color: var(--th-primary);
+      background: var(--th-surface);
+    }
+    .filter-bar__select {
+      height: 38px;
+      border-radius: 8px;
+      border: 1px solid var(--th-border-strong);
+      padding: 0 10px;
+      font-size: 14px;
+      background: var(--th-surface-2);
+      color: var(--th-text);
+      width: 100%;
+      cursor: pointer;
+      transition: border-color 0.15s;
+    }
+    .filter-bar__select:focus {
+      outline: none;
+      border-color: var(--th-primary);
+    }
+    .filter-bar__select option {
+      background: var(--th-surface);
+      color: var(--th-text);
+    }
+    .filter-bar__clear {
+      height: 38px;
+      padding: 0 14px;
+      border-radius: 8px;
+      border: 1px solid var(--th-border-strong);
+      background: transparent;
+      color: var(--th-muted);
+      font-size: 13px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      white-space: nowrap;
+      transition: all 0.15s;
+      align-self: flex-end;
+    }
+    .filter-bar__clear:hover {
+      border-color: var(--th-danger);
+      color: var(--th-danger);
+      background: var(--th-danger-soft);
+    }
+    .filter-bar__active-badge {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      background: var(--th-primary);
+      color: #fff;
+      font-size: 10px;
+      font-weight: 700;
+    }
+  `],
   template: `
     <app-page-header
       title="Requests"
@@ -48,6 +150,71 @@ import { ContactRequestCardComponent } from '../../../shared/components/contact-
     <!-- ── EDIT REQUESTS SECTION ── -->
     @if (activeSection === 'edit') {
 
+      <!-- Filter bar -->
+      <div class="filter-bar">
+        <div class="filter-bar__row">
+
+          <!-- Search -->
+          <div class="filter-bar__group filter-bar__group--wide">
+            <span class="filter-bar__label"><i class="bi bi-search me-1"></i>Search candidate</span>
+            <input
+              class="filter-bar__input"
+              type="text"
+              placeholder="Search by candidate name…"
+              [(ngModel)]="editSearch"
+              (ngModelChange)="onEditSearchChange($event)"
+            />
+          </div>
+
+          <!-- Request Type -->
+          <div class="filter-bar__group">
+            <span class="filter-bar__label"><i class="bi bi-tag me-1"></i>Request type</span>
+            <select class="filter-bar__select" [(ngModel)]="editRequestType" (ngModelChange)="onEditFilterChange()">
+              <option value="">All types</option>
+              <option value="personal">Personal Info</option>
+              <option value="professional">Professional</option>
+              <option value="location">Location</option>
+              <option value="salary">Salary</option>
+              <option value="skills">Skills</option>
+              <option value="languages">Languages</option>
+              <option value="experience">Experience</option>
+              <option value="education">Education</option>
+            </select>
+          </div>
+
+          <!-- Date From -->
+          <div class="filter-bar__group">
+            <span class="filter-bar__label"><i class="bi bi-calendar me-1"></i>Date from</span>
+            <input
+              class="filter-bar__input"
+              type="date"
+              [(ngModel)]="editDateFrom"
+              (ngModelChange)="onEditFilterChange()"
+            />
+          </div>
+
+          <!-- Date To -->
+          <div class="filter-bar__group">
+            <span class="filter-bar__label"><i class="bi bi-calendar-check me-1"></i>Date to</span>
+            <input
+              class="filter-bar__input"
+              type="date"
+              [(ngModel)]="editDateTo"
+              (ngModelChange)="onEditFilterChange()"
+            />
+          </div>
+
+          <!-- Clear filters -->
+          @if (editActiveFilterCount > 0) {
+            <button class="filter-bar__clear" (click)="clearEditFilters()">
+              <i class="bi bi-x-lg"></i>
+              Clear
+              <span class="filter-bar__active-badge">{{ editActiveFilterCount }}</span>
+            </button>
+          }
+        </div>
+      </div>
+
       <!-- Status filter tabs -->
       <div class="nav-pills-custom mb-4">
         @for (tab of statusTabs; track tab.value) {
@@ -68,7 +235,7 @@ import { ContactRequestCardComponent } from '../../../shared/components/contact-
         <app-empty-state
           icon="bi-inbox"
           title="No edit requests found"
-          subtitle="Edit requests submitted by candidates will appear here."
+          [subtitle]="editActiveFilterCount > 0 ? 'No results match your current filters. Try adjusting your search.' : 'Edit requests submitted by candidates will appear here.'"
         />
       } @else {
         <div class="row g-3">
@@ -109,6 +276,55 @@ import { ContactRequestCardComponent } from '../../../shared/components/contact-
     <!-- ── CONTACT REQUESTS SECTION ── -->
     @if (activeSection === 'contact') {
 
+      <!-- Filter bar -->
+      <div class="filter-bar">
+        <div class="filter-bar__row">
+
+          <!-- Search -->
+          <div class="filter-bar__group filter-bar__group--wide">
+            <span class="filter-bar__label"><i class="bi bi-search me-1"></i>Search</span>
+            <input
+              class="filter-bar__input"
+              type="text"
+              placeholder="Search by recruiter or candidate name…"
+              [(ngModel)]="contactSearch"
+              (ngModelChange)="onContactSearchChange($event)"
+            />
+          </div>
+
+          <!-- Date From -->
+          <div class="filter-bar__group">
+            <span class="filter-bar__label"><i class="bi bi-calendar me-1"></i>Date from</span>
+            <input
+              class="filter-bar__input"
+              type="date"
+              [(ngModel)]="contactDateFrom"
+              (ngModelChange)="onContactFilterChange()"
+            />
+          </div>
+
+          <!-- Date To -->
+          <div class="filter-bar__group">
+            <span class="filter-bar__label"><i class="bi bi-calendar-check me-1"></i>Date to</span>
+            <input
+              class="filter-bar__input"
+              type="date"
+              [(ngModel)]="contactDateTo"
+              (ngModelChange)="onContactFilterChange()"
+            />
+          </div>
+
+          <!-- Clear filters -->
+          @if (contactActiveFilterCount > 0) {
+            <button class="filter-bar__clear" (click)="clearContactFilters()">
+              <i class="bi bi-x-lg"></i>
+              Clear
+              <span class="filter-bar__active-badge">{{ contactActiveFilterCount }}</span>
+            </button>
+          }
+        </div>
+      </div>
+
       <!-- Status filter tabs -->
       <div class="nav-pills-custom mb-4">
         @for (tab of statusTabs; track tab.value) {
@@ -129,7 +345,7 @@ import { ContactRequestCardComponent } from '../../../shared/components/contact-
         <app-empty-state
           icon="bi-person-lines-fill"
           title="No contact requests found"
-          subtitle="Contact info requests from recruiters will appear here."
+          [subtitle]="contactActiveFilterCount > 0 ? 'No results match your current filters. Try adjusting your search.' : 'Contact info requests from recruiters will appear here.'"
         />
       } @else {
         <div class="row g-3">
@@ -168,7 +384,7 @@ import { ContactRequestCardComponent } from '../../../shared/components/contact-
     }
   `,
 })
-export class EditRequestsComponent implements OnInit {
+export class EditRequestsComponent implements OnInit, OnDestroy {
   activeSection: 'edit' | 'contact' = 'edit';
 
   // Edit requests state
@@ -179,6 +395,12 @@ export class EditRequestsComponent implements OnInit {
   editReviewingId: string | null = null;
   editPendingCount = 0;
 
+  // Edit filter state
+  editSearch = '';
+  editDateFrom = '';
+  editDateTo = '';
+  editRequestType: EditRequestType | '' = '';
+
   // Contact requests state
   contactRequests: ContactRequest[] = [];
   contactPagination = { page: 1, limit: 10, total: 0, pages: 0 };
@@ -186,6 +408,11 @@ export class EditRequestsComponent implements OnInit {
   contactStatus = 'pending';
   contactReviewingId: string | null = null;
   contactPendingCount = 0;
+
+  // Contact filter state
+  contactSearch = '';
+  contactDateFrom = '';
+  contactDateTo = '';
 
   // Shared review form
   reviewForm: FormGroup;
@@ -197,6 +424,11 @@ export class EditRequestsComponent implements OnInit {
     { label: 'Rejected', value: 'rejected' },
     { label: 'All',      value: ''         },
   ];
+
+  // Debounce subjects
+  private editSearch$    = new Subject<string>();
+  private contactSearch$ = new Subject<string>();
+  private destroy$       = new Subject<void>();
 
   private readonly fieldLabels: Record<string, string> = {
     first_name: 'First Name', last_name: 'Last Name', phone: 'Phone',
@@ -220,8 +452,33 @@ export class EditRequestsComponent implements OnInit {
   }
 
   ngOnInit(): void {
+    // Wire up debounced search for edit section (300 ms)
+    this.editSearch$.pipe(
+      debounceTime(300),
+      distinctUntilChanged(),
+      takeUntil(this.destroy$),
+    ).subscribe(() => {
+      this.editPagination.page = 1;
+      this.loadEditRequests();
+    });
+
+    // Wire up debounced search for contact section (300 ms)
+    this.contactSearch$.pipe(
+      debounceTime(300),
+      distinctUntilChanged(),
+      takeUntil(this.destroy$),
+    ).subscribe(() => {
+      this.contactPagination.page = 1;
+      this.loadContactRequests();
+    });
+
     this.loadEditRequests();
     this.loadContactRequests();
+  }
+
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
   }
 
   // ── Section toggle ─────────────────────────────────────────────────────────
@@ -231,14 +488,67 @@ export class EditRequestsComponent implements OnInit {
     this.cancelReview();
   }
 
+  // ── Edit filter helpers ────────────────────────────────────────────────────
+
+  get editActiveFilterCount(): number {
+    return [this.editSearch, this.editDateFrom, this.editDateTo, this.editRequestType]
+      .filter(v => !!v).length;
+  }
+
+  onEditSearchChange(value: string): void {
+    this.editSearch$.next(value);
+  }
+
+  onEditFilterChange(): void {
+    this.editPagination.page = 1;
+    this.loadEditRequests();
+  }
+
+  clearEditFilters(): void {
+    this.editSearch      = '';
+    this.editDateFrom    = '';
+    this.editDateTo      = '';
+    this.editRequestType = '';
+    this.editPagination.page = 1;
+    this.loadEditRequests();
+  }
+
+  // ── Contact filter helpers ─────────────────────────────────────────────────
+
+  get contactActiveFilterCount(): number {
+    return [this.contactSearch, this.contactDateFrom, this.contactDateTo]
+      .filter(v => !!v).length;
+  }
+
+  onContactSearchChange(value: string): void {
+    this.contactSearch$.next(value);
+  }
+
+  onContactFilterChange(): void {
+    this.contactPagination.page = 1;
+    this.loadContactRequests();
+  }
+
+  clearContactFilters(): void {
+    this.contactSearch   = '';
+    this.contactDateFrom = '';
+    this.contactDateTo   = '';
+    this.contactPagination.page = 1;
+    this.loadContactRequests();
+  }
+
   // ── Edit requests ──────────────────────────────────────────────────────────
 
   loadEditRequests(): void {
     this.editLoading = true;
     this.editRequestService.list({
-      status: this.editStatus as any || undefined,
-      page:   this.editPagination.page,
-      limit:  this.editPagination.limit,
+      status:       (this.editStatus as any) || undefined,
+      search:       this.editSearch       || undefined,
+      date_from:    this.editDateFrom     || undefined,
+      date_to:      this.editDateTo       || undefined,
+      request_type: (this.editRequestType as EditRequestType) || undefined,
+      page:         this.editPagination.page,
+      limit:        this.editPagination.limit,
     }).subscribe({
       next: (res) => {
         this.editLoading    = false;
@@ -304,9 +614,12 @@ export class EditRequestsComponent implements OnInit {
   loadContactRequests(): void {
     this.contactLoading = true;
     this.contactRequestService.list({
-      status: this.contactStatus || undefined,
-      page:   this.contactPagination.page,
-      limit:  this.contactPagination.limit,
+      status:    this.contactStatus || undefined,
+      search:    this.contactSearch    || undefined,
+      date_from: this.contactDateFrom  || undefined,
+      date_to:   this.contactDateTo    || undefined,
+      page:      this.contactPagination.page,
+      limit:     this.contactPagination.limit,
     }).subscribe({
       next: (res) => {
         this.contactLoading    = false;

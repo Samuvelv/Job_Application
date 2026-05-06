@@ -9,6 +9,7 @@ import type {
   ReviewEditRequestDto,
   EditRequestFilterDto,
 } from './edit-requests.dto';
+import { REQUEST_TYPE_GROUPS } from './edit-requests.dto';
 
 // ── Submit (candidate) ─────────────────────────────────────────────────────────
 
@@ -71,7 +72,7 @@ export async function submitEditRequest(
 // ── List (admin) ──────────────────────────────────────────────────────────────
 
 export async function listEditRequests(filters: EditRequestFilterDto) {
-  const { status, page, limit } = filters;
+  const { status, search, date_from, date_to, request_type, page, limit } = filters;
   const offset = (page - 1) * limit;
 
   let base = db('profile_edit_requests as r')
@@ -79,6 +80,34 @@ export async function listEditRequests(filters: EditRequestFilterDto) {
     .join('users as u', 'u.id', 'e.user_id');
 
   if (status) base = base.where('r.status', status);
+
+  if (search) {
+    const term = `%${search.toLowerCase()}%`;
+    base = base.whereRaw(`LOWER(e.first_name || ' ' || e.last_name) LIKE ?`, [term]);
+  }
+
+  if (date_from) {
+    base = base.where('r.created_at', '>=', new Date(date_from));
+  }
+
+  if (date_to) {
+    // Include the full day by going to end of the given date
+    const to = new Date(date_to);
+    to.setHours(23, 59, 59, 999);
+    base = base.where('r.created_at', '<=', to);
+  }
+
+  if (request_type) {
+    const keys = REQUEST_TYPE_GROUPS[request_type] ?? [];
+    if (keys.length > 0) {
+      // Match requests where requested_data contains at least one key from the group
+      base = base.where(function () {
+        keys.forEach((key) => {
+          this.orWhereRaw(`r.requested_data::jsonb \\? ?`, [key]);
+        });
+      });
+    }
+  }
 
   const [{ count }] = await base.clone().count('r.id as count');
 

@@ -3,7 +3,7 @@ import { Router, Request, Response, NextFunction } from 'express';
 import { authenticate } from '../../middleware/authenticate';
 import { authorize }    from '../../middleware/authorize';
 import * as svc from './contact-requests.service';
-import { ReviewContactRequestSchema } from './contact-requests.dto';
+import { ReviewContactRequestSchema, ContactRequestFilterSchema } from './contact-requests.dto';
 import { getRecruiterByUserId } from '../recruiters/recruiters.service';
 
 const router = Router();
@@ -38,10 +38,8 @@ router.get('/',
   authorize('admin'),
   async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const page   = Math.max(1, Number(req.query['page'])  || 1);
-      const limit  = Math.max(1, Number(req.query['limit']) || 20);
-      const status = (req.query['status'] as string) || undefined;
-      const result = await svc.listContactRequests({ status, page, limit });
+      const filters = ContactRequestFilterSchema.parse(req.query);
+      const result  = await svc.listContactRequests(filters);
       res.json(result);
     } catch (err) { next(err); }
   },
