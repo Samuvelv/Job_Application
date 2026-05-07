@@ -183,6 +183,86 @@ import { ContactSubmission } from '../../../core/models/contact-submission.model
         </div>
       </div>
 
+      <!-- ── Volunteer Stats Row ──────────────────────────────────────────── -->
+
+      <!-- Total Volunteers -->
+      <div class="bento-4">
+        <div class="stat-card-xl stat-card-xl--purple h-100">
+          <div class="stat-card-xl__header">
+            <div class="stat-card-xl__icon">
+              <i class="bi bi-hand-thumbs-up-fill"></i>
+            </div>
+            <span class="badge rounded-pill"
+              style="background:rgba(139,92,246,.12);color:#6d28d9;font-size:.7rem;font-weight:600">
+              Community
+            </span>
+          </div>
+          <div class="stat-card-xl__value">
+            @if (loading()) {
+              <span class="skeleton" style="width:60px;height:40px;display:block"></span>
+            } @else {
+              {{ stats()?.totalVolunteers ?? 0 }}
+            }
+          </div>
+          <div class="stat-card-xl__label">Total Volunteers</div>
+          <div class="stat-card-xl__trend" style="background:rgba(139,92,246,.10);color:#6d28d9">
+            <i class="bi bi-people-fill"></i>Registered
+          </div>
+        </div>
+      </div>
+
+      <!-- Active Volunteers -->
+      <div class="bento-4">
+        <div class="stat-card-xl stat-card-xl--success h-100">
+          <div class="stat-card-xl__header">
+            <div class="stat-card-xl__icon">
+              <i class="bi bi-person-check-fill"></i>
+            </div>
+            <span class="badge rounded-pill"
+              style="background:rgba(16,185,129,.12);color:#065f46;font-size:.7rem;font-weight:600">
+              Available
+            </span>
+          </div>
+          <div class="stat-card-xl__value">
+            @if (loading()) {
+              <span class="skeleton" style="width:60px;height:40px;display:block"></span>
+            } @else {
+              {{ stats()?.activeVolunteers ?? 0 }}
+            }
+          </div>
+          <div class="stat-card-xl__label">Active Volunteers</div>
+          <div class="stat-card-xl__trend" style="background:rgba(16,185,129,.10);color:#065f46">
+            <i class="bi bi-circle-fill" style="font-size:.5rem"></i>Ready to help
+          </div>
+        </div>
+      </div>
+
+      <!-- Candidates Helped This Month -->
+      <div class="bento-4">
+        <div class="stat-card-xl stat-card-xl--warning h-100">
+          <div class="stat-card-xl__header">
+            <div class="stat-card-xl__icon">
+              <i class="bi bi-stars"></i>
+            </div>
+            <span class="badge rounded-pill"
+              style="background:rgba(245,158,11,.12);color:#92400e;font-size:.7rem;font-weight:600">
+              This Month
+            </span>
+          </div>
+          <div class="stat-card-xl__value">
+            @if (loading()) {
+              <span class="skeleton" style="width:60px;height:40px;display:block"></span>
+            } @else {
+              {{ stats()?.candidatesHelpedThisMonth ?? 0 }}
+            }
+          </div>
+          <div class="stat-card-xl__label">Candidates Helped</div>
+          <div class="stat-card-xl__trend" style="background:rgba(245,158,11,.10);color:#92400e">
+            <i class="bi bi-arrow-up-right"></i>Via volunteers
+          </div>
+        </div>
+      </div>
+
     </div>
 
     <!-- ── Contact Submissions summary card ─────────────────────────────── -->
@@ -290,6 +370,10 @@ import { ContactSubmission } from '../../../core/models/contact-submission.model
           <div class="nav-link-card__title">Manage Volunteers</div>
           <div class="nav-link-card__desc">View and manage volunteer profiles</div>
         </div>
+        <span class="nav-link-card__badge"
+          style="background:var(--th-purple-soft, rgba(139,92,246,.1));color:var(--th-purple, #7c3aed)">
+          {{ stats()?.activeVolunteers ?? 0 }} active
+        </span>
         <i class="bi bi-chevron-right nav-link-card__arrow"></i>
       </a>
 

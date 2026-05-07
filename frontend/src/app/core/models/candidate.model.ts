@@ -88,6 +88,7 @@ export interface Candidate {
   cv_format?: string;
   plain_password?: string;
   contact_locked?: boolean;
+  is_volunteer?: boolean;
 
   // Relations
   skills?: Skill[];

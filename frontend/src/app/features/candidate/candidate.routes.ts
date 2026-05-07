@@ -27,4 +27,9 @@ export const candidateRoutes: Routes = [
     loadComponent: () =>
       import('./volunteers/volunteer-browse.component').then((m) => m.VolunteerBrowseComponent),
   },
+  {
+    path: 'volunteers/:id',
+    loadComponent: () =>
+      import('./volunteers/volunteer-public-profile.component').then((m) => m.VolunteerPublicProfileComponent),
+  },
 ];

@@ -19,6 +19,7 @@ import masterRouter             from './modules/master/master.router';
 import contactRequestsRouter    from './modules/contact-requests/contact-requests.router';
 import volunteersRouter         from './modules/volunteers/volunteers.router';
 import contactSubmissionsRouter from './modules/contact-submissions/contact-submissions.router';
+import volunteerSupportRouter  from './modules/volunteer-support-requests/volunteer-support-requests.router';
 import uploadsRouter            from './modules/uploads/uploads.router';
 
 const app = express();
@@ -61,8 +62,9 @@ app.use('/api/v1/audit-logs',         auditLogsRouter);
 app.use('/api/v1/stats',              statsRouter);
 app.use('/api/v1/master',             masterRouter);
 app.use('/api/v1/contact-requests',   contactRequestsRouter);
-app.use('/api/v1/volunteers',         volunteersRouter);
-app.use('/api/v1/contact-submissions', contactSubmissionsRouter);
+app.use('/api/v1/volunteers',              volunteersRouter);
+app.use('/api/v1/contact-submissions',     contactSubmissionsRouter);
+app.use('/api/v1/volunteer-support-requests', volunteerSupportRouter);
 // Generic /api/v1 mount LAST so it never shadows any specific router above
 app.use('/api/v1',                    uploadsRouter);
 

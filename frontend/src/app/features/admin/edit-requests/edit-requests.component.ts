@@ -7,8 +7,10 @@ import { EditRequestService } from '../../../core/services/edit-request.service'
 import { EditRequestCounts } from '../../../core/services/edit-request.service';
 import { ContactRequestService } from '../../../core/services/contact-request.service';
 import { ContactRequestCounts } from '../../../core/services/contact-request.service';
+import { VolunteerSupportRequestService } from '../../../core/services/volunteer-support-request.service';
 import { EditRequest, EditRequestType } from '../../../core/models/edit-request.model';
 import { ContactRequest } from '../../../core/models/contact-request.model';
+import { VolunteerSupportRequest, VolunteerSupportRequestCounts } from '../../../core/models/volunteer-support-request.model';
 import { ToastService } from '../../../core/services/toast.service';
 import { ConfirmDialogService } from '../../../core/services/confirm-dialog.service';
 import { PageHeaderComponent } from '../../../shared/components/page-header/page-header.component';
@@ -230,7 +232,7 @@ import { ContactRequestCardComponent } from '../../../shared/components/contact-
   template: `
     <app-page-header
       title="Requests"
-      [subtitle]="activeSection === 'edit' ? (editPagination.total + ' edit requests') : (contactPagination.total + ' contact requests')"
+      [subtitle]="activeSection === 'edit' ? (editPagination.total + ' edit requests') : activeSection === 'contact' ? (contactPagination.total + ' contact requests') : (supportPagination.total + ' volunteer support requests')"
       icon="bi-inbox-fill"
     />
 
@@ -252,6 +254,15 @@ import { ContactRequestCardComponent } from '../../../shared/components/contact-
         Contact Info Requests
         @if (contactPendingCount > 0) {
           <span class="req-section-badge">{{ contactPendingCount }}</span>
+        }
+      </button>
+      <button class="req-section-btn"
+        [class.active]="activeSection === 'support'"
+        (click)="setSection('support')">
+        <i class="bi bi-hand-thumbs-up-fill"></i>
+        Volunteer Support
+        @if (supportPendingCount > 0) {
+          <span class="req-section-badge">{{ supportPendingCount }}</span>
         }
       </button>
     </div>
@@ -733,10 +744,166 @@ import { ContactRequestCardComponent } from '../../../shared/components/contact-
         }
       }
     }
+
+    <!-- ── VOLUNTEER SUPPORT SECTION ── -->
+    @if (activeSection === 'support') {
+
+      <!-- Filter bar -->
+      <div class="filter-bar">
+        <div class="filter-bar__row">
+
+          <!-- Search -->
+          <div class="filter-bar__group filter-bar__group--wide">
+            <span class="filter-bar__label"><i class="bi bi-search me-1"></i>Search</span>
+            <input
+              class="filter-bar__input"
+              type="text"
+              placeholder="Search by candidate or volunteer name…"
+              [(ngModel)]="supportSearch"
+              (ngModelChange)="onSupportSearchChange($event)"
+            />
+          </div>
+
+          <!-- Sort -->
+          <div class="filter-bar__group" style="flex:0 1 140px;min-width:120px">
+            <span class="filter-bar__label"><i class="bi bi-sort-down me-1"></i>Sort</span>
+            <select class="filter-bar__select" [(ngModel)]="supportSort" (ngModelChange)="onSupportFilterChange()">
+              <option value="newest">Newest</option>
+              <option value="oldest">Oldest</option>
+            </select>
+          </div>
+
+          <!-- Clear filters -->
+          @if (supportSearch) {
+            <button class="filter-bar__clear" (click)="clearSupportFilters()">
+              <i class="bi bi-x-lg"></i>
+              Clear
+              <span class="filter-bar__active-badge">1</span>
+            </button>
+          }
+        </div>
+      </div>
+
+      <!-- Status filter tabs -->
+      <div class="nav-pills-custom mb-4">
+        @for (tab of supportStatusTabs; track tab.value) {
+          <button class="nav-pill"
+            [class.active]="supportStatus === tab.value"
+            (click)="setSupportStatus(tab.value)">
+            {{ tab.label }}
+            <span class="nav-pill__count">{{ supportTabCount(tab.value) }}</span>
+          </button>
+        }
+      </div>
+
+      @if (supportLoading) {
+        <div class="loading-state">
+          <div class="spinner-border"></div>
+          <div class="loading-state__text">Loading requests…</div>
+        </div>
+      } @else if (supportRequests.length === 0) {
+        <app-empty-state
+          icon="bi-hand-thumbs-up"
+          [title]="supportEmptyTitle"
+          [subtitle]="supportSearch ? 'No results match your current filters. Try adjusting your search.' : 'Volunteer support requests from candidates will appear here.'"
+        />
+      } @else {
+        <!-- List (table) view -->
+        <div class="table-responsive">
+          <table class="table table-hover align-middle mb-0">
+            <thead class="table-light">
+              <tr>
+                <th>Candidate</th>
+                <th>Volunteer</th>
+                <th>Message</th>
+                <th>Status</th>
+                <th>Submitted</th>
+                <th class="text-end">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (req of supportRequests; track req.id) {
+                <tr>
+                  <td>
+                    <div class="fw-semibold small">{{ req.candidate_first_name }} {{ req.candidate_last_name }}</div>
+                    @if (req.candidate_email) {
+                      <div class="text-muted" style="font-size:11px;">{{ req.candidate_email }}</div>
+                    }
+                  </td>
+                  <td>
+                    <div class="small fw-medium">{{ req.volunteer_name }}</div>
+                    @if (req.volunteer_role) {
+                      <div class="text-muted" style="font-size:11px;">{{ req.volunteer_role }}</div>
+                    }
+                  </td>
+                  <td class="small text-muted" style="max-width:220px;">
+                    @if (req.message) {
+                      {{ req.message }}
+                    } @else {
+                      <span class="fst-italic">No message</span>
+                    }
+                  </td>
+                  <td>
+                    @if (req.status === 'pending') {
+                      <span class="badge bg-warning-subtle text-warning border border-warning-subtle" style="font-size:.7rem">Pending</span>
+                    } @else if (req.status === 'connected') {
+                      <span class="badge bg-success-subtle text-success border border-success-subtle" style="font-size:.7rem">Connected</span>
+                    } @else {
+                      <span class="badge bg-secondary-subtle text-secondary border border-secondary-subtle" style="font-size:.7rem">Closed</span>
+                    }
+                  </td>
+                  <td class="small text-muted">{{ req.created_at | date:'dd MMM yyyy' }}</td>
+                  <td class="text-end">
+                    <div class="d-flex justify-content-end gap-1">
+                      @if (req.status === 'pending') {
+                        <button class="btn btn-xs btn-success"
+                          (click)="reviewSupportRequest(req.id, 'connected')"
+                          [disabled]="supportReviewingId === req.id">
+                          <i class="bi bi-link-45deg"></i>
+                        </button>
+                        <button class="btn btn-xs btn-danger"
+                          (click)="reviewSupportRequest(req.id, 'closed')"
+                          [disabled]="supportReviewingId === req.id">
+                          <i class="bi bi-x"></i>
+                        </button>
+                      } @else if (req.status === 'connected') {
+                        <button class="btn btn-xs btn-outline-secondary"
+                          (click)="reviewSupportRequest(req.id, 'closed')"
+                          [disabled]="supportReviewingId === req.id">
+                          <i class="bi bi-x"></i>
+                        </button>
+                      }
+                    </div>
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+
+        @if (supportPagination.pages > 1) {
+          <nav class="mt-4 d-flex justify-content-center">
+            <ul class="pagination pagination-sm mb-0">
+              <li class="page-item" [class.disabled]="supportPagination.page === 1">
+                <button class="page-link" (click)="goToSupportPage(supportPagination.page - 1)">«</button>
+              </li>
+              @for (pg of supportPageNumbers(); track pg) {
+                <li class="page-item" [class.active]="pg === supportPagination.page">
+                  <button class="page-link" (click)="goToSupportPage(pg)">{{ pg }}</button>
+                </li>
+              }
+              <li class="page-item" [class.disabled]="supportPagination.page === supportPagination.pages">
+                <button class="page-link" (click)="goToSupportPage(supportPagination.page + 1)">»</button>
+              </li>
+            </ul>
+          </nav>
+        }
+      }
+    }
   `,
 })
 export class EditRequestsComponent implements OnInit, OnDestroy {
-  activeSection: 'edit' | 'contact' = 'edit';
+  activeSection: 'edit' | 'contact' | 'support' = 'edit';
 
   // Edit requests state
   editRequests: EditRequest[] = [];
@@ -783,6 +950,28 @@ export class EditRequestsComponent implements OnInit, OnDestroy {
   // Contact tab counts
   contactCounts: ContactRequestCounts = { pending: 0, approved: 0, rejected: 0, total: 0 };
 
+  // Volunteer support state
+  supportRequests: VolunteerSupportRequest[] = [];
+  supportPagination = { page: 1, limit: 10, total: 0, pages: 0 };
+  supportLoading = false;
+  supportStatus = 'pending';
+  supportReviewingId: string | null = null;
+  supportPendingCount = 0;
+
+  // Support filter state
+  supportSearch = '';
+  supportSort: 'newest' | 'oldest' = 'newest';
+
+  // Support counts
+  supportCounts: VolunteerSupportRequestCounts = { pending: 0, connected: 0, closed: 0, total: 0 };
+
+  supportStatusTabs = [
+    { label: 'Pending',   value: 'pending'   },
+    { label: 'Connected', value: 'connected' },
+    { label: 'Closed',    value: 'closed'    },
+    { label: 'All',       value: ''          },
+  ];
+
   // Shared
   reviewForm: FormGroup;
   reviewSubmitting = false;
@@ -798,6 +987,7 @@ export class EditRequestsComponent implements OnInit, OnDestroy {
   // Debounce subjects
   private editSearch$    = new Subject<string>();
   private contactSearch$ = new Subject<string>();
+  private supportSearch$ = new Subject<string>();
   private destroy$       = new Subject<void>();
 
   private readonly fieldLabels: Record<string, string> = {
@@ -816,6 +1006,7 @@ export class EditRequestsComponent implements OnInit, OnDestroy {
     private fb: FormBuilder,
     private editRequestService: EditRequestService,
     private contactRequestService: ContactRequestService,
+    private supportRequestService: VolunteerSupportRequestService,
     private toast: ToastService,
     private confirmDialog: ConfirmDialogService,
   ) {
@@ -841,10 +1032,21 @@ export class EditRequestsComponent implements OnInit, OnDestroy {
       this.loadContactRequests();
     });
 
+    this.supportSearch$.pipe(
+      debounceTime(300),
+      distinctUntilChanged(),
+      takeUntil(this.destroy$),
+    ).subscribe(() => {
+      this.supportPagination.page = 1;
+      this.loadSupportRequests();
+    });
+
     this.loadEditRequests();
     this.loadContactRequests();
+    this.loadSupportRequests();
     this.refreshEditCounts();
     this.refreshContactCounts();
+    this.refreshSupportCounts();
   }
 
   ngOnDestroy(): void {
@@ -906,10 +1108,10 @@ export class EditRequestsComponent implements OnInit, OnDestroy {
     return '';
   }
 
-  setSection(section: 'edit' | 'contact'): void {
+  setSection(section: 'edit' | 'contact' | 'support'): void {
     this.activeSection = section;
     this.cancelReview();
-    this.editSelectedIds   = new Set();
+    this.editSelectedIds    = new Set();
     this.contactSelectedIds = new Set();
   }
 
@@ -1305,55 +1507,169 @@ export class EditRequestsComponent implements OnInit, OnDestroy {
     this.reviewSubmitting = false;
   }
 
+  // ── Volunteer Support Requests ─────────────────────────────────────────────
+
+  refreshSupportCounts(): void {
+    this.supportRequestService.getCounts().subscribe({
+      next: (c) => {
+        this.supportCounts      = c;
+        this.supportPendingCount = c.pending;
+      },
+      error: () => { /* non-fatal */ },
+    });
+  }
+
+  supportTabCount(value: string): number {
+    if (value === 'pending')   return this.supportCounts.pending;
+    if (value === 'connected') return this.supportCounts.connected;
+    if (value === 'closed')    return this.supportCounts.closed;
+    return this.supportCounts.total;
+  }
+
+  get supportEmptyTitle(): string {
+    if (this.supportStatus === 'pending')   return 'No pending support requests';
+    if (this.supportStatus === 'connected') return 'No connected requests yet';
+    if (this.supportStatus === 'closed')    return 'No closed requests yet';
+    return 'No volunteer support requests found';
+  }
+
+  onSupportSearchChange(value: string): void {
+    this.supportSearch$.next(value);
+  }
+
+  onSupportFilterChange(): void {
+    this.supportPagination.page = 1;
+    this.loadSupportRequests();
+  }
+
+  clearSupportFilters(): void {
+    this.supportSearch = '';
+    this.supportSort   = 'newest';
+    this.supportPagination.page = 1;
+    this.loadSupportRequests();
+  }
+
+  setSupportStatus(status: string): void {
+    this.supportStatus          = status;
+    this.supportPagination.page = 1;
+    this.loadSupportRequests();
+  }
+
+  loadSupportRequests(): void {
+    this.supportLoading = true;
+    this.supportRequestService.list({
+      status: (this.supportStatus as any) || undefined,
+      search: this.supportSearch || undefined,
+      page:   this.supportPagination.page,
+      limit:  this.supportPagination.limit,
+    }).subscribe({
+      next: (res) => {
+        this.supportLoading    = false;
+        this.supportRequests   = res.data;
+        this.supportPagination = res.pagination;
+      },
+      error: () => (this.supportLoading = false),
+    });
+  }
+
+  reviewSupportRequest(id: string, status: 'connected' | 'closed'): void {
+    this.supportReviewingId = id;
+    this.supportRequestService.review(id, status).subscribe({
+      next: () => {
+        this.supportReviewingId = null;
+        this.toast.success(status === 'connected' ? 'Marked as Connected' : 'Request Closed');
+        this.loadSupportRequests();
+        this.refreshSupportCounts();
+      },
+      error: (err) => {
+        this.supportReviewingId = null;
+        this.toast.error(err?.error?.message ?? 'Action failed');
+      },
+    });
+  }
+
+  goToSupportPage(page: number): void {
+    if (page < 1 || page > this.supportPagination.pages) return;
+    this.supportPagination.page = page;
+    this.loadSupportRequests();
+  }
+
+  supportPageNumbers(): number[] {
+    return this._pageNumbers(this.supportPagination);
+  }
+
   // ── Shared ────────────────────────────────────────────────────────────────
 
   exportEditCsv(): void {
+    if (this.editExporting) return;
     this.editExporting = true;
-    this.editRequestService.exportCsv({
+    this.editRequestService.list({
       status:       (this.editStatus as any) || undefined,
       search:       this.editSearch       || undefined,
       date_from:    this.editDateFrom     || undefined,
       date_to:      this.editDateTo       || undefined,
       request_type: (this.editRequestType as EditRequestType) || undefined,
       sort:         this.editSort,
+      page:         1,
+      limit:        10000,
     }).subscribe({
-      next: (blob) => {
+      next: (res) => {
         this.editExporting = false;
-        const url = URL.createObjectURL(blob);
-        const a   = document.createElement('a');
-        a.href    = url;
-        a.download = `edit-requests-${new Date().toISOString().split('T')[0]}.csv`;
-        a.click();
-        URL.revokeObjectURL(url);
+        const rows = res.data as EditRequest[];
+        const header = 'ID,Candidate,Email,Type,Status,Submitted,Reviewed By';
+        const lines  = rows.map(r =>
+          [r.id, `${r.first_name} ${r.last_name}`, r.email, r.reason ?? '', r.status,
+           r.created_at, r.reviewed_by_name ?? ''].map(v => `"${String(v ?? '').replace(/"/g, '""')}"`).join(',')
+        );
+        this._downloadCsv([header, ...lines].join('\n'), 'edit-requests.csv');
       },
       error: () => { this.editExporting = false; this.toast.error('Export failed'); },
     });
   }
 
   exportContactCsv(): void {
+    if (this.contactExporting) return;
     this.contactExporting = true;
-    this.editRequestService.exportCsv({
+    this.contactRequestService.list({
+      status:    this.contactStatus || undefined,
       search:    this.contactSearch    || undefined,
       date_from: this.contactDateFrom  || undefined,
       date_to:   this.contactDateTo    || undefined,
-      sort:      this.contactSort,
+      page:      1,
+      limit:     10000,
     }).subscribe({
-      next: (blob) => {
+      next: (res) => {
         this.contactExporting = false;
-        const url = URL.createObjectURL(blob);
-        const a   = document.createElement('a');
-        a.href    = url;
-        a.download = `contact-requests-${new Date().toISOString().split('T')[0]}.csv`;
-        a.click();
-        URL.revokeObjectURL(url);
+        const rows = res.data as ContactRequest[];
+        const header = 'ID,Candidate/Recruiter,Status,Submitted,Reviewed By';
+        const lines  = rows.map(r =>
+          [r.id,
+           r.candidate_first_name ? `${r.candidate_first_name} ${r.candidate_last_name}` : (r.recruiter_name ?? ''),
+           r.status, r.created_at, r.reviewed_by_name ?? '']
+          .map(v => `"${String(v ?? '').replace(/"/g, '""')}"`).join(',')
+        );
+        this._downloadCsv([header, ...lines].join('\n'), 'contact-requests.csv');
       },
       error: () => { this.contactExporting = false; this.toast.error('Export failed'); },
     });
   }
 
+  private _downloadCsv(content: string, filename: string): void {
+    const blob = new Blob([content], { type: 'text/csv' });
+    const url  = URL.createObjectURL(blob);
+    const a    = document.createElement('a');
+    a.href     = url;
+    a.download = filename;
+    a.click();
+    URL.revokeObjectURL(url);
+  }
+
   cancelReview(): void {
     this.editReviewingId    = null;
     this.contactReviewingId = null;
+    this.supportReviewingId = null;
+    this.reviewSubmitting   = false;
+    this.reviewForm.reset();
   }
 
   private _pageNumbers(p: { page: number; pages: number }): number[] {

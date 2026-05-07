@@ -248,10 +248,15 @@ export class AuditLogsComponent implements OnInit {
   }
 
   actionBadgeClass(action: string): string {
-    if (action.startsWith('login'))    return 'badge-action badge-action--login';
-    if (action.includes('delete'))     return 'badge-action badge-action--delete';
-    if (action.includes('create') || action.includes('register')) return 'badge-action badge-action--create';
-    if (action.includes('update') || action.includes('approve') || action.includes('reject')) return 'badge-action badge-action--update';
+    const a = action.toLowerCase();
+    if (a.startsWith('login') || a.startsWith('logout'))
+      return 'badge-action badge-action--login';
+    if (a.includes('delete') || a.includes('deactivate'))
+      return 'badge-action badge-action--delete';
+    if (a.includes('add') || a.includes('create') || a.includes('register') || a.includes('request') || a.includes('submit') || a.includes('invite'))
+      return 'badge-action badge-action--create';
+    if (a.includes('update') || a.includes('approve') || a.includes('reject') || a.includes('review') || a.includes('reviewed') || a.includes('bulk'))
+      return 'badge-action badge-action--update';
     return 'badge-action badge-action--default';
   }
 }

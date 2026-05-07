@@ -1,5 +1,5 @@
 import { db } from '../../config/db';
-import { sendAdminContactRequestNotification } from '../../services/email.service';
+import { sendAdminContactNotification as sendAdminContactRequestNotification } from '../../services/email.service';
 
 export interface CreateSubmissionDto {
   name:     string;

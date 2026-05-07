@@ -448,8 +448,8 @@ export class CandidateEditComponent implements OnInit {
         this.toast.success('Candidate updated');
         window.scrollTo({ top: 0, behavior: 'smooth' });
 
-        if (raw.profile_status === 'placed') {
-          // Show volunteer invitation prompt instead of navigating
+        if (raw.profile_status === 'placed' && !res.candidate.is_volunteer) {
+          // Show volunteer invitation prompt only if not already a volunteer
           this.showPlacedPrompt = true;
         } else {
           setTimeout(() => this.router.navigate(['/admin/candidates', this.candidateId]), 1500);

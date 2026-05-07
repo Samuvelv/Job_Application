@@ -197,7 +197,54 @@ export async function sendAdminEditRequestNotification(
   });
 }
 
-export async function sendAdminContactRequestNotification(
+export async function sendAdminVolunteerSupportNotification(
+  candidateName: string,
+  volunteerName: string,
+): Promise<void> {
+  if (!env.ADMIN_EMAIL) {
+    console.warn('⚠️  ADMIN_EMAIL not configured, skipping volunteer support notification');
+    return;
+  }
+
+  await sendMail({
+    to: env.ADMIN_EMAIL,
+    subject: '🤝 New Volunteer Support Request',
+    html: `
+      <div style="font-family:sans-serif;max-width:600px;margin:0 auto;">
+        <div style="background:#4f46e5;padding:28px 24px;border-radius:12px 12px 0 0;">
+          <h2 style="color:#fff;margin:0;font-size:22px;">🤝 New Volunteer Support Request</h2>
+        </div>
+        <div style="background:#fff;padding:32px 24px;border:1px solid #e5e7eb;border-top:none;border-radius:0 0 12px 12px;">
+          <p style="font-size:16px;line-height:1.7;color:#111827;">
+            A candidate has requested to be connected with a volunteer.
+          </p>
+          <table style="border-collapse:collapse;margin:16px 0;width:100%;">
+            <tr style="background:#f9fafb;">
+              <td style="padding:10px 14px;font-weight:600;color:#374151;border:1px solid #e5e7eb;">Candidate</td>
+              <td style="padding:10px 14px;color:#111827;border:1px solid #e5e7eb;">${candidateName}</td>
+            </tr>
+            <tr>
+              <td style="padding:10px 14px;font-weight:600;color:#374151;border:1px solid #e5e7eb;">Volunteer</td>
+              <td style="padding:10px 14px;color:#111827;border:1px solid #e5e7eb;">${volunteerName}</td>
+            </tr>
+            <tr style="background:#f9fafb;">
+              <td style="padding:10px 14px;font-weight:600;color:#374151;border:1px solid #e5e7eb;">Time</td>
+              <td style="padding:10px 14px;color:#111827;border:1px solid #e5e7eb;">${new Date().toUTCString()}</td>
+            </tr>
+          </table>
+          <p style="font-size:14px;color:#6b7280;margin-top:16px;">
+            Please review this request and connect the candidate with the volunteer through the admin panel.
+          </p>
+          <p style="margin-top:24px;">
+            <a href="${env.FRONTEND_URL}/admin/edit-requests" style="background:#4f46e5;color:#fff;padding:12px 24px;border-radius:6px;text-decoration:none;font-size:14px;">Review Support Requests</a>
+          </p>
+        </div>
+      </div>
+    `,
+  });
+}
+
+export async function sendAdminContactNotification(
   recruiterName: string,
   recruiterEmail: string,
 ): Promise<void> {

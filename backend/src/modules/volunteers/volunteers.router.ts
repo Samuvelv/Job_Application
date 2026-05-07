@@ -5,6 +5,7 @@ import { authorize }    from '../../middleware/authorize';
 import { upload }       from '../../config/multer';
 import { cloudinary }   from '../../config/cloudinary';
 import { UploadApiResponse } from 'cloudinary';
+import { logAudit } from '../../services/audit.service';
 import * as svc from './volunteers.service';
 import { CreateVolunteerSchema, UpdateVolunteerSchema } from './volunteers.dto';
 const router = Router();
@@ -71,6 +72,14 @@ router.post('/',
     try {
       const dto       = CreateVolunteerSchema.parse(req.body);
       const volunteer = await svc.createVolunteer(dto, req.user!.sub);
+      logAudit({
+        userId:     req.user!.sub,
+        action:     'ADD_VOLUNTEER',
+        resource:   'volunteer',
+        resourceId: volunteer.id,
+        ipAddress:  req.ip,
+        metadata:   { name: volunteer.name, availability: volunteer.availability },
+      }).catch(() => {});
       res.status(201).json({ volunteer });
     } catch (err) { next(err); }
   },
@@ -116,8 +125,32 @@ router.put('/:id',
   authorize('admin'),
   async (req: Request, res: Response, next: NextFunction) => {
     try {
+      const id        = req.params['id'] as string;
       const dto       = UpdateVolunteerSchema.parse(req.body);
-      const volunteer = await svc.updateVolunteer(req.params['id'] as string, dto);
+      const volunteer = await svc.updateVolunteer(id, dto);
+
+      // Always log the update
+      logAudit({
+        userId:     req.user!.sub,
+        action:     'UPDATE_VOLUNTEER',
+        resource:   'volunteer',
+        resourceId: id,
+        ipAddress:  req.ip,
+        metadata:   { updatedFields: Object.keys(dto) },
+      }).catch(() => {});
+
+      // Additionally log deactivation when availability changes away from Active
+      if (dto.availability && dto.availability !== 'Active') {
+        logAudit({
+          userId:     req.user!.sub,
+          action:     'DEACTIVATE_VOLUNTEER',
+          resource:   'volunteer',
+          resourceId: id,
+          ipAddress:  req.ip,
+          metadata:   { availability: dto.availability },
+        }).catch(() => {});
+      }
+
       res.json({ volunteer });
     } catch (err) { next(err); }
   },

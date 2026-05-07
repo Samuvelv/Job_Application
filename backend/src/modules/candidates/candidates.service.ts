@@ -333,7 +333,13 @@ export async function getCandidateById(id: string) {
 
   const relations = await fetchRelations(id);
 
-  return { ...candidate, ...relations };
+  // Check if this candidate has already been made a volunteer (match by email)
+  const volunteerMatch = candidate.email
+    ? await db('volunteers').whereRaw('LOWER(email) = LOWER(?)', [candidate.email]).first()
+    : null;
+  const is_volunteer = !!volunteerMatch;
+
+  return { ...candidate, ...relations, is_volunteer };
 }
 
 // ── Get by user_id (for candidate self-view) ───────────────────────────────────

@@ -5,12 +5,15 @@ import { Observable } from 'rxjs';
 import { environment } from '../../../environments/environment';
 
 export interface AdminStats {
-  candidates:             number;
-  recruiters:             number;
-  pendingEdits:           number;
-  auditLogsToday:         number;
-  registrationsToday:     number;
-  profilesForwardedToday: number;
+  candidates:                number;
+  recruiters:                number;
+  pendingEdits:              number;
+  auditLogsToday:            number;
+  registrationsToday:        number;
+  profilesForwardedToday:    number;
+  totalVolunteers:           number;
+  activeVolunteers:          number;
+  candidatesHelpedThisMonth: number;
 }
 
 export interface CandidateStats {

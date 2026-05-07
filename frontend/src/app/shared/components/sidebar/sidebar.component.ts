@@ -68,7 +68,7 @@ export class SidebarComponent implements OnDestroy {
           { label: 'Dashboard',     icon: 'bi-grid-1x2-fill',     route: '/admin/dashboard' },
           { label: 'Candidates',     icon: 'bi-people-fill',        route: '/admin/candidates' },
           { label: 'Recruiters',    icon: 'bi-person-badge-fill',  route: '/admin/recruiters' },
-          { label: 'Edit Requests',      icon: 'bi-pencil-square',      route: '/admin/edit-requests', badge: () => this.notifications.pendingEdits() },
+          { label: 'Edit Requests',     icon: 'bi-pencil-square',     route: '/admin/edit-requests',       badge: () => this.notifications.pendingEdits() + this.notifications.pendingVolunteerSupport() },
           { label: 'Contact Requests',  icon: 'bi-envelope-fill',      route: '/admin/contact-submissions', badge: () => this.notifications.pendingContactRequests() },
           { label: 'Volunteers',        icon: 'bi-people-fill',        route: '/admin/volunteers' },
           { label: 'Audit Logs',        icon: 'bi-journal-text',       route: '/admin/audit-logs' },
