@@ -10,6 +10,10 @@ export interface PaginatedContactRequests {
   pagination: { page: number; limit: number; total: number; pages: number };
 }
 
+export interface ContactRequestCounts {
+  pending: number; approved: number; rejected: number; total: number;
+}
+
 @Injectable({ providedIn: 'root' })
 export class ContactRequestService {
   private readonly api = `${environment.apiUrl}/contact-requests`;
@@ -38,5 +42,22 @@ export class ContactRequestService {
   // Admin: approve or reject
   review(id: string, data: { status: 'approved' | 'rejected'; admin_note?: string }): Observable<{ request: ContactRequest }> {
     return this.http.put<{ request: ContactRequest }>(`${this.api}/${id}/review`, data);
+  }
+
+  // Admin: get counts by status
+  getCounts(): Observable<ContactRequestCounts> {
+    return this.http.get<ContactRequestCounts>(`${this.api}/counts`);
+  }
+
+  // Admin: bulk approve or reject
+  bulkReview(
+    ids: string[],
+    status: 'approved' | 'rejected',
+    adminNote?: string,
+  ): Observable<{ succeeded: string[]; failed: { id: string; reason: string }[] }> {
+    return this.http.post<{ succeeded: string[]; failed: { id: string; reason: string }[] }>(
+      `${this.api}/bulk-review`,
+      { ids, status, admin_note: adminNote },
+    );
   }
 }

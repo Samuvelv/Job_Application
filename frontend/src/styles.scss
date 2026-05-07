@@ -4728,6 +4728,29 @@ body {
       color: #fff;
       box-shadow: 0 2px 8px rgba(79,70,229,.25);
     }
+
+    .nav-pill__count {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 18px;
+      height: 18px;
+      padding: 0 5px;
+      margin-left: 6px;
+      border-radius: 9px;
+      font-size: .6875rem;
+      font-weight: 600;
+      line-height: 1;
+      background: var(--th-surface-3);
+      color: var(--th-text-secondary);
+      vertical-align: middle;
+      transition: var(--th-transition);
+    }
+
+    &.active .nav-pill__count {
+      background: rgba(255,255,255,.25);
+      color: #fff;
+    }
   }
 }
 
@@ -10392,4 +10415,102 @@ html { scroll-behavior: smooth; }
 [data-theme='dark'] .rc-card__tag      { background: rgba(255,255,255,.06); border-color: rgba(255,255,255,.08); }
 [data-theme='dark'] .rc-card__action   { background: rgba(255,255,255,.05); border-color: rgba(255,255,255,.1); }
 [data-theme='dark'] .rc-card__actions  { border-color: rgba(255,255,255,.08); }
+
+// ══════════════════════════════════════════════════════════════════════════════
+//  PLACED CANDIDATE → VOLUNTEER INVITATION PROMPT
+// ══════════════════════════════════════════════════════════════════════════════
+.placed-prompt-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,.45);
+  backdrop-filter: blur(4px);
+  z-index: 1060;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+}
+
+.placed-prompt {
+  background: var(--th-surface, #fff);
+  border-radius: 20px;
+  box-shadow: 0 20px 60px rgba(0,0,0,.2);
+  padding: 2.5rem 2rem;
+  max-width: 460px;
+  width: 100%;
+  text-align: center;
+
+  &__icon {
+    width: 72px;
+    height: 72px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #fbbf24, #f59e0b);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 1.25rem;
+    font-size: 2rem;
+    color: #fff;
+    box-shadow: 0 4px 16px rgba(251,191,36,.35);
+  }
+
+  &__title {
+    font-size: 1.35rem;
+    font-weight: 700;
+    color: var(--th-text, #111827);
+    margin-bottom: .75rem;
+  }
+
+  &__msg {
+    font-size: .95rem;
+    color: var(--th-text, #111827);
+    line-height: 1.6;
+    margin-bottom: .5rem;
+  }
+
+  &__sub {
+    font-size: .82rem;
+    color: var(--th-text-muted, #6b7280);
+    margin-bottom: 1.5rem;
+  }
+
+  &__actions {
+    display: flex;
+    flex-direction: column;
+    gap: .75rem;
+  }
+
+  &__btn {
+    border: none;
+    border-radius: 10px;
+    padding: .75rem 1.5rem;
+    font-size: .9rem;
+    font-weight: 600;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    transition: opacity .15s, transform .1s;
+
+    &:hover:not(:disabled) { opacity: .9; transform: translateY(-1px); }
+    &:disabled { opacity: .6; cursor: not-allowed; }
+
+    &--yes {
+      background: linear-gradient(135deg, #22c55e, #16a34a);
+      color: #fff;
+      box-shadow: 0 4px 14px rgba(34,197,94,.3);
+    }
+
+    &--no {
+      background: var(--th-surface-2, #f3f4f6);
+      color: var(--th-text-muted, #6b7280);
+      border: 1px solid var(--th-border, #e5e7eb);
+    }
+  }
+}
+
+[data-theme='dark'] {
+  .placed-prompt { background: var(--th-surface, #1e1a35); }
+  .placed-prompt__btn--no { background: rgba(255,255,255,.07); border-color: rgba(255,255,255,.1); color: #d1d5db; }
+}
 

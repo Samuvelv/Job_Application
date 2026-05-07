@@ -7,6 +7,7 @@ export interface ContactRequest {
   admin_note?: string | null;
   created_at: string;
   reviewed_at?: string | null;
+  reviewed_by_name?: string | null;
   // Admin list joined fields
   recruiter_name?: string;
   recruiter_company?: string;

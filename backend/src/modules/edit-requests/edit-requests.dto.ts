@@ -29,10 +29,18 @@ export const EditRequestFilterSchema = z.object({
   date_from:    z.string().optional(),
   date_to:      z.string().optional(),
   request_type: z.enum(['personal', 'professional', 'location', 'salary', 'skills', 'languages', 'experience', 'education']).optional(),
+  sort:         z.enum(['newest', 'oldest']).optional(),
   page:         z.coerce.number().int().positive().default(1),
   limit:        z.coerce.number().int().positive().max(100).default(20),
 });
 
-export type SubmitEditRequestDto  = z.infer<typeof SubmitEditRequestSchema>;
-export type ReviewEditRequestDto  = z.infer<typeof ReviewEditRequestSchema>;
-export type EditRequestFilterDto  = z.infer<typeof EditRequestFilterSchema>;
+export const BulkReviewEditRequestSchema = z.object({
+  ids:        z.array(z.string().uuid()).min(1, 'At least one ID is required'),
+  status:     z.enum(['approved', 'rejected']),
+  admin_note: z.string().max(1000).optional(),
+});
+
+export type SubmitEditRequestDto      = z.infer<typeof SubmitEditRequestSchema>;
+export type ReviewEditRequestDto      = z.infer<typeof ReviewEditRequestSchema>;
+export type BulkReviewEditRequestDto  = z.infer<typeof BulkReviewEditRequestSchema>;
+export type EditRequestFilterDto      = z.infer<typeof EditRequestFilterSchema>;

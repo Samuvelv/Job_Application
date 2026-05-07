@@ -15,5 +15,12 @@ export const ContactRequestFilterSchema = z.object({
   limit:     z.coerce.number().int().positive().max(100).default(20),
 });
 
-export type ReviewContactRequestDto  = z.infer<typeof ReviewContactRequestSchema>;
-export type ContactRequestFilterDto  = z.infer<typeof ContactRequestFilterSchema>;
+export const BulkReviewContactRequestSchema = z.object({
+  ids:        z.array(z.string().uuid()).min(1, 'At least one ID is required'),
+  status:     z.enum(['approved', 'rejected']),
+  admin_note: z.string().max(500).optional(),
+});
+
+export type ReviewContactRequestDto      = z.infer<typeof ReviewContactRequestSchema>;
+export type BulkReviewContactRequestDto  = z.infer<typeof BulkReviewContactRequestSchema>;
+export type ContactRequestFilterDto      = z.infer<typeof ContactRequestFilterSchema>;

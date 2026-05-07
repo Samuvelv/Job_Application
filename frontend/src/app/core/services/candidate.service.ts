@@ -79,6 +79,10 @@ export class CandidateService {
     return this.http.post<{ message: string }>(`${this.api}/${id}/resend-credentials`, {});
   }
 
+  inviteVolunteer(id: string): Observable<{ message: string }> {
+    return this.http.post<{ message: string }>(`${this.api}/${id}/invite-volunteer`, {});
+  }
+
   // ── File upload ───────────────────────────────────────────────────────────
   uploadFile(
     candidateId: string,

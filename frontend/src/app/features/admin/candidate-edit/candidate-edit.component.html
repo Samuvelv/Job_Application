@@ -27,6 +27,45 @@
       <i class="bi bi-check-circle-fill"></i> {{ successMsg }}
     </div>
   }
+
+  <!-- ── Volunteer Invitation Prompt (shown when status set to Placed) ──── -->
+  @if (showPlacedPrompt) {
+    <div class="placed-prompt-overlay">
+      <div class="placed-prompt">
+        <div class="placed-prompt__icon">
+          <i class="bi bi-trophy-fill"></i>
+        </div>
+        <h4 class="placed-prompt__title">Candidate Placed!</h4>
+        <p class="placed-prompt__msg">
+          Would you like to invite
+          <strong>{{ candidate.first_name }} {{ candidate.last_name }}</strong>
+          to become a TalentHub Volunteer?
+        </p>
+        <p class="placed-prompt__sub">
+          An email invitation will be sent to them to join the volunteer team.
+        </p>
+        @if (inviteError) {
+          <div class="alert alert-danger small py-2 mb-3">
+            <i class="bi bi-exclamation-triangle me-1"></i>{{ inviteError }}
+          </div>
+        }
+        <div class="placed-prompt__actions">
+          <button class="placed-prompt__btn placed-prompt__btn--yes"
+            (click)="sendInvitation()" [disabled]="inviteSending">
+            @if (inviteSending) {
+              <span class="spinner-border spinner-border-sm me-2"></span>Sending…
+            } @else {
+              <i class="bi bi-envelope-check-fill me-2"></i>Yes, Send Invitation
+            }
+          </button>
+          <button class="placed-prompt__btn placed-prompt__btn--no"
+            (click)="skipInvitation()" [disabled]="inviteSending">
+            <i class="bi bi-x-circle me-1"></i>No, Not Now
+          </button>
+        </div>
+      </div>
+    </div>
+  }
   @if (errorMsg) {
     <div class="alert alert-danger d-flex align-items-center gap-2">
       <i class="bi bi-exclamation-triangle-fill"></i> {{ errorMsg }}

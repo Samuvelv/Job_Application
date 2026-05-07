@@ -3,7 +3,7 @@ import bcrypt from 'bcryptjs';
 import { v4 as uuidv4 } from 'uuid';
 import { db } from '../../config/db';
 import { AppError } from '../../middleware/errorHandler';
-import { sendCandidateCredentials } from '../../services/email.service';
+import { sendCandidateCredentials, sendVolunteerInvitation } from '../../services/email.service';
 import type { CreateCandidateDto, UpdateCandidateDto, CandidateFilterDto } from './candidates.dto';
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
@@ -501,4 +501,22 @@ export async function resendCredentials(candidateId: string): Promise<void> {
     candidate.plain_password,
     `${candidate.first_name} ${candidate.last_name}`,
   );
+}
+
+// ── Invite as Volunteer ───────────────────────────────────────────────────────
+
+export async function inviteAsVolunteer(id: string): Promise<{ message: string }> {
+  const candidate = await db('candidates as e')
+    .join('users as u', 'u.id', 'e.user_id')
+    .select('e.first_name', 'e.last_name', 'e.profile_status', 'u.email')
+    .where('e.id', id)
+    .first();
+
+  if (!candidate) throw new AppError(404, 'Candidate not found');
+  if (!candidate.email) throw new AppError(400, 'Candidate has no email address on file');
+
+  const fullName = `${candidate.first_name} ${candidate.last_name}`;
+  await sendVolunteerInvitation(candidate.email, fullName);
+
+  return { message: `Volunteer invitation sent to ${candidate.email}` };
 }

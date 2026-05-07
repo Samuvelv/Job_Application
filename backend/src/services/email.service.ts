@@ -264,3 +264,45 @@ export async function sendContactRequestRejectedNotification(
     `,
   });
 }
+
+export async function sendVolunteerInvitation(
+  email: string,
+  name: string,
+): Promise<void> {
+  await sendMail({
+    to: email,
+    subject: '🎉 Congratulations on Your Placement — Join the TalentHub Volunteer Team!',
+    html: `
+      <div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;">
+        <div style="background:linear-gradient(135deg,#22c55e,#16a34a);padding:32px 24px;border-radius:12px 12px 0 0;text-align:center;">
+          <h1 style="color:#fff;margin:0;font-size:26px;">Congratulations, ${name}!</h1>
+        </div>
+        <div style="background:#fff;padding:32px 24px;border:1px solid #e5e7eb;border-top:none;border-radius:0 0 12px 12px;">
+          <p style="font-size:16px;line-height:1.7;color:#111827;">
+            Congratulations on your placement! You are now part of the <strong>TalentHub success family</strong>.
+          </p>
+          <p style="font-size:16px;line-height:1.7;color:#111827;">
+            Would you like to help other candidates on their journey?
+            <strong>Join our volunteer team</strong> — it takes just 5 minutes to set up your profile.
+          </p>
+          <div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:10px;padding:20px;margin:24px 0;">
+            <p style="margin:0;font-size:15px;color:#15803d;font-weight:600;">
+              As a TalentHub Volunteer, you can:
+            </p>
+            <ul style="margin:12px 0 0;padding-left:20px;color:#374151;font-size:14px;line-height:1.8;">
+              <li>Share your experience and advice with aspiring candidates</li>
+              <li>Help others navigate job placements abroad</li>
+              <li>Be featured as a success story on our platform</li>
+            </ul>
+          </div>
+          <p style="font-size:14px;color:#6b7280;margin-top:24px;">
+            Our team will be in touch to help you get started. We look forward to having you on board!
+          </p>
+          <p style="color:#888;font-size:12px;margin-top:20px;border-top:1px solid #f3f4f6;padding-top:16px;">
+            This invitation was sent by the TalentHub admin team. If you have any questions, please reply to this email.
+          </p>
+        </div>
+      </div>
+    `,
+  });
+}

@@ -67,4 +67,14 @@ export const adminRoutes: Routes = [
     loadComponent: () =>
       import('./volunteers/volunteer-list.component').then((m) => m.VolunteerListComponent),
   },
+  {
+    path: 'volunteers/create',
+    loadComponent: () =>
+      import('./volunteers/volunteer-create.component').then((m) => m.VolunteerCreateComponent),
+  },
+  {
+    path: 'volunteers/:id',
+    loadComponent: () =>
+      import('./volunteers/volunteer-profile-page.component').then((m) => m.VolunteerProfilePageComponent),
+  },
 ];

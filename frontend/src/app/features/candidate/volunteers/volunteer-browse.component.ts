@@ -45,11 +45,19 @@ import { EmptyStateComponent } from '../../../shared/components/empty-state/empt
       </div>
 
     } @else if (volunteers.length === 0) {
-      <app-empty-state
-        icon="bi-people"
-        title="No volunteers found"
-        subtitle="Check back later or try a different search."
-      />
+      @if (searchTerm) {
+        <app-empty-state
+          icon="bi-people"
+          title="No volunteers found"
+          subtitle="No volunteers match your search. Try a different keyword."
+        />
+      } @else {
+        <app-empty-state
+          icon="bi-people"
+          title="No volunteers yet"
+          subtitle="Volunteers are candidates who successfully secured jobs abroad through TalentHub and have chosen to give back by supporting new job seekers on their journey."
+        />
+      }
 
     } @else {
       <div class="section-card">

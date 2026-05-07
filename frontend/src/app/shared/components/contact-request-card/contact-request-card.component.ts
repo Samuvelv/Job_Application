@@ -9,10 +9,22 @@ import { ConfirmDialogService } from '../../../core/services/confirm-dialog.serv
   standalone: true,
   imports: [CommonModule],
   template: `
-    <div class="contact-request-card">
+    <div class="contact-request-card" [class.is-selected]="selected">
       <!-- Card Header -->
       <div class="card-header">
         <div class="header-content">
+          <!-- Selection checkbox -->
+          @if (selectable && request.status === 'pending') {
+            <div class="card-checkbox-wrap" (click)="$event.stopPropagation()">
+              <input
+                type="checkbox"
+                class="card-checkbox"
+                [checked]="selected"
+                (change)="onCheckboxChange($event)"
+              />
+            </div>
+          }
+
           <!-- Recruiter Info -->
           <div class="party-info recruiter-info">
             <div class="party-label">Recruiter</div>
@@ -55,18 +67,40 @@ import { ConfirmDialogService } from '../../../core/services/confirm-dialog.serv
         </div>
       </div>
 
-      <!-- Status and Date Section -->
-      <div class="card-meta">
+      <!-- Status Section -->
+      <div class="card-status-bar">
         <span class="status-badge" [class]="'status-' + request.status">
           {{ request.status | uppercase }}
         </span>
-        <div class="request-date">
-          <i class="bi bi-clock"></i>
-          {{ request.created_at | date:'dd MMM yyyy, HH:mm' }}
-          @if (request.reviewed_at) {
-            <span class="reviewed-date">
-              Reviewed {{ request.reviewed_at | date:'dd MMM yyyy' }}
-            </span>
+      </div>
+
+      <!-- Audit Trail -->
+      <div class="audit-trail">
+        <div class="audit-trail__title">
+          <i class="bi bi-journal-text"></i>
+          Audit Trail
+        </div>
+        <div class="audit-trail__rows">
+          <div class="audit-trail__row">
+            <span class="audit-trail__label">Submitted</span>
+            <span class="audit-trail__value">{{ request.created_at | date:'dd MMM yyyy, HH:mm' }}</span>
+          </div>
+          @if (request.status !== 'pending') {
+            <div class="audit-trail__row">
+              <span class="audit-trail__label">Reviewed by</span>
+              <span class="audit-trail__value">
+                @if (request.reviewed_by_name) {
+                  <i class="bi bi-person-check"></i>
+                  {{ request.reviewed_by_name }}
+                } @else {
+                  <span class="audit-trail__unknown">—</span>
+                }
+              </span>
+            </div>
+            <div class="audit-trail__row">
+              <span class="audit-trail__label">Decision made</span>
+              <span class="audit-trail__value">{{ request.reviewed_at | date:'dd MMM yyyy, HH:mm' }}</span>
+            </div>
           }
         </div>
       </div>
@@ -120,6 +154,26 @@ import { ConfirmDialogService } from '../../../core/services/confirm-dialog.serv
     .contact-request-card:hover {
       box-shadow: var(--th-shadow-card-hover, 0 4px 12px rgba(0, 0, 0, 0.15));
       transform: translateY(-2px);
+    }
+
+    .contact-request-card.is-selected {
+      border-color: var(--th-primary);
+      box-shadow: 0 0 0 2px color-mix(in srgb, var(--th-primary) 25%, transparent);
+    }
+
+    /* ── Checkbox ── */
+    .card-checkbox-wrap {
+      flex-shrink: 0;
+      display: flex;
+      align-items: center;
+    }
+
+    .card-checkbox {
+      width: 18px;
+      height: 18px;
+      accent-color: var(--th-primary);
+      cursor: pointer;
+      border-radius: 4px;
     }
 
     /* ── Header ── */
@@ -214,16 +268,11 @@ import { ConfirmDialogService } from '../../../core/services/confirm-dialog.serv
       padding: 0 0.5rem;
     }
 
-    /* ── Meta Info ── */
-    .card-meta {
-      padding: 0.75rem 1rem;
+    /* ── Status Bar ── */
+    .card-status-bar {
+      padding: 0.5rem 1rem;
       background: var(--th-surface-2);
       border-bottom: 1px solid var(--th-border);
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 1rem;
-      flex-wrap: wrap;
     }
 
     .status-badge {
@@ -251,24 +300,69 @@ import { ConfirmDialogService } from '../../../core/services/confirm-dialog.serv
       color: var(--th-danger);
     }
 
-    .request-date {
-      font-size: 0.8rem;
-      color: var(--th-muted);
-      display: flex;
-      align-items: center;
-      gap: 0.5rem;
+    /* ── Audit Trail ── */
+    .audit-trail {
+      border-top: 1px solid var(--th-border);
+      background: var(--th-surface-2);
+      padding: 0.625rem 1rem;
     }
 
-    .request-date i {
+    .audit-trail__title {
+      display: flex;
+      align-items: center;
+      gap: 0.375rem;
+      font-size: 0.7rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--th-muted);
+      margin-bottom: 0.5rem;
+    }
+
+    .audit-trail__title i {
       font-size: 0.75rem;
     }
 
-    .reviewed-date {
-      margin-left: 0.5rem;
-      padding-left: 0.5rem;
-      border-left: 1px solid var(--th-border-strong);
+    .audit-trail__rows {
+      display: flex;
+      flex-direction: column;
+      gap: 0.3rem;
     }
 
+    .audit-trail__row {
+      display: flex;
+      align-items: baseline;
+      gap: 0.5rem;
+      font-size: 0.78rem;
+    }
+
+    .audit-trail__label {
+      flex-shrink: 0;
+      width: 6.5rem;
+      color: var(--th-muted);
+      font-weight: 500;
+    }
+
+    .audit-trail__value {
+      color: var(--th-text-secondary);
+      display: flex;
+      align-items: center;
+      gap: 0.3rem;
+      min-width: 0;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .audit-trail__value i {
+      font-size: 0.72rem;
+      color: var(--th-success);
+      flex-shrink: 0;
+    }
+
+    .audit-trail__unknown {
+      color: var(--th-muted);
+    }
     /* ── Admin Notes ── */
     .admin-notes-section {
       padding: 0.75rem 1rem;
@@ -411,9 +505,12 @@ export class ContactRequestCardComponent implements OnInit {
   @Input() request!: ContactRequest;
   @Input() isAdmin: boolean = false;
   @Input() isRecruiter: boolean = false;
+  @Input() selectable: boolean = false;
+  @Input() selected: boolean = false;
   @Output() approved = new EventEmitter<{ id: string; adminNote?: string }>();
   @Output() rejected = new EventEmitter<{ id: string; adminNote?: string }>();
   @Output() cancelled = new EventEmitter<void>();
+  @Output() selectionChange = new EventEmitter<boolean>();
 
   isSubmitting = false;
 
@@ -423,6 +520,11 @@ export class ContactRequestCardComponent implements OnInit {
     if (!this.request) {
       console.error('ContactRequestCardComponent: request input is required');
     }
+  }
+
+  onCheckboxChange(event: Event): void {
+    const checked = (event.target as HTMLInputElement).checked;
+    this.selectionChange.emit(checked);
   }
 
   /**

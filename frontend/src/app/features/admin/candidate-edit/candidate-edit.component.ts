@@ -51,6 +51,11 @@ export class CandidateEditComponent implements OnInit {
   successMsg = '';
   errorMsg = '';
 
+  // Volunteer invitation prompt
+  showPlacedPrompt = false;
+  inviteSending    = false;
+  inviteError      = '';
+
   form!: FormGroup;
 
   mediaLoading: Record<string, boolean> = {};
@@ -74,6 +79,7 @@ export class CandidateEditComponent implements OnInit {
     { value: 'active',       label: 'Active'       },
     { value: 'inactive',     label: 'Inactive'     },
     { value: 'pending_edit', label: 'Pending Edit' },
+    { value: 'placed',       label: 'Placed'       },
   ];
   readonly currentYear = new Date().getFullYear();
 
@@ -103,6 +109,7 @@ export class CandidateEditComponent implements OnInit {
     { value: 'active',       label: 'Active'       },
     { value: 'inactive',     label: 'Inactive'     },
     { value: 'pending_edit', label: 'Pending Edit' },
+    { value: 'placed',       label: 'Placed'       },
   ];
   readonly registrationFeeStatusOptions = REGISTRATION_FEE_STATUS_OPTIONS;
   readonly cvFormatOptions = CV_FORMAT_OPTIONS;
@@ -440,12 +447,44 @@ export class CandidateEditComponent implements OnInit {
         this.successMsg = 'Candidate updated successfully!';
         this.toast.success('Candidate updated');
         window.scrollTo({ top: 0, behavior: 'smooth' });
-        setTimeout(() => this.router.navigate(['/admin/candidates', this.candidateId]), 1500);
+
+        if (raw.profile_status === 'placed') {
+          // Show volunteer invitation prompt instead of navigating
+          this.showPlacedPrompt = true;
+        } else {
+          setTimeout(() => this.router.navigate(['/admin/candidates', this.candidateId]), 1500);
+        }
       },
       error: (err) => {
         this.saving   = false;
         this.errorMsg = err?.error?.message ?? 'Update failed. Please try again.';
       },
     });
+  }
+
+  // ── Volunteer invitation (shown after placing a candidate) ────────────────
+
+  sendInvitation(): void {
+    this.inviteSending = true;
+    this.inviteError   = '';
+    this.empSvc.inviteVolunteer(this.candidateId).subscribe({
+      next: () => {
+        this.inviteSending    = false;
+        this.showPlacedPrompt = false;
+        this.toast.success('Invitation sent successfully!');
+        this.router.navigate(['/admin/volunteers/create'], {
+          queryParams: { fromCandidate: this.candidateId },
+        });
+      },
+      error: (err) => {
+        this.inviteSending = false;
+        this.inviteError   = err?.error?.message ?? 'Failed to send invitation.';
+      },
+    });
+  }
+
+  skipInvitation(): void {
+    this.showPlacedPrompt = false;
+    this.router.navigate(['/admin/candidates', this.candidateId]);
   }
 }

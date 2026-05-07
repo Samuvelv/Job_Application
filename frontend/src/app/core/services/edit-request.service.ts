@@ -10,6 +10,10 @@ export interface PaginatedEditRequests {
   pagination: { page: number; limit: number; total: number; pages: number };
 }
 
+export interface EditRequestCounts {
+  pending: number; approved: number; rejected: number; total: number;
+}
+
 @Injectable({ providedIn: 'root' })
 export class EditRequestService {
   private readonly api = `${environment.apiUrl}/edit-requests`;
@@ -43,5 +47,28 @@ export class EditRequestService {
     decision: { status: 'approved' | 'rejected'; admin_note?: string },
   ): Observable<{ request: EditRequest }> {
     return this.http.patch<{ request: EditRequest }>(`${this.api}/${id}`, decision);
+  }
+
+  getCounts(): Observable<EditRequestCounts> {
+    return this.http.get<EditRequestCounts>(`${this.api}/counts`);
+  }
+
+  bulkReview(
+    ids: string[],
+    status: 'approved' | 'rejected',
+    adminNote?: string,
+  ): Observable<{ succeeded: string[]; failed: { id: string; reason: string }[] }> {
+    return this.http.post<{ succeeded: string[]; failed: { id: string; reason: string }[] }>(
+      `${this.api}/bulk-review`,
+      { ids, status, admin_note: adminNote },
+    );
+  }
+
+  exportCsv(filters: Omit<EditRequestFilters, 'page' | 'limit'> = {}): Observable<Blob> {
+    let params = new HttpParams();
+    Object.entries(filters).forEach(([k, v]) => {
+      if (v !== undefined && v !== null && v !== '') params = params.set(k, String(v));
+    });
+    return this.http.get(`${this.api}/export`, { params, responseType: 'blob' });
   }
 }

@@ -17,10 +17,22 @@ interface FieldChange {
   standalone: true,
   imports: [CommonModule, EditChangesModalComponent],
   template: `
-    <div class="edit-request-card">
+    <div class="edit-request-card" [class.is-selected]="selected">
       <!-- Card Header -->
       <div class="card-header">
         <div class="header-content">
+          <!-- Selection checkbox -->
+          @if (selectable && request.status === 'pending') {
+            <div class="card-checkbox-wrap" (click)="$event.stopPropagation()">
+              <input
+                type="checkbox"
+                class="card-checkbox"
+                [checked]="selected"
+                (change)="onCheckboxChange($event)"
+              />
+            </div>
+          }
+
           <!-- Avatar -->
           <div class="avatar-section">
             @if (request.profile_photo_url) {
@@ -93,18 +105,35 @@ interface FieldChange {
         }
       </div>
 
-      <!-- Date strip -->
-      <div class="card-dates">
-        <span class="card-date">
-          <i class="bi bi-clock"></i>
-          Submitted {{ request.created_at | date:'dd MMM yyyy, HH:mm' }}
-        </span>
-        @if (request.reviewed_at) {
-          <span class="card-date card-date--reviewed">
-            <i class="bi bi-check2-circle"></i>
-            Reviewed {{ request.reviewed_at | date:'dd MMM yyyy' }}
-          </span>
-        }
+      <!-- Audit Trail -->
+      <div class="audit-trail">
+        <div class="audit-trail__title">
+          <i class="bi bi-journal-text"></i>
+          Audit Trail
+        </div>
+        <div class="audit-trail__rows">
+          <div class="audit-trail__row">
+            <span class="audit-trail__label">Submitted</span>
+            <span class="audit-trail__value">{{ request.created_at | date:'dd MMM yyyy, HH:mm' }}</span>
+          </div>
+          @if (request.status !== 'pending') {
+            <div class="audit-trail__row">
+              <span class="audit-trail__label">Reviewed by</span>
+              <span class="audit-trail__value">
+                @if (request.reviewed_by_name) {
+                  <i class="bi bi-person-check"></i>
+                  {{ request.reviewed_by_name }}
+                } @else {
+                  <span class="audit-trail__unknown">—</span>
+                }
+              </span>
+            </div>
+            <div class="audit-trail__row">
+              <span class="audit-trail__label">Decision made</span>
+              <span class="audit-trail__value">{{ request.reviewed_at | date:'dd MMM yyyy, HH:mm' }}</span>
+            </div>
+          }
+        </div>
       </div>
 
       <!-- Card Footer (Action Buttons) -->
@@ -155,6 +184,26 @@ interface FieldChange {
     .edit-request-card:hover {
       box-shadow: var(--th-shadow-card-hover, 0 4px 12px rgba(0, 0, 0, 0.15));
       transform: translateY(-2px);
+    }
+
+    .edit-request-card.is-selected {
+      border-color: var(--th-primary);
+      box-shadow: 0 0 0 2px color-mix(in srgb, var(--th-primary) 25%, transparent);
+    }
+
+    /* ── Checkbox ── */
+    .card-checkbox-wrap {
+      flex-shrink: 0;
+      display: flex;
+      align-items: center;
+    }
+
+    .card-checkbox {
+      width: 18px;
+      height: 18px;
+      accent-color: var(--th-primary);
+      cursor: pointer;
+      border-radius: 4px;
     }
 
     /* ── Header ── */
@@ -413,6 +462,70 @@ interface FieldChange {
       word-wrap: break-word;
     }
 
+    /* ── Audit Trail ── */
+    .audit-trail {
+      border-top: 1px solid var(--th-border);
+      background: var(--th-surface-2);
+      padding: 0.625rem 1rem;
+    }
+
+    .audit-trail__title {
+      display: flex;
+      align-items: center;
+      gap: 0.375rem;
+      font-size: 0.7rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--th-muted);
+      margin-bottom: 0.5rem;
+    }
+
+    .audit-trail__title i {
+      font-size: 0.75rem;
+    }
+
+    .audit-trail__rows {
+      display: flex;
+      flex-direction: column;
+      gap: 0.3rem;
+    }
+
+    .audit-trail__row {
+      display: flex;
+      align-items: baseline;
+      gap: 0.5rem;
+      font-size: 0.78rem;
+    }
+
+    .audit-trail__label {
+      flex-shrink: 0;
+      width: 6.5rem;
+      color: var(--th-muted);
+      font-weight: 500;
+    }
+
+    .audit-trail__value {
+      color: var(--th-text-secondary);
+      display: flex;
+      align-items: center;
+      gap: 0.3rem;
+      min-width: 0;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .audit-trail__value i {
+      font-size: 0.72rem;
+      color: var(--th-success);
+      flex-shrink: 0;
+    }
+
+    .audit-trail__unknown {
+      color: var(--th-muted);
+    }
+
     /* ── Footer ── */
     .card-footer {
       padding: 1rem;
@@ -422,35 +535,6 @@ interface FieldChange {
       gap: 0.5rem;
     }
 
-    /* ── Date strip ── */
-    .card-dates {
-      padding: 0.6rem 1rem;
-      background: var(--th-surface-2);
-      border-top: 1px solid var(--th-border);
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 0.75rem;
-      flex-wrap: wrap;
-    }
-
-    .card-date {
-      display: flex;
-      align-items: center;
-      gap: 0.35rem;
-      font-size: 0.75rem;
-      color: var(--th-muted);
-    }
-
-    .card-date i {
-      font-size: 0.7rem;
-      flex-shrink: 0;
-    }
-
-    .card-date--reviewed {
-      padding-left: 0.75rem;
-      border-left: 1px solid var(--th-border-strong);
-    }
 
     .btn-action {
       flex: 1;
@@ -560,9 +644,12 @@ export class EditRequestCardComponent implements OnInit {
   @Input() request!: EditRequest;
   @Input() isAdmin: boolean = false;
   @Input() isRecruiter: boolean = false;
+  @Input() selectable: boolean = false;
+  @Input() selected: boolean = false;
   @Output() approved = new EventEmitter<{ id: string; adminNote?: string }>();
   @Output() rejected = new EventEmitter<{ id: string; adminNote?: string }>();
   @Output() cancelled = new EventEmitter<void>();
+  @Output() selectionChange = new EventEmitter<boolean>();
 
   isSubmitting = false;
   showChangesModal = false;
@@ -573,6 +660,11 @@ export class EditRequestCardComponent implements OnInit {
     if (!this.request) {
       console.error('EditRequestCardComponent: request input is required');
     }
+  }
+
+  onCheckboxChange(event: Event): void {
+    const checked = (event.target as HTMLInputElement).checked;
+    this.selectionChange.emit(checked);
   }
 
   /**

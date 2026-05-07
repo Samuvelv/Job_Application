@@ -2,7 +2,7 @@
 import { db } from '../../config/db';
 import { AppError } from '../../middleware/errorHandler';
 import { sendContactRequestApprovedNotification, sendContactRequestRejectedNotification } from '../../services/email.service';
-import type { ReviewContactRequestDto, ContactRequestFilterDto } from './contact-requests.dto';
+import type { ReviewContactRequestDto, BulkReviewContactRequestDto, ContactRequestFilterDto } from './contact-requests.dto';
 
 // ── Create a request (recruiter → admin) ────────────────────────────────────
 
@@ -39,6 +39,7 @@ export async function listContactRequests(filters: ContactRequestFilterDto) {
     .join('users as ru',       'ru.id', 'r.user_id')
     .join('candidates as c',   'c.id',  'cr.candidate_id')
     .join('users as cu',       'cu.id', 'c.user_id')
+    .leftJoin('admins as a',   'a.user_id', 'cr.reviewed_by_id')
     .select(
       'cr.id',
       'cr.recruiter_id',
@@ -55,6 +56,7 @@ export async function listContactRequests(filters: ContactRequestFilterDto) {
       'c.candidate_number',
       'c.job_title as candidate_job_title',
       'cu.email as candidate_email',
+      db.raw(`TRIM(a.first_name || ' ' || COALESCE(a.last_name, '')) as reviewed_by_name`),
     );
 
   if (status) query = query.where('cr.status', status);
@@ -91,7 +93,7 @@ export async function listContactRequests(filters: ContactRequestFilterDto) {
 
 // ── Review a request (admin) ─────────────────────────────────────────────────
 
-export async function reviewContactRequest(id: string, dto: ReviewContactRequestDto) {
+export async function reviewContactRequest(id: string, dto: ReviewContactRequestDto, adminUserId?: string) {
   const req = await db('contact_unlock_requests').where({ id }).first();
   if (!req) throw new AppError(404, 'Contact request not found');
   if (req.status !== 'pending') throw new AppError(400, 'Request has already been reviewed');
@@ -99,9 +101,10 @@ export async function reviewContactRequest(id: string, dto: ReviewContactRequest
   const [updated] = await db('contact_unlock_requests')
     .where({ id })
     .update({
-      status:      dto.status,
-      admin_note:  dto.admin_note ?? null,
-      reviewed_at: new Date(),
+      status:          dto.status,
+      admin_note:      dto.admin_note ?? null,
+      reviewed_at:     new Date(),
+      reviewed_by_id:  adminUserId ?? null,
     })
     .returning('*');
 
@@ -156,4 +159,41 @@ export async function isContactUnlocked(recruiterId: string, candidateId: string
     .where({ recruiter_id: recruiterId, candidate_id: candidateId, status: 'approved' })
     .first();
   return !!row;
+}
+
+// ── Counts (admin) ───────────────────────────────────────────────────────────
+
+export async function getContactRequestCounts() {
+  const rows = await db('contact_unlock_requests')
+    .select('status')
+    .count('id as count')
+    .groupBy('status');
+
+  const result = { pending: 0, approved: 0, rejected: 0, total: 0 };
+  for (const row of rows) {
+    const n = Number(row.count);
+    if (row.status === 'pending')  result.pending  = n;
+    if (row.status === 'approved') result.approved = n;
+    if (row.status === 'rejected') result.rejected = n;
+    result.total += n;
+  }
+  return result;
+}
+
+// ── Bulk review (admin) ───────────────────────────────────────────────────────
+
+export async function bulkReviewContactRequests(dto: BulkReviewContactRequestDto, adminUserId?: string) {
+  const succeeded: string[] = [];
+  const failed: { id: string; reason: string }[] = [];
+
+  for (const id of dto.ids) {
+    try {
+      await reviewContactRequest(id, { status: dto.status, admin_note: dto.admin_note }, adminUserId);
+      succeeded.push(id);
+    } catch (err: any) {
+      failed.push({ id, reason: err?.message ?? 'Unknown error' });
+    }
+  }
+
+  return { succeeded, failed };
 }

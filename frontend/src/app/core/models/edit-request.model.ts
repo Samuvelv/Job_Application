@@ -14,6 +14,7 @@ export interface EditRequest {
   admin_note?: string | null;
   created_at: string;
   reviewed_at?: string | null;
+  reviewed_by_name?: string | null;
 }
 
 export type EditRequestType = 'personal' | 'professional' | 'location' | 'salary' | 'skills' | 'languages' | 'experience' | 'education';
@@ -24,6 +25,7 @@ export interface EditRequestFilters {
   date_from?:    string;
   date_to?:      string;
   request_type?: EditRequestType;
+  sort?:         'newest' | 'oldest';
   page?:         number;
   limit?:        number;
 }

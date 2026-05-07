@@ -35,6 +35,11 @@ router.post('/:id/resend-credentials',
   ctrl.resendCreds,
 );
 
+router.post('/:id/invite-volunteer',
+  authorize('admin'),
+  ctrl.inviteVolunteer,
+);
+
 router.put('/:id',
   authorize('admin'),
   ctrl.update,

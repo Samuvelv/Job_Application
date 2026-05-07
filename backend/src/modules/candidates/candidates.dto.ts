@@ -111,7 +111,7 @@ export const UpdateCandidateSchema = CreateCandidateSchema
     resume_url:               z.string().optional().nullable(),
     intro_video_url:          z.string().optional().nullable(),
     new_password:             z.string().min(8, 'Password must be at least 8 characters').max(100).optional(),
-    profile_status:           z.enum(['active', 'inactive', 'pending_edit']).optional(),
+    profile_status:           z.enum(['active', 'inactive', 'pending_edit', 'placed']).optional(),
   })
   .partial();
 
@@ -170,7 +170,7 @@ export const BulkActionSchema = z.object({
   candidateIds: z.array(z.string().uuid()).min(1).max(500),
   action: z.enum(['mark_fee_paid', 'change_status']),
   payload: z.object({
-    profile_status: z.enum(['active', 'inactive', 'pending_edit']).optional(),
+    profile_status: z.enum(['active', 'inactive', 'pending_edit', 'placed']).optional(),
   }).optional(),
 });
 

@@ -111,6 +111,18 @@ export async function resendCreds(req: Request, res: Response, next: NextFunctio
   } catch (err) { next(err); }
 }
 
+export async function inviteVolunteer(req: Request, res: Response, next: NextFunction): Promise<void> {
+  try {
+    const id = p(req.params['id']);
+    const result = await svc.inviteAsVolunteer(id);
+    await logAudit({
+      userId: req.user!.sub, action: 'INVITE_VOLUNTEER',
+      resource: 'candidate', resourceId: id, ipAddress: req.ip,
+    });
+    res.json(result);
+  } catch (err) { next(err); }
+}
+
 export async function bulkActionHandler(req: Request, res: Response, next: NextFunction): Promise<void> {
   try {
     const dto = BulkActionSchema.parse(req.body);

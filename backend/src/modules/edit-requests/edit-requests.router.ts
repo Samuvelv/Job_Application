@@ -11,8 +11,11 @@ router.post('/me',  authenticate, authorize('candidate'), ctrl.submit);
 router.get( '/me',  authenticate, authorize('candidate'), ctrl.getMyRequest);
 
 // ── Admin: list + review ──────────────────────────────────────────────────────
-router.get(  '/',       authenticate, authorize('admin'), ctrl.list);
-router.get(  '/:id',    authenticate, authorize('admin'), ctrl.getOne);
-router.patch('/:id',    authenticate, authorize('admin'), ctrl.review);
+router.get(  '/',             authenticate, authorize('admin'), ctrl.list);
+router.get(  '/export',       authenticate, authorize('admin'), ctrl.exportCsv);
+router.get(  '/counts',       authenticate, authorize('admin'), ctrl.counts);
+router.post( '/bulk-review',  authenticate, authorize('admin'), ctrl.bulkReview);
+router.get(  '/:id',          authenticate, authorize('admin'), ctrl.getOne);
+router.patch('/:id',          authenticate, authorize('admin'), ctrl.review);
 
 export default router;

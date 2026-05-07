@@ -4,10 +4,13 @@ import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, FormGroup, FormsModule } from '@angular/forms';
 import { Subject, debounceTime, distinctUntilChanged, takeUntil } from 'rxjs';
 import { EditRequestService } from '../../../core/services/edit-request.service';
+import { EditRequestCounts } from '../../../core/services/edit-request.service';
 import { ContactRequestService } from '../../../core/services/contact-request.service';
+import { ContactRequestCounts } from '../../../core/services/contact-request.service';
 import { EditRequest, EditRequestType } from '../../../core/models/edit-request.model';
 import { ContactRequest } from '../../../core/models/contact-request.model';
 import { ToastService } from '../../../core/services/toast.service';
+import { ConfirmDialogService } from '../../../core/services/confirm-dialog.service';
 import { PageHeaderComponent } from '../../../shared/components/page-header/page-header.component';
 import { EmptyStateComponent } from '../../../shared/components/empty-state/empty-state.component';
 import { EditRequestCardComponent } from '../../../shared/components/edit-request-card/edit-request-card.component';
@@ -117,6 +120,112 @@ import { ContactRequestCardComponent } from '../../../shared/components/contact-
       font-size: 10px;
       font-weight: 700;
     }
+
+    /* ── Bulk toolbar ── */
+    .bulk-toolbar {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 10px 14px;
+      margin-bottom: 14px;
+      background: var(--th-surface-2);
+      border: 1px solid var(--th-border);
+      border-radius: 10px;
+      flex-wrap: wrap;
+    }
+    .bulk-toolbar__select-all {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 13px;
+      color: var(--th-text-secondary);
+      cursor: pointer;
+      user-select: none;
+    }
+    .bulk-toolbar__select-all input[type="checkbox"] {
+      width: 16px;
+      height: 16px;
+      accent-color: var(--th-primary);
+      cursor: pointer;
+    }
+    .bulk-toolbar__sep {
+      width: 1px;
+      height: 20px;
+      background: var(--th-border-strong);
+    }
+    .bulk-toolbar__count {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--th-primary);
+    }
+    .bulk-toolbar__actions {
+      display: flex;
+      gap: 8px;
+      margin-left: auto;
+    }
+    .bulk-btn {
+      height: 34px;
+      padding: 0 14px;
+      border-radius: 8px;
+      font-size: 13px;
+      font-weight: 500;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      border: 1px solid transparent;
+      transition: all 0.15s;
+    }
+    .bulk-btn--approve {
+      background: var(--th-success);
+      color: #fff;
+      border-color: var(--th-success);
+    }
+    .bulk-btn--approve:hover:not(:disabled) {
+      filter: brightness(0.9);
+    }
+    .bulk-btn--reject {
+      background: var(--th-danger);
+      color: #fff;
+      border-color: var(--th-danger);
+    }
+    .bulk-btn--reject:hover:not(:disabled) {
+      filter: brightness(0.9);
+    }
+    .bulk-btn:disabled {
+      opacity: 0.55;
+      cursor: not-allowed;
+    }
+    .bulk-toolbar__clear {
+      font-size: 12px;
+      color: var(--th-muted);
+      background: none;
+      border: none;
+      cursor: pointer;
+      text-decoration: underline;
+      padding: 0;
+    }
+    .bulk-toolbar__clear:hover {
+      color: var(--th-text);
+    }
+    .cl-view-toggle {
+      display: flex;
+      border: 1px solid var(--th-border-strong, #d1d5db);
+      border-radius: 8px;
+      overflow: hidden;
+    }
+    .cl-view-toggle button {
+      background: var(--th-surface-2, #f9fafb);
+      border: none;
+      padding: .3rem .6rem;
+      color: var(--th-text-muted, #9ca3af);
+      cursor: pointer;
+      font-size: .9rem;
+      transition: background .15s, color .15s;
+    }
+    .cl-view-toggle button.active { background: var(--th-primary, #6366f1); color: #fff; }
+    .cl-view-toggle button:not(.active):hover { background: var(--th-surface, #fff); color: var(--th-text, #111); }
+    .btn-xs { padding: .2rem .45rem; font-size: .75rem; }
   `],
   template: `
     <app-page-header
@@ -204,6 +313,29 @@ import { ContactRequestCardComponent } from '../../../shared/components/contact-
             />
           </div>
 
+          <!-- Sort -->
+          <div class="filter-bar__group" style="flex:0 1 140px;min-width:120px">
+            <span class="filter-bar__label"><i class="bi bi-sort-down me-1"></i>Sort</span>
+            <select class="filter-bar__select" [(ngModel)]="editSort" (ngModelChange)="onEditFilterChange()">
+              <option value="newest">Newest</option>
+              <option value="oldest">Oldest</option>
+            </select>
+          </div>
+
+          <!-- View toggle + Export -->
+          <div style="display:flex;align-items:flex-end;gap:6px;margin-left:auto">
+            <div class="cl-view-toggle" style="align-self:flex-end">
+              <button [class.active]="editViewMode === 'card'" (click)="editViewMode = 'card'" title="Card view"><i class="bi bi-grid-3x3-gap-fill"></i></button>
+              <button [class.active]="editViewMode === 'list'" (click)="editViewMode = 'list'" title="List view"><i class="bi bi-list-ul"></i></button>
+            </div>
+            <button class="filter-bar__clear" style="border-color:var(--th-success);color:var(--th-success)"
+              [disabled]="editExporting" (click)="exportEditCsv()">
+              @if (editExporting) { <span class="spinner-border spinner-border-sm"></span> }
+              @else { <i class="bi bi-download"></i> }
+              Export CSV
+            </button>
+          </div>
+
           <!-- Clear filters -->
           @if (editActiveFilterCount > 0) {
             <button class="filter-bar__clear" (click)="clearEditFilters()">
@@ -222,9 +354,40 @@ import { ContactRequestCardComponent } from '../../../shared/components/contact-
             [class.active]="editStatus === tab.value"
             (click)="setEditStatus(tab.value)">
             {{ tab.label }}
+            <span class="nav-pill__count">{{ editTabCount(tab.value) }}</span>
           </button>
         }
       </div>
+
+      <!-- Bulk toolbar (visible only on pending tab) -->
+      @if (editStatus === 'pending' && !editLoading && editRequests.length > 0) {
+        <div class="bulk-toolbar">
+          <label class="bulk-toolbar__select-all">
+            <input
+              type="checkbox"
+              [checked]="editAllSelected"
+              [indeterminate]="editSelectedIds.size > 0 && !editAllSelected"
+              (change)="toggleSelectAllEdit($event)"
+            />
+            Select all on page
+          </label>
+          @if (editSelectedIds.size > 0) {
+            <div class="bulk-toolbar__sep"></div>
+            <span class="bulk-toolbar__count">{{ editSelectedIds.size }} selected</span>
+            <div class="bulk-toolbar__actions">
+              <button class="bulk-btn bulk-btn--approve" [disabled]="bulkSubmitting" (click)="bulkActionEdit('approved')">
+                <i class="bi bi-check-circle"></i>
+                Approve Selected
+              </button>
+              <button class="bulk-btn bulk-btn--reject" [disabled]="bulkSubmitting" (click)="bulkActionEdit('rejected')">
+                <i class="bi bi-x-circle"></i>
+                Reject Selected
+              </button>
+            </div>
+            <button class="bulk-toolbar__clear" (click)="clearEditSelection()">Clear</button>
+          }
+        </div>
+      }
 
       @if (editLoading) {
         <div class="loading-state">
@@ -234,24 +397,94 @@ import { ContactRequestCardComponent } from '../../../shared/components/contact-
       } @else if (editRequests.length === 0) {
         <app-empty-state
           icon="bi-inbox"
-          title="No edit requests found"
-          [subtitle]="editActiveFilterCount > 0 ? 'No results match your current filters. Try adjusting your search.' : 'Edit requests submitted by candidates will appear here.'"
+          [title]="editEmptyTitle"
+          [subtitle]="editActiveFilterCount > 0 ? 'No results match your current filters. Try adjusting your search.' : editEmptySubtitle"
         />
       } @else {
-        <div class="row g-3">
-          @for (req of editRequests; track req.id) {
-            <div class="col-xxl-3 col-lg-4 col-md-6 col-12">
-              <app-edit-request-card
-                [request]="req"
-                [isAdmin]="true"
-                [isRecruiter]="false"
-                (approved)="onEditApproved($event)"
-                (rejected)="onEditRejected($event)"
-                (cancelled)="onEditReviewCancelled()">
-              </app-edit-request-card>
-            </div>
-          }
-        </div>
+        @if (editViewMode === 'card') {
+          <div class="row g-3">
+            @for (req of editRequests; track req.id) {
+              <div class="col-xxl-3 col-lg-4 col-md-6 col-12">
+                <app-edit-request-card
+                  [request]="req"
+                  [isAdmin]="true"
+                  [isRecruiter]="false"
+                  [selectable]="editStatus === 'pending'"
+                  [selected]="editSelectedIds.has(req.id)"
+                  (selectionChange)="onEditSelectionChange(req.id, $event)"
+                  (approved)="onEditApproved($event)"
+                  (rejected)="onEditRejected($event)"
+                  (cancelled)="onEditReviewCancelled()">
+                </app-edit-request-card>
+              </div>
+            }
+          </div>
+        } @else {
+          <!-- List (table) view -->
+          <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+              <thead class="table-light">
+                <tr>
+                  @if (editStatus === 'pending') {
+                    <th style="width:36px">
+                      <input type="checkbox" [checked]="editAllSelected"
+                        [indeterminate]="editSelectedIds.size > 0 && !editAllSelected"
+                        (change)="toggleSelectAllEdit($event)" style="accent-color:var(--th-primary)">
+                    </th>
+                  }
+                  <th>Candidate</th>
+                  <th>Email</th>
+                  <th>Type</th>
+                  <th>Status</th>
+                  <th>Submitted</th>
+                  <th>Reviewed By</th>
+                  <th class="text-end">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (req of editRequests; track req.id) {
+                  <tr>
+                    @if (editStatus === 'pending') {
+                      <td>
+                        <input type="checkbox" [checked]="editSelectedIds.has(req.id)"
+                          (change)="onEditSelectionChange(req.id, $any($event.target).checked)"
+                          style="accent-color:var(--th-primary)">
+                      </td>
+                    }
+                    <td>
+                      <div class="fw-semibold small">{{ req.first_name }} {{ req.last_name }}</div>
+                    </td>
+                    <td class="small text-muted">{{ req.email }}</td>
+                    <td class="small">{{ req.reason || '—' }}</td>
+                    <td>
+                      @if (req.status === 'pending') {
+                        <span class="badge bg-warning-subtle text-warning border border-warning-subtle" style="font-size:.7rem">Pending</span>
+                      } @else if (req.status === 'approved') {
+                        <span class="badge bg-success-subtle text-success border border-success-subtle" style="font-size:.7rem">Approved</span>
+                      } @else {
+                        <span class="badge bg-danger-subtle text-danger border border-danger-subtle" style="font-size:.7rem">Rejected</span>
+                      }
+                    </td>
+                    <td class="small text-muted">{{ req.created_at | date:'dd MMM yyyy' }}</td>
+                    <td class="small text-muted">{{ req.reviewed_by_name || '—' }}</td>
+                    <td class="text-end">
+                      @if (req.status === 'pending') {
+                        <div class="d-flex justify-content-end gap-1">
+                          <button class="btn btn-xs btn-success" (click)="onEditApproved({ id: req.id })">
+                            <i class="bi bi-check"></i>
+                          </button>
+                          <button class="btn btn-xs btn-danger" (click)="onEditRejected({ id: req.id })">
+                            <i class="bi bi-x"></i>
+                          </button>
+                        </div>
+                      }
+                    </td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+        }
 
         @if (editPagination.pages > 1) {
           <nav class="mt-4 d-flex justify-content-center">
@@ -314,6 +547,29 @@ import { ContactRequestCardComponent } from '../../../shared/components/contact-
             />
           </div>
 
+          <!-- Sort -->
+          <div class="filter-bar__group" style="flex:0 1 140px;min-width:120px">
+            <span class="filter-bar__label"><i class="bi bi-sort-down me-1"></i>Sort</span>
+            <select class="filter-bar__select" [(ngModel)]="contactSort" (ngModelChange)="onContactFilterChange()">
+              <option value="newest">Newest</option>
+              <option value="oldest">Oldest</option>
+            </select>
+          </div>
+
+          <!-- View toggle + Export -->
+          <div style="display:flex;align-items:flex-end;gap:6px;margin-left:auto">
+            <div class="cl-view-toggle" style="align-self:flex-end">
+              <button [class.active]="contactViewMode === 'card'" (click)="contactViewMode = 'card'" title="Card view"><i class="bi bi-grid-3x3-gap-fill"></i></button>
+              <button [class.active]="contactViewMode === 'list'" (click)="contactViewMode = 'list'" title="List view"><i class="bi bi-list-ul"></i></button>
+            </div>
+            <button class="filter-bar__clear" style="border-color:var(--th-success);color:var(--th-success)"
+              [disabled]="contactExporting" (click)="exportContactCsv()">
+              @if (contactExporting) { <span class="spinner-border spinner-border-sm"></span> }
+              @else { <i class="bi bi-download"></i> }
+              Export CSV
+            </button>
+          </div>
+
           <!-- Clear filters -->
           @if (contactActiveFilterCount > 0) {
             <button class="filter-bar__clear" (click)="clearContactFilters()">
@@ -332,9 +588,40 @@ import { ContactRequestCardComponent } from '../../../shared/components/contact-
             [class.active]="contactStatus === tab.value"
             (click)="setContactStatus(tab.value)">
             {{ tab.label }}
+            <span class="nav-pill__count">{{ contactTabCount(tab.value) }}</span>
           </button>
         }
       </div>
+
+      <!-- Bulk toolbar (visible only on pending tab) -->
+      @if (contactStatus === 'pending' && !contactLoading && contactRequests.length > 0) {
+        <div class="bulk-toolbar">
+          <label class="bulk-toolbar__select-all">
+            <input
+              type="checkbox"
+              [checked]="contactAllSelected"
+              [indeterminate]="contactSelectedIds.size > 0 && !contactAllSelected"
+              (change)="toggleSelectAllContact($event)"
+            />
+            Select all on page
+          </label>
+          @if (contactSelectedIds.size > 0) {
+            <div class="bulk-toolbar__sep"></div>
+            <span class="bulk-toolbar__count">{{ contactSelectedIds.size }} selected</span>
+            <div class="bulk-toolbar__actions">
+              <button class="bulk-btn bulk-btn--approve" [disabled]="bulkSubmitting" (click)="bulkActionContact('approved')">
+                <i class="bi bi-check-circle"></i>
+                Approve Selected
+              </button>
+              <button class="bulk-btn bulk-btn--reject" [disabled]="bulkSubmitting" (click)="bulkActionContact('rejected')">
+                <i class="bi bi-x-circle"></i>
+                Reject Selected
+              </button>
+            </div>
+            <button class="bulk-toolbar__clear" (click)="clearContactSelection()">Clear</button>
+          }
+        </div>
+      }
 
       @if (contactLoading) {
         <div class="loading-state">
@@ -344,24 +631,88 @@ import { ContactRequestCardComponent } from '../../../shared/components/contact-
       } @else if (contactRequests.length === 0) {
         <app-empty-state
           icon="bi-person-lines-fill"
-          title="No contact requests found"
-          [subtitle]="contactActiveFilterCount > 0 ? 'No results match your current filters. Try adjusting your search.' : 'Contact info requests from recruiters will appear here.'"
+          [title]="contactEmptyTitle"
+          [subtitle]="contactActiveFilterCount > 0 ? 'No results match your current filters. Try adjusting your search.' : contactEmptySubtitle"
         />
       } @else {
-        <div class="row g-3">
-          @for (req of contactRequests; track req.id) {
-            <div class="col-xxl-3 col-lg-4 col-md-6 col-12">
-              <app-contact-request-card
-                [request]="req"
-                [isAdmin]="true"
-                [isRecruiter]="false"
-                (approved)="onContactApproved($event)"
-                (rejected)="onContactRejected($event)"
-                (cancelled)="onContactReviewCancelled()">
-              </app-contact-request-card>
-            </div>
-          }
-        </div>
+        @if (contactViewMode === 'card') {
+          <div class="row g-3">
+            @for (req of contactRequests; track req.id) {
+              <div class="col-xxl-3 col-lg-4 col-md-6 col-12">
+                <app-contact-request-card
+                  [request]="req"
+                  [isAdmin]="true"
+                  [isRecruiter]="false"
+                  [selectable]="contactStatus === 'pending'"
+                  [selected]="contactSelectedIds.has(req.id)"
+                  (selectionChange)="onContactSelectionChange(req.id, $event)"
+                  (approved)="onContactApproved($event)"
+                  (rejected)="onContactRejected($event)"
+                  (cancelled)="onContactReviewCancelled()">
+                </app-contact-request-card>
+              </div>
+            }
+          </div>
+        } @else {
+          <!-- List (table) view -->
+          <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+              <thead class="table-light">
+                <tr>
+                  @if (contactStatus === 'pending') {
+                    <th style="width:36px">
+                      <input type="checkbox" [checked]="contactAllSelected"
+                        [indeterminate]="contactSelectedIds.size > 0 && !contactAllSelected"
+                        (change)="toggleSelectAllContact($event)" style="accent-color:var(--th-primary)">
+                    </th>
+                  }
+                  <th>Candidate / Requester</th>
+                  <th>Status</th>
+                  <th>Submitted</th>
+                  <th>Reviewed By</th>
+                  <th class="text-end">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (req of contactRequests; track req.id) {
+                  <tr>
+                    @if (contactStatus === 'pending') {
+                      <td>
+                        <input type="checkbox" [checked]="contactSelectedIds.has(req.id)"
+                          (change)="onContactSelectionChange(req.id, $any($event.target).checked)"
+                          style="accent-color:var(--th-primary)">
+                      </td>
+                    }
+                    <td class="fw-semibold small">{{ (req.candidate_first_name ? req.candidate_first_name + ' ' + req.candidate_last_name : null) ?? req.recruiter_name ?? '—' }}</td>
+                    <td>
+                      @if (req.status === 'pending') {
+                        <span class="badge bg-warning-subtle text-warning border border-warning-subtle" style="font-size:.7rem">Pending</span>
+                      } @else if (req.status === 'approved') {
+                        <span class="badge bg-success-subtle text-success border border-success-subtle" style="font-size:.7rem">Approved</span>
+                      } @else {
+                        <span class="badge bg-danger-subtle text-danger border border-danger-subtle" style="font-size:.7rem">Rejected</span>
+                      }
+                    </td>
+                    <td class="small text-muted">{{ req.created_at | date:'dd MMM yyyy' }}</td>
+                    <td class="small text-muted">{{ req.reviewed_by_name || '—' }}</td>
+                    <td class="text-end">
+                      @if (req.status === 'pending') {
+                        <div class="d-flex justify-content-end gap-1">
+                          <button class="btn btn-xs btn-success" (click)="onContactApproved({ id: req.id })">
+                            <i class="bi bi-check"></i>
+                          </button>
+                          <button class="btn btn-xs btn-danger" (click)="onContactRejected({ id: req.id })">
+                            <i class="bi bi-x"></i>
+                          </button>
+                        </div>
+                      }
+                    </td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+        }
 
         @if (contactPagination.pages > 1) {
           <nav class="mt-4 d-flex justify-content-center">
@@ -400,6 +751,15 @@ export class EditRequestsComponent implements OnInit, OnDestroy {
   editDateFrom = '';
   editDateTo = '';
   editRequestType: EditRequestType | '' = '';
+  editSort: 'newest' | 'oldest' = 'newest';
+  editViewMode: 'card' | 'list' = 'card';
+  editExporting = false;
+
+  // Edit bulk selection
+  editSelectedIds = new Set<string>();
+
+  // Edit tab counts
+  editCounts: EditRequestCounts = { pending: 0, approved: 0, rejected: 0, total: 0 };
 
   // Contact requests state
   contactRequests: ContactRequest[] = [];
@@ -413,10 +773,20 @@ export class EditRequestsComponent implements OnInit, OnDestroy {
   contactSearch = '';
   contactDateFrom = '';
   contactDateTo = '';
+  contactSort: 'newest' | 'oldest' = 'newest';
+  contactViewMode: 'card' | 'list' = 'card';
+  contactExporting = false;
 
-  // Shared review form
+  // Contact bulk selection
+  contactSelectedIds = new Set<string>();
+
+  // Contact tab counts
+  contactCounts: ContactRequestCounts = { pending: 0, approved: 0, rejected: 0, total: 0 };
+
+  // Shared
   reviewForm: FormGroup;
   reviewSubmitting = false;
+  bulkSubmitting = false;
 
   statusTabs = [
     { label: 'Pending',  value: 'pending'  },
@@ -447,12 +817,12 @@ export class EditRequestsComponent implements OnInit, OnDestroy {
     private editRequestService: EditRequestService,
     private contactRequestService: ContactRequestService,
     private toast: ToastService,
+    private confirmDialog: ConfirmDialogService,
   ) {
     this.reviewForm = this.fb.group({ admin_note: [''] });
   }
 
   ngOnInit(): void {
-    // Wire up debounced search for edit section (300 ms)
     this.editSearch$.pipe(
       debounceTime(300),
       distinctUntilChanged(),
@@ -462,7 +832,6 @@ export class EditRequestsComponent implements OnInit, OnDestroy {
       this.loadEditRequests();
     });
 
-    // Wire up debounced search for contact section (300 ms)
     this.contactSearch$.pipe(
       debounceTime(300),
       distinctUntilChanged(),
@@ -474,6 +843,8 @@ export class EditRequestsComponent implements OnInit, OnDestroy {
 
     this.loadEditRequests();
     this.loadContactRequests();
+    this.refreshEditCounts();
+    this.refreshContactCounts();
   }
 
   ngOnDestroy(): void {
@@ -483,9 +854,63 @@ export class EditRequestsComponent implements OnInit, OnDestroy {
 
   // ── Section toggle ─────────────────────────────────────────────────────────
 
+  refreshEditCounts(): void {
+    this.editRequestService.getCounts().subscribe({
+      next: (c) => (this.editCounts = c),
+      error: () => { /* non-fatal */ },
+    });
+  }
+
+  refreshContactCounts(): void {
+    this.contactRequestService.getCounts().subscribe({
+      next: (c) => (this.contactCounts = c),
+      error: () => { /* non-fatal */ },
+    });
+  }
+
+  editTabCount(value: string): number {
+    if (value === 'pending')  return this.editCounts.pending;
+    if (value === 'approved') return this.editCounts.approved;
+    if (value === 'rejected') return this.editCounts.rejected;
+    return this.editCounts.total;
+  }
+
+  contactTabCount(value: string): number {
+    if (value === 'pending')  return this.contactCounts.pending;
+    if (value === 'approved') return this.contactCounts.approved;
+    if (value === 'rejected') return this.contactCounts.rejected;
+    return this.contactCounts.total;
+  }
+
+  get editEmptyTitle(): string {
+    if (this.editStatus === 'pending')  return 'No pending requests — all caught up!';
+    if (this.editStatus === 'approved') return 'No approved requests yet';
+    if (this.editStatus === 'rejected') return 'No rejected requests yet';
+    return 'No edit requests found';
+  }
+
+  get editEmptySubtitle(): string {
+    if (this.editStatus === '') return 'Requests submitted by candidates and recruiters will appear here.';
+    return '';
+  }
+
+  get contactEmptyTitle(): string {
+    if (this.contactStatus === 'pending')  return 'No pending requests — all caught up!';
+    if (this.contactStatus === 'approved') return 'No approved requests yet';
+    if (this.contactStatus === 'rejected') return 'No rejected requests yet';
+    return 'No contact requests found';
+  }
+
+  get contactEmptySubtitle(): string {
+    if (this.contactStatus === '') return 'Requests submitted by candidates and recruiters will appear here.';
+    return '';
+  }
+
   setSection(section: 'edit' | 'contact'): void {
     this.activeSection = section;
     this.cancelReview();
+    this.editSelectedIds   = new Set();
+    this.contactSelectedIds = new Set();
   }
 
   // ── Edit filter helpers ────────────────────────────────────────────────────
@@ -509,6 +934,7 @@ export class EditRequestsComponent implements OnInit, OnDestroy {
     this.editDateFrom    = '';
     this.editDateTo      = '';
     this.editRequestType = '';
+    this.editSort        = 'newest';
     this.editPagination.page = 1;
     this.loadEditRequests();
   }
@@ -533,8 +959,137 @@ export class EditRequestsComponent implements OnInit, OnDestroy {
     this.contactSearch   = '';
     this.contactDateFrom = '';
     this.contactDateTo   = '';
+    this.contactSort     = 'newest';
     this.contactPagination.page = 1;
     this.loadContactRequests();
+  }
+
+  // ── Edit bulk selection ────────────────────────────────────────────────────
+
+  get editAllSelected(): boolean {
+    const pending = this.editRequests.filter(r => r.status === 'pending');
+    return pending.length > 0 && pending.every(r => this.editSelectedIds.has(r.id));
+  }
+
+  clearEditSelection(): void {
+    this.editSelectedIds = new Set();
+  }
+
+  onEditSelectionChange(id: string, checked: boolean): void {
+    const next = new Set(this.editSelectedIds);
+    checked ? next.add(id) : next.delete(id);
+    this.editSelectedIds = next;
+  }
+
+  toggleSelectAllEdit(event: Event): void {
+    const checked = (event.target as HTMLInputElement).checked;
+    const pending = this.editRequests.filter(r => r.status === 'pending').map(r => r.id);
+    if (checked) {
+      this.editSelectedIds = new Set([...this.editSelectedIds, ...pending]);
+    } else {
+      const next = new Set(this.editSelectedIds);
+      pending.forEach(id => next.delete(id));
+      this.editSelectedIds = next;
+    }
+  }
+
+  bulkActionEdit(status: 'approved' | 'rejected'): void {
+    const ids = Array.from(this.editSelectedIds);
+    const verb = status === 'approved' ? 'approve' : 'reject';
+    this.confirmDialog.confirm({
+      title:        `Bulk ${status === 'approved' ? 'Approve' : 'Reject'} Requests?`,
+      message:      `Are you sure you want to ${verb} ${ids.length} edit request${ids.length !== 1 ? 's' : ''}? This action cannot be undone.`,
+      confirmLabel: status === 'approved' ? 'Approve All' : 'Reject All',
+      cancelLabel:  'Cancel',
+      confirmClass: status === 'approved' ? 'btn-success' : 'btn-danger',
+      showNoteField: true,
+      noteLabel:    'Admin Note (Optional — applied to all)',
+      notePlaceholder: status === 'approved' ? 'Add notes about this approval…' : 'Explain why these requests are being rejected…',
+    }).then(result => {
+      if (!result.confirmed) return;
+      this.bulkSubmitting = true;
+      this.editRequestService.bulkReview(ids, status, result.notes).subscribe({
+        next: (res) => {
+          this.bulkSubmitting  = false;
+          this.editSelectedIds = new Set();
+          if (res.failed.length === 0) {
+            this.toast.success(`${res.succeeded.length} request${res.succeeded.length !== 1 ? 's' : ''} ${status}`);
+          } else {
+            this.toast.error(`${res.succeeded.length} succeeded, ${res.failed.length} failed`);
+          }
+          this.loadEditRequests();
+          this.refreshEditCounts();
+        },
+        error: (err) => {
+          this.bulkSubmitting = false;
+          this.toast.error(err?.error?.message ?? 'Bulk action failed');
+        },
+      });
+    });
+  }
+
+  // ── Contact bulk selection ─────────────────────────────────────────────────
+
+  get contactAllSelected(): boolean {
+    const pending = this.contactRequests.filter(r => r.status === 'pending');
+    return pending.length > 0 && pending.every(r => this.contactSelectedIds.has(r.id));
+  }
+
+  clearContactSelection(): void {
+    this.contactSelectedIds = new Set();
+  }
+
+  onContactSelectionChange(id: string, checked: boolean): void {
+    const next = new Set(this.contactSelectedIds);
+    checked ? next.add(id) : next.delete(id);
+    this.contactSelectedIds = next;
+  }
+
+  toggleSelectAllContact(event: Event): void {
+    const checked = (event.target as HTMLInputElement).checked;
+    const pending = this.contactRequests.filter(r => r.status === 'pending').map(r => r.id);
+    if (checked) {
+      this.contactSelectedIds = new Set([...this.contactSelectedIds, ...pending]);
+    } else {
+      const next = new Set(this.contactSelectedIds);
+      pending.forEach(id => next.delete(id));
+      this.contactSelectedIds = next;
+    }
+  }
+
+  bulkActionContact(status: 'approved' | 'rejected'): void {
+    const ids = Array.from(this.contactSelectedIds);
+    const verb = status === 'approved' ? 'approve' : 'reject';
+    this.confirmDialog.confirm({
+      title:        `Bulk ${status === 'approved' ? 'Approve' : 'Reject'} Requests?`,
+      message:      `Are you sure you want to ${verb} ${ids.length} contact request${ids.length !== 1 ? 's' : ''}? This action cannot be undone.`,
+      confirmLabel: status === 'approved' ? 'Approve All' : 'Reject All',
+      cancelLabel:  'Cancel',
+      confirmClass: status === 'approved' ? 'btn-success' : 'btn-danger',
+      showNoteField: true,
+      noteLabel:    'Admin Note (Optional — applied to all)',
+      notePlaceholder: status === 'approved' ? 'Add notes about this approval…' : 'Explain why these requests are being rejected…',
+    }).then(result => {
+      if (!result.confirmed) return;
+      this.bulkSubmitting = true;
+      this.contactRequestService.bulkReview(ids, status, result.notes).subscribe({
+        next: (res) => {
+          this.bulkSubmitting     = false;
+          this.contactSelectedIds = new Set();
+          if (res.failed.length === 0) {
+            this.toast.success(`${res.succeeded.length} request${res.succeeded.length !== 1 ? 's' : ''} ${status}`);
+          } else {
+            this.toast.error(`${res.succeeded.length} succeeded, ${res.failed.length} failed`);
+          }
+          this.loadContactRequests();
+          this.refreshContactCounts();
+        },
+        error: (err) => {
+          this.bulkSubmitting = false;
+          this.toast.error(err?.error?.message ?? 'Bulk action failed');
+        },
+      });
+    });
   }
 
   // ── Edit requests ──────────────────────────────────────────────────────────
@@ -547,6 +1102,7 @@ export class EditRequestsComponent implements OnInit, OnDestroy {
       date_from:    this.editDateFrom     || undefined,
       date_to:      this.editDateTo       || undefined,
       request_type: (this.editRequestType as EditRequestType) || undefined,
+      sort:         this.editSort,
       page:         this.editPagination.page,
       limit:        this.editPagination.limit,
     }).subscribe({
@@ -554,10 +1110,12 @@ export class EditRequestsComponent implements OnInit, OnDestroy {
         this.editLoading    = false;
         this.editRequests   = res.data;
         this.editPagination = res.pagination;
+        // Remove stale selections after page reload
+        const ids = new Set(res.data.map((r: EditRequest) => r.id));
+        this.editSelectedIds = new Set([...this.editSelectedIds].filter(id => ids.has(id)));
       },
       error: () => (this.editLoading = false),
     });
-    // Also load pending count for badge
     this.editRequestService.list({ status: 'pending', page: 1, limit: 1 }).subscribe({
       next: (res) => (this.editPendingCount = res.pagination.total),
     });
@@ -566,12 +1124,14 @@ export class EditRequestsComponent implements OnInit, OnDestroy {
   setEditStatus(status: string): void {
     this.editStatus          = status;
     this.editPagination.page = 1;
+    this.editSelectedIds     = new Set();
     this.loadEditRequests();
   }
 
   goToEditPage(page: number): void {
     if (page < 1 || page > this.editPagination.pages) return;
     this.editPagination.page = page;
+    this.editSelectedIds     = new Set();
     this.loadEditRequests();
   }
 
@@ -625,10 +1185,12 @@ export class EditRequestsComponent implements OnInit, OnDestroy {
         this.contactLoading    = false;
         this.contactRequests   = res.data;
         this.contactPagination = res.pagination;
+        // Remove stale selections after page reload
+        const ids = new Set(res.data.map((r: ContactRequest) => r.id));
+        this.contactSelectedIds = new Set([...this.contactSelectedIds].filter(id => ids.has(id)));
       },
       error: () => (this.contactLoading = false),
     });
-    // Pending count for badge
     this.contactRequestService.list({ status: 'pending', page: 1, limit: 1 }).subscribe({
       next: (res) => (this.contactPendingCount = res.pagination.total),
     });
@@ -637,12 +1199,14 @@ export class EditRequestsComponent implements OnInit, OnDestroy {
   setContactStatus(status: string): void {
     this.contactStatus          = status;
     this.contactPagination.page = 1;
+    this.contactSelectedIds     = new Set();
     this.loadContactRequests();
   }
 
   goToContactPage(page: number): void {
     if (page < 1 || page > this.contactPagination.pages) return;
     this.contactPagination.page = page;
+    this.contactSelectedIds     = new Set();
     this.loadContactRequests();
   }
 
@@ -676,6 +1240,7 @@ export class EditRequestsComponent implements OnInit, OnDestroy {
         this.reviewSubmitting = false;
         this.toast.success('Request approved');
         this.loadEditRequests();
+        this.refreshEditCounts();
       },
       error: (err) => {
         this.reviewSubmitting = false;
@@ -691,6 +1256,7 @@ export class EditRequestsComponent implements OnInit, OnDestroy {
         this.reviewSubmitting = false;
         this.toast.success('Request rejected');
         this.loadEditRequests();
+        this.refreshEditCounts();
       },
       error: (err) => {
         this.reviewSubmitting = false;
@@ -710,6 +1276,7 @@ export class EditRequestsComponent implements OnInit, OnDestroy {
         this.reviewSubmitting = false;
         this.toast.success('Request approved');
         this.loadContactRequests();
+        this.refreshContactCounts();
       },
       error: (err) => {
         this.reviewSubmitting = false;
@@ -725,6 +1292,7 @@ export class EditRequestsComponent implements OnInit, OnDestroy {
         this.reviewSubmitting = false;
         this.toast.success('Request rejected');
         this.loadContactRequests();
+        this.refreshContactCounts();
       },
       error: (err) => {
         this.reviewSubmitting = false;
@@ -738,6 +1306,50 @@ export class EditRequestsComponent implements OnInit, OnDestroy {
   }
 
   // ── Shared ────────────────────────────────────────────────────────────────
+
+  exportEditCsv(): void {
+    this.editExporting = true;
+    this.editRequestService.exportCsv({
+      status:       (this.editStatus as any) || undefined,
+      search:       this.editSearch       || undefined,
+      date_from:    this.editDateFrom     || undefined,
+      date_to:      this.editDateTo       || undefined,
+      request_type: (this.editRequestType as EditRequestType) || undefined,
+      sort:         this.editSort,
+    }).subscribe({
+      next: (blob) => {
+        this.editExporting = false;
+        const url = URL.createObjectURL(blob);
+        const a   = document.createElement('a');
+        a.href    = url;
+        a.download = `edit-requests-${new Date().toISOString().split('T')[0]}.csv`;
+        a.click();
+        URL.revokeObjectURL(url);
+      },
+      error: () => { this.editExporting = false; this.toast.error('Export failed'); },
+    });
+  }
+
+  exportContactCsv(): void {
+    this.contactExporting = true;
+    this.editRequestService.exportCsv({
+      search:    this.contactSearch    || undefined,
+      date_from: this.contactDateFrom  || undefined,
+      date_to:   this.contactDateTo    || undefined,
+      sort:      this.contactSort,
+    }).subscribe({
+      next: (blob) => {
+        this.contactExporting = false;
+        const url = URL.createObjectURL(blob);
+        const a   = document.createElement('a');
+        a.href    = url;
+        a.download = `contact-requests-${new Date().toISOString().split('T')[0]}.csv`;
+        a.click();
+        URL.revokeObjectURL(url);
+      },
+      error: () => { this.contactExporting = false; this.toast.error('Export failed'); },
+    });
+  }
 
   cancelReview(): void {
     this.editReviewingId    = null;

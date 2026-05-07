@@ -3,11 +3,34 @@ import { Router, Request, Response, NextFunction } from 'express';
 import { authenticate } from '../../middleware/authenticate';
 import { authorize }    from '../../middleware/authorize';
 import * as svc from './contact-requests.service';
-import { ReviewContactRequestSchema, ContactRequestFilterSchema } from './contact-requests.dto';
+import { ReviewContactRequestSchema, BulkReviewContactRequestSchema, ContactRequestFilterSchema } from './contact-requests.dto';
 import { getRecruiterByUserId } from '../recruiters/recruiters.service';
 
 const router = Router();
 router.use(authenticate);
+
+// Admin: get counts by status (must be before /:candidateId)
+router.get('/counts',
+  authorize('admin'),
+  async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const result = await svc.getContactRequestCounts();
+      res.json(result);
+    } catch (err) { next(err); }
+  },
+);
+
+// Admin: bulk approve or reject (must be before /:candidateId to avoid param clash)
+router.post('/bulk-review',
+  authorize('admin'),
+  async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const dto    = BulkReviewContactRequestSchema.parse(req.body);
+      const result = await svc.bulkReviewContactRequests(dto, req.user!.sub);
+      res.json(result);
+    } catch (err) { next(err); }
+  },
+);
 
 // Recruiter: submit a request for a candidate's contact info
 router.post('/:candidateId',
@@ -51,7 +74,7 @@ router.put('/:id/review',
   async (req: Request, res: Response, next: NextFunction) => {
     try {
       const dto     = ReviewContactRequestSchema.parse(req.body);
-      const updated = await svc.reviewContactRequest(req.params['id'] as string, dto);
+      const updated = await svc.reviewContactRequest(req.params['id'] as string, dto, req.user!.sub);
       res.json({ request: updated });
     } catch (err) { next(err); }
   },

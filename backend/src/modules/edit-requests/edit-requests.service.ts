@@ -7,6 +7,7 @@ import { sendEditRequestStatus, sendAdminEditRequestNotification } from '../../s
 import type {
   SubmitEditRequestDto,
   ReviewEditRequestDto,
+  BulkReviewEditRequestDto,
   EditRequestFilterDto,
 } from './edit-requests.dto';
 import { REQUEST_TYPE_GROUPS } from './edit-requests.dto';
@@ -72,7 +73,7 @@ export async function submitEditRequest(
 // ── List (admin) ──────────────────────────────────────────────────────────────
 
 export async function listEditRequests(filters: EditRequestFilterDto) {
-  const { status, search, date_from, date_to, request_type, page, limit } = filters;
+  const { status, search, date_from, date_to, request_type, sort, page, limit } = filters;
   const offset = (page - 1) * limit;
 
   let base = db('profile_edit_requests as r')
@@ -111,8 +112,11 @@ export async function listEditRequests(filters: EditRequestFilterDto) {
 
   const [{ count }] = await base.clone().count('r.id as count');
 
+  const orderDir: 'asc' | 'desc' = sort === 'oldest' ? 'asc' : 'desc';
+
   const rows = await base
     .clone()
+    .leftJoin('admins as a', 'a.user_id', 'r.reviewed_by_id')
     .select(
       'r.id',
       'r.status',
@@ -127,8 +131,9 @@ export async function listEditRequests(filters: EditRequestFilterDto) {
       'e.last_name',
       'e.profile_photo_url',
       'u.email',
+      db.raw(`TRIM(a.first_name || ' ' || COALESCE(a.last_name, '')) as reviewed_by_name`),
     )
-    .orderBy('r.created_at', 'desc')
+    .orderBy('r.created_at', orderDir)
     .limit(limit)
     .offset(offset);
 
@@ -149,6 +154,7 @@ export async function getEditRequestById(id: string) {
   const row = await db('profile_edit_requests as r')
     .join('candidates as e', 'e.id', 'r.candidate_id')
     .join('users as u', 'u.id', 'e.user_id')
+    .leftJoin('admins as a', 'a.user_id', 'r.reviewed_by_id')
     .select(
       'r.id',
       'r.candidate_id',
@@ -163,6 +169,7 @@ export async function getEditRequestById(id: string) {
       'e.last_name',
       'e.profile_photo_url',
       'u.email',
+      db.raw(`TRIM(a.first_name || ' ' || COALESCE(a.last_name, '')) as reviewed_by_name`),
     )
     .where('r.id', id)
     .first();
@@ -190,15 +197,17 @@ export async function getMyPendingRequest(userId: string) {
 export async function reviewEditRequest(
   id: string,
   dto: ReviewEditRequestDto,
+  adminUserId?: string,
 ) {
   const request = await db('profile_edit_requests').where({ id }).first();
   if (!request) throw new AppError(404, 'Edit request not found');
   if (request.status !== 'pending') throw new AppError(409, 'Request has already been reviewed');
 
   await db('profile_edit_requests').where({ id }).update({
-    status:      dto.status,
-    admin_note:  dto.admin_note ?? null,
-    reviewed_at: new Date(),
+    status:          dto.status,
+    admin_note:      dto.admin_note ?? null,
+    reviewed_at:     new Date(),
+    reviewed_by_id:  adminUserId ?? null,
   });
 
   // Fetch candidate + user for email + profile_status update
@@ -238,4 +247,95 @@ export async function reviewEditRequest(
   ).catch(() => { /* non-fatal */ });
 
   return getEditRequestById(id);
+}
+
+// ── Counts (admin) ───────────────────────────────────────────────────────────
+
+export async function getEditRequestCounts() {
+  const rows = await db('profile_edit_requests')
+    .select('status')
+    .count('id as count')
+    .groupBy('status');
+
+  const result = { pending: 0, approved: 0, rejected: 0, total: 0 };
+  for (const row of rows) {
+    const n = Number(row.count);
+    if (row.status === 'pending')  result.pending  = n;
+    if (row.status === 'approved') result.approved = n;
+    if (row.status === 'rejected') result.rejected = n;
+    result.total += n;
+  }
+  return result;
+}
+
+// ── Bulk review (admin) ───────────────────────────────────────────────────────
+
+export async function bulkReviewEditRequests(dto: BulkReviewEditRequestDto, adminUserId?: string) {
+  const succeeded: string[] = [];
+  const failed: { id: string; reason: string }[] = [];
+
+  for (const id of dto.ids) {
+    try {
+      await reviewEditRequest(id, { status: dto.status, admin_note: dto.admin_note }, adminUserId);
+      succeeded.push(id);
+    } catch (err: any) {
+      failed.push({ id, reason: err?.message ?? 'Unknown error' });
+    }
+  }
+
+  return { succeeded, failed };
+}
+
+// ── Export CSV (admin) ────────────────────────────────────────────────────────
+
+export async function exportEditRequests(filters: Omit<EditRequestFilterDto, 'page' | 'limit'>) {
+  const { status, search, date_from, date_to, request_type, sort } = filters;
+
+  let base = db('profile_edit_requests as r')
+    .join('candidates as e', 'e.id', 'r.candidate_id')
+    .join('users as u', 'u.id', 'e.user_id')
+    .leftJoin('admins as a', 'a.user_id', 'r.reviewed_by_id');
+
+  if (status) base = base.where('r.status', status);
+  if (search) {
+    const term = `%${search.toLowerCase()}%`;
+    base = base.whereRaw(`LOWER(e.first_name || ' ' || e.last_name) LIKE ?`, [term]);
+  }
+  if (date_from) base = base.where('r.created_at', '>=', new Date(date_from));
+  if (date_to) {
+    const to = new Date(date_to);
+    to.setHours(23, 59, 59, 999);
+    base = base.where('r.created_at', '<=', to);
+  }
+  if (request_type) {
+    const keys = REQUEST_TYPE_GROUPS[request_type] ?? [];
+    if (keys.length > 0) {
+      base = base.where(function (this: any) {
+        keys.forEach((key) => { this.orWhereRaw(`r.requested_data::jsonb \\? ?`, [key]); });
+      });
+    }
+  }
+
+  const orderDir: 'asc' | 'desc' = sort === 'oldest' ? 'asc' : 'desc';
+
+  const rows = await base
+    .select(
+      'r.id', 'r.status', 'r.reason', 'r.created_at', 'r.reviewed_at', 'r.admin_note',
+      'e.first_name', 'e.last_name', 'u.email',
+      db.raw(`TRIM(a.first_name || ' ' || COALESCE(a.last_name, '')) as reviewed_by_name`),
+    )
+    .orderBy('r.created_at', orderDir);
+
+  const headers = ['Candidate', 'Email', 'Status', 'Reason', 'Admin Note', 'Reviewed By', 'Submitted', 'Reviewed At'];
+  const escape = (v: unknown) => { const s = String(v ?? '').replace(/"/g, '""'); return `"${s}"`; };
+  const lines = [
+    headers.map(escape).join(','),
+    ...rows.map((r: any) => [
+      `${r.first_name} ${r.last_name}`, r.email, r.status, r.reason ?? '',
+      r.admin_note ?? '', r.reviewed_by_name ?? '',
+      new Date(r.created_at).toISOString().split('T')[0],
+      r.reviewed_at ? new Date(r.reviewed_at).toISOString().split('T')[0] : '',
+    ].map(escape).join(',')),
+  ];
+  return lines.join('\n');
 }
