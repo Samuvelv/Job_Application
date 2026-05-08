@@ -370,6 +370,12 @@ export class CandidateRegisterComponent implements OnInit, OnDestroy {
   onVideoSelected(e: Event): void {
     const file = (e.target as HTMLInputElement).files?.[0];
     if (!file) return;
+    if (file.size > 200 * 1024 * 1024) {
+      this.errorMsg = `Video exceeds the 200 MB limit (selected: ${(file.size / (1024 * 1024)).toFixed(1)} MB). Please choose a smaller file.`;
+      (e.target as HTMLInputElement).value = '';
+      return;
+    }
+    this.errorMsg = '';
     this.pendingVideo = file;
     if (this.videoPreviewUrl) { URL.revokeObjectURL(this.videoPreviewUrl); this._objectUrls = this._objectUrls.filter(u => u !== this.videoPreviewUrl); }
     this.videoPreviewUrl = URL.createObjectURL(file);

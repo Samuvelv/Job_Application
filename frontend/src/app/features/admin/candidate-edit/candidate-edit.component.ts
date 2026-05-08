@@ -281,6 +281,11 @@ export class CandidateEditComponent implements OnInit {
   uploadFile(type: 'profiles' | 'resumes' | 'videos' | 'certificates', event: Event): void {
     const file = (event.target as HTMLInputElement).files?.[0];
     if (!file || !this.candidate) return;
+    if (type === 'videos' && file.size > 200 * 1024 * 1024) {
+      this.toast.error(`Video exceeds the 200 MB limit (selected: ${(file.size / (1024 * 1024)).toFixed(1)} MB). Please choose a smaller file.`);
+      (event.target as HTMLInputElement).value = '';
+      return;
+    }
     this.mediaLoading[type] = true;
     const name = type === 'certificates' ? file.name.replace(/\.[^.]+$/, '') : undefined;
     this.empSvc.uploadFile(this.candidateId, type, file, name).subscribe({

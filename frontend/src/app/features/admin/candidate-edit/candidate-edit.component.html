@@ -154,6 +154,7 @@
             @else { <i class="bi bi-upload me-1"></i>{{ candidate.intro_video_url ? 'Replace' : 'Upload' }} }
             <input type="file" class="d-none" accept="video/mp4,video/webm,video/ogg" (change)="uploadFile('videos', $event)">
           </label>
+          <div class="text-muted mt-1" style="font-size:.7rem">MP4, WEBM — max 200 MB</div>
         </div>
       </div>
 
