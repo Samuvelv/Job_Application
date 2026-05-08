@@ -189,7 +189,9 @@ import { SORT_OPTIONS } from '../../../core/constants/candidate-options';
       @if (!loading && candidates.length === 0) {
         <app-empty-state icon="bi-people"
                          title="No candidates found"
-                         message="Try adjusting your filters or register a new candidate." />
+                         message="Try adjusting your filters or register a new candidate."
+                         actionLabel="Register New Candidate"
+                         actionRoute="/admin/candidates/register" />
       }
 
       @if (!loading && candidates.length > 0) {
