@@ -360,8 +360,14 @@
           </app-searchable-select>
         </div>
         <div class="col-md-3">
-          <label class="form-label">Years of Experience</label>
-          <input type="number" class="form-control" formControlName="years_experience" min="0" max="60">
+          <label class="form-label">Years of Experience
+            <span class="badge bg-primary ms-2">{{ form.get('years_experience')?.value ?? 0 }} yrs</span>
+          </label>
+          <input type="range" class="experience-slider" formControlName="years_experience" min="0" max="25" step="1"
+            [style.--fill]="((form.get('years_experience')?.value ?? 0) / 25 * 100) + '%'">
+          <div class="d-flex justify-content-between" style="font-size:.7rem;color:var(--th-text-secondary)">
+            <span>0 yrs</span><span>25 yrs</span>
+          </div>
         </div>
         <div class="col-md-3">
           <label class="form-label">LinkedIn URL</label>

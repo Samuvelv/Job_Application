@@ -4348,6 +4348,64 @@ body {
   margin-top: .1rem;
 }
 
+// Work-experience filled range slider
+.experience-slider {
+  --fill: 0%;
+  width: 100%;
+  cursor: pointer;
+  appearance: none;
+  -webkit-appearance: none;
+  height: 6px;
+  border-radius: 3px;
+  margin: .6rem 0 .35rem;
+  background: linear-gradient(
+    to right,
+    var(--th-primary) var(--fill),
+    var(--th-border, #dee2e6) var(--fill)
+  );
+  outline: none;
+
+  &::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    background: var(--th-primary);
+    border: 2px solid #fff;
+    box-shadow: 0 1px 4px rgba(0,0,0,.25);
+    cursor: pointer;
+    transition: transform .15s ease, box-shadow .15s ease;
+
+    &:hover {
+      transform: scale(1.15);
+      box-shadow: 0 2px 8px rgba(0,0,0,.3);
+    }
+  }
+
+  &::-moz-range-thumb {
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    background: var(--th-primary);
+    border: 2px solid #fff;
+    box-shadow: 0 1px 4px rgba(0,0,0,.25);
+    cursor: pointer;
+  }
+
+  &::-moz-range-track {
+    background: transparent;
+  }
+
+  [data-theme='dark'] & {
+    background: linear-gradient(
+      to right,
+      var(--th-primary) var(--fill),
+      rgba(255,255,255,.12) var(--fill)
+    );
+  }
+}
+
 // Radio button group
 .cfs-radio-group {
   display: flex;

@@ -322,9 +322,15 @@ import { PageHeaderComponent } from '../../../shared/components/page-header/page
               <input formControlName="industry" class="form-control form-control-sm">
             </div>
             <div class="col-md-4">
-              <label class="form-label small fw-semibold">Years Experience</label>
-              <input formControlName="years_experience" type="number" min="0" max="60"
-                class="form-control form-control-sm">
+              <label class="form-label small fw-semibold">Years Experience
+                <span class="badge bg-primary ms-2">{{ form.get('years_experience')?.value ?? 0 }} yrs</span>
+              </label>
+              <input formControlName="years_experience" type="range" min="0" max="25" step="1"
+                class="experience-slider"
+                [style.--fill]="((form.get('years_experience')?.value ?? 0) / 25 * 100) + '%'">
+              <div class="d-flex justify-content-between" style="font-size:.7rem;color:var(--th-text-secondary)">
+                <span>0 yrs</span><span>25 yrs</span>
+              </div>
             </div>
           </div>
         </div>
