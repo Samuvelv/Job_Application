@@ -44,7 +44,7 @@ export async function createRecruiter(dto: CreateRecruiterDto, createdByAdminId:
       email:         dto.email.toLowerCase(),
       password_hash: passwordHash,
       role_id:       recruiterRoleId,
-      is_active:     dto.is_active ?? true,
+      is_active:     dto.account_status ? dto.account_status === 'active' : (dto.is_active ?? true),
     });
 
     // Generate recruiter number from sequence
@@ -56,18 +56,29 @@ export async function createRecruiter(dto: CreateRecruiterDto, createdByAdminId:
       user_id:          userId,
       recruiter_number: recruiterNumber,
       contact_name:     dto.contact_name,
+      type:             dto.type ?? 'direct_employer',
       contact_job_title: dto.contact_job_title ?? null,
+      phone:            dto.phone ?? null,
+      whatsapp_number:  dto.whatsapp_number ?? null,
       company_name:     dto.company_name ?? null,
       company_country:  dto.company_country ?? null,
       company_city:     dto.company_city ?? null,
       company_website:  dto.company_website ?? null,
       industry:         dto.industry ?? null,
-      phone:            dto.phone ?? null,
+      company_size:     dto.company_size ?? null,
       has_sponsor_licence:       dto.has_sponsor_licence ?? null,
       sponsor_licence_number:    dto.sponsor_licence_number ?? null,
       sponsor_licence_countries: dto.sponsor_licence_countries ?? null,
+      licence_rating:            dto.licence_rating ?? null,
+      licence_verified:          dto.licence_verified ?? false,
       target_nationalities:      dto.target_nationalities ?? null,
+      sectors_recruit_for:       dto.sectors_recruit_for ?? null,
+      countries_place_in:        dto.countries_place_in ?? null,
       hires_per_year:   dto.hires_per_year ?? null,
+      job_types:        dto.job_types ?? null,
+      account_status:   dto.account_status ?? 'active',
+      access_start_date: dto.access_start_date ? new Date(dto.access_start_date) : null,
+      free_account:     dto.free_account ?? false,
       admin_notes:      dto.admin_notes ?? null,
       created_by:       createdByAdminId,
       plain_password:   dto.password,
@@ -163,12 +174,18 @@ export async function listRecruiters(filters: RecruiterFilterDto) {
       'u.email',
       'r.contact_name',
       'r.contact_job_title',
+      'r.type',
       'r.company_name',
       'r.company_logo_url',
       'r.company_country',
       'r.industry',
       'r.has_sponsor_licence',
       'r.sponsor_licence_countries',
+      'r.target_nationalities',
+      'r.sectors_recruit_for',
+      'r.countries_place_in',
+      'r.account_status',
+      'r.free_account',
       'r.access_expires_at',
       'r.plain_password',
       'u.is_active',
@@ -205,7 +222,6 @@ export async function listRecruiters(filters: RecruiterFilterDto) {
 // plain_password is intentionally excluded — sensitive field must never appear in exports.
 
 export async function exportRecruiters(filters: RecruiterFilterDto) {
-  debugger
   const rows = await db('recruiters as r')
     .join('users as u', 'u.id', 'r.user_id')
     .select(
@@ -243,7 +259,6 @@ export async function exportRecruiters(filters: RecruiterFilterDto) {
 // ── Bulk operations ───────────────────────────────────────────────────────────
 
 export async function bulkUpdateStatus(ids: string[], isActive: boolean): Promise<{ updated: number }> {
-  debugger
   if (!ids.length) return { updated: 0 };
   const updated = await db('users')
     .whereIn('id', db('recruiters').select('user_id').whereIn('id', ids))
@@ -280,6 +295,7 @@ export async function updateRecruiter(id: string, dto: UpdateRecruiterDto) {
   const existing = await getRecruiterById(id); // throws 404 if not found
   const patch: Record<string, unknown> = {};
   if (dto.contact_name       !== undefined) patch['contact_name']      = dto.contact_name;
+  if (dto.type               !== undefined) patch['type']              = dto.type;
   if (dto.contact_job_title  !== undefined) patch['contact_job_title'] = dto.contact_job_title ?? null;
   if (dto.company_name       !== undefined) patch['company_name']      = dto.company_name ?? null;
   if (dto.company_country    !== undefined) patch['company_country']   = dto.company_country ?? null;
@@ -291,6 +307,8 @@ export async function updateRecruiter(id: string, dto: UpdateRecruiterDto) {
   if (dto.sponsor_licence_number    !== undefined) patch['sponsor_licence_number']    = dto.sponsor_licence_number ?? null;
   if (dto.sponsor_licence_countries !== undefined) patch['sponsor_licence_countries'] = dto.sponsor_licence_countries ?? null;
   if (dto.target_nationalities      !== undefined) patch['target_nationalities']      = dto.target_nationalities ?? null;
+  if (dto.sectors_recruit_for       !== undefined) patch['sectors_recruit_for']       = dto.sectors_recruit_for ?? null;
+  if (dto.countries_place_in        !== undefined) patch['countries_place_in']        = dto.countries_place_in ?? null;
   if (dto.hires_per_year     !== undefined) patch['hires_per_year']    = dto.hires_per_year ?? null;
   if (dto.admin_notes        !== undefined) patch['admin_notes']       = dto.admin_notes ?? null;
   if (dto.access_expires_at  !== undefined) patch['access_expires_at'] = new Date(dto.access_expires_at);
@@ -333,6 +351,7 @@ export async function getRecruiterById(id: string) {
       'u.email',
       'r.contact_name',
       'r.contact_job_title',
+      'r.type',
       'r.company_name',
       'r.company_logo_url',
       'r.company_country',
@@ -340,11 +359,21 @@ export async function getRecruiterById(id: string) {
       'r.company_website',
       'r.industry',
       'r.phone',
+      'r.whatsapp_number',
+      'r.company_size',
       'r.has_sponsor_licence',
       'r.sponsor_licence_number',
       'r.sponsor_licence_countries',
+      'r.licence_rating',
+      'r.licence_verified',
       'r.target_nationalities',
+      'r.sectors_recruit_for',
+      'r.countries_place_in',
       'r.hires_per_year',
+      'r.job_types',
+      'r.account_status',
+      'r.access_start_date',
+      'r.free_account',
       'r.admin_notes',
       'r.access_expires_at',
       'r.plain_password',

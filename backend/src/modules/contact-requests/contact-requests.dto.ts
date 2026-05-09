@@ -6,8 +6,12 @@ export const ReviewContactRequestSchema = z.object({
   admin_note: z.string().max(500).optional(),
 });
 
+export const RevokeContactRequestSchema = z.object({
+  reason: z.string().max(500).optional(),
+});
+
 export const ContactRequestFilterSchema = z.object({
-  status:    z.enum(['pending', 'approved', 'rejected']).optional(),
+  status:    z.enum(['pending', 'approved', 'rejected', 'revoked']).optional(),
   search:    z.string().trim().optional(),
   date_from: z.string().optional(),
   date_to:   z.string().optional(),
@@ -22,5 +26,6 @@ export const BulkReviewContactRequestSchema = z.object({
 });
 
 export type ReviewContactRequestDto      = z.infer<typeof ReviewContactRequestSchema>;
+export type RevokeContactRequestDto      = z.infer<typeof RevokeContactRequestSchema>;
 export type BulkReviewContactRequestDto  = z.infer<typeof BulkReviewContactRequestSchema>;
 export type ContactRequestFilterDto      = z.infer<typeof ContactRequestFilterSchema>;

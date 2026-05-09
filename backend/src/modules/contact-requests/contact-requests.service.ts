@@ -1,8 +1,8 @@
 // src/modules/contact-requests/contact-requests.service.ts
 import { db } from '../../config/db';
 import { AppError } from '../../middleware/errorHandler';
-import { sendContactRequestApprovedNotification, sendContactRequestRejectedNotification } from '../../services/email.service';
-import type { ReviewContactRequestDto, BulkReviewContactRequestDto, ContactRequestFilterDto } from './contact-requests.dto';
+import { sendContactRequestApprovedNotification, sendContactRequestRejectedNotification, sendContactRevokedNotification } from '../../services/email.service';
+import type { ReviewContactRequestDto, BulkReviewContactRequestDto, ContactRequestFilterDto, RevokeContactRequestDto } from './contact-requests.dto';
 
 // ── Create a request (recruiter → admin) ────────────────────────────────────
 
@@ -18,7 +18,7 @@ export async function createContactRequest(recruiterId: string, candidateId: str
   if (existing) {
     if (existing.status === 'approved') throw new AppError(409, 'Contact info is already unlocked for this candidate.');
     if (existing.status === 'pending')  throw new AppError(409, 'A request is already pending for this candidate.');
-    // rejected — allow re-request: delete old and create new
+    // rejected or revoked — allow re-request: delete old and create new
     await db('contact_unlock_requests').where({ id: existing.id }).delete();
   }
 
@@ -40,6 +40,7 @@ export async function listContactRequests(filters: ContactRequestFilterDto) {
     .join('candidates as c',   'c.id',  'cr.candidate_id')
     .join('users as cu',       'cu.id', 'c.user_id')
     .leftJoin('admins as a',   'a.user_id', 'cr.reviewed_by_id')
+    .leftJoin('admins as ra',  'ra.user_id', 'cr.revoked_by_id')
     .select(
       'cr.id',
       'cr.recruiter_id',
@@ -48,6 +49,8 @@ export async function listContactRequests(filters: ContactRequestFilterDto) {
       'cr.admin_note',
       'cr.created_at',
       'cr.reviewed_at',
+      'cr.revoked_at',
+      'cr.revocation_reason',
       'r.contact_name as recruiter_name',
       'r.company_name as recruiter_company',
       'ru.email as recruiter_email',
@@ -57,6 +60,7 @@ export async function listContactRequests(filters: ContactRequestFilterDto) {
       'c.job_title as candidate_job_title',
       'cu.email as candidate_email',
       db.raw(`TRIM(a.first_name || ' ' || COALESCE(a.last_name, '')) as reviewed_by_name`),
+      db.raw(`TRIM(ra.first_name || ' ' || COALESCE(ra.last_name, '')) as revoked_by_name`),
     );
 
   if (status) query = query.where('cr.status', status);
@@ -169,15 +173,57 @@ export async function getContactRequestCounts() {
     .count('id as count')
     .groupBy('status');
 
-  const result = { pending: 0, approved: 0, rejected: 0, total: 0 };
+  const result = { pending: 0, approved: 0, rejected: 0, revoked: 0, total: 0 };
   for (const row of rows) {
     const n = Number(row.count);
     if (row.status === 'pending')  result.pending  = n;
     if (row.status === 'approved') result.approved = n;
     if (row.status === 'rejected') result.rejected = n;
+    if (row.status === 'revoked')  result.revoked  = n;
     result.total += n;
   }
   return result;
+}
+
+// ── Revoke an approved request (admin) ──────────────────────────────────────
+
+export async function revokeContactRequest(id: string, dto: RevokeContactRequestDto, adminUserId?: string) {
+  const req = await db('contact_unlock_requests').where({ id }).first();
+  if (!req) throw new AppError(404, 'Contact request not found');
+  if (req.status !== 'approved') throw new AppError(400, 'Only approved requests can be revoked');
+
+  const [updated] = await db('contact_unlock_requests')
+    .where({ id })
+    .update({
+      status:            'revoked',
+      revoked_at:        new Date(),
+      revoked_by_id:     adminUserId ?? null,
+      revocation_reason: dto.reason ?? null,
+    })
+    .returning('*');
+
+  // Notify recruiter (non-fatal)
+  const recruiter = await db('recruiters as r')
+    .join('users as u', 'u.id', 'r.user_id')
+    .select('r.contact_name', 'u.email')
+    .where('r.id', req.recruiter_id)
+    .first();
+
+  const candidate = await db('candidates')
+    .select('first_name', 'last_name')
+    .where('id', req.candidate_id)
+    .first();
+
+  if (recruiter && candidate) {
+    sendContactRevokedNotification(
+      recruiter.email,
+      recruiter.contact_name,
+      `${candidate.first_name} ${candidate.last_name}`,
+      dto.reason,
+    ).catch(() => { /* non-fatal */ });
+  }
+
+  return updated;
 }
 
 // ── Bulk review (admin) ───────────────────────────────────────────────────────

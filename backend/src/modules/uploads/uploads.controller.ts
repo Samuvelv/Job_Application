@@ -8,6 +8,7 @@ import { MAX_SIZES } from '../../config/multer';
 import {
   updateCandidateFile,
   addCertificateFile,
+  updateCertificateMetadata,
   getCandidateById,
 } from '../candidates/candidates.service';
 import { logAudit } from '../../services/audit.service';
@@ -142,8 +143,12 @@ export async function uploadCandidateFile(
     const secureUrl = result.secure_url;
 
     if (type === 'certificates') {
-      const certName = (req.body['name'] as string) || file.originalname;
-      await addCertificateFile(id, certName, secureUrl);
+      const certName    = (req.body['name']        as string) || file.originalname;
+      const issuer      = (req.body['issuer']       as string) || undefined;
+      const issue_date  = (req.body['issue_date']   as string) || undefined;
+      const expiry_date = (req.body['expiry_date']  as string) || null;
+      const no_expiry   = req.body['no_expiry'] === 'true' || req.body['no_expiry'] === true;
+      await addCertificateFile(id, certName, secureUrl, { issuer, issue_date, expiry_date, no_expiry });
     } else {
       const field = TYPE_TO_FIELD[type];
       if (!field) throw new AppError(400, `Unknown file type: ${type}`);
@@ -256,6 +261,44 @@ export async function deleteCandidateCertificate(
     });
 
     res.json({ message: 'Certificate removed' });
+  } catch (err) {
+    next(err);
+  }
+}
+
+// ── Patch certificate metadata ─────────────────────────────────────────────────
+
+/** PATCH /api/v1/candidates/:id/certificates/:certId */
+export async function patchCandidateCertificate(
+  req: Request,
+  res: Response,
+  next: NextFunction,
+): Promise<void> {
+  try {
+    const id     = p(req.params['id']);
+    const certId = Number(p(req.params['certId']));
+
+    // Admin-only route — no candidate self-serve for cert metadata
+    if (req.user?.role !== 'admin') throw new AppError(403, 'Access denied');
+
+    const { name, issuer, issue_date, expiry_date, no_expiry } = req.body as {
+      name?:        string;
+      issuer?:      string;
+      issue_date?:  string | null;
+      expiry_date?: string | null;
+      no_expiry?:   boolean;
+    };
+
+    await updateCertificateMetadata(id, certId, { name, issuer, issue_date, expiry_date, no_expiry });
+
+    await logAudit({
+      userId: req.user?.sub, action: 'UPDATE_CERT_METADATA',
+      resource: 'candidate', resourceId: id,
+      metadata: { certId },
+      ipAddress: req.ip,
+    });
+
+    res.json({ message: 'Certificate updated' });
   } catch (err) {
     next(err);
   }

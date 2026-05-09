@@ -3,7 +3,8 @@ import bcrypt from 'bcryptjs';
 import { v4 as uuidv4 } from 'uuid';
 import { db } from '../../config/db';
 import { AppError } from '../../middleware/errorHandler';
-import { sendCandidateCredentials, sendVolunteerInvitation } from '../../services/email.service';
+import { sendCandidateWelcomeEmail, sendCandidateCredentials, sendAdminNewCandidateNotification, sendVolunteerInvitation } from '../../services/email.service';
+import { sendWhatsAppMessage } from '../../services/whatsapp.service';
 import type { CreateCandidateDto, UpdateCandidateDto, CandidateFilterDto } from './candidates.dto';
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
@@ -15,14 +16,15 @@ async function getRoleId(roleName: string): Promise<number> {
 }
 
 async function fetchRelations(candidateId: string) {
-  const [skills, languages, experience, education, certificates] = await Promise.all([
+  const [skills, languages, experience, education, certificates, referrals] = await Promise.all([
     db('candidate_skills').where({ candidate_id: candidateId }),
     db('candidate_languages').where({ candidate_id: candidateId }),
     db('candidate_experience').where({ candidate_id: candidateId }).orderBy('start_date', 'desc'),
     db('candidate_education').where({ candidate_id: candidateId }).orderBy('start_year', 'desc'),
     db('candidate_certificates').where({ candidate_id: candidateId }),
+    db('candidate_agency_referrals').where({ candidate_id: candidateId }).orderBy('referral_date', 'desc'),
   ]);
-  return { skills, languages, experience, education, certificates };
+  return { skills, languages, experience, education, certificates, referrals };
 }
 
 // ── Create ────────────────────────────────────────────────────────────────────
@@ -60,23 +62,23 @@ export async function createCandidate(dto: CreateCandidateDto, createdByAdminId:
       last_name:        dto.last_name,
       date_of_birth:    dto.date_of_birth    ?? null,
       gender:           dto.gender           ?? null,
+      marital_status:   dto.marital_status   ?? null,
       phone:            dto.phone            ?? null,
+      whatsapp_number:  dto.whatsapp_number  ?? null,
       bio:              dto.bio              ?? null,
       job_title:        dto.job_title        ?? null,
+      employment_status: dto.employment_status ?? null,
       occupation:       dto.occupation       ?? null,
       industry:         dto.industry         ?? null,
       years_experience: dto.years_experience ?? null,
       linkedin_url:     dto.linkedin_url     ?? null,
+      visa_status:      dto.visa_status      ?? null,
       current_country:  dto.current_country  ?? null,
       current_city:     dto.current_city     ?? null,
       nationality:      dto.nationality      ?? null,
       postal_code:      dto.postal_code      ?? null,
       target_locations: dto.target_locations ?? null,
       hobbies:          dto.hobbies          ?? [],
-      salary_min:      dto.salary_min      ?? null,
-      salary_max:      dto.salary_max      ?? null,
-      salary_currency: dto.salary_currency ?? null,
-      salary_type:     dto.salary_type     ?? null,
       notice_period_id:        dto.notice_period_id ?? null,
       profile_status:          'active',
       registration_fee_status: dto.registration_fee_status ?? 'pending_payment',
@@ -99,13 +101,14 @@ export async function createCandidate(dto: CreateCandidateDto, createdByAdminId:
     if (dto.experience?.length) {
       await trx('candidate_experience').insert(
         dto.experience.map((e) => ({
-          candidate_id: candidateId,
-          company_name: e.company_name || null,
-          job_title:    e.job_title    || null,
-          start_date:   e.start_date   || null,
-          end_date:     e.end_date     || null,
-          description:  e.description  || null,
-          location:     e.location     || null,
+          candidate_id:       candidateId,
+          company_name:       e.company_name       || null,
+          job_title:          e.job_title          || null,
+          start_date:         e.start_date         || null,
+          end_date:           e.end_date           || null,
+          description:        e.description        || null,
+          location:           e.location           || null,
+          reason_for_leaving: e.reason_for_leaving || null,
         })),
       );
     }
@@ -129,12 +132,25 @@ export async function createCandidate(dto: CreateCandidateDto, createdByAdminId:
     }
   });
 
-  // 4. Send credentials email (non-blocking)
-  sendCandidateCredentials(
+  // 4. Send welcome email (non-blocking)
+  sendCandidateWelcomeEmail(
     dto.email,
     dto.password,
     `${dto.first_name} ${dto.last_name}`,
-  ).catch((err) => console.error('[EMAIL] Failed to send credentials:', err));
+  ).catch((err) => console.error('[EMAIL] Failed to send welcome email:', err));
+
+  // 5. Notify admin of new registration (non-blocking)
+  sendAdminNewCandidateNotification(
+    `${dto.first_name} ${dto.last_name}`,
+  ).catch((err) => console.error('[EMAIL] Failed to send admin notification:', err));
+
+  // 6. Send WhatsApp confirmation to candidate if number provided (non-blocking)
+  if (dto.whatsapp_number) {
+    sendWhatsAppMessage(
+      dto.whatsapp_number,
+      `Hi ${dto.first_name}, welcome to TalentHub! Your profile has been created and is under review. We'll be in touch soon.`,
+    ).catch((err) => console.error('[WHATSAPP] Failed to send WhatsApp message:', err));
+  }
 
   return getCandidateById(candidateId);
 }
@@ -218,8 +234,6 @@ function applyFilters(query: any, filters: CandidateFilterDto): any {
       );
     }
   }
-  if (filters.salaryMin) query = query.where('e.salary_min', '>=', filters.salaryMin);
-  if (filters.salaryMax) query = query.where('e.salary_max', '<=', filters.salaryMax);
   if (filters.ageMin != null) {
     const maxDob = new Date();
     maxDob.setFullYear(maxDob.getFullYear() - filters.ageMin);
@@ -283,10 +297,10 @@ export async function listCandidates(filters: CandidateFilterDto) {
   let query = buildBaseQuery().select(
       'e.id', 'e.candidate_number', 'e.first_name', 'e.last_name', 'e.job_title',
       'e.industry', 'e.occupation', 'e.current_country', 'e.current_city',
-      'e.years_experience', 'e.salary_min', 'e.salary_max', 'e.salary_currency',
+      'e.years_experience',
       'e.profile_photo_url', 'e.profile_status', 'e.intro_video_url', 'e.created_at',
       'e.nationality', 'e.target_locations', 'e.date_of_birth', 'e.gender',
-      'e.plain_password', 'e.registration_fee_status', 'e.cv_format', 'e.source',
+      'e.plain_password', 'e.registration_fee_status', 'e.cv_format', 'e.source', 'e.visa_status', 'e.employment_status',
       'u.email', 'u.is_active',
       db.raw(`(SELECT cl.proficiency FROM candidate_languages cl WHERE cl.candidate_id = e.id AND LOWER(cl.language) = 'english' LIMIT 1) as english_level`),
     );
@@ -391,13 +405,14 @@ export async function updateCandidate(id: string, dto: UpdateCandidateDto) {
       if (experience.length)
         await trx('candidate_experience').insert(
           experience.map((e) => ({
-            candidate_id: id,
-            company_name: e.company_name || null,
-            job_title:    e.job_title    || null,
-            start_date:   e.start_date   || null,
-            end_date:     e.end_date     || null,
-            description:  e.description  || null,
-            location:     e.location     || null,
+            candidate_id:       id,
+            company_name:       e.company_name       || null,
+            job_title:          e.job_title          || null,
+            start_date:         e.start_date         || null,
+            end_date:           e.end_date           || null,
+            description:        e.description        || null,
+            location:           e.location           || null,
+            reason_for_leaving: e.reason_for_leaving || null,
           })),
         );
     }
@@ -452,12 +467,39 @@ export async function addCertificateFile(
   candidateId: string,
   name: string,
   relativePath: string,
+  metadata?: {
+    issuer?:      string;
+    issue_date?:  string;
+    expiry_date?: string | null;
+    no_expiry?:   boolean;
+  },
 ) {
   await db('candidate_certificates').insert({
     candidate_id: candidateId,
     name,
-    file_url: relativePath,
+    file_url:    relativePath,
+    issuer:      metadata?.issuer      ?? null,
+    issue_date:  metadata?.issue_date  ?? null,
+    expiry_date: metadata?.expiry_date ?? null,
+    no_expiry:   metadata?.no_expiry   ?? false,
   });
+}
+
+export async function updateCertificateMetadata(
+  candidateId: string,
+  certId:      number,
+  data: {
+    name?:        string;
+    issuer?:      string;
+    issue_date?:  string | null;
+    expiry_date?: string | null;
+    no_expiry?:   boolean;
+  },
+): Promise<void> {
+  const updated = await db('candidate_certificates')
+    .where({ id: certId, candidate_id: candidateId })
+    .update({ ...data });
+  if (!updated) throw new AppError(404, 'Certificate not found');
 }
 
 // ── Bulk actions ─────────────────────────────────────────────────────────────
@@ -502,7 +544,7 @@ export async function resendCredentials(candidateId: string): Promise<void> {
   if (!candidate) throw new AppError(404, 'Candidate not found');
   if (!candidate.plain_password) throw new AppError(400, 'No stored password for this candidate. Please set a new password via the edit form first.');
 
-  await sendCandidateCredentials(
+  await sendCandidateWelcomeEmail(
     candidate.email,
     candidate.plain_password,
     `${candidate.first_name} ${candidate.last_name}`,

@@ -3,7 +3,7 @@ import { Router, Request, Response, NextFunction } from 'express';
 import { authenticate } from '../../middleware/authenticate';
 import { authorize }    from '../../middleware/authorize';
 import * as svc from './contact-requests.service';
-import { ReviewContactRequestSchema, BulkReviewContactRequestSchema, ContactRequestFilterSchema } from './contact-requests.dto';
+import { ReviewContactRequestSchema, BulkReviewContactRequestSchema, ContactRequestFilterSchema, RevokeContactRequestSchema } from './contact-requests.dto';
 import { getRecruiterByUserId } from '../recruiters/recruiters.service';
 
 const router = Router();
@@ -33,11 +33,16 @@ router.post('/bulk-review',
 );
 
 // Recruiter: submit a request for a candidate's contact info
+// Recruitment agencies must use /api/v1/interest-requests instead
 router.post('/:candidateId',
   authorize('recruiter'),
   async (req: Request, res: Response, next: NextFunction) => {
     try {
       const recruiter = await getRecruiterByUserId(req.user!.sub);
+      if ((recruiter as any).type === 'recruitment_agency') {
+        res.status(403).json({ message: 'Recruitment agencies cannot use this endpoint. Please submit an Interest Request instead.' });
+        return;
+      }
       const row = await svc.createContactRequest(recruiter.id, req.params['candidateId'] as string);
       res.status(201).json({ request: row });
     } catch (err) { next(err); }
@@ -64,6 +69,18 @@ router.get('/',
       const filters = ContactRequestFilterSchema.parse(req.query);
       const result  = await svc.listContactRequests(filters);
       res.json(result);
+    } catch (err) { next(err); }
+  },
+);
+
+// Admin: revoke an approved request
+router.post('/:id/revoke',
+  authorize('admin'),
+  async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const dto     = RevokeContactRequestSchema.parse(req.body);
+      const updated = await svc.revokeContactRequest(req.params['id'] as string, dto, req.user!.sub);
+      res.json({ request: updated });
     } catch (err) { next(err); }
   },
 );

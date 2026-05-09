@@ -65,23 +65,95 @@ async function sendMail(opts: MailOptions): Promise<void> {
 
 // ── Public send functions ────────────────────────────────────────────────────
 
+/** @deprecated Use sendCandidateWelcomeEmail instead */
 export async function sendCandidateCredentials(
+  email: string,
+  password: string,
+  name: string,
+): Promise<void> {
+  return sendCandidateWelcomeEmail(email, password, name);
+}
+
+export async function sendCandidateWelcomeEmail(
   email: string,
   password: string,
   name: string,
 ): Promise<void> {
   await sendMail({
     to: email,
-    subject: 'Your TalentHub Account Credentials',
+    subject: 'Welcome to TalentHub — Your Account is Under Review',
     html: `
-      <h2>Welcome to TalentHub, ${name}!</h2>
-      <p>Your account has been created by the administrator. Below are your login credentials:</p>
-      <table style="border-collapse:collapse;">
-        <tr><td style="padding:8px;font-weight:bold;">Email:</td><td style="padding:8px;">${email}</td></tr>
-        <tr><td style="padding:8px;font-weight:bold;">Password:</td><td style="padding:8px;">${password}</td></tr>
-      </table>
-      <p>Please log in at <a href="${env.FRONTEND_URL}/login">${env.FRONTEND_URL}/login</a></p>
-      <p style="color:#888;font-size:12px;">For security, please change your password after your first login.</p>
+      <div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;">
+        <div style="background:linear-gradient(135deg,#4f46e5,#6366f1);padding:32px 24px;border-radius:12px 12px 0 0;text-align:center;">
+          <h1 style="color:#fff;margin:0;font-size:26px;">Welcome to TalentHub, ${name}!</h1>
+        </div>
+        <div style="background:#fff;padding:32px 24px;border:1px solid #e5e7eb;border-top:none;border-radius:0 0 12px 12px;">
+          <p style="font-size:16px;line-height:1.7;color:#111827;">
+            Thank you for joining TalentHub. Your profile has been created and is currently <strong>under review</strong> by our team.
+            We will be in touch once your profile has been assessed.
+          </p>
+          <p style="font-size:15px;color:#374151;line-height:1.7;">
+            In the meantime, you can log in to view and update your profile:
+          </p>
+          <table style="border-collapse:collapse;margin:16px 0;width:100%;max-width:400px;">
+            <tr style="background:#f9fafb;">
+              <td style="padding:10px 14px;font-weight:600;color:#374151;border:1px solid #e5e7eb;">Email</td>
+              <td style="padding:10px 14px;color:#111827;border:1px solid #e5e7eb;">${email}</td>
+            </tr>
+            <tr>
+              <td style="padding:10px 14px;font-weight:600;color:#374151;border:1px solid #e5e7eb;">Password</td>
+              <td style="padding:10px 14px;color:#111827;border:1px solid #e5e7eb;">${password}</td>
+            </tr>
+          </table>
+          <p style="margin-top:24px;">
+            <a href="${env.FRONTEND_URL}/login" style="background:#4f46e5;color:#fff;padding:12px 24px;border-radius:6px;text-decoration:none;display:inline-block;font-size:15px;">
+              Log In to Your Profile
+            </a>
+          </p>
+          <div style="background:#fef9c3;border:1px solid #fde68a;border-radius:8px;padding:14px 16px;margin-top:24px;">
+            <p style="margin:0;font-size:13px;color:#92400e;">
+              <strong>Security tip:</strong> Please change your password after your first login.
+              If you did not expect this email, contact our support team immediately.
+            </p>
+          </div>
+          <p style="color:#9ca3af;font-size:12px;margin-top:24px;border-top:1px solid #f3f4f6;padding-top:16px;">
+            This email was sent by the TalentHub admin team. Please do not reply to this email.
+          </p>
+        </div>
+      </div>
+    `,
+  });
+}
+
+export async function sendAdminNewCandidateNotification(
+  candidateName: string,
+): Promise<void> {
+  if (!env.ADMIN_EMAIL) {
+    console.warn('⚠️  ADMIN_EMAIL not configured — skipping admin new-candidate notification');
+    return;
+  }
+
+  await sendMail({
+    to: env.ADMIN_EMAIL,
+    subject: `New candidate registered — ${candidateName} — Review required`,
+    html: `
+      <div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;">
+        <div style="background:#4f46e5;padding:24px;border-radius:12px 12px 0 0;">
+          <h2 style="color:#fff;margin:0;font-size:20px;">New Candidate Registered</h2>
+        </div>
+        <div style="background:#fff;padding:28px 24px;border:1px solid #e5e7eb;border-top:none;border-radius:0 0 12px 12px;">
+          <p style="font-size:16px;color:#111827;">A new candidate has been registered and requires review.</p>
+          <table style="border-collapse:collapse;margin:16px 0;">
+            <tr><td style="padding:8px;font-weight:bold;">Candidate:</td><td style="padding:8px;">${candidateName}</td></tr>
+            <tr><td style="padding:8px;font-weight:bold;">Time:</td><td style="padding:8px;">${new Date().toUTCString()}</td></tr>
+          </table>
+          <p style="margin-top:20px;">
+            <a href="${env.FRONTEND_URL}/admin/candidates" style="background:#4f46e5;color:#fff;padding:12px 24px;border-radius:6px;text-decoration:none;">
+              Review Candidates
+            </a>
+          </p>
+        </div>
+      </div>
     `,
   });
 }
@@ -308,6 +380,97 @@ export async function sendContactRequestRejectedNotification(
         </a>
       </p>
       <p style="color:#888;font-size:12px;margin-top:20px;">If you have any questions, please reach out to our support team.</p>
+    `,
+  });
+}
+
+export async function sendInterestRequestNotification(
+  recruiterName: string,
+  recruiterCompany: string,
+  recruiterEmail: string,
+  candidateName: string,
+): Promise<void> {
+  if (!env.ADMIN_EMAIL) {
+    console.warn('⚠️  ADMIN_EMAIL not configured, skipping interest request notification');
+    return;
+  }
+  await sendMail({
+    to: env.ADMIN_EMAIL,
+    subject: '🔔 New Agency Interest Request Received',
+    html: `
+      <h2>New Agency Interest Request</h2>
+      <p>A recruitment agency has submitted a new interest request.</p>
+      <table style="border-collapse:collapse;margin:16px 0;">
+        <tr><td style="padding:8px;font-weight:bold;">Agency:</td><td style="padding:8px;">${recruiterCompany}</td></tr>
+        <tr><td style="padding:8px;font-weight:bold;">Contact:</td><td style="padding:8px;">${recruiterName}</td></tr>
+        <tr><td style="padding:8px;font-weight:bold;">Email:</td><td style="padding:8px;">${recruiterEmail}</td></tr>
+        <tr><td style="padding:8px;font-weight:bold;">Candidate:</td><td style="padding:8px;">${candidateName}</td></tr>
+        <tr><td style="padding:8px;font-weight:bold;">Time:</td><td style="padding:8px;">${new Date().toUTCString()}</td></tr>
+      </table>
+      <p><a href="${env.FRONTEND_URL}/admin/interest-requests" style="background:#4f46e5;color:#fff;padding:12px 24px;border-radius:6px;text-decoration:none;">Review Interest Requests</a></p>
+    `,
+  });
+}
+
+export async function sendInterestRequestReviewed(
+  recruiterEmail: string,
+  recruiterName: string,
+  candidateName: string,
+  status: 'approved' | 'rejected',
+  adminNote?: string,
+): Promise<void> {
+  const isApproved = status === 'approved';
+  const subject = isApproved
+    ? '✅ Your Interest Request Has Been Approved'
+    : '📋 Your Interest Request Has Been Reviewed';
+
+  const html = `
+    <h2>Hello ${recruiterName},</h2>
+    ${isApproved
+      ? `<p>Your interest request for <strong>${candidateName}</strong> has been <strong style="color:#16a34a;">approved</strong>.</p>
+         <p style="font-size:16px;line-height:1.6;color:#111827;">Our team will be in touch to facilitate the introduction. Please do not contact the candidate directly.</p>`
+      : `<p>Your interest request for <strong>${candidateName}</strong> has been <strong style="color:#dc2626;">reviewed</strong> and was not approved at this time.</p>
+         ${adminNote ? `<p style="background:#fef3c7;padding:12px;border-left:4px solid #f59e0b;border-radius:4px;"><strong>Note from Admin:</strong><br/>${adminNote}</p>` : ''}`
+    }
+    <p style="margin-top:24px;">
+      <a href="${env.FRONTEND_URL}/recruiter/candidates" style="background:#4f46e5;color:#fff;padding:12px 24px;border-radius:6px;text-decoration:none;display:inline-block;">
+        View Candidates
+      </a>
+    </p>
+    <p style="color:#888;font-size:12px;margin-top:20px;">If you have any questions, please reach out to our support team.</p>
+  `;
+
+  await sendMail({ to: recruiterEmail, subject, html });
+}
+
+export async function sendContactRevokedNotification(
+  recruiterEmail: string,
+  recruiterName: string,
+  candidateName: string,
+  reason?: string,
+): Promise<void> {
+  await sendMail({
+    to: recruiterEmail,
+    subject: 'Contact Access Revoked — TalentHub',
+    html: `
+      <div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;">
+        <div style="background:linear-gradient(135deg,#dc2626,#b91c1c);padding:32px 24px;border-radius:12px 12px 0 0;text-align:center;">
+          <h1 style="color:#fff;margin:0;font-size:24px;">Contact Access Revoked</h1>
+        </div>
+        <div style="background:#fff;padding:32px 24px;border:1px solid #e5e7eb;border-top:none;border-radius:0 0 12px 12px;">
+          <p style="font-size:16px;color:#111827;">Dear <strong>${recruiterName}</strong>,</p>
+          <p style="font-size:15px;color:#374151;line-height:1.7;">
+            Your access to the contact details of <strong>${candidateName}</strong> has been <strong>revoked</strong> by an administrator.
+          </p>
+          ${reason ? '<div style="background:#fef2f2;border:1px solid #fecaca;border-radius:8px;padding:16px;margin:20px 0;"><p style="margin:0;font-size:14px;color:#991b1b;"><strong>Reason:</strong> ' + reason + '</p></div>' : ''}
+          <p style="font-size:14px;color:#6b7280;line-height:1.7;">
+            If you believe this was done in error or wish to regain access, you may submit a new contact access request through the TalentHub platform.
+          </p>
+          <p style="color:#888;font-size:12px;margin-top:24px;border-top:1px solid #f3f4f6;padding-top:16px;">
+            This notification was sent by the TalentHub admin team.
+          </p>
+        </div>
+      </div>
     `,
   });
 }

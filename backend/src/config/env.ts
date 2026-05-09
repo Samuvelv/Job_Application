@@ -29,6 +29,10 @@ const envSchema = z.object({
   EMAIL_FROM: z.string().optional(),
   ADMIN_EMAIL: z.string().optional(),
 
+  TWILIO_ACCOUNT_SID:    z.string().optional(),
+  TWILIO_AUTH_TOKEN:     z.string().optional(),
+  TWILIO_WHATSAPP_FROM:  z.string().optional(),
+
   APP_URL: z.string().default('http://localhost:3000'),
   FRONTEND_URL: z.string().default('http://localhost:4200'),
 });

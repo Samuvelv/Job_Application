@@ -43,7 +43,8 @@ export async function getOne(req: Request, res: Response, next: NextFunction): P
     if (req.user!.role === 'candidate') {
       const emp = await svc.getCandidateByUserId(req.user!.sub);
       if (emp.id !== id) { res.status(403).json({ message: 'Access denied' }); return; }
-      res.json({ candidate: emp }); return;
+      const { referrals: _r, ...empPublic } = emp as any;
+      res.json({ candidate: empPublic }); return;
     }
 
     const candidate = await svc.getCandidateById(id);
@@ -51,14 +52,18 @@ export async function getOne(req: Request, res: Response, next: NextFunction): P
     // Recruiters: mask contact fields unless they have an approved unlock request
     if (req.user!.role === 'recruiter') {
       const recruiter = await getRecruiterByUserId(req.user!.sub);
-      const unlocked  = await isContactUnlocked(recruiter.id, id);
+      // Recruitment agencies never get contact fields — they must use the interest request workflow
+      const isAgency  = (recruiter as any).type === 'recruitment_agency';
+      const unlocked  = isAgency ? false : await isContactUnlocked(recruiter.id, id);
       const masked    = {
         ...candidate,
         plain_password: undefined, // never expose to recruiters
-        contact_locked: !unlocked,
-        email:       unlocked ? candidate.email       : null,
-        phone:       unlocked ? candidate.phone       : null,
-        linkedin_url:unlocked ? candidate.linkedin_url: null,
+        referrals:      undefined, // admin-only
+        contact_locked:   !unlocked,
+        email:            unlocked ? candidate.email            : null,
+        phone:            unlocked ? candidate.phone            : null,
+        linkedin_url:     unlocked ? candidate.linkedin_url     : null,
+        whatsapp_number:  unlocked ? candidate.whatsapp_number  : null,
       };
       res.json({ candidate: masked }); return;
     }

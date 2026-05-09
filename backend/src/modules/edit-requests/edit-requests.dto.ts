@@ -13,10 +13,9 @@ export const ReviewEditRequestSchema = z.object({
 });
 
 export const REQUEST_TYPE_GROUPS: Record<string, string[]> = {
-  personal:     ['first_name', 'last_name', 'date_of_birth', 'gender', 'bio', 'phone'],
+  personal:     ['first_name', 'last_name', 'date_of_birth', 'gender', 'marital_status', 'bio', 'phone'],
   professional: ['job_title', 'occupation', 'industry', 'years_experience', 'linkedin_url'],
   location:     ['current_country', 'current_city', 'nationality'],
-  salary:       ['salary_min', 'salary_max', 'salary_currency', 'salary_type'],
   skills:       ['skills'],
   languages:    ['languages'],
   experience:   ['experience'],
@@ -28,7 +27,7 @@ export const EditRequestFilterSchema = z.object({
   search:       z.string().trim().optional(),
   date_from:    z.string().optional(),
   date_to:      z.string().optional(),
-  request_type: z.enum(['personal', 'professional', 'location', 'salary', 'skills', 'languages', 'experience', 'education']).optional(),
+  request_type: z.enum(['personal', 'professional', 'location', 'skills', 'languages', 'experience', 'education']).optional(),
   sort:         z.enum(['newest', 'oldest']).optional(),
   page:         z.coerce.number().int().positive().default(1),
   limit:        z.coerce.number().int().positive().max(100).default(20),

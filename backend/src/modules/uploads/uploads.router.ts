@@ -8,6 +8,7 @@ import {
   stageCandidateFile,
   deleteCandidateFile,
   deleteCandidateCertificate,
+  patchCandidateCertificate,
 } from './uploads.controller';
 
 const router = Router();
@@ -58,6 +59,17 @@ router.delete(
   authenticate,
   authorize('admin', 'candidate'),
   deleteCandidateCertificate,
+);
+
+/**
+ * PATCH /api/v1/candidates/:id/certificates/:certId
+ * Admin-only: update certificate metadata (name, issuer, issue_date, expiry_date, no_expiry)
+ */
+router.patch(
+  '/candidates/:id/certificates/:certId',
+  authenticate,
+  authorize('admin'),
+  patchCandidateCertificate,
 );
 
 export default router;

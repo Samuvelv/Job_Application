@@ -28,12 +28,6 @@ export async function up(knex: Knex): Promise<void> {
     t.string('nationality', 100).nullable();
     t.specificType('target_locations', 'text[]').nullable();
 
-    // Salary
-    t.decimal('salary_min', 12, 2).nullable();
-    t.decimal('salary_max', 12, 2).nullable();
-    t.string('salary_currency', 10).nullable();
-    t.string('salary_type', 20).nullable(); // monthly/annual/hourly
-
     // Files
     t.text('resume_url').nullable();
     t.text('intro_video_url').nullable();
