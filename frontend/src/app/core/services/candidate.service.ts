@@ -99,6 +99,37 @@ export class CandidateService {
     );
   }
 
+  /** Upload a certificate file with full metadata */
+  uploadCertificate(
+    candidateId: string,
+    file: File,
+    meta: { name: string; issuer?: string; issue_date?: string; expiry_date?: string | null; no_expiry?: boolean },
+  ): Observable<{ url: string; filename: string }> {
+    const form = new FormData();
+    form.append('file', file);
+    form.append('name', meta.name || file.name);
+    if (meta.issuer)      form.append('issuer',      meta.issuer);
+    if (meta.issue_date)  form.append('issue_date',  meta.issue_date);
+    if (meta.expiry_date) form.append('expiry_date', meta.expiry_date);
+    form.append('no_expiry', String(meta.no_expiry ?? false));
+    return this.http.post<{ url: string; filename: string }>(
+      `${environment.apiUrl}/candidates/${candidateId}/files/certificates`,
+      form,
+    );
+  }
+
+  /** Update certificate metadata (admin only) */
+  updateCertificate(
+    candidateId: string,
+    certId: number,
+    data: { name?: string; issuer?: string; issue_date?: string | null; expiry_date?: string | null; no_expiry?: boolean },
+  ): Observable<{ message: string }> {
+    return this.http.patch<{ message: string }>(
+      `${environment.apiUrl}/candidates/${candidateId}/certificates/${certId}`,
+      data,
+    );
+  }
+
   // ── File delete ───────────────────────────────────────────────────────────
   deleteFile(
     candidateId: string,

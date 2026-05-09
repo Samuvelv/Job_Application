@@ -62,16 +62,6 @@ const AVAILABILITY_OPTIONS: SelectOption[] = [
   { value: '3_months',  label: 'Within 3 Months' },
 ];
 
-const CURRENCY_OPTIONS: SelectOption[] = [
-  { value: 'USD', label: 'USD – US Dollar' },
-  { value: 'GBP', label: 'GBP – British Pound' },
-  { value: 'EUR', label: 'EUR – Euro' },
-  { value: 'AUD', label: 'AUD – Australian Dollar' },
-  { value: 'INR', label: 'INR – Indian Rupee' },
-  { value: 'CAD', label: 'CAD – Canadian Dollar' },
-  { value: 'SGD', label: 'SGD – Singapore Dollar' },
-];
-
 const PROFILE_STATUS_OPTIONS: SelectOption[] = [
   { value: 'active',       label: 'Active' },
   { value: 'pending_edit', label: 'Pending Edit' },
@@ -280,33 +270,6 @@ const PROFILE_STATUS_OPTIONS: SelectOption[] = [
           </div>
         </div>
 
-        <!-- 10. Salary Expectation -->
-        <div class="cfs-section">
-          <div class="cfs-section__label">
-            Salary Expectation
-            @if (form.get('salaryMin')?.value || form.get('salaryMax')?.value) {
-              <span class="cfs-section__active-dot"></span>
-            }
-          </div>
-          <div class="cfs-section__body open">
-            <label class="cfs-field-label">Currency</label>
-            <app-searchable-select
-              formControlName="salaryCurrency"
-              [options]="CURRENCY_OPTIONS"
-              placeholder="Any currency"
-              class="mb-2 d-block">
-            </app-searchable-select>
-            <label class="cfs-field-label">Range</label>
-            <div class="cfs-range-row">
-              <input type="number" class="form-control form-control-sm"
-                formControlName="salaryMin" placeholder="Min" min="0">
-              <span>–</span>
-              <input type="number" class="form-control form-control-sm"
-                formControlName="salaryMax" placeholder="Max" min="0">
-            </div>
-          </div>
-        </div>
-
         <!-- 11. Visa Status -->
         <div class="cfs-section">
           <div class="cfs-section__label">
@@ -478,7 +441,6 @@ export class CandidateFilterSidebarComponent implements OnInit, OnDestroy {
   readonly GENDER_OPTIONS           = GENDER_OPTIONS;
   readonly VISA_OPTIONS             = VISA_OPTIONS;
   readonly AVAILABILITY_OPTIONS     = AVAILABILITY_OPTIONS;
-  readonly CURRENCY_OPTIONS         = CURRENCY_OPTIONS;
   readonly PROFILE_STATUS_OPTIONS             = PROFILE_STATUS_OPTIONS;
   readonly REGISTRATION_FEE_STATUS_OPTIONS    = REGISTRATION_FEE_STATUS_OPTIONS;
   readonly CV_FORMAT_OPTIONS                  = CV_FORMAT_OPTIONS;
@@ -512,10 +474,6 @@ export class CandidateFilterSidebarComponent implements OnInit, OnDestroy {
       // Education
       university:         [''],
       fieldOfStudy:       [null],
-      // Salary
-      salaryCurrency:     [null],
-      salaryMin:          [null],
-      salaryMax:          [null],
       // Age
       ageMin:             [null],
       ageMax:             [null],
@@ -566,7 +524,6 @@ export class CandidateFilterSidebarComponent implements OnInit, OnDestroy {
     if (v.university)                 n++;
     if (v.fieldOfStudy)               n++;
     if (v.ageMin || v.ageMax)         n++;
-    if (v.salaryCurrency || v.salaryMin || v.salaryMax) n++;
     if (v.gender)                     n++;
     if (v.visaStatus)                 n++;
     if (v.availability)               n++;
@@ -598,9 +555,6 @@ export class CandidateFilterSidebarComponent implements OnInit, OnDestroy {
     if (v.fieldOfStudy)       f.fieldOfStudy   = v.fieldOfStudy;
     if (v.ageMin != null && v.ageMin !== '')    f.ageMin    = +v.ageMin;
     if (v.ageMax != null && v.ageMax !== '')    f.ageMax    = +v.ageMax;
-    if (v.salaryCurrency)     f.salaryCurrency = v.salaryCurrency;
-    if (v.salaryMin != null && v.salaryMin !== '') f.salaryMin = +v.salaryMin;
-    if (v.salaryMax != null && v.salaryMax !== '') f.salaryMax = +v.salaryMax;
     if (v.gender)             f.gender         = v.gender;
     if (v.visaStatus)         f.visaStatus     = v.visaStatus;
     if (v.availability)       f.availability   = v.availability;
@@ -621,8 +575,8 @@ export class CandidateFilterSidebarComponent implements OnInit, OnDestroy {
       industryList: [], educationLevelList: [], languageList: [], skillTags: [],
       yearsExpMin: null, yearsExpMax: null, occupation: '',
       currentCountry: '', currentCity: '', nationality: '', targetCountry: '',
-      university: '', fieldOfStudy: null, salaryCurrency: null,
-      salaryMin: null, salaryMax: null, ageMin: null, ageMax: null,
+      university: '', fieldOfStudy: null,
+      ageMin: null, ageMax: null,
       gender: null, visaStatus: null, availability: null,
       hasVideo: false, hasCV: false, sourceList: [],
       profileStatus: null, registrationFeeStatus: null, cvFormat: null,

@@ -61,6 +61,13 @@ export class CandidateEditComponent implements OnInit {
   mediaLoading: Record<string, boolean> = {};
   certDeleting: number | null = null;
 
+  // Per-cert inline editing
+  editingCertId: number | null = null;
+  certEditForm: FormGroup | null = null;
+
+  // New cert pending card
+  pendingNewCert: { name: string; issuer: string; issue_date: string; expiry_date: string; no_expiry: boolean; file?: File } | null = null;
+
   // Password section visibility toggles
   showCurrentPw = false;
   showNewPw     = false;
@@ -74,7 +81,7 @@ export class CandidateEditComponent implements OnInit {
   readonly GENDERS       = ['male', 'female', 'non-binary', 'prefer_not_to_say'];
   readonly SALARY_TYPES  = ['monthly', 'annual', 'hourly'];
   readonly PROFICIENCY_SKILL = ['beginner', 'intermediate', 'expert'];
-  readonly PROFICIENCY_LANG  = ['basic', 'conversational', 'fluent', 'native'];
+  readonly PROFICIENCY_LANG  = ['A1', 'A2', 'B1', 'B2', 'C1', 'C2', 'native'];
   readonly STATUSES = [
     { value: 'active',       label: 'Active'       },
     { value: 'inactive',     label: 'Inactive'     },
@@ -89,21 +96,19 @@ export class CandidateEditComponent implements OnInit {
     { value: 'non-binary',        label: 'Non-binary'        },
     { value: 'prefer_not_to_say', label: 'Prefer not to say' },
   ];
-  readonly salaryTypeOptions: SelectOption[] = [
-    { value: 'monthly', label: 'Monthly' },
-    { value: 'annual',  label: 'Annual'  },
-    { value: 'hourly',  label: 'Hourly'  },
-  ];
   readonly proficiencySkillOptions: SelectOption[] = [
     { value: 'beginner',     label: 'Beginner'     },
     { value: 'intermediate', label: 'Intermediate' },
     { value: 'expert',       label: 'Expert'       },
   ];
   readonly proficiencyLangOptions: SelectOption[] = [
-    { value: 'basic',          label: 'Basic'          },
-    { value: 'conversational', label: 'Conversational' },
-    { value: 'fluent',         label: 'Fluent'         },
-    { value: 'native',         label: 'Native'         },
+    { value: 'A1',     label: 'A1 — Beginner'          },
+    { value: 'A2',     label: 'A2 — Elementary'         },
+    { value: 'B1',     label: 'B1 — Intermediate'       },
+    { value: 'B2',     label: 'B2 — Upper Intermediate' },
+    { value: 'C1',     label: 'C1 — Advanced'           },
+    { value: 'C2',     label: 'C2 — Proficient'         },
+    { value: 'native', label: 'Native'                   },
   ];
   readonly statusOptions: SelectOption[] = [
     { value: 'active',       label: 'Active'       },
@@ -143,9 +148,6 @@ export class CandidateEditComponent implements OnInit {
   fieldOfStudyOptions = computed<SelectOption[]>(() =>
     this.master.fieldsOfStudy().map(f => ({ value: f.name, label: f.name })));
 
-  currencyOptions   = computed<SelectOption[]>(() =>
-    this.master.currencies().map(c => ({ value: c.code, label: `${c.code} — ${c.name}`, sublabel: c.symbol })));
-
   noticePeriodOptions = computed<SelectOption[]>(() =>
     this.master.noticePeriods().map(n => ({ value: n.id, label: n.label })));
 
@@ -182,6 +184,25 @@ export class CandidateEditComponent implements OnInit {
           f.get('current_country')!.valueChanges.subscribe((v: any) => this.onCountryChange(v));
           // Subscribe to job_title for auto-fill occupation
           f.get('job_title')!.valueChanges.subscribe((v: any) => this.onJobTitleChange(v));
+          // WhatsApp "same as phone" sync
+          f.get('whatsapp_same_as_phone')!.valueChanges.subscribe((checked: boolean) => {
+            if (checked) {
+              const raw = f.getRawValue();
+              f.patchValue({ whatsapp_number: `${raw.dial_code || ''}${raw.phone || ''}`.trim() }, { emitEvent: false });
+            }
+          });
+          f.get('phone')!.valueChanges.subscribe(() => {
+            if (f.get('whatsapp_same_as_phone')?.value) {
+              const raw = f.getRawValue();
+              f.patchValue({ whatsapp_number: `${raw.dial_code || ''}${raw.phone || ''}`.trim() }, { emitEvent: false });
+            }
+          });
+          f.get('dial_code')!.valueChanges.subscribe(() => {
+            if (f.get('whatsapp_same_as_phone')?.value) {
+              const raw = f.getRawValue();
+              f.patchValue({ whatsapp_number: `${raw.dial_code || ''}${raw.phone || ''}`.trim() }, { emitEvent: false });
+            }
+          });
           // Pre-load cities if country already set
           const country = res.candidate.current_country;
           if (country) {
@@ -250,6 +271,9 @@ export class CandidateEditComponent implements OnInit {
   addExperience(): void {    this.experience.push(this.fb.group({
       company_name: [''], job_title: [''], start_date: [''],
       end_date: [''], description: [''], location: [''],
+      reason_for_leaving_select: [''],
+      reason_for_leaving_other:  [''],
+      currently_working: [false],
     }));
   }
   removeExperience(i: number): void { this.experience.removeAt(i); }
@@ -275,6 +299,14 @@ export class CandidateEditComponent implements OnInit {
     this.previewType = null;
     this.previewUrl  = undefined;
     this.previewName = undefined;
+  }
+
+  // ── Bio word counter ────────────────────────────────────────────────────────
+  readonly BIO_WORD_LIMIT = 2000;
+  bioWordCount = 0;
+
+  countWords(text: string): number {
+    return text.trim() === '' ? 0 : text.trim().split(/\s+/).filter(Boolean).length;
   }
 
   // ── Media handlers ─────────────────────────────────────────────────────────
@@ -335,31 +367,129 @@ export class CandidateEditComponent implements OnInit {
     });
   }
 
+  startEditCert(cert: Certificate): void {
+    this.editingCertId = cert.id ?? null;
+    this.certEditForm = this.fb.group({
+      name:        [cert.name        ?? ''],
+      issuer:      [cert.issuer      ?? ''],
+      issue_date:  [cert.issue_date  ?? ''],
+      expiry_date: [cert.expiry_date ?? ''],
+      no_expiry:   [cert.no_expiry   ?? false],
+    });
+  }
+
+  cancelEditCert(): void {
+    this.editingCertId = null;
+    this.certEditForm  = null;
+  }
+
+  saveCertMetadata(): void {
+    if (!this.certEditForm || !this.editingCertId) return;
+    const v = this.certEditForm.value;
+    this.empSvc.updateCertificate(this.candidateId, this.editingCertId, {
+      name:        v.name        || undefined,
+      issuer:      v.issuer      || undefined,
+      issue_date:  v.issue_date  || null,
+      expiry_date: v.no_expiry ? null : (v.expiry_date || null),
+      no_expiry:   v.no_expiry,
+    }).subscribe({
+      next: () => {
+        this.toast.success('Certificate updated');
+        this.cancelEditCert();
+        this.empSvc.getById(this.candidateId).subscribe(r => { this.candidate = r.candidate; });
+      },
+      error: (err) => this.toast.error(err?.error?.message ?? 'Failed to update certificate'),
+    });
+  }
+
+  initNewCert(): void {
+    this.pendingNewCert = { name: '', issuer: '', issue_date: '', expiry_date: '', no_expiry: false };
+  }
+
+  cancelNewCert(): void { this.pendingNewCert = null; }
+
+  toggleNewCertNoExpiry(event: Event): void {
+    if (!this.pendingNewCert) return;
+    this.pendingNewCert.no_expiry = (event.target as HTMLInputElement).checked;
+    if (this.pendingNewCert.no_expiry) this.pendingNewCert.expiry_date = '';
+  }
+
+  onNewCertFileSelected(event: Event): void {
+    const file = (event.target as HTMLInputElement).files?.[0];
+    if (!file || !this.pendingNewCert) return;
+    this.pendingNewCert.file = file;
+    if (!this.pendingNewCert.name) this.pendingNewCert.name = file.name.replace(/\.[^.]+$/, '');
+    (event.target as HTMLInputElement).value = '';
+  }
+
+  submitNewCert(): void {
+    const c = this.pendingNewCert;
+    if (!c || !c.file) { this.toast.error('Please attach a file'); return; }
+    this.mediaLoading['certificates'] = true;
+    this.empSvc.uploadCertificate(this.candidateId, c.file, {
+      name:        c.name || c.file.name,
+      issuer:      c.issuer      || undefined,
+      issue_date:  c.issue_date  || undefined,
+      expiry_date: c.no_expiry   ? null : (c.expiry_date || null),
+      no_expiry:   c.no_expiry,
+    }).subscribe({
+      next: () => {
+        this.mediaLoading['certificates'] = false;
+        this.pendingNewCert = null;
+        this.toast.success('Certificate uploaded');
+        this.empSvc.getById(this.candidateId).subscribe(r => { this.candidate = r.candidate; });
+      },
+      error: (err) => {
+        this.mediaLoading['certificates'] = false;
+        this.toast.error(err?.error?.message ?? 'Upload failed');
+      },
+    });
+  }
+
   // ── Build form prefilled with candidate data ───────────────────────────────
   private buildForm(emp: Candidate): void {
+    this.bioWordCount = this.countWords(emp.bio ?? '');
     const { dialCode, number: phoneNumber } = this.splitPhone(emp.phone ?? '');
+
+    // Parse stored visa_status back into select + other controls
+    let visaSelect = '';
+    let visaOther  = '';
+    if (emp.visa_status) {
+      if (emp.visa_status.startsWith('Other: ')) {
+        visaSelect = 'other';
+        visaOther  = emp.visa_status.slice('Other: '.length);
+      } else if (emp.visa_status === 'Other — specify') {
+        visaSelect = 'other';
+      } else {
+        visaSelect = emp.visa_status;
+      }
+    }
+
     this.form = this.fb.group({
       first_name:    [emp.first_name, [Validators.required, Validators.maxLength(100)]],
       last_name:     [emp.last_name,  [Validators.required, Validators.maxLength(100)]],
       date_of_birth: [emp.date_of_birth ?? ''],
       gender:        [emp.gender ?? ''],
+      marital_status: [emp.marital_status ?? ''],
       dial_code:     [dialCode],
       phone:         [phoneNumber],
+      whatsapp_number:       [emp.whatsapp_number ?? ''],
+      whatsapp_same_as_phone: [false],
       bio:           [emp.bio ?? '', Validators.maxLength(2000)],
       profile_status:          [emp.profile_status          ?? 'active'],
       registration_fee_status: [emp.registration_fee_status ?? 'pending_payment'],
       cv_format:               [emp.cv_format               ?? 'not_yet_created'],
       source:                  [emp.source                  ?? 'Other'],
 
+      visa_status_select: [visaSelect],
+      visa_status_other:  [visaOther],
+
+      employment_status: [emp.employment_status ?? ''],
       job_title:        [emp.job_title ?? ''],
       occupation:       [emp.occupation ?? ''],
       industry:         [emp.industry ?? ''],
       years_experience: [emp.years_experience ?? null],
       linkedin_url:     [emp.linkedin_url ?? ''],
-      salary_min:       [emp.salary_min ?? null],
-      salary_max:       [emp.salary_max ?? null],
-      salary_currency:  [emp.salary_currency ?? 'USD'],
-      salary_type:      [emp.salary_type ?? 'monthly'],
       notice_period_id: [(emp as any).notice_period_id ?? null],
 
       current_country:  [emp.current_country ?? ''],
@@ -380,12 +510,25 @@ export class CandidateEditComponent implements OnInit {
       ),
       experience: this.fb.array(
         emp.experience?.length
-          ? emp.experience.map(e => this.fb.group({
-              company_name: [e.company_name ?? ''], job_title: [e.job_title ?? ''],
-              start_date: [e.start_date ?? ''], end_date: [e.end_date ?? ''],
-              description: [e.description ?? ''], location: [e.location ?? ''],
-            }))
-          : [this.fb.group({ company_name: [''], job_title: [''], start_date: [''], end_date: [''], description: [''], location: [''] })]
+          ? emp.experience.map(e => {
+              let rflSel = '', rflOther = '';
+              if (e.reason_for_leaving?.startsWith('Other: ')) {
+                rflSel = 'Other'; rflOther = e.reason_for_leaving.slice(7);
+              } else if (e.reason_for_leaving === 'Other') {
+                rflSel = 'Other';
+              } else {
+                rflSel = e.reason_for_leaving ?? '';
+              }
+              return this.fb.group({
+                company_name: [e.company_name ?? ''], job_title: [e.job_title ?? ''],
+                start_date: [e.start_date ?? ''], end_date: [e.end_date ?? ''],
+                description: [e.description ?? ''], location: [e.location ?? ''],
+                reason_for_leaving_select: [rflSel],
+                reason_for_leaving_other:  [rflOther],
+                currently_working: [!e.end_date],
+              });
+            })
+          : [this.fb.group({ company_name: [''], job_title: [''], start_date: [''], end_date: [''], description: [''], location: [''], reason_for_leaving_select: [''], reason_for_leaving_other: [''], currently_working: [false] })]
       ),
       education: this.fb.array(
         emp.education?.length
@@ -401,6 +544,18 @@ export class CandidateEditComponent implements OnInit {
       new_password:     ['', [Validators.minLength(8)]],
       confirm_password: [''],
     }, { validators: passwordsMatchValidator });
+
+    this.form.get('bio')!.valueChanges.subscribe((val: string | null) => {
+      const text  = val ?? '';
+      const words = text.trim() === '' ? [] : text.trim().split(/\s+/).filter(Boolean);
+      if (words.length > this.BIO_WORD_LIMIT) {
+        const clamped = words.slice(0, this.BIO_WORD_LIMIT).join(' ');
+        this.form.get('bio')!.setValue(clamped, { emitEvent: false });
+        this.bioWordCount = this.BIO_WORD_LIMIT;
+      } else {
+        this.bioWordCount = words.length;
+      }
+    });
   }
 
   // ── Submit ────────────────────────────────────────────────────────────────
@@ -417,21 +572,22 @@ export class CandidateEditComponent implements OnInit {
       last_name:     raw.last_name,
       date_of_birth: raw.date_of_birth   || undefined,
       gender:        raw.gender          || undefined,
+      marital_status: raw.marital_status || undefined,
       phone:         phone               || undefined,
+      whatsapp_number: raw.whatsapp_number || undefined,
       bio:           raw.bio             || undefined,
       profile_status:          raw.profile_status          || undefined,
       registration_fee_status: raw.registration_fee_status || undefined,
       cv_format:               raw.cv_format               || undefined,
       source:                  raw.source                  || undefined,
+      visa_status: raw.visa_status_select === 'other'
+        ? (raw.visa_status_other?.trim() ? `Other: ${raw.visa_status_other.trim()}` : 'Other — specify')
+        : (raw.visa_status_select || undefined),
       job_title:     raw.job_title       || undefined,
       occupation:    raw.occupation      || undefined,
       industry:      raw.industry        || undefined,
       years_experience: raw.years_experience ?? undefined,
       linkedin_url:  raw.linkedin_url    || undefined,
-      salary_min:    raw.salary_min      ?? undefined,
-      salary_max:    raw.salary_max      ?? undefined,
-      salary_currency: raw.salary_currency || undefined,
-      salary_type:   raw.salary_type     || undefined,
       notice_period_id: raw.notice_period_id || undefined,
       current_country: raw.current_country || undefined,
       current_city:  raw.current_city    || undefined,
@@ -441,7 +597,18 @@ export class CandidateEditComponent implements OnInit {
       new_password: raw.new_password || undefined,
       skills:    raw.skills.filter((s: any) => s.skill_name?.trim()),
       languages: raw.languages.filter((l: any) => l.language?.trim()),
-      experience: raw.experience.filter((e: any) => e.company_name?.trim() || e.job_title?.trim()),
+      experience: raw.experience
+        .filter((e: any) => e.company_name?.trim() || e.job_title?.trim())
+        .map((e: any) => {
+          const { reason_for_leaving_select: sel, reason_for_leaving_other: other, currently_working: cw, ...rest } = e;
+          return {
+            ...rest,
+            end_date: cw ? null : (rest.end_date || null),
+            reason_for_leaving: sel === 'Other'
+              ? (other?.trim() ? `Other: ${other.trim()}` : 'Other')
+              : (sel || undefined),
+          };
+        }),
       education:  raw.education.filter((e: any) => e.institution?.trim() || e.degree?.trim()),
     };
 

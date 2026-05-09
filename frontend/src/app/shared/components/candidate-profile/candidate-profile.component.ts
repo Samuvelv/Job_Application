@@ -93,6 +93,11 @@ type Tab = 'overview' | 'experience' | 'education' | 'documents';
                   <i class="bi bi-telephone-fill"></i>{{ candidate.phone }}
                 </span>
               }
+              @if (!contactLocked && candidate.whatsapp_number) {
+                <span class="profile-hero-v2__meta-chip">
+                  <i class="bi bi-whatsapp text-success"></i>{{ candidate.whatsapp_number }}
+                </span>
+              }
               @if (candidate.nationality) {
                 <span class="profile-hero-v2__meta-chip">
                   <i class="bi bi-flag-fill"></i>{{ candidate.nationality }}
@@ -187,12 +192,26 @@ type Tab = 'overview' | 'experience' | 'education' | 'documents';
                       <div class="info-pill-row__value">{{ candidate.phone }}</div>
                     </div>
                   }
+                  @if (candidate.whatsapp_number) {
+                    <div class="info-pill-row">
+                      <div class="info-pill-row__icon"><i class="bi bi-whatsapp text-success"></i></div>
+                      <div class="info-pill-row__label">WhatsApp</div>
+                      <div class="info-pill-row__value">{{ candidate.whatsapp_number }}</div>
+                    </div>
+                  }
                 }
                 @if (candidate.nationality) {
                   <div class="info-pill-row">
                     <div class="info-pill-row__icon"><i class="bi bi-flag-fill"></i></div>
-                    <div class="info-pill-row__label">Nationality</div>
+                    <div class="info-pill-row__label">Passport Nationality</div>
                     <div class="info-pill-row__value">{{ candidate.nationality }}</div>
+                  </div>
+                }
+                @if (candidate.current_country) {
+                  <div class="info-pill-row">
+                    <div class="info-pill-row__icon"><i class="bi bi-house-fill"></i></div>
+                    <div class="info-pill-row__label">Country of Residence</div>
+                    <div class="info-pill-row__value">{{ candidate.current_country }}</div>
                   </div>
                 }
                 @if (candidate.date_of_birth) {
@@ -204,12 +223,19 @@ type Tab = 'overview' | 'experience' | 'education' | 'documents';
                 }
                 @if (candidate.gender) {
                   <div class="info-pill-row">
-                    <div class="info-pill-row__icon"><i class="bi bi-person-fill"></i></div>
+                    <div class="info-pill-row__icon"><i class="bi bi-gender-ambiguous"></i></div>
                     <div class="info-pill-row__label">Gender</div>
                     <div class="info-pill-row__value">{{ candidate.gender | titlecase }}</div>
                   </div>
                 }
-                @if (!candidate.phone && !candidate.nationality && !candidate.date_of_birth && !candidate.gender) {
+                @if (candidate.marital_status) {
+                  <div class="info-pill-row">
+                    <div class="info-pill-row__icon"><i class="bi bi-heart"></i></div>
+                    <div class="info-pill-row__label">Marital Status</div>
+                    <div class="info-pill-row__value">{{ candidate.marital_status | titlecase }}</div>
+                  </div>
+                }
+                @if (!candidate.phone && !candidate.nationality && !candidate.date_of_birth && !candidate.gender && !candidate.marital_status) {
                   <p class="text-muted small mb-0">No contact details available.</p>
                 }
               </div>
@@ -263,31 +289,8 @@ type Tab = 'overview' | 'experience' | 'education' | 'documents';
               </div>
             }
 
-            <!-- Salary Card -->
-            @if (candidate.salary_min || candidate.salary_max) {
-              <div class="profile-section-card mb-3">
-                <div class="profile-section-card__header">
-                  <div class="profile-section-card__header-icon"
-                    style="background:var(--th-gradient-warning)">
-                    <i class="bi bi-cash-coin"></i>
-                  </div>
-                  <h6>Salary Expectation</h6>
-                </div>
-                <div class="profile-section-card__body">
-                  <div style="font-size:1.25rem;font-weight:800;color:var(--th-amber)">
-                    {{ candidate.salary_currency }}
-                    {{ candidate.salary_min | number }}
-                    @if (candidate.salary_max) { <span style="color:var(--th-muted);font-size:.875rem">–</span> {{ candidate.salary_max | number }} }
-                  </div>
-                  <div style="font-size:.75rem;color:var(--th-muted);margin-top:.25rem">
-                    per {{ candidate.salary_type }}
-                  </div>
-                </div>
-              </div>
-            }
-
             <!-- Admin Info Card -->
-            @if (candidate.registration_fee_status) {
+            @if (showAdminInfo && candidate.registration_fee_status) {
               <div class="profile-section-card mb-3">
                 <div class="profile-section-card__header">
                   <div class="profile-section-card__header-icon"
@@ -410,6 +413,19 @@ type Tab = 'overview' | 'experience' | 'education' | 'documents';
                       </div>
                     </div>
                   </div>
+                  @if (candidate.employment_status) {
+                  <div class="col-sm-6">
+                    <div style="padding:.75rem;background:var(--th-surface-raised);border-radius:var(--th-radius);
+                      border:1px solid var(--th-border)">
+                      <div style="font-size:.7rem;text-transform:uppercase;letter-spacing:.06em;
+                        color:var(--th-muted);font-weight:600;margin-bottom:.3rem">Employment Status</div>
+                      <div style="font-size:.875rem;font-weight:600;color:var(--th-text);display:flex;align-items:center;gap:.4rem">
+                        <i class="bi bi-person-workspace" style="color:var(--th-primary)"></i>
+                        {{ candidate.employment_status }}
+                      </div>
+                    </div>
+                  </div>
+                  }
                   <div class="col-sm-6">
                     <div style="padding:.75rem;background:var(--th-surface-raised);border-radius:var(--th-radius);
                       border:1px solid var(--th-border)">
@@ -430,6 +446,18 @@ type Tab = 'overview' | 'experience' | 'education' | 'documents';
                       </div>
                     </div>
                   </div>
+                  @if (candidate.visa_status) {
+                    <div class="col-sm-6">
+                      <div style="padding:.75rem;background:var(--th-surface-raised);border-radius:var(--th-radius);
+                        border:1px solid var(--th-border)">
+                        <div style="font-size:.7rem;text-transform:uppercase;letter-spacing:.06em;
+                          color:var(--th-muted);font-weight:600;margin-bottom:.3rem">Visa / Work Permit</div>
+                        <div style="font-size:.875rem;font-weight:600;color:var(--th-text)">
+                          {{ candidate.visa_status }}
+                        </div>
+                      </div>
+                    </div>
+                  }
                 </div>
               </div>
             </div>
@@ -508,6 +536,12 @@ type Tab = 'overview' | 'experience' | 'education' | 'documents';
                     </div>
                     @if (exp.description) {
                       <div class="exp-timeline__desc">{{ exp.description }}</div>
+                    }
+                    @if (exp.reason_for_leaving) {
+                      <div class="exp-timeline__period" style="margin-top:.35rem;opacity:.8">
+                        <i class="bi bi-box-arrow-right"></i>
+                        Left: {{ exp.reason_for_leaving }}
+                      </div>
                     }
                   </div>
                 }
@@ -600,6 +634,18 @@ type Tab = 'overview' | 'experience' | 'education' | 'documents';
                           @if (cert.issuer) {
                             <div style="font-size:.75rem;color:var(--th-muted)">{{ cert.issuer }}</div>
                           }
+                          @if (cert.issue_date) {
+                            <div style="font-size:.7rem;color:var(--th-muted)">
+                              Issued: {{ cert.issue_date | date:'dd MMM yyyy' }}
+                            </div>
+                          }
+                          @if (cert.no_expiry) {
+                            <div style="font-size:.7rem;color:var(--th-success,#16a34a)">No Expiry</div>
+                          } @else if (cert.expiry_date) {
+                            <div style="font-size:.7rem;color:var(--th-muted)">
+                              Expires: {{ cert.expiry_date | date:'dd MMM yyyy' }}
+                            </div>
+                          }
                         </div>
                         @if (cert.file_url) {
                           <a [href]="cert.file_url" target="_blank"
@@ -688,6 +734,7 @@ type Tab = 'overview' | 'experience' | 'education' | 'documents';
 export class CandidateProfileComponent {
   @Input() candidate: Candidate | null = null;
   @Input() contactLocked = false;
+  @Input() showAdminInfo = true;
 
   activeTab = signal<Tab>('overview');
 

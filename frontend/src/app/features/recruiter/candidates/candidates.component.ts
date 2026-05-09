@@ -122,13 +122,6 @@ import { CandidateFilterSidebarComponent } from '../../../shared/components/cand
                         <i class="bi bi-briefcase"></i> {{ emp.years_experience }} yrs
                       </span>
                     }
-                    @if (emp.salary_min || emp.salary_max) {
-                      <span class="cand-badge cand-badge--salary">
-                        <i class="bi bi-cash-coin"></i>
-                        {{ emp.salary_currency || '' }}
-                        {{ emp.salary_min | number }}{{ emp.salary_max ? ('–' + (emp.salary_max | number)) : '' }}
-                      </span>
-                    }
                   </div>
 
                   @if (emp.skills?.length) {

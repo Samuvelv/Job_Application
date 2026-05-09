@@ -11,7 +11,7 @@ export interface PaginatedContactRequests {
 }
 
 export interface ContactRequestCounts {
-  pending: number; approved: number; rejected: number; total: number;
+  pending: number; approved: number; rejected: number; revoked: number; total: number;
 }
 
 @Injectable({ providedIn: 'root' })
@@ -47,6 +47,11 @@ export class ContactRequestService {
   // Admin: get counts by status
   getCounts(): Observable<ContactRequestCounts> {
     return this.http.get<ContactRequestCounts>(`${this.api}/counts`);
+  }
+
+  // Admin: revoke an approved request
+  revoke(id: string, reason?: string): Observable<{ request: ContactRequest }> {
+    return this.http.post<{ request: ContactRequest }>(`${this.api}/${id}/revoke`, { reason });
   }
 
   // Admin: bulk approve or reject

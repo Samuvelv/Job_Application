@@ -50,7 +50,7 @@ export class CandidateRegisterComponent implements OnInit, OnDestroy {
   pendingPhoto?:  File;
   pendingResume?: File;
   pendingVideo?:  File;
-  pendingCerts: { file: File; name: string }[] = [];
+  pendingCerts: { name: string; issuer: string; issue_date: string; expiry_date: string; no_expiry: boolean; file?: File; filePreviewUrl?: string }[] = [];
 
   photoPreviewUrl?:  string;
   videoPreviewUrl?:  string;
@@ -74,9 +74,8 @@ export class CandidateRegisterComponent implements OnInit, OnDestroy {
   ];
 
   readonly GENDERS      = ['male', 'female', 'non-binary', 'prefer_not_to_say'];
-  readonly SALARY_TYPES = ['monthly', 'annual', 'hourly'];
   readonly PROFICIENCY_SKILL = ['beginner', 'intermediate', 'expert'];
-  readonly PROFICIENCY_LANG  = ['basic', 'conversational', 'fluent', 'native'];
+  readonly PROFICIENCY_LANG  = ['A1', 'A2', 'B1', 'B2', 'C1', 'C2', 'native'];
   readonly currentYear = new Date().getFullYear();
 
   readonly genderOptions: SelectOption[] = [
@@ -85,21 +84,19 @@ export class CandidateRegisterComponent implements OnInit, OnDestroy {
     { value: 'non-binary',      label: 'Non-binary'      },
     { value: 'prefer_not_to_say', label: 'Prefer not to say' },
   ];
-  readonly salaryTypeOptions: SelectOption[] = [
-    { value: 'monthly', label: 'Monthly' },
-    { value: 'annual',  label: 'Annual'  },
-    { value: 'hourly',  label: 'Hourly'  },
-  ];
   readonly proficiencySkillOptions: SelectOption[] = [
     { value: 'beginner',     label: 'Beginner'     },
     { value: 'intermediate', label: 'Intermediate' },
     { value: 'expert',       label: 'Expert'       },
   ];
   readonly proficiencyLangOptions: SelectOption[] = [
-    { value: 'basic',          label: 'Basic'          },
-    { value: 'conversational', label: 'Conversational' },
-    { value: 'fluent',         label: 'Fluent'         },
-    { value: 'native',         label: 'Native'         },
+    { value: 'A1',     label: 'A1 — Beginner'       },
+    { value: 'A2',     label: 'A2 — Elementary'      },
+    { value: 'B1',     label: 'B1 — Intermediate'    },
+    { value: 'B2',     label: 'B2 — Upper Intermediate' },
+    { value: 'C1',     label: 'C1 — Advanced'        },
+    { value: 'C2',     label: 'C2 — Proficient'      },
+    { value: 'native', label: 'Native'                },
   ];
   readonly registrationFeeStatusOptions = REGISTRATION_FEE_STATUS_OPTIONS;
   readonly cvFormatOptions = CV_FORMAT_OPTIONS;
@@ -133,9 +130,6 @@ export class CandidateRegisterComponent implements OnInit, OnDestroy {
   fieldOfStudyOptions = computed<SelectOption[]>(() =>
     this.master.fieldsOfStudy().map(f => ({ value: f.name, label: f.name })));
 
-  currencyOptions   = computed<SelectOption[]>(() =>
-    this.master.currencies().map(c => ({ value: c.code, label: `${c.code} — ${c.name}`, sublabel: c.symbol })));
-
   noticePeriodOptions = computed<SelectOption[]>(() =>
     this.master.noticePeriods().map(n => ({ value: n.id, label: n.label })));
 
@@ -160,20 +154,20 @@ export class CandidateRegisterComponent implements OnInit, OnDestroy {
       last_name:     ['', [Validators.required, Validators.maxLength(100)]],
       date_of_birth: [''],
       gender:        [''],
-      dial_code:     ['+1'],
-      phone:         [''],
-      bio:           ['', Validators.maxLength(2000)],
+      marital_status: [''],
+      dial_code:            ['+1'],
+      phone:                [''],
+      whatsapp_number:      [''],
+      whatsapp_same_as_phone: [false],
+      bio:                  ['', Validators.maxLength(2000)],
       hobbies:       [[] as string[]],
 
+      employment_status: [''],
       job_title:        [''],
       occupation:       [''],
       industry:         [''],
       years_experience: [null],
       linkedin_url:     [''],
-      salary_min:       [null],
-      salary_max:       [null],
-      salary_currency:  ['USD'],
-      salary_type:      ['monthly'],
       notice_period_id: [null],
 
       skills:    this.fb.array([]),
@@ -194,6 +188,12 @@ export class CandidateRegisterComponent implements OnInit, OnDestroy {
       registration_fee_status: ['pending_payment'],
       cv_format:               ['not_yet_created'],
       source:                  ['Other'],
+      visa_status_select:      [''],
+      visa_status_other:       [''],
+
+      confirm_terms: [false],
+      confirm_fee:   [false],
+      confirm_docs:  [false],
     });
 
     this.addSkill();
@@ -208,9 +208,43 @@ export class CandidateRegisterComponent implements OnInit, OnDestroy {
     // Subscribe to current_country changes for city cascade
     this.form.get('current_country')!.valueChanges.subscribe(v => this.onCountryChange(v));
 
+    // WhatsApp "same as phone" sync
+    this.form.get('whatsapp_same_as_phone')!.valueChanges.subscribe((checked: boolean) => {
+      if (checked) {
+        const raw = this.form.getRawValue();
+        this.form.patchValue({ whatsapp_number: `${raw.dial_code || ''}${raw.phone || ''}`.trim() }, { emitEvent: false });
+      }
+    });
+    this.form.get('phone')!.valueChanges.subscribe(() => {
+      if (this.form.get('whatsapp_same_as_phone')?.value) {
+        const raw = this.form.getRawValue();
+        this.form.patchValue({ whatsapp_number: `${raw.dial_code || ''}${raw.phone || ''}`.trim() }, { emitEvent: false });
+      }
+    });
+    this.form.get('dial_code')!.valueChanges.subscribe(() => {
+      if (this.form.get('whatsapp_same_as_phone')?.value) {
+        const raw = this.form.getRawValue();
+        this.form.patchValue({ whatsapp_number: `${raw.dial_code || ''}${raw.phone || ''}`.trim() }, { emitEvent: false });
+      }
+    });
+
     this.draftSub = this.form.valueChanges.pipe(debounceTime(800)).subscribe(() => {
       this.saveDraft();
     });
+
+    this.draftSub.add(
+      this.form.get('bio')!.valueChanges.subscribe((val: string | null) => {
+        const text  = val ?? '';
+        const words = text.trim() === '' ? [] : text.trim().split(/\s+/).filter(Boolean);
+        if (words.length > this.BIO_WORD_LIMIT) {
+          const clamped = words.slice(0, this.BIO_WORD_LIMIT).join(' ');
+          this.form.get('bio')!.setValue(clamped, { emitEvent: false });
+          this.bioWordCount = this.BIO_WORD_LIMIT;
+        } else {
+          this.bioWordCount = words.length;
+        }
+      })
+    );
   }
 
   ngOnDestroy(): void {
@@ -251,11 +285,12 @@ export class CandidateRegisterComponent implements OnInit, OnDestroy {
       if (!raw) return;
       const draft = JSON.parse(raw);
       const scalarKeys = [
-        'first_name','last_name','date_of_birth','gender','dial_code','phone','bio',
+        'first_name','last_name','date_of_birth','gender','marital_status','dial_code','phone','whatsapp_number','bio',
         'job_title','occupation','industry','years_experience','linkedin_url',
-        'salary_min','salary_max','salary_currency','salary_type','notice_period_id',
+        'notice_period_id',
         'current_country','current_city','nationality','postal_code','target_locations',
         'email','password','hobbies','registration_fee_status','cv_format','source',
+        'visa_status_select','visa_status_other','employment_status',
       ];      const patch: Record<string, unknown> = {};
       for (const k of scalarKeys) {
         if (draft[k] !== undefined && draft[k] !== null && draft[k] !== '') patch[k] = draft[k];
@@ -286,6 +321,9 @@ export class CandidateRegisterComponent implements OnInit, OnDestroy {
     this.experience.push(this.fb.group({
       company_name: [''], job_title: [''], start_date: [''],
       end_date: [''], description: [''], location: [''],
+      reason_for_leaving_select: [''],
+      reason_for_leaving_other:  [''],
+      currently_working: [false],
     }));
   }
   removeExperience(i: number): void { this.experience.removeAt(i); }
@@ -381,12 +419,30 @@ export class CandidateRegisterComponent implements OnInit, OnDestroy {
     this.videoPreviewUrl = URL.createObjectURL(file);
     this._objectUrls.push(this.videoPreviewUrl);
   }
-  onCertSelected(e: Event): void {
+  addCertEntry(): void {
+    this.pendingCerts.push({ name: '', issuer: '', issue_date: '', expiry_date: '', no_expiry: false });
+  }
+  onCertFileSelected(i: number, e: Event): void {
     const file = (e.target as HTMLInputElement).files?.[0];
-    if (file) this.pendingCerts.push({ file, name: file.name });
+    if (!file) return;
+    const cert = this.pendingCerts[i];
+    if (cert.filePreviewUrl) URL.revokeObjectURL(cert.filePreviewUrl);
+    cert.file = file;
+    cert.filePreviewUrl = URL.createObjectURL(file);
+    this._objectUrls.push(cert.filePreviewUrl);
+    if (!cert.name) cert.name = file.name.replace(/\.[^.]+$/, '');
     (e.target as HTMLInputElement).value = '';
   }
-  removeCert(i: number): void { this.pendingCerts.splice(i, 1); }
+  toggleCertNoExpiry(i: number): void {
+    const cert = this.pendingCerts[i];
+    cert.no_expiry = !cert.no_expiry;
+    if (cert.no_expiry) cert.expiry_date = '';
+  }
+  removeCert(i: number): void {
+    const cert = this.pendingCerts[i];
+    if (cert.filePreviewUrl) URL.revokeObjectURL(cert.filePreviewUrl);
+    this.pendingCerts.splice(i, 1);
+  }
   clearPhoto(): void {
     if (this.photoPreviewUrl) { URL.revokeObjectURL(this.photoPreviewUrl); this._objectUrls = this._objectUrls.filter(u => u !== this.photoPreviewUrl); }
     this.pendingPhoto = undefined; this.photoPreviewUrl = undefined;
@@ -410,6 +466,13 @@ export class CandidateRegisterComponent implements OnInit, OnDestroy {
     return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
   }
 
+  readonly BIO_WORD_LIMIT = 2000;
+  bioWordCount = 0;
+
+  countWords(text: string): number {
+    return text.trim() === '' ? 0 : text.trim().split(/\s+/).filter(Boolean).length;
+  }
+
   // ── Submit ─────────────────────────────────────────────────────────────────
   onSubmit(): void {
     this.submitted = true;
@@ -419,7 +482,18 @@ export class CandidateRegisterComponent implements OnInit, OnDestroy {
     const raw = this.form.getRawValue();
     const skills      = raw.skills.filter((s: any) => s.skill_name?.trim());
     const languages   = raw.languages.filter((l: any) => l.language?.trim());
-    const experience  = raw.experience.filter((e: any) => e.company_name?.trim() || e.job_title?.trim());
+    const experience  = raw.experience
+      .filter((e: any) => e.company_name?.trim() || e.job_title?.trim())
+      .map((e: any) => {
+        const { reason_for_leaving_select: sel, reason_for_leaving_other: other, currently_working: cw, ...rest } = e;
+        return {
+          ...rest,
+          end_date: cw ? null : (rest.end_date || null),
+          reason_for_leaving: sel === 'Other'
+            ? (other?.trim() ? `Other: ${other.trim()}` : 'Other')
+            : (sel || undefined),
+        };
+      });
     const education   = raw.education.filter((e: any) => e.institution?.trim() || e.degree?.trim());
 
     const phone = raw.phone ? `${raw.dial_code || ''}${raw.phone}`.trim() : undefined;
@@ -429,17 +503,16 @@ export class CandidateRegisterComponent implements OnInit, OnDestroy {
       first_name: raw.first_name, last_name: raw.last_name,
       date_of_birth:    raw.date_of_birth   || undefined,
       gender:           raw.gender          || undefined,
+      marital_status:   raw.marital_status  || undefined,
       phone:            phone               || undefined,
+      whatsapp_number:  raw.whatsapp_number || undefined,
       bio:              raw.bio             || undefined,
+      employment_status: raw.employment_status || undefined,
       job_title:        raw.job_title       || undefined,
       occupation:       raw.occupation      || undefined,
       industry:         raw.industry        || undefined,
       years_experience: raw.years_experience || undefined,
       linkedin_url:     raw.linkedin_url    || undefined,
-      salary_min:       raw.salary_min      || undefined,
-      salary_max:       raw.salary_max      || undefined,
-      salary_currency:  raw.salary_currency || undefined,
-      salary_type:      raw.salary_type     || undefined,
       notice_period_id: raw.notice_period_id || undefined,
       current_country:  raw.current_country || undefined,
       current_city:     raw.current_city    || undefined,
@@ -450,6 +523,9 @@ export class CandidateRegisterComponent implements OnInit, OnDestroy {
       registration_fee_status: raw.registration_fee_status || 'pending_payment',
       cv_format:               raw.cv_format               || 'not_yet_created',
       source:                  raw.source                  || 'Other',
+      visa_status: raw.visa_status_select === 'other'
+        ? (raw.visa_status_other?.trim() ? `Other: ${raw.visa_status_other.trim()}` : 'Other — specify')
+        : (raw.visa_status_select || undefined),
       skills, languages, experience, education,
     };
 
@@ -461,7 +537,7 @@ export class CandidateRegisterComponent implements OnInit, OnDestroy {
         this.clearDraft();
         this.loading    = false;
         this.createdCandidateNumber = res.candidate.candidate_number ?? '';
-        this.successMsg = `${res.candidate.first_name} ${res.candidate.last_name} registered successfully! Credentials emailed.`;
+        this.successMsg = `${res.candidate.first_name} ${res.candidate.last_name} registered successfully! Welcome email sent. WhatsApp notification dispatched (if number provided).`;
         setTimeout(() => this.router.navigate(['/admin/candidates']), 3000);
       },
       error: (err) => {
@@ -477,7 +553,14 @@ export class CandidateRegisterComponent implements OnInit, OnDestroy {
     if (this.pendingResume) uploads.push(this.empSvc.uploadFile(candidateId, 'resumes',      this.pendingResume).toPromise());
     if (this.pendingVideo)  uploads.push(this.empSvc.uploadFile(candidateId, 'videos',       this.pendingVideo).toPromise());
     for (const cert of this.pendingCerts) {
-      uploads.push(this.empSvc.uploadFile(candidateId, 'certificates', cert.file, cert.name).toPromise());
+      if (!cert.file) continue;
+      uploads.push(this.empSvc.uploadCertificate(candidateId, cert.file, {
+        name:        cert.name || cert.file.name,
+        issuer:      cert.issuer      || undefined,
+        issue_date:  cert.issue_date  || undefined,
+        expiry_date: cert.no_expiry   ? null : (cert.expiry_date || null),
+        no_expiry:   cert.no_expiry,
+      }).toPromise());
     }
     await Promise.allSettled(uploads);
   }

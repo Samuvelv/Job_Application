@@ -85,7 +85,7 @@ import { ConfirmDialogService } from '../../../core/services/confirm-dialog.serv
             <span class="audit-trail__label">Submitted</span>
             <span class="audit-trail__value">{{ request.created_at | date:'dd MMM yyyy, HH:mm' }}</span>
           </div>
-          @if (request.status !== 'pending') {
+          @if (request.status !== 'pending' && request.status !== 'revoked') {
             <div class="audit-trail__row">
               <span class="audit-trail__label">Reviewed by</span>
               <span class="audit-trail__value">
@@ -100,6 +100,23 @@ import { ConfirmDialogService } from '../../../core/services/confirm-dialog.serv
             <div class="audit-trail__row">
               <span class="audit-trail__label">Decision made</span>
               <span class="audit-trail__value">{{ request.reviewed_at | date:'dd MMM yyyy, HH:mm' }}</span>
+            </div>
+          }
+          @if (request.status === 'revoked') {
+            <div class="audit-trail__row">
+              <span class="audit-trail__label">Revoked by</span>
+              <span class="audit-trail__value">
+                @if (request.revoked_by_name) {
+                  <i class="bi bi-person-x" style="color:var(--th-danger)"></i>
+                  {{ request.revoked_by_name }}
+                } @else {
+                  <span class="audit-trail__unknown">—</span>
+                }
+              </span>
+            </div>
+            <div class="audit-trail__row">
+              <span class="audit-trail__label">Revoked at</span>
+              <span class="audit-trail__value">{{ request.revoked_at | date:'dd MMM yyyy, HH:mm' }}</span>
             </div>
           }
         </div>
@@ -124,6 +141,24 @@ import { ConfirmDialogService } from '../../../core/services/confirm-dialog.serv
             <i class="bi bi-x-circle"></i>
             Reject
           </button>
+        </div>
+      }
+
+      <!-- Revoke Button (for approved requests, admin only) -->
+      @if (request.status === 'approved' && isAdmin && !isSubmitting) {
+        <div class="card-actions">
+          <button class="btn btn-warning btn-action" (click)="onRevokeClick()" style="background:#f59e0b;border-color:#f59e0b;color:#fff">
+            <i class="bi bi-shield-x"></i>
+            Revoke Access
+          </button>
+        </div>
+      }
+
+      <!-- Revocation info (revoked rows) -->
+      @if (request.status === 'revoked' && request.revocation_reason) {
+        <div class="admin-notes-section">
+          <p class="admin-note-label">Revocation Reason</p>
+          <p class="admin-note-text">{{ request.revocation_reason }}</p>
         </div>
       }
 
@@ -298,6 +333,11 @@ import { ConfirmDialogService } from '../../../core/services/confirm-dialog.serv
     .status-rejected {
       background-color: var(--th-danger-soft);
       color: var(--th-danger);
+    }
+
+    .status-revoked {
+      background-color: #f3f4f6;
+      color: #6b7280;
     }
 
     /* ── Audit Trail ── */
@@ -509,6 +549,7 @@ export class ContactRequestCardComponent implements OnInit {
   @Input() selected: boolean = false;
   @Output() approved = new EventEmitter<{ id: string; adminNote?: string }>();
   @Output() rejected = new EventEmitter<{ id: string; adminNote?: string }>();
+  @Output() revoked  = new EventEmitter<{ id: string }>();
   @Output() cancelled = new EventEmitter<void>();
   @Output() selectionChange = new EventEmitter<boolean>();
 
@@ -525,6 +566,13 @@ export class ContactRequestCardComponent implements OnInit {
   onCheckboxChange(event: Event): void {
     const checked = (event.target as HTMLInputElement).checked;
     this.selectionChange.emit(checked);
+  }
+
+  /**
+   * Handle revoke button click
+   */
+  onRevokeClick(): void {
+    this.revoked.emit({ id: this.request.id });
   }
 
   /**

@@ -1,5 +1,5 @@
 // src/app/features/candidate/edit-request/edit-request.component.ts
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import {
   ReactiveFormsModule, FormBuilder, FormGroup,
@@ -10,6 +10,8 @@ import { EditRequestService } from '../../../core/services/edit-request.service'
 import { Candidate } from '../../../core/models/candidate.model';
 import { EditRequest } from '../../../core/models/edit-request.model';
 import { ToastService } from '../../../core/services/toast.service';
+import { MasterDataService } from '../../../core/services/master-data.service';
+import { SearchableSelectComponent, SelectOption } from '../../../shared/components/searchable-select/searchable-select.component';
 
 function skillGroupValidator(g: AbstractControl): ValidationErrors | null {
   const name = g.get('skill_name')?.value?.trim();
@@ -31,7 +33,7 @@ import { PageHeaderComponent } from '../../../shared/components/page-header/page
 @Component({
   selector: 'app-edit-request',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, PageHeaderComponent],
+  imports: [CommonModule, ReactiveFormsModule, PageHeaderComponent, SearchableSelectComponent],
   template: `
     <app-page-header
       title="Request Profile Edit"
@@ -291,9 +293,24 @@ import { PageHeaderComponent } from '../../../shared/components/page-header/page
                 <option value="prefer_not_to_say">Prefer not to say</option>
               </select>
             </div>
+            <div class="col-md-4">
+              <label class="form-label small fw-semibold">Marital Status <span class="text-muted fw-normal">(Optional)</span></label>
+              <select formControlName="marital_status" class="form-select form-select-sm">
+                <option value="">— Select —</option>
+                <option value="single">Single</option>
+                <option value="married">Married</option>
+                <option value="divorced">Divorced</option>
+                <option value="widowed">Widowed</option>
+              </select>
+            </div>
             <div class="col-12">
               <label class="form-label small fw-semibold">Bio</label>
               <textarea formControlName="bio" class="form-control form-control-sm" rows="3"></textarea>
+              <small class="d-block text-end mt-1"
+                [class.text-muted]="bioWordCount < BIO_WORD_LIMIT"
+                [class.text-danger]="bioWordCount >= BIO_WORD_LIMIT">
+                {{ bioWordCount }} / {{ BIO_WORD_LIMIT }} words
+              </small>
             </div>
             <div class="col-12">
               <label class="form-label small fw-semibold">LinkedIn URL</label>
@@ -352,36 +369,6 @@ import { PageHeaderComponent } from '../../../shared/components/page-header/page
             <div class="col-md-4">
               <label class="form-label small fw-semibold">Nationality</label>
               <input formControlName="nationality" class="form-control form-control-sm">
-            </div>
-          </div>
-        </div>
-
-        <!-- ── Salary ─────────────────────────────────────────────────────── -->
-        <div class="form-card mb-4">
-          <h5 class="card-section-header card-section-header--warning">
-            <i class="bi bi-cash-coin"></i> Salary Expectation
-          </h5>
-          <div class="row g-3">
-            <div class="col-md-3">
-              <label class="form-label small fw-semibold">Min</label>
-              <input formControlName="salary_min" type="number" min="0" class="form-control form-control-sm">
-            </div>
-            <div class="col-md-3">
-              <label class="form-label small fw-semibold">Max</label>
-              <input formControlName="salary_max" type="number" min="0" class="form-control form-control-sm">
-            </div>
-            <div class="col-md-3">
-              <label class="form-label small fw-semibold">Currency</label>
-              <input formControlName="salary_currency" class="form-control form-control-sm" placeholder="USD">
-            </div>
-            <div class="col-md-3">
-              <label class="form-label small fw-semibold">Type</label>
-              <select formControlName="salary_type" class="form-select form-select-sm">
-                <option value="">— Select —</option>
-                <option value="monthly">Monthly</option>
-                <option value="annual">Annual</option>
-                <option value="hourly">Hourly</option>
-              </select>
             </div>
           </div>
         </div>
@@ -458,9 +445,12 @@ import { PageHeaderComponent } from '../../../shared/components/page-header/page
                 <select formControlName="proficiency" class="form-select form-select-sm"
                   [class.is-invalid]="asGroup(ctrl).get('proficiency')!.invalid && asGroup(ctrl).get('proficiency')!.touched">
                   <option value="">— Select —</option>
-                  <option value="basic">Basic</option>
-                  <option value="conversational">Conversational</option>
-                  <option value="fluent">Fluent</option>
+                  <option value="A1">A1 — Beginner</option>
+                  <option value="A2">A2 — Elementary</option>
+                  <option value="B1">B1 — Intermediate</option>
+                  <option value="B2">B2 — Upper Intermediate</option>
+                  <option value="C1">C1 — Advanced</option>
+                  <option value="C2">C2 — Proficient</option>
                   <option value="native">Native</option>
                 </select>
                 @if (asGroup(ctrl).get('proficiency')!.invalid && asGroup(ctrl).get('proficiency')!.touched) {
@@ -538,10 +528,75 @@ import { PageHeaderComponent } from '../../../shared/components/page-header/page
                 <div class="col-md-3">
                   <input formControlName="end_year" type="number" class="form-control form-control-sm" placeholder="End Year">
                 </div>
+                <div class="col-md-6">
+                  <label class="form-label form-label-sm text-muted mb-1">Country of Institution</label>
+                  <app-searchable-select
+                    formControlName="location"
+                    [options]="countryOptions()"
+                    placeholder="Select country…"
+                    [allowClear]="true">
+                  </app-searchable-select>
+                </div>
               </div>
               <button type="button" class="btn btn-sm btn-outline-danger mt-2"
                 (click)="removeEducation($index)">Remove</button>
             </div>
+          }
+        </div>
+
+        <!-- Certificates -->
+        <div class="section-header d-flex justify-content-between align-items-center">
+          <h6 class="section-header__title"><i class="bi bi-patch-check"></i> Certificates</h6>
+          <button type="button" class="btn btn-sm btn-outline-primary" (click)="addCertEntry()">+ Add</button>
+        </div>
+        <div class="d-flex flex-column gap-3 mb-4">
+          @for (ctrl of certificateArray.controls; track $index) {
+            <div [formGroup]="asGroup(ctrl)" class="card border" style="border-radius:var(--th-radius)">
+              <div class="card-body p-3">
+                <div class="d-flex justify-content-between align-items-start mb-2">
+                  <span class="small fw-semibold text-muted">Certificate {{ $index + 1 }}</span>
+                  <button type="button" class="btn btn-sm btn-outline-danger py-0 px-1" (click)="removeCertEntry($index)">
+                    <i class="bi bi-x-lg"></i>
+                  </button>
+                </div>
+                <div class="row g-2">
+                  <div class="col-12 col-md-6">
+                    <label class="form-label form-label--sm">Name</label>
+                    <input type="text" class="form-control form-control-sm" formControlName="name" placeholder="Certificate name">
+                  </div>
+                  <div class="col-12 col-md-6">
+                    <label class="form-label form-label--sm">Issuing Organisation</label>
+                    <input type="text" class="form-control form-control-sm" formControlName="issuer" placeholder="e.g. Amazon Web Services">
+                  </div>
+                  <div class="col-6 col-md-3">
+                    <label class="form-label form-label--sm">Issue Date</label>
+                    <input type="date" class="form-control form-control-sm" formControlName="issue_date">
+                  </div>
+                  <div class="col-6 col-md-3">
+                    <label class="form-label form-label--sm">Expiry Date</label>
+                    <input type="date" class="form-control form-control-sm" formControlName="expiry_date"
+                      [attr.disabled]="asGroup(ctrl).get('no_expiry')?.value ? true : null">
+                  </div>
+                  <div class="col-12 col-md-6 d-flex align-items-end pb-1">
+                    <div class="form-check mb-0">
+                      <input class="form-check-input" type="checkbox" [id]="'cert-no-expiry-'+$index" formControlName="no_expiry">
+                      <label class="form-check-label small" [for]="'cert-no-expiry-'+$index">No Expiry</label>
+                    </div>
+                  </div>
+                </div>
+                @if (asGroup(ctrl).get('file_url')?.value) {
+                  <div class="mt-2">
+                    <a [href]="asGroup(ctrl).get('file_url')?.value" target="_blank" class="btn btn-sm btn-outline-secondary">
+                      <i class="bi bi-eye me-1"></i> View current file
+                    </a>
+                    <span class="text-muted small ms-2">(file managed by admin)</span>
+                  </div>
+                }
+              </div>
+            </div>
+          }
+          @if (!certificateArray.length) {
+            <div class="text-muted small">No certificates — click Add to request adding one.</div>
           }
         </div>
 
@@ -617,9 +672,14 @@ export class EditRequestComponent implements OnInit {
     private candidateService: CandidateService,
     private editRequestService: EditRequestService,
     private toast: ToastService,
+    public master: MasterDataService,
   ) {}
 
+  readonly countryOptions = computed<SelectOption[]>(() =>
+    this.master.countries().map(c => ({ value: c.name, label: `${c.flag_emoji} ${c.name}` })));
+
   ngOnInit(): void {
+    this.master.loadAll();
     this.editRequestService.getMyRequest().subscribe({
       next: (res) => (this.existingRequest = res.request),
     });
@@ -635,12 +695,14 @@ export class EditRequestComponent implements OnInit {
   }
 
   buildForm(emp: Candidate): void {
+    this.bioWordCount = this.countWords(emp.bio ?? '');
     this.form = this.fb.group({
       first_name:       [emp.first_name       ?? '', Validators.required],
       last_name:        [emp.last_name        ?? '', Validators.required],
       phone:            [emp.phone            ?? ''],
       date_of_birth:    [emp.date_of_birth    ?? ''],
       gender:           [emp.gender           ?? ''],
+      marital_status:   [emp.marital_status   ?? ''],
       bio:              [emp.bio              ?? ''],
       linkedin_url:     [emp.linkedin_url     ?? ''],
       job_title:        [emp.job_title        ?? ''],
@@ -650,10 +712,6 @@ export class EditRequestComponent implements OnInit {
       current_country:  [emp.current_country  ?? ''],
       current_city:     [emp.current_city     ?? ''],
       nationality:      [emp.nationality      ?? ''],
-      salary_min:       [emp.salary_min       ?? null],
-      salary_max:       [emp.salary_max       ?? null],
-      salary_currency:  [emp.salary_currency  ?? ''],
-      salary_type:      [emp.salary_type      ?? ''],
       skills:     this.fb.array((emp.skills    ?? []).map((s) =>
         this.fb.group({ skill_name: [s.skill_name, Validators.required], proficiency: [s.proficiency ?? ''] }, { validators: skillGroupValidator }))),
       languages:  this.fb.array((emp.languages ?? []).map((l) =>
@@ -673,6 +731,27 @@ export class EditRequestComponent implements OnInit {
         start_year:     [e.start_year     ?? null],
         end_year:       [e.end_year       ?? null],
       }))),
+      certificates: this.fb.array((emp.certificates ?? []).map((c) => this.fb.group({
+        id:          [c.id          ?? null],
+        name:        [c.name        ?? ''],
+        issuer:      [c.issuer      ?? ''],
+        issue_date:  [c.issue_date  ?? ''],
+        expiry_date: [c.expiry_date ?? ''],
+        no_expiry:   [c.no_expiry   ?? false],
+        file_url:    [c.file_url    ?? ''],
+      }))),
+    });
+
+    this.form!.get('bio')!.valueChanges.subscribe((val: string | null) => {
+      const text  = val ?? '';
+      const words = text.trim() === '' ? [] : text.trim().split(/\s+/).filter(Boolean);
+      if (words.length > this.BIO_WORD_LIMIT) {
+        const clamped = words.slice(0, this.BIO_WORD_LIMIT).join(' ');
+        this.form!.get('bio')!.setValue(clamped, { emitEvent: false });
+        this.bioWordCount = this.BIO_WORD_LIMIT;
+      } else {
+        this.bioWordCount = words.length;
+      }
     });
   }
 
@@ -681,6 +760,7 @@ export class EditRequestComponent implements OnInit {
   get languagesArray(): FormArray { return this.form!.get('languages')  as FormArray; }
   get experienceArray():FormArray { return this.form!.get('experience') as FormArray; }
   get educationArray(): FormArray { return this.form!.get('education')  as FormArray; }
+  get certificateArray(): FormArray { return this.form!.get('certificates') as FormArray; }
 
   asGroup(c: import('@angular/forms').AbstractControl): FormGroup { return c as FormGroup; }
 
@@ -698,10 +778,17 @@ export class EditRequestComponent implements OnInit {
   addEducation(): void {
     this.educationArray.push(this.fb.group({
       institution: [''], degree: [''], field_of_study: [''],
-      start_year: [null], end_year: [null],
+      start_year: [null], end_year: [null], location: [''],
     }));
   }
   removeEducation(i: number): void { this.educationArray.removeAt(i); }
+
+  addCertEntry(): void {
+    this.certificateArray.push(this.fb.group({
+      id: [null], name: [''], issuer: [''], issue_date: [''], expiry_date: [''], no_expiry: [false], file_url: [''],
+    }));
+  }
+  removeCertEntry(i: number): void { this.certificateArray.removeAt(i); }
 
   // ── Stage media ─────────────────────────────────────────────────────────
   /** Map upload type → candidate field name for the submit payload */
@@ -710,6 +797,14 @@ export class EditRequestComponent implements OnInit {
     resumes:  'resume_url',
     videos:   'intro_video_url',
   };
+
+  // ── Bio word counter ────────────────────────────────────────────────────────
+  readonly BIO_WORD_LIMIT = 2000;
+  bioWordCount = 0;
+
+  countWords(text: string): number {
+    return text.trim() === '' ? 0 : text.trim().split(/\s+/).filter(Boolean).length;
+  }
 
   stageFile(type: 'profiles' | 'resumes' | 'videos', event: Event): void {
     const file = (event.target as HTMLInputElement).files?.[0];

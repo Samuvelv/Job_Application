@@ -77,4 +77,9 @@ export const adminRoutes: Routes = [
     loadComponent: () =>
       import('./volunteers/volunteer-profile-page.component').then((m) => m.VolunteerProfilePageComponent),
   },
+  {
+    path: 'interest-requests',
+    loadComponent: () =>
+      import('./interest-requests/interest-requests.component').then((m) => m.InterestRequestsComponent),
+  },
 ];

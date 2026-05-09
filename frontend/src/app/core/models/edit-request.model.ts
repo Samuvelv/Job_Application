@@ -17,7 +17,7 @@ export interface EditRequest {
   reviewed_by_name?: string | null;
 }
 
-export type EditRequestType = 'personal' | 'professional' | 'location' | 'salary' | 'skills' | 'languages' | 'experience' | 'education';
+export type EditRequestType = 'personal' | 'professional' | 'location' | 'skills' | 'languages' | 'experience' | 'education';
 
 export interface EditRequestFilters {
   status?:       'pending' | 'approved' | 'rejected';

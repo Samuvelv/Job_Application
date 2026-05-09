@@ -42,7 +42,7 @@ import { MasterDataService } from '../../../core/services/master-data.service';
         </div>
       </div>
 
-      <!-- ── Location + industry + sponsor ── -->
+      <!-- ── Location + industry + type + sponsor ── -->
       <div class="rc-card__tags">
         @if (recruiter.company_country) {
           <span class="rc-card__tag">
@@ -55,6 +55,7 @@ import { MasterDataService } from '../../../core/services/master-data.service';
             <i class="bi bi-building"></i> {{ recruiter.industry }}
           </span>
         }
+        <span class="rc-badge rc-badge--sm {{ typeInfo.cls }}">{{ typeInfo.label }}</span>
         @if (sponsorInfo) {
           <span class="rc-badge rc-badge--sm {{ sponsorInfo.cls }}">{{ sponsorInfo.label }}</span>
         }
@@ -163,6 +164,13 @@ export class RecruiterCardComponent {
     if (!this.recruiter.is_active) return { label: 'Inactive',      cls: 'rc-badge--inactive' };
     if (this.isExpired)            return { label: 'Expired',       cls: 'rc-badge--expired'  };
     return                                { label: 'Active',        cls: 'rc-badge--active'   };
+  }
+
+  get typeInfo(): { label: string; cls: string } {
+    if (this.recruiter.type === 'recruitment_agency') {
+      return { label: 'Recruitment Agency', cls: 'rc-badge--type-agency' };
+    }
+    return { label: 'Direct Employer', cls: 'rc-badge--type-employer' };
   }
 
   get sponsorInfo(): { label: string; cls: string } | null {

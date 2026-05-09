@@ -8,6 +8,7 @@ interface NotificationCounts {
   pendingEdits: number;
   pendingContactRequests: number;
   pendingVolunteerSupport: number;
+  pendingInterestRequests: number;
 }
 
 @Injectable({ providedIn: 'root' })
@@ -19,16 +20,19 @@ export class NotificationService implements OnDestroy {
     pendingEdits: 0,
     pendingContactRequests: 0,
     pendingVolunteerSupport: 0,
+    pendingInterestRequests: 0,
   });
 
   // Public computed properties for UI
   pendingEdits            = computed(() => this.counts().pendingEdits);
   pendingContactRequests  = computed(() => this.counts().pendingContactRequests);
   pendingVolunteerSupport = computed(() => this.counts().pendingVolunteerSupport);
+  pendingInterestRequests = computed(() => this.counts().pendingInterestRequests);
   totalPending            = computed(() =>
     this.counts().pendingEdits +
     this.counts().pendingContactRequests +
-    this.counts().pendingVolunteerSupport,
+    this.counts().pendingVolunteerSupport +
+    this.counts().pendingInterestRequests,
   );
 
   private pollingInterval: any = null;

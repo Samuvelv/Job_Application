@@ -263,9 +263,10 @@ function passwordsMatchValidator(g: AbstractControl): ValidationErrors | null {
                       [indeterminate]="isIndeterminate()"
                       (change)="toggleSelectAll()">
                   </th>
-                  <th class="small">#</th>
-                  <th class="small">Name</th>
-                  <th class="small">Company</th>
+                   <th class="small">#</th>
+                   <th class="small">Name</th>
+                   <th class="small">Type</th>
+                   <th class="small">Company</th>
                   <th class="small">Email</th>
                   <th class="small">Expires</th>
                   <th class="small">Status</th>
@@ -286,8 +287,15 @@ function passwordsMatchValidator(g: AbstractControl): ValidationErrors | null {
                         <span class="autocode-badge">{{ rec.recruiter_number }}</span>
                       }
                     </td>
-                    <td class="fw-semibold small">{{ rec.contact_name }}</td>
-                    <td class="small text-muted">{{ rec.company_name || '—' }}</td>
+                     <td class="fw-semibold small">{{ rec.contact_name }}</td>
+                     <td>
+                       <span class="rc-badge rc-badge--sm"
+                         [class.rc-badge--type-employer]="rec.type !== 'recruitment_agency'"
+                         [class.rc-badge--type-agency]="rec.type === 'recruitment_agency'">
+                         {{ rec.type === 'recruitment_agency' ? 'Recruitment Agency' : 'Direct Employer' }}
+                       </span>
+                     </td>
+                     <td class="small text-muted">{{ rec.company_name || '—' }}</td>
                     <td class="small">{{ rec.email }}</td>
                     <td class="small">
                       <span [class.text-danger]="isExpired(rec.access_expires_at)"
@@ -410,18 +418,25 @@ function passwordsMatchValidator(g: AbstractControl): ValidationErrors | null {
                   <i class="bi bi-person"></i> Profile
                 </div>
                 <div class="mb-3">
-                  <label class="form-label">Contact Name <span class="text-danger">*</span></label>
-                  <input formControlName="contact_name" class="form-control"
-                    placeholder="Full name"
-                    [class.is-invalid]="editInvalid('contact_name')">
-                  @if (editInvalid('contact_name')) {
-                    <div class="invalid-feedback">Contact name is required.</div>
-                  }
-                </div>
-                <div class="mb-0">
-                  <label class="form-label">Company Name <span class="rep-optional">optional</span></label>
-                  <input formControlName="company_name" class="form-control" placeholder="e.g. Acme Corp">
-                </div>
+                   <label class="form-label">Contact Name <span class="text-danger">*</span></label>
+                   <input formControlName="contact_name" class="form-control"
+                     placeholder="Full name"
+                     [class.is-invalid]="editInvalid('contact_name')">
+                   @if (editInvalid('contact_name')) {
+                     <div class="invalid-feedback">Contact name is required.</div>
+                   }
+                 </div>
+                 <div class="mb-3">
+                   <label class="form-label">Recruiter Type</label>
+                   <select formControlName="type" class="form-select">
+                     <option value="direct_employer">Direct Employer</option>
+                     <option value="recruitment_agency">Recruitment Agency</option>
+                   </select>
+                 </div>
+                 <div class="mb-0">
+                   <label class="form-label">Company Name <span class="rep-optional">optional</span></label>
+                   <input formControlName="company_name" class="form-control" placeholder="e.g. Acme Corp">
+                 </div>
               </div>
 
               <!-- ── Section: Contact Details ── -->
@@ -497,12 +512,32 @@ function passwordsMatchValidator(g: AbstractControl): ValidationErrors | null {
                 }
               </div>
 
+              <!-- ── Section: Recruitment Agency Details ── -->
+              @if (editIsAgency) {
+                <div class="rep-section">
+                  <div class="rep-section__label">
+                    <i class="bi bi-briefcase"></i> Recruitment Agency Details
+                  </div>
+                  <div class="mb-3">
+                    <label class="form-label">Job Title <span class="rep-optional">e.g. Recruitment Consultant</span></label>
+                    <input formControlName="contact_job_title" class="form-control" placeholder="e.g. Recruitment Consultant">
+                  </div>
+                  <div class="mb-3">
+                    <label class="form-label">Sectors They Recruit For</label>
+                    <app-chip-multi-select formControlName="sectors_recruit_for" [options]="industryChipOpts()" placeholder="Select sectors" />
+                  </div>
+                  <div class="mb-0">
+                    <label class="form-label">Countries They Place In</label>
+                    <app-chip-multi-select formControlName="countries_place_in" [options]="nationalityOpts()" placeholder="Select countries" />
+                  </div>
+                </div>
+              }
+
               <!-- ── Section: Hiring Preferences ── -->
               <div class="rep-section">
                 <div class="rep-section__label">
                   <i class="bi bi-people"></i> Hiring Preferences
-                </div>
-                <div class="mb-3">
+                </div>                <div class="mb-3">
                   <label class="form-label">Target Nationalities</label>
                   <app-chip-multi-select formControlName="target_nationalities" [options]="nationalityOpts()" placeholder="Select nationalities to hire" />
                 </div>
@@ -666,6 +701,9 @@ export class RecruiterListComponent implements OnInit {
   industryOpts = computed<SelectOption[]>(() =>
     this.master.industries().map(i => ({ value: i.name, label: i.name }))
   );
+  industryChipOpts = computed<ChipOption[]>(() =>
+    this.master.industries().map(i => ({ value: i.name, label: i.name }))
+  );
   nationalityOpts = computed<ChipOption[]>(() =>
     this.master.countries().map(c => ({ value: c.name, label: `${c.flag_emoji} ${c.name}` }))
   );
@@ -748,6 +786,10 @@ export class RecruiterListComponent implements OnInit {
 
   get editSponsorYes(): boolean {
     return this.editForm?.get('has_sponsor_licence')?.value === 'yes';
+  }
+
+  get editIsAgency(): boolean {
+    return this.editForm?.get('type')?.value === 'recruitment_agency';
   }
 
   get expiryPreview(): string {
@@ -881,7 +923,6 @@ export class RecruiterListComponent implements OnInit {
     });
     if (!ok) return;
     this.bulkProcessing = true;
-    debugger
     this.recruiterService.bulkStatus(ids, false).subscribe({
       next: (res) => {
         this.toast.success(`${res.updated} recruiter${res.updated === 1 ? '' : 's'} deactivated`);
@@ -971,6 +1012,7 @@ export class RecruiterListComponent implements OnInit {
     this.editForm = this.fb.group({
       // Profile
       contact_name:      [rec.contact_name, Validators.required],
+      type:              [rec.type ?? 'direct_employer'],
       company_name:      [rec.company_name ?? ''],
       // Contact Details
       contact_job_title: [rec.contact_job_title ?? ''],
@@ -988,6 +1030,9 @@ export class RecruiterListComponent implements OnInit {
       // Hiring Preferences
       target_nationalities: [rec.target_nationalities ?? []],
       hires_per_year:       [rec.hires_per_year ?? ''],
+      // Agency fields
+      sectors_recruit_for: [rec.sectors_recruit_for ?? []],
+      countries_place_in:  [rec.countries_place_in ?? []],
       // Account Management
       is_active_str: [rec.is_active ? 'active' : 'inactive'],
       admin_notes:   [rec.admin_notes ?? ''],
@@ -1023,6 +1068,7 @@ export class RecruiterListComponent implements OnInit {
     const payload: Record<string, unknown> = {
       // Profile
       contact_name:      val.contact_name,
+      type:              val.type,
       company_name:      val.company_name || null,
       // Contact Details
       email:             val.email,
@@ -1040,6 +1086,9 @@ export class RecruiterListComponent implements OnInit {
       // Hiring Preferences
       target_nationalities: val.target_nationalities?.length ? val.target_nationalities : null,
       hires_per_year:       val.hires_per_year || null,
+      // Agency fields
+      sectors_recruit_for: val.sectors_recruit_for?.length ? val.sectors_recruit_for : null,
+      countries_place_in:  val.countries_place_in?.length ? val.countries_place_in : null,
       // Account Management
       is_active:  val.is_active_str !== 'inactive',
       admin_notes: val.admin_notes || null,

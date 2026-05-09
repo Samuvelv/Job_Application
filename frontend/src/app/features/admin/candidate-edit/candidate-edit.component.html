@@ -159,38 +159,154 @@
       </div>
 
       <!-- Certificates -->
-      <div class="col-md-3">
-        <div class="media-upload-cell">
-          <div class="media-upload-cell__label">
-            <i class="bi bi-patch-check me-1"></i> Certificates
-            <span class="badge bg-secondary rounded-pill ms-1">{{ candidate.certificates?.length || 0 }}</span>
-          </div>
-          <div class="media-upload-cell__cert-list">
-            @if (candidate.certificates?.length) {
+      <div class="col-12">
+        <div class="card border mb-2" style="border-radius:var(--th-radius-lg)">
+          <div class="card-body p-3">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+              <h6 class="mb-0 fw-semibold"><i class="bi bi-patch-check me-1"></i> Certificates
+                <span class="badge bg-secondary rounded-pill ms-1">{{ candidate.certificates?.length || 0 }}</span>
+              </h6>
+              @if (!pendingNewCert) {
+                <button type="button" class="btn btn-sm btn-outline-primary" (click)="initNewCert()">
+                  <i class="bi bi-plus-lg me-1"></i> Add Certificate
+                </button>
+              }
+            </div>
+
+            <!-- Existing certificates -->
+            <div class="d-flex flex-column gap-2">
               @for (cert of candidate.certificates; track cert.id) {
-                <div class="media-upload-cell__cert-item">
-                  <i class="bi bi-file-earmark-check text-success flex-shrink-0"></i>
-                  <span class="text-truncate flex-grow-1 small">{{ cert.name || 'Certificate' }}</span>
-                  <button type="button" class="media-upload-cell__cert-btn"
-                    (click)="openPreview('pdf', cert.file_url, cert.name || 'Certificate')"><i class="bi bi-eye"></i></button>
-                  <button type="button" class="media-upload-cell__cert-btn media-upload-cell__cert-btn--danger"
-                    [disabled]="certDeleting === cert.id" (click)="deleteCertificate(cert)">
-                    @if (certDeleting === cert.id) { <span class="spinner-border spinner-border-sm"></span> }
-                    @else { <i class="bi bi-trash"></i> }
-                  </button>
+                @if (editingCertId === cert.id && certEditForm) {
+                  <!-- Inline edit form -->
+                  <div class="card border border-primary" [formGroup]="certEditForm" style="border-radius:var(--th-radius)">
+                    <div class="card-body p-3">
+                      <div class="row g-2">
+                        <div class="col-12 col-md-6">
+                          <label class="form-label form-label--sm">Name</label>
+                          <input type="text" class="form-control form-control-sm" formControlName="name">
+                        </div>
+                        <div class="col-12 col-md-6">
+                          <label class="form-label form-label--sm">Issuing Organisation</label>
+                          <input type="text" class="form-control form-control-sm" formControlName="issuer">
+                        </div>
+                        <div class="col-6 col-md-3">
+                          <label class="form-label form-label--sm">Issue Date</label>
+                          <input type="date" class="form-control form-control-sm" formControlName="issue_date">
+                        </div>
+                        <div class="col-6 col-md-3">
+                          <label class="form-label form-label--sm">Expiry Date</label>
+                          <input type="date" class="form-control form-control-sm" formControlName="expiry_date"
+                            [attr.disabled]="certEditForm.get('no_expiry')?.value ? true : null">
+                        </div>
+                        <div class="col-6 col-md-3 d-flex align-items-end pb-1">
+                          <div class="form-check mb-0">
+                            <input class="form-check-input" type="checkbox" id="edit-no-expiry" formControlName="no_expiry">
+                            <label class="form-check-label small" for="edit-no-expiry">No Expiry</label>
+                          </div>
+                        </div>
+                        <div class="col-12 col-md-3 d-flex align-items-end gap-1">
+                          <button type="button" class="btn btn-sm btn-primary flex-grow-1" (click)="saveCertMetadata()">Save</button>
+                          <button type="button" class="btn btn-sm btn-outline-secondary" (click)="cancelEditCert()">Cancel</button>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                } @else {
+                  <!-- Display row -->
+                  <div class="d-flex align-items-start gap-2 p-2 rounded border" style="background:var(--th-surface-raised)">
+                    <i class="bi bi-file-earmark-check text-success flex-shrink-0 mt-1"></i>
+                    <div class="flex-grow-1 overflow-hidden">
+                      <div class="small fw-semibold text-truncate">{{ cert.name || 'Certificate' }}</div>
+                      @if (cert.issuer) {
+                        <div class="x-small text-muted">{{ cert.issuer }}</div>
+                      }
+                      <div class="x-small text-muted">
+                        @if (cert.issue_date) { Issued: {{ cert.issue_date | date:'dd MMM yyyy' }} }
+                        @if (cert.no_expiry) { &nbsp;· No Expiry }
+                        @else if (cert.expiry_date) { &nbsp;· Expires: {{ cert.expiry_date | date:'dd MMM yyyy' }} }
+                      </div>
+                    </div>
+                    <div class="d-flex gap-1 flex-shrink-0">
+                      @if (cert.file_url) {
+                        <button type="button" class="media-upload-cell__cert-btn"
+                          (click)="openPreview('pdf', cert.file_url, cert.name || 'Certificate')">
+                          <i class="bi bi-eye"></i>
+                        </button>
+                      }
+                      <button type="button" class="media-upload-cell__cert-btn" (click)="startEditCert(cert)" title="Edit metadata">
+                        <i class="bi bi-pencil"></i>
+                      </button>
+                      <button type="button" class="media-upload-cell__cert-btn media-upload-cell__cert-btn--danger"
+                        [disabled]="certDeleting === cert.id" (click)="deleteCertificate(cert)">
+                        @if (certDeleting === cert.id) { <span class="spinner-border spinner-border-sm"></span> }
+                        @else { <i class="bi bi-trash"></i> }
+                      </button>
+                    </div>
+                  </div>
+                }
+              }
+              @if (!candidate.certificates?.length && !pendingNewCert) {
+                <div class="media-upload-cell__empty" style="height:60px">
+                  <i class="bi bi-patch-check"></i><span>No certificates</span>
                 </div>
               }
-            } @else {
-              <div class="media-upload-cell__empty" style="height:60px">
-                <i class="bi bi-patch-check"></i><span>No certificates</span>
+            </div>
+
+            <!-- New certificate card -->
+            @if (pendingNewCert) {
+              <div class="card border border-success mt-3" style="border-radius:var(--th-radius)">
+                <div class="card-body p-3">
+                  <div class="fw-semibold small text-success mb-2">New Certificate</div>
+                  <div class="row g-2">
+                    <div class="col-12 col-md-6">
+                      <label class="form-label form-label--sm">Name <span class="text-danger">*</span></label>
+                      <input type="text" class="form-control form-control-sm" placeholder="e.g. AWS Solutions Architect"
+                        [value]="pendingNewCert.name" (input)="pendingNewCert!.name = $any($event.target).value">
+                    </div>
+                    <div class="col-12 col-md-6">
+                      <label class="form-label form-label--sm">Issuing Organisation</label>
+                      <input type="text" class="form-control form-control-sm" placeholder="e.g. Amazon Web Services"
+                        [value]="pendingNewCert.issuer" (input)="pendingNewCert!.issuer = $any($event.target).value">
+                    </div>
+                    <div class="col-6 col-md-3">
+                      <label class="form-label form-label--sm">Issue Date</label>
+                      <input type="date" class="form-control form-control-sm"
+                        [value]="pendingNewCert.issue_date" (input)="pendingNewCert!.issue_date = $any($event.target).value">
+                    </div>
+                    <div class="col-6 col-md-3">
+                      <label class="form-label form-label--sm">Expiry Date</label>
+                      <input type="date" class="form-control form-control-sm"
+                        [value]="pendingNewCert.expiry_date" (input)="pendingNewCert!.expiry_date = $any($event.target).value"
+                        [disabled]="pendingNewCert.no_expiry">
+                    </div>
+                    <div class="col-6 col-md-3 d-flex align-items-end pb-1">
+                      <div class="form-check mb-0">
+                        <input class="form-check-input" type="checkbox" id="new-cert-no-expiry"
+                          [checked]="pendingNewCert.no_expiry"
+                          (change)="toggleNewCertNoExpiry($event)">
+                        <label class="form-check-label small" for="new-cert-no-expiry">No Expiry</label>
+                      </div>
+                    </div>
+                    <div class="col-6 col-md-3 d-flex align-items-end">
+                      <label class="btn btn-sm btn-outline-secondary w-100 mb-0" style="cursor:pointer">
+                        <i class="bi bi-paperclip me-1"></i>
+                        {{ pendingNewCert.file ? pendingNewCert.file.name : 'Attach File *' }}
+                        <input type="file" class="d-none" accept=".pdf,image/jpeg,image/png" (change)="onNewCertFileSelected($event)">
+                      </label>
+                    </div>
+                  </div>
+                  <div class="d-flex gap-2 mt-3">
+                    <button type="button" class="btn btn-sm btn-success"
+                      [disabled]="mediaLoading['certificates']" (click)="submitNewCert()">
+                      @if (mediaLoading['certificates']) { <span class="spinner-border spinner-border-sm me-1"></span> Uploading… }
+                      @else { <i class="bi bi-cloud-upload me-1"></i> Upload }
+                    </button>
+                    <button type="button" class="btn btn-sm btn-outline-secondary" (click)="cancelNewCert()">Cancel</button>
+                  </div>
+                </div>
               </div>
             }
           </div>
-          <label class="btn btn-sm btn-outline-secondary w-100 mt-2" [class.disabled]="mediaLoading['certificates']">
-            @if (mediaLoading['certificates']) { <span class="spinner-border spinner-border-sm me-1"></span> Uploading… }
-            @else { <i class="bi bi-plus-lg me-1"></i> Add Certificate }
-            <input type="file" class="d-none" accept=".pdf,image/jpeg,image/png" (change)="uploadFile('certificates', $event)">
-          </label>
         </div>
       </div>
 
@@ -262,6 +378,16 @@
           </app-searchable-select>
         </div>
         <div class="col-md-4">
+          <label class="form-label">Marital Status <span class="text-muted fw-normal">(Optional)</span></label>
+          <select class="form-select" formControlName="marital_status">
+            <option value="">— Select —</option>
+            <option value="single">Single</option>
+            <option value="married">Married</option>
+            <option value="divorced">Divorced</option>
+            <option value="widowed">Widowed</option>
+          </select>
+        </div>
+        <div class="col-md-4">
           <label class="form-label">Phone</label>
           <div class="phone-input-group">
             <app-searchable-select
@@ -274,10 +400,34 @@
               formControlName="phone" placeholder="e.g. 234 567 8900">
           </div>
         </div>
+        <!-- WhatsApp number -->
+        <div class="col-md-4">
+          <label class="form-label">WhatsApp</label>
+          <div class="input-group">
+            <span class="input-group-text"><i class="bi bi-whatsapp text-success"></i></span>
+            <input type="tel" class="form-control"
+              formControlName="whatsapp_number"
+              placeholder="e.g. +44 7700 900000"
+              [class.bg-light]="form.get('whatsapp_same_as_phone')?.value"
+              [attr.readonly]="form.get('whatsapp_same_as_phone')?.value ? true : null">
+          </div>
+          <div class="form-check mt-1">
+            <input class="form-check-input" type="checkbox"
+              formControlName="whatsapp_same_as_phone" id="wa_same_edit">
+            <label class="form-check-label small text-muted" for="wa_same_edit">
+              Same as phone number
+            </label>
+          </div>
+        </div>
         <div class="col-12">
           <label class="form-label">Bio / Self Introduction</label>
           <textarea class="form-control" formControlName="bio" rows="3"
             placeholder="Brief introduction about the candidate…"></textarea>
+          <small class="d-block text-end mt-1"
+            [class.text-muted]="bioWordCount < BIO_WORD_LIMIT"
+            [class.text-danger]="bioWordCount >= BIO_WORD_LIMIT">
+            {{ bioWordCount }} / {{ BIO_WORD_LIMIT }} words
+          </small>
         </div>
         <!-- Hobbies -->
         <div class="col-12">
@@ -324,15 +474,26 @@
         <i class="bi bi-briefcase"></i> Professional Details
       </h5>
       <div class="row g-3">
-        <div class="col-md-6">
-          <label class="form-label">Job Title</label>
-          <app-searchable-select
-            formControlName="job_title"
-            [options]="jobTitleOptions()"
-            placeholder="e.g. Senior Developer"
-            [allowClear]="true">
-          </app-searchable-select>
-        </div>
+              <div class="col-md-6">
+                <label class="form-label">Employment Status</label>
+                <select class="form-select form-select-sm" formControlName="employment_status">
+                  <option value="">— Select status —</option>
+                  <option value="Currently Employed">Currently Employed</option>
+                  <option value="Currently Unemployed">Currently Unemployed</option>
+                  <option value="Self Employed">Self Employed</option>
+                  <option value="Student">Student</option>
+                  <option value="Career Break">Career Break</option>
+                </select>
+              </div>
+              <div class="col-md-6">
+                <label class="form-label">Job Title</label>
+                <app-searchable-select
+                  formControlName="job_title"
+                  [options]="jobTitleOptions()"
+                  placeholder="e.g. Senior Developer"
+                  [allowClear]="true">
+                </app-searchable-select>
+              </div>
         <div class="col-md-6">
           <label class="form-label">Occupation</label>
           <app-searchable-select
@@ -374,34 +535,6 @@
           <label class="form-label">LinkedIn URL</label>
           <input type="url" class="form-control" formControlName="linkedin_url" placeholder="https://linkedin.com/in/…">
         </div>
-        <div class="col-12 mt-1">
-          <label class="form-label fw-semibold">Salary Expectations</label>
-        </div>
-        <div class="col-md-3">
-          <label class="form-label">Min</label>
-          <input type="number" class="form-control" formControlName="salary_min" placeholder="0">
-        </div>
-        <div class="col-md-3">
-          <label class="form-label">Max</label>
-          <input type="number" class="form-control" formControlName="salary_max" placeholder="0">
-        </div>
-        <div class="col-md-3">
-          <label class="form-label">Currency</label>
-          <app-searchable-select
-            formControlName="salary_currency"
-            [options]="currencyOptions()"
-            placeholder="USD">
-          </app-searchable-select>
-        </div>
-        <div class="col-md-3">
-          <label class="form-label">Type</label>
-          <app-searchable-select
-            formControlName="salary_type"
-            [options]="salaryTypeOptions"
-            placeholder="Select type…"
-            [allowClear]="false">
-          </app-searchable-select>
-        </div>
         <div class="col-md-6">
           <label class="form-label">CV Format</label>
           <app-searchable-select
@@ -411,6 +544,23 @@
             [allowClear]="false">
           </app-searchable-select>
         </div>
+        <div class="col-md-6">
+          <label class="form-label">Visa / Work Permit Status</label>
+          <select class="form-select" formControlName="visa_status_select">
+            <option value="">— Select —</option>
+            <option value="No visa — need full sponsorship">No visa — need full sponsorship</option>
+            <option value="Have valid visa in current country">Have valid visa in current country</option>
+            <option value="Have UK/EU visa already">Have UK/EU visa already</option>
+            <option value="Asylum seeker">Asylum seeker</option>
+            <option value="other">Other — specify</option>
+          </select>
+        </div>
+        @if (form.get('visa_status_select')?.value === 'other') {
+          <div class="col-md-6">
+            <label class="form-label">Please specify</label>
+            <input class="form-control" formControlName="visa_status_other" placeholder="Describe your visa situation…">
+          </div>
+        }
       </div>
     </div>
 
@@ -518,13 +668,14 @@
       <h5 class="card-section-header card-section-header--success mb-4"><i class="bi bi-geo-alt"></i> Location</h5>
       <div class="row g-3">
         <div class="col-md-6">
-          <label class="form-label">Current Country</label>
+          <label class="form-label">Current Country of Residence</label>
           <app-searchable-select
             formControlName="current_country"
             [options]="countryOptions()"
             placeholder="Select country…"
             [allowClear]="true">
           </app-searchable-select>
+          <div class="form-text">Where the candidate is currently living</div>
         </div>
         <div class="col-md-6">
           <label class="form-label">Current City</label>
@@ -537,13 +688,14 @@
           <div class="form-text">Select a country first to load cities</div>
         </div>
         <div class="col-md-6">
-          <label class="form-label">Nationality</label>
+          <label class="form-label">Passport Nationality</label>
           <app-searchable-select
             formControlName="nationality"
             [options]="countryOptions()"
-            placeholder="Select nationality…"
+            placeholder="Select passport country…"
             [allowClear]="true">
           </app-searchable-select>
+          <div class="form-text">Country of passport / citizenship</div>
         </div>
         <div class="col-md-6">
           <label class="form-label">Target Locations</label>
@@ -588,8 +740,18 @@
                 <input type="date" class="form-control form-control-sm" formControlName="start_date">
               </div>
               <div class="col-md-3">
-                <label class="form-label form-label-sm">End Date <span class="text-muted fw-normal" style="font-size:.7rem">(blank = current)</span></label>
-                <input type="date" class="form-control form-control-sm" formControlName="end_date">
+                <label class="form-label form-label-sm">End Date</label>
+                @if (!experience.at($index).get('currently_working')?.value) {
+                  <input type="date" class="form-control form-control-sm" formControlName="end_date">
+                } @else {
+                  <div class="form-control form-control-sm bg-success-subtle text-success fw-semibold d-flex align-items-center gap-1">
+                    <i class="bi bi-circle-fill" style="font-size:.45rem"></i> Present
+                  </div>
+                }
+                <div class="form-check mt-1">
+                  <input type="checkbox" class="form-check-input" formControlName="currently_working" id="cw_{{$index}}">
+                  <label class="form-check-label small text-muted" for="cw_{{$index}}">I currently work here</label>
+                </div>
               </div>
               <div class="col-md-6">
                 <label class="form-label form-label-sm">Location</label>
@@ -605,6 +767,26 @@
                 <textarea class="form-control form-control-sm" formControlName="description" rows="2"
                   placeholder="Key responsibilities and achievements…"></textarea>
               </div>
+              <div class="col-md-6">
+                <label class="form-label form-label-sm">Reason for Leaving <span class="text-muted fw-normal" style="font-size:.7rem">(optional)</span></label>
+                <select class="form-select form-select-sm" formControlName="reason_for_leaving_select">
+                  <option value="">— Select —</option>
+                  <option value="Career Growth">Career Growth</option>
+                  <option value="Better Opportunity">Better Opportunity</option>
+                  <option value="Relocation">Relocation</option>
+                  <option value="Contract Ended">Contract Ended</option>
+                  <option value="Redundancy">Redundancy</option>
+                  <option value="Personal Reasons">Personal Reasons</option>
+                  <option value="Other">Other</option>
+                </select>
+              </div>
+              @if (experience.at($index).get('reason_for_leaving_select')?.value === 'Other') {
+                <div class="col-md-6">
+                  <label class="form-label form-label-sm">Please specify</label>
+                  <input class="form-control form-control-sm" formControlName="reason_for_leaving_other"
+                    placeholder="Briefly describe the reason…">
+                </div>
+              }
             </div>
           </div>
         }

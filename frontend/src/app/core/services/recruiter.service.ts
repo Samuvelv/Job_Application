@@ -32,19 +32,30 @@ export class RecruiterService {
   create(data: {
     email: string;
     contact_name: string;
+    type?: string;
     contact_job_title?: string;
+    phone?: string;
+    whatsapp_number?: string;
     company_name?: string;
     company_country?: string;
     company_city?: string;
     company_website?: string;
     industry?: string;
-    phone?: string;
-    has_sponsor_licence?: 'yes' | 'no' | 'unknown';
+    company_size?: string;
+    has_sponsor_licence?: 'yes' | 'no' | 'applied' | 'unknown';
     sponsor_licence_number?: string;
     sponsor_licence_countries?: string[];
+    licence_rating?: string;
+    licence_verified?: boolean;
     target_nationalities?: string[];
+    sectors_recruit_for?: string[];
+    countries_place_in?: string[];
     hires_per_year?: string;
+    job_types?: string[];
+    account_status?: 'active' | 'pending' | 'suspended';
     is_active?: boolean;
+    access_start_date?: string;
+    free_account?: boolean;
     admin_notes?: string;
     password: string;
     access_expires_at: string;
@@ -59,6 +70,7 @@ export class RecruiterService {
   update(id: string, data: {
     email?: string;
     contact_name?: string;
+    type?: string;
     contact_job_title?: string | null;
     company_name?: string | null;
     company_country?: string | null;
@@ -66,10 +78,12 @@ export class RecruiterService {
     company_website?: string | null;
     industry?: string | null;
     phone?: string | null;
-    has_sponsor_licence?: 'yes' | 'no' | 'unknown' | null;
+    has_sponsor_licence?: 'yes' | 'no' | 'applied' | 'unknown' | null;
     sponsor_licence_number?: string | null;
     sponsor_licence_countries?: string[] | null;
     target_nationalities?: string[] | null;
+    sectors_recruit_for?: string[] | null;
+    countries_place_in?: string[] | null;
     hires_per_year?: string | null;
     admin_notes?: string | null;
     new_password?: string;

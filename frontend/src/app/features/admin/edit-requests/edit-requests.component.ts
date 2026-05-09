@@ -294,7 +294,6 @@ import { ContactRequestCardComponent } from '../../../shared/components/contact-
               <option value="personal">Personal Info</option>
               <option value="professional">Professional</option>
               <option value="location">Location</option>
-              <option value="salary">Salary</option>
               <option value="skills">Skills</option>
               <option value="languages">Languages</option>
               <option value="experience">Experience</option>
@@ -659,6 +658,7 @@ import { ContactRequestCardComponent } from '../../../shared/components/contact-
                   (selectionChange)="onContactSelectionChange(req.id, $event)"
                   (approved)="onContactApproved($event)"
                   (rejected)="onContactRejected($event)"
+                  (revoked)="onContactRevoked($event)"
                   (cancelled)="onContactReviewCancelled()">
                 </app-contact-request-card>
               </div>
@@ -695,29 +695,36 @@ import { ContactRequestCardComponent } from '../../../shared/components/contact-
                       </td>
                     }
                     <td class="fw-semibold small">{{ (req.candidate_first_name ? req.candidate_first_name + ' ' + req.candidate_last_name : null) ?? req.recruiter_name ?? '—' }}</td>
-                    <td>
-                      @if (req.status === 'pending') {
-                        <span class="badge bg-warning-subtle text-warning border border-warning-subtle" style="font-size:.7rem">Pending</span>
-                      } @else if (req.status === 'approved') {
-                        <span class="badge bg-success-subtle text-success border border-success-subtle" style="font-size:.7rem">Approved</span>
-                      } @else {
-                        <span class="badge bg-danger-subtle text-danger border border-danger-subtle" style="font-size:.7rem">Rejected</span>
-                      }
-                    </td>
-                    <td class="small text-muted">{{ req.created_at | date:'dd MMM yyyy' }}</td>
-                    <td class="small text-muted">{{ req.reviewed_by_name || '—' }}</td>
+                     <td>
+                       @if (req.status === 'pending') {
+                         <span class="badge bg-warning-subtle text-warning border border-warning-subtle" style="font-size:.7rem">Pending</span>
+                       } @else if (req.status === 'approved') {
+                         <span class="badge bg-success-subtle text-success border border-success-subtle" style="font-size:.7rem">Approved</span>
+                       } @else if (req.status === 'revoked') {
+                         <span class="badge bg-secondary-subtle text-secondary border border-secondary-subtle" style="font-size:.7rem">Revoked</span>
+                       } @else {
+                         <span class="badge bg-danger-subtle text-danger border border-danger-subtle" style="font-size:.7rem">Rejected</span>
+                       }
+                     </td>
+                     <td class="small text-muted">{{ req.created_at | date:'dd MMM yyyy' }}</td>
+                     <td class="small text-muted">{{ req.revoked_by_name || req.reviewed_by_name || '—' }}</td>
                     <td class="text-end">
-                      @if (req.status === 'pending') {
-                        <div class="d-flex justify-content-end gap-1">
-                          <button class="btn btn-xs btn-success" (click)="onContactApproved({ id: req.id })">
-                            <i class="bi bi-check"></i>
-                          </button>
-                          <button class="btn btn-xs btn-danger" (click)="onContactRejected({ id: req.id })">
-                            <i class="bi bi-x"></i>
-                          </button>
-                        </div>
-                      }
-                    </td>
+                       @if (req.status === 'pending') {
+                         <div class="d-flex justify-content-end gap-1">
+                           <button class="btn btn-xs btn-success" (click)="onContactApproved({ id: req.id })">
+                             <i class="bi bi-check"></i>
+                           </button>
+                           <button class="btn btn-xs btn-danger" (click)="onContactRejected({ id: req.id })">
+                             <i class="bi bi-x"></i>
+                           </button>
+                         </div>
+                       } @else if (req.status === 'approved') {
+                         <button class="btn btn-xs btn-warning" title="Revoke access"
+                           (click)="onContactRevoked({ id: req.id })">
+                           <i class="bi bi-shield-x me-1"></i>Revoke
+                         </button>
+                       }
+                     </td>
                   </tr>
                 }
               </tbody>
@@ -948,7 +955,7 @@ export class EditRequestsComponent implements OnInit, OnDestroy {
   contactSelectedIds = new Set<string>();
 
   // Contact tab counts
-  contactCounts: ContactRequestCounts = { pending: 0, approved: 0, rejected: 0, total: 0 };
+  contactCounts: ContactRequestCounts = { pending: 0, approved: 0, rejected: 0, revoked: 0, total: 0 };
 
   // Volunteer support state
   supportRequests: VolunteerSupportRequest[] = [];
@@ -981,6 +988,7 @@ export class EditRequestsComponent implements OnInit, OnDestroy {
     { label: 'Pending',  value: 'pending'  },
     { label: 'Approved', value: 'approved' },
     { label: 'Rejected', value: 'rejected' },
+    { label: 'Revoked',  value: 'revoked'  },
     { label: 'All',      value: ''         },
   ];
 
@@ -992,12 +1000,10 @@ export class EditRequestsComponent implements OnInit, OnDestroy {
 
   private readonly fieldLabels: Record<string, string> = {
     first_name: 'First Name', last_name: 'Last Name', phone: 'Phone',
-    date_of_birth: 'Date of Birth', gender: 'Gender', bio: 'Bio',
+    date_of_birth: 'Date of Birth', gender: 'Gender', marital_status: 'Marital Status', bio: 'Bio',
     linkedin_url: 'LinkedIn', job_title: 'Job Title', occupation: 'Occupation',
     industry: 'Industry', years_experience: 'Yrs Experience',
     current_country: 'Country', current_city: 'City', nationality: 'Nationality',
-    salary_min: 'Salary Min', salary_max: 'Salary Max',
-    salary_currency: 'Currency', salary_type: 'Salary Type',
     skills: 'Skills', languages: 'Languages',
     experience: 'Work Experience', education: 'Education',
   };
@@ -1081,6 +1087,7 @@ export class EditRequestsComponent implements OnInit, OnDestroy {
     if (value === 'pending')  return this.contactCounts.pending;
     if (value === 'approved') return this.contactCounts.approved;
     if (value === 'rejected') return this.contactCounts.rejected;
+    if (value === 'revoked')  return this.contactCounts.revoked;
     return this.contactCounts.total;
   }
 
@@ -1100,6 +1107,7 @@ export class EditRequestsComponent implements OnInit, OnDestroy {
     if (this.contactStatus === 'pending')  return 'No pending requests — all caught up!';
     if (this.contactStatus === 'approved') return 'No approved requests yet';
     if (this.contactStatus === 'rejected') return 'No rejected requests yet';
+    if (this.contactStatus === 'revoked')  return 'No revoked requests yet';
     return 'No contact requests found';
   }
 
@@ -1505,6 +1513,34 @@ export class EditRequestsComponent implements OnInit, OnDestroy {
 
   onContactReviewCancelled(): void {
     this.reviewSubmitting = false;
+  }
+
+  onContactRevoked(event: { id: string; reason?: string }): void {
+    this.confirmDialog.confirm({
+      title:        'Revoke Contact Access?',
+      message:      'This will immediately remove the recruiter\'s access to this candidate\'s contact details. They will be notified by email.',
+      confirmLabel: 'Revoke Access',
+      cancelLabel:  'Cancel',
+      confirmClass: 'btn-danger',
+      showNoteField: true,
+      noteLabel:    'Reason for Revocation (Optional)',
+      notePlaceholder: 'Explain why access is being revoked…',
+    }).then(result => {
+      if (!result.confirmed) return;
+      this.reviewSubmitting = true;
+      this.contactRequestService.revoke(event.id, result.notes || undefined).subscribe({
+        next: () => {
+          this.reviewSubmitting = false;
+          this.toast.success('Contact access revoked');
+          this.loadContactRequests();
+          this.refreshContactCounts();
+        },
+        error: (err) => {
+          this.reviewSubmitting = false;
+          this.toast.error(err?.error?.message ?? 'Failed to revoke access');
+        },
+      });
+    });
   }
 
   // ── Volunteer Support Requests ─────────────────────────────────────────────

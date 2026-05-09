@@ -1,4 +1,5 @@
 // src/app/core/models/candidate.model.ts
+import { AgencyReferral } from './agency-referral.model';
 
 export interface Skill {
   id?: number;
@@ -20,6 +21,7 @@ export interface Experience {
   end_date?: string | null;
   description?: string;
   location?: string;
+  reason_for_leaving?: string;
 }
 
 export interface Education {
@@ -37,6 +39,8 @@ export interface Certificate {
   name?: string;
   issuer?: string;
   issue_date?: string;
+  expiry_date?: string | null;
+  no_expiry?: boolean;
   file_url?: string;
 }
 
@@ -51,16 +55,20 @@ export interface Candidate {
   last_name: string;
   date_of_birth?: string;
   gender?: string;
+  marital_status?: string;
   phone?: string;
+  whatsapp_number?: string;
   profile_photo_url?: string;
   bio?: string;
 
   // Professional
+  employment_status?: string;
   job_title?: string;
   occupation?: string;
   industry?: string;
   years_experience?: number;
   linkedin_url?: string;
+  visa_status?: string;
 
   // Location
   current_country?: string;
@@ -69,12 +77,6 @@ export interface Candidate {
   postal_code?: string;
   target_locations?: string[];
   hobbies?: string[];
-
-  // Salary
-  salary_min?: number;
-  salary_max?: number;
-  salary_currency?: string;
-  salary_type?: string;
 
   // Files
   resume_url?: string;
@@ -96,6 +98,7 @@ export interface Candidate {
   experience?: Experience[];
   education?: Education[];
   certificates?: Certificate[];
+  referrals?: AgencyReferral[];
 
   created_at?: string;
   updated_at?: string;
@@ -122,10 +125,6 @@ export interface CandidateFilters {
   fieldOfStudy?: string;
   // Language
   languages?: string;       // comma-sep
-  // Salary
-  salaryMin?: number;
-  salaryMax?: number;
-  salaryCurrency?: string;
   // Age
   ageMin?: number;
   ageMax?: number;

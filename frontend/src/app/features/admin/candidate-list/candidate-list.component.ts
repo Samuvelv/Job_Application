@@ -805,7 +805,10 @@ export class CandidateListComponent implements OnInit {
   }
 
   private readonly englishLabels: Record<string, string> = {
-    basic: 'Basic', conversational: 'Conversational', fluent: 'Fluent', native: 'Native',
+    // Legacy values (mapped during migration, kept for safety)
+    basic: 'A1', conversational: 'B1', fluent: 'C1', native: 'Native',
+    // CEFR values
+    a1: 'A1', a2: 'A2', b1: 'B1', b2: 'B2', c1: 'C1', c2: 'C2',
   };
 
   englishLabel(level: string | undefined): string {

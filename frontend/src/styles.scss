@@ -3026,6 +3026,12 @@ body {
     color: var(--th-danger);
     border: 1px solid rgba(var(--th-danger-rgb, 220,38,38), .2);
   }
+
+  &--revoked {
+    background: rgba(107,114,128,.1);
+    color: #4b5563;
+    border: 1px solid rgba(107,114,128,.25);
+  }
 }
 
 // Section toggle for edit-requests page
@@ -7465,10 +7471,6 @@ body {
     background: var(--th-violet-soft);
     color: var(--th-violet);
   }
-  &--salary {
-    background: var(--th-emerald-soft);
-    color: var(--th-emerald);
-  }
   &--more {
     background: var(--th-surface-raised);
     color: var(--th-muted);
@@ -10366,6 +10368,9 @@ html { scroll-behavior: smooth; }
   &--sponsor-yes     { background: var(--th-emerald-soft); color: #065f46; }
   &--sponsor-no      { background: var(--th-rose-soft);    color: #9f1239; }
   &--sponsor-pending { background: var(--th-amber-soft);   color: #92400e; }
+
+  &--type-employer { background: #dbeafe; color: #1d4ed8; }
+  &--type-agency   { background: #ede9fe; color: #6d28d9; }
 }
 
 // ── Metrics ───────────────────────────────────────────────────────────────────

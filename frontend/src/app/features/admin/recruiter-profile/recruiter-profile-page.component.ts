@@ -1,5 +1,5 @@
 // src/app/features/admin/recruiter-profile/recruiter-profile-page.component.ts
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, RouterLink } from '@angular/router';
@@ -7,11 +7,13 @@ import { RecruiterService } from '../../../core/services/recruiter.service';
 import { Recruiter, ShortlistEntry } from '../../../core/models/recruiter.model';
 import { ToastService } from '../../../core/services/toast.service';
 import { ConfirmDialogService } from '../../../core/services/confirm-dialog.service';
+import { MasterDataService } from '../../../core/services/master-data.service';
+import { ChipMultiSelectComponent, ChipOption } from '../../../shared/components/chip-multi-select/chip-multi-select.component';
 
 @Component({
   selector: 'app-recruiter-profile-page',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink],
+  imports: [CommonModule, FormsModule, RouterLink, ChipMultiSelectComponent],
   template: `
     <!-- Back + actions row -->
     <div class="d-flex align-items-center justify-content-between mb-4 gap-2 flex-wrap">
@@ -188,6 +190,65 @@ import { ConfirmDialogService } from '../../../core/services/confirm-dialog.serv
 
       </div>
 
+      <!-- ── Agency Details card (agency only) ──────────────────────────── -->
+      @if (recruiter.type === 'recruitment_agency') {
+        <div class="row g-3 mb-4">
+          <div class="col-12">
+            <div class="rp-info-card">
+              <div class="rp-info-card__header">
+                <i class="bi bi-briefcase-fill rp-info-card__icon rp-info-card__icon--purple"></i>
+                <span>Recruitment Agency Details</span>
+              </div>
+              <div class="rp-info-card__rows">
+                @if (recruiter.contact_job_title) {
+                  <div class="rp-info-card__row">
+                    <i class="bi bi-person-badge"></i>
+                    <div>
+                      <div class="rp-info-card__label">Job Title</div>
+                      <div class="rp-info-card__value">{{ recruiter.contact_job_title }}</div>
+                    </div>
+                  </div>
+                }
+                <div class="rp-info-card__row">
+                  <i class="bi bi-tags"></i>
+                  <div>
+                    <div class="rp-info-card__label">Sectors They Recruit For</div>
+                    <div class="rp-info-card__value">
+                      @if (recruiter.sectors_recruit_for?.length) {
+                        <div class="d-flex flex-wrap gap-1 mt-1">
+                          @for (s of recruiter.sectors_recruit_for; track s) {
+                            <span class="badge bg-secondary">{{ s }}</span>
+                          }
+                        </div>
+                      } @else {
+                        <span class="text-muted">—</span>
+                      }
+                    </div>
+                  </div>
+                </div>
+                <div class="rp-info-card__row">
+                  <i class="bi bi-globe2"></i>
+                  <div>
+                    <div class="rp-info-card__label">Countries They Place In</div>
+                    <div class="rp-info-card__value">
+                      @if (recruiter.countries_place_in?.length) {
+                        <div class="d-flex flex-wrap gap-1 mt-1">
+                          @for (c of recruiter.countries_place_in; track c) {
+                            <span class="badge bg-info text-dark">{{ c }}</span>
+                          }
+                        </div>
+                      } @else {
+                        <span class="text-muted">—</span>
+                      }
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      }
+
       <!-- ── Shortlisted Candidates ─────────────────────────────────────── -->
       <div class="rp-shortlist-section">
 
@@ -302,6 +363,28 @@ import { ConfirmDialogService } from '../../../core/services/confirm-dialog.serv
                 <input class="form-control" [(ngModel)]="editCompany" placeholder="Optional">
               </div>
 
+              <!-- Agency-only fields -->
+              @if (recruiter.type === 'recruitment_agency') {
+                <div class="mb-3">
+                  <label class="form-label fw-semibold">Job Title <span class="text-muted fw-normal">(e.g. Recruitment Consultant)</span></label>
+                  <input class="form-control" [(ngModel)]="editJobTitle" placeholder="e.g. Recruitment Consultant">
+                </div>
+                <div class="mb-3">
+                  <label class="form-label fw-semibold">Sectors They Recruit For</label>
+                  <app-chip-multi-select
+                    [(ngModel)]="editSectorsRecruitFor"
+                    [options]="industryChipOpts()"
+                    placeholder="Select sectors" />
+                </div>
+                <div class="mb-3">
+                  <label class="form-label fw-semibold">Countries They Place In</label>
+                  <app-chip-multi-select
+                    [(ngModel)]="editCountriesPlaceIn"
+                    [options]="nationalityChipOpts()"
+                    placeholder="Select countries" />
+                </div>
+              }
+
               <!-- Access Duration -->
               <div class="mb-3">
                 <label class="form-label fw-semibold">Extend Access Duration</label>
@@ -404,10 +487,21 @@ export class RecruiterProfilePageComponent implements OnInit {
   loadError = '';
   shortlistLoading = false;
 
+  // Computed options for agency fields
+  industryChipOpts = computed<ChipOption[]>(() =>
+    this.master.industries().map(i => ({ value: i.name, label: i.name }))
+  );
+  nationalityChipOpts = computed<ChipOption[]>(() =>
+    this.master.countries().map(c => ({ value: c.name, label: `${c.flag_emoji} ${c.name}` }))
+  );
+
   // Edit panel state
   editOpen = false;
   editName = '';
   editCompany = '';
+  editJobTitle = '';
+  editSectorsRecruitFor: string[] = [];
+  editCountriesPlaceIn: string[] = [];
   editSaving = false;
   editError = '';
   editSubmitted = false;
@@ -429,11 +523,13 @@ export class RecruiterProfilePageComponent implements OnInit {
     private recruiterSvc: RecruiterService,
     private toast: ToastService,
     private confirm: ConfirmDialogService,
+    private master: MasterDataService,
   ) {}
 
   ngOnInit(): void {
     this.recruiterId = this.route.snapshot.paramMap.get('id') ?? '';
     if (!this.recruiterId) { this.loadError = 'Invalid recruiter ID.'; return; }
+    this.master.loadAll();
     this.load();
   }
 
@@ -462,19 +558,22 @@ export class RecruiterProfilePageComponent implements OnInit {
   // ── Edit ────────────────────────────────────────────────────────────────────
   openEdit(): void {
     if (!this.recruiter) return;
-    this.editName          = this.recruiter.contact_name;
-    this.editCompany       = this.recruiter.company_name ?? '';
-    this.editError         = '';
-    this.editSubmitted     = false;
-    this.editDurationValue = null;
-    this.editDurationUnit  = '';
-    this.editExpiryPreview = '';
-    this.editNewPassword   = '';
-    this.editConfirmPassword = '';
-    this.showCurrentPw     = false;
-    this.showNewPw         = false;
-    this.showConfirmPw     = false;
-    this.editOpen          = true;
+    this.editName               = this.recruiter.contact_name;
+    this.editCompany            = this.recruiter.company_name ?? '';
+    this.editJobTitle           = this.recruiter.contact_job_title ?? '';
+    this.editSectorsRecruitFor  = [...(this.recruiter.sectors_recruit_for ?? [])];
+    this.editCountriesPlaceIn   = [...(this.recruiter.countries_place_in ?? [])];
+    this.editError              = '';
+    this.editSubmitted          = false;
+    this.editDurationValue      = null;
+    this.editDurationUnit       = '';
+    this.editExpiryPreview      = '';
+    this.editNewPassword        = '';
+    this.editConfirmPassword    = '';
+    this.showCurrentPw          = false;
+    this.showNewPw              = false;
+    this.showConfirmPw          = false;
+    this.editOpen               = true;
   }
 
   closeEdit(): void {
@@ -520,6 +619,12 @@ export class RecruiterProfilePageComponent implements OnInit {
       contact_name: this.editName.trim(),
       company_name: this.editCompany.trim() || null,
     };
+
+    if (this.recruiter!.type === 'recruitment_agency') {
+      payload['contact_job_title']    = this.editJobTitle.trim() || null;
+      payload['sectors_recruit_for']  = this.editSectorsRecruitFor.length ? this.editSectorsRecruitFor : null;
+      payload['countries_place_in']   = this.editCountriesPlaceIn.length ? this.editCountriesPlaceIn : null;
+    }
 
     if (this.editNewPassword) payload['new_password'] = this.editNewPassword;
 
