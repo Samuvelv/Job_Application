@@ -3,7 +3,7 @@ import { Component, OnInit, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, FormGroup, FormControl, Validators, AbstractControl, ValidationErrors } from '@angular/forms';
 import { RouterLink } from '@angular/router';
-import { catchError, of } from 'rxjs';
+import { catchError, of, distinctUntilChanged, skip } from 'rxjs';
 import { RecruiterService } from '../../../core/services/recruiter.service';
 import { MasterDataService } from '../../../core/services/master-data.service';
 import { Recruiter } from '../../../core/models/recruiter.model';
@@ -52,18 +52,16 @@ function passwordsMatchValidator(g: AbstractControl): ValidationErrors | null {
         <button type="button" class="filter-search-btn" (click)="search()">
           <i class="bi bi-search"></i> Search
         </button>
-        <!-- Sort By -->
-        <div class="cl-sort-wrap">
-          <i class="bi bi-sort-down cl-sort-wrap__icon"></i>
-          <select class="form-select form-select-sm cl-sort-select"
-            [formControl]="sortCtrl"
-            (change)="onSortChange()"
-            title="Sort recruiters">
-            @for (opt of RECRUITER_SORT_OPTIONS; track opt.value) {
-              <option [value]="opt.value">{{ opt.label }}</option>
-            }
-          </select>
-        </div>
+      <!-- Sort By -->
+      <div class="cl-sort-wrap">
+        <i class="bi bi-sort-down cl-sort-wrap__icon"></i>
+        <app-searchable-select
+          [formControl]="sortCtrl"
+          [options]="RECRUITER_SORT_OPTIONS"
+          [allowClear]="false"
+          placeholder="Sort by…">
+        </app-searchable-select>
+      </div>
         <button type="button" class="cfs-toggle-sidebar-btn"
           [class.active]="advOpen"
           (click)="advOpen = !advOpen">
@@ -124,12 +122,12 @@ function passwordsMatchValidator(g: AbstractControl): ValidationErrors | null {
               </div>
               <div class="col-sm-6 col-md-4 col-lg-3">
                 <label class="filter-card__section-label">Industry / Sector</label>
-                <select class="form-select form-select-sm" formControlName="industry">
-                  <option value="">All Industries</option>
-                  @for (opt of INDUSTRY_OPTIONS; track opt) {
-                    <option [value]="opt">{{ opt }}</option>
-                  }
-                </select>
+                <app-searchable-select
+                  formControlName="industry"
+                  [options]="INDUSTRY_SELECT_OPTS"
+                  placeholder="All Industries"
+                  [allowClear]="true">
+                </app-searchable-select>
               </div>
             </div>
 
@@ -138,21 +136,21 @@ function passwordsMatchValidator(g: AbstractControl): ValidationErrors | null {
             <div class="row g-2 mb-3">
               <div class="col-sm-6 col-md-4 col-lg-3">
                 <label class="filter-card__section-label">Holds Sponsor Licence</label>
-                <select class="form-select form-select-sm" formControlName="hasSponsorLicence">
-                  <option value="">Any</option>
-                  <option value="yes">Yes</option>
-                  <option value="no">No</option>
-                  <option value="unknown">Unknown</option>
-                </select>
+                <app-searchable-select
+                  formControlName="hasSponsorLicence"
+                  [options]="LICENCE_OPTS"
+                  placeholder="Any"
+                  [allowClear]="true">
+                </app-searchable-select>
               </div>
               <div class="col-sm-6 col-md-4 col-lg-3">
                 <label class="filter-card__section-label">Sponsor Licence Country</label>
-                <select class="form-select form-select-sm" formControlName="sponsorCountry">
-                  <option value="">Any Country</option>
-                  @for (opt of SPONSOR_COUNTRY_OPTIONS; track opt) {
-                    <option [value]="opt">{{ opt }}</option>
-                  }
-                </select>
+                <app-searchable-select
+                  formControlName="sponsorCountry"
+                  [options]="SPONSOR_COUNTRY_OPTS"
+                  placeholder="Any Country"
+                  [allowClear]="true">
+                </app-searchable-select>
               </div>
             </div>
 
@@ -161,21 +159,21 @@ function passwordsMatchValidator(g: AbstractControl): ValidationErrors | null {
             <div class="row g-2 mb-3">
               <div class="col-sm-6 col-md-4 col-lg-3">
                 <label class="filter-card__section-label">Account Status</label>
-                <select class="form-select form-select-sm" formControlName="accountStatus">
-                  <option value="">All Statuses</option>
-                  <option value="active">Active</option>
-                  <option value="inactive">Inactive</option>
-                  <option value="expired">Expired Access</option>
-                </select>
+                <app-searchable-select
+                  formControlName="accountStatus"
+                  [options]="ACCOUNT_STATUS_OPTS"
+                  placeholder="All Statuses"
+                  [allowClear]="true">
+                </app-searchable-select>
               </div>
               <div class="col-sm-6 col-md-4 col-lg-3">
                 <label class="filter-card__section-label">Last Active</label>
-                <select class="form-select form-select-sm" formControlName="lastActive">
-                  <option value="">Any Time</option>
-                  <option value="7_days">Within 7 days</option>
-                  <option value="30_days">Within 30 days</option>
-                  <option value="90_days">Within 90 days</option>
-                </select>
+                <app-searchable-select
+                  formControlName="lastActive"
+                  [options]="LAST_ACTIVE_OPTS"
+                  placeholder="Any Time"
+                  [allowClear]="true">
+                </app-searchable-select>
               </div>
               <div class="col-sm-6 col-md-4 col-lg-3">
                 <label class="filter-card__section-label">Date Joined — From</label>
@@ -693,7 +691,7 @@ function passwordsMatchValidator(g: AbstractControl): ValidationErrors | null {
   `,
 })
 export class RecruiterListComponent implements OnInit {
-  readonly RECRUITER_SORT_OPTIONS = RECRUITER_SORT_OPTIONS;
+  readonly RECRUITER_SORT_OPTIONS: SelectOption[] = RECRUITER_SORT_OPTIONS;
 
   countryOpts = computed<SelectOption[]>(() =>
     this.master.countries().map(c => ({ value: c.name, label: `${c.flag_emoji} ${c.name}` }))
@@ -715,6 +713,35 @@ export class RecruiterListComponent implements OnInit {
   readonly SPONSOR_COUNTRY_OPTIONS = [
     'United Kingdom', 'Germany', 'Netherlands', 'Canada', 'Australia',
     'United States', 'France', 'Ireland', 'New Zealand', 'Singapore',
+  ];
+
+  // ── Filter SelectOption[] arrays for app-searchable-select ─────────────────
+  readonly INDUSTRY_SELECT_OPTS: SelectOption[] = [
+    'Healthcare', 'IT', 'Engineering', 'Finance',
+    'Care', 'Education', 'Hospitality', 'Construction',
+  ].map(v => ({ value: v, label: v }));
+
+  readonly SPONSOR_COUNTRY_OPTS: SelectOption[] = [
+    'United Kingdom', 'Germany', 'Netherlands', 'Canada', 'Australia',
+    'United States', 'France', 'Ireland', 'New Zealand', 'Singapore',
+  ].map(v => ({ value: v, label: v }));
+
+  readonly LICENCE_OPTS: SelectOption[] = [
+    { value: 'yes',     label: 'Yes' },
+    { value: 'no',      label: 'No' },
+    { value: 'unknown', label: 'Unknown' },
+  ];
+
+  readonly ACCOUNT_STATUS_OPTS: SelectOption[] = [
+    { value: 'active',   label: 'Active' },
+    { value: 'inactive', label: 'Inactive' },
+    { value: 'expired',  label: 'Expired Access' },
+  ];
+
+  readonly LAST_ACTIVE_OPTS: SelectOption[] = [
+    { value: '7_days',  label: 'Within 7 days' },
+    { value: '30_days', label: 'Within 30 days' },
+    { value: '90_days', label: 'Within 90 days' },
   ];
 
   recruiters: Recruiter[] = [];
@@ -764,6 +791,11 @@ export class RecruiterListComponent implements OnInit {
   ngOnInit(): void {
     this.master.loadAll();
     this.load();
+    // Re-load on sort change (app-searchable-select uses formControl, no (change) event)
+    this.sortCtrl.valueChanges.pipe(
+      skip(1),
+      distinctUntilChanged(),
+    ).subscribe(() => this.onSortChange());
   }
 
   get activeAdvCount(): number {

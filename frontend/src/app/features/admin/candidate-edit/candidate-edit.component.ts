@@ -6,13 +6,24 @@ import {
   FormArray, Validators, AbstractControl, ValidationErrors, ValidatorFn,
 } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
+import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 import { CandidateService } from '../../../core/services/candidate.service';
 import { ToastService } from '../../../core/services/toast.service';
 import { MasterDataService } from '../../../core/services/master-data.service';
 import { SearchableSelectComponent, SelectOption } from '../../../shared/components/searchable-select/searchable-select.component';
 import { ChipMultiSelectComponent, ChipOption } from '../../../shared/components/chip-multi-select/chip-multi-select.component';
 import { Candidate, Certificate } from '../../../core/models/candidate.model';
-import { REGISTRATION_FEE_STATUS_OPTIONS, CV_FORMAT_OPTIONS, SOURCE_OPTIONS } from '../../../core/constants/candidate-options';
+import { REGISTRATION_FEE_STATUS_OPTIONS, CV_FORMAT_OPTIONS, SOURCE_OPTIONS, EMPLOYMENT_STATUS_OPTIONS, VISA_STATUS_OPTIONS, REASON_FOR_LEAVING_OPTIONS } from '../../../core/constants/candidate-options';
+
+// ── LinkedIn URL validator ─────────────────────────────────────────────────
+function linkedInValidator(): ValidatorFn {
+  return (ctrl: AbstractControl): ValidationErrors | null => {
+    const v = (ctrl.value as string || '').trim();
+    if (!v) return null;
+    const ok = /^https?:\/\/(www\.)?linkedin\.com\/(in|company|pub|school)\/[a-zA-Z0-9\-_%]+\/?/.test(v);
+    return ok ? null : { invalidLinkedIn: true };
+  };
+}
 
 function skillGroupValidator(g: AbstractControl): ValidationErrors | null {
   const name = g.get('skill_name')?.value?.trim();
@@ -30,11 +41,153 @@ function langGroupValidator(g: AbstractControl): ValidationErrors | null {
   return null;
 }
 
+// ── Phone rules ────────────────────────────────────────────────────────────
+interface PhoneRule { minLen: number; maxLen: number; pattern?: RegExp; hint: string; }
+const PHONE_RULES: Record<string, PhoneRule> = {
+  '+91':  { minLen: 10, maxLen: 10, pattern: /^[6-9]\d{9}$/,   hint: '10 digits starting with 6–9 (India)' },
+  '+1':   { minLen: 10, maxLen: 10, pattern: /^\d{10}$/,        hint: '10 digits (US / Canada)' },
+  '+44':  { minLen: 10, maxLen: 11, pattern: /^7\d{9}$/,        hint: '10 digits starting with 7 (UK mobile)' },
+  '+61':  { minLen: 9,  maxLen: 9,  pattern: /^[4]\d{8}$/,      hint: '9 digits starting with 4 (Australia)' },
+  '+971': { minLen: 9,  maxLen: 9,  pattern: /^[5]\d{8}$/,      hint: '9 digits starting with 5 (UAE)' },
+  '+234': { minLen: 10, maxLen: 11, pattern: /^[7-9]\d{9,10}$/, hint: '10–11 digits starting with 7–9 (Nigeria)' },
+  '+254': { minLen: 9,  maxLen: 9,  pattern: /^[7]\d{8}$/,      hint: '9 digits starting with 7 (Kenya)' },
+  '+27':  { minLen: 9,  maxLen: 9,  pattern: /^[6-8]\d{8}$/,    hint: '9 digits starting with 6–8 (South Africa)' },
+  '+49':  { minLen: 10, maxLen: 12, pattern: /^\d{10,12}$/,     hint: '10–12 digits (Germany)' },
+  '+33':  { minLen: 9,  maxLen: 9,  pattern: /^[6-7]\d{8}$/,    hint: '9 digits starting with 6–7 (France)' },
+};
+const PHONE_FALLBACK: PhoneRule = { minLen: 5, maxLen: 15, pattern: /^\d{5,15}$/, hint: '5–15 digits' };
+function getPhoneRule(dialCode: string): PhoneRule { return PHONE_RULES[dialCode] ?? PHONE_FALLBACK; }
+
+function dobValidator(): ValidatorFn {
+  return (ctrl: AbstractControl): ValidationErrors | null => {
+    const v = ctrl.value;
+    if (!v) return null;
+    const date = new Date(v);
+    if (isNaN(date.getTime())) return { invalidDate: true };
+    const today = new Date(); today.setHours(0, 0, 0, 0);
+    if (date >= today) return { futureDate: true };
+    const age = today.getFullYear() - date.getFullYear()
+      - (today < new Date(today.getFullYear(), date.getMonth(), date.getDate()) ? 1 : 0);
+    if (age < 16) return { tooYoung: true };
+    if (age > 100) return { tooOld: true };
+    return null;
+  };
+}
+
+function makePhoneGroupValidator(dialCtrl: string, numCtrl: string): ValidatorFn {
+  return (group: AbstractControl): ValidationErrors | null => {
+    const dial = group.get(dialCtrl)?.value as string || '';
+    const num  = (group.get(numCtrl)?.value as string || '').replace(/\s+/g, '');
+    const numControl = group.get(numCtrl);
+    if (!numControl) return null;
+    if (!num) {
+      const cur = numControl.errors;
+      if (cur?.['phoneInvalid']) { const { phoneInvalid: _, ...rest } = cur; numControl.setErrors(Object.keys(rest).length ? rest : null); }
+      return null;
+    }
+    const rule = getPhoneRule(dial);
+    const ok = /^\d+$/.test(num) && num.length >= rule.minLen && num.length <= rule.maxLen && (rule.pattern ? rule.pattern.test(num) : true);
+    if (!ok) {
+      numControl.setErrors({ ...(numControl.errors || {}), phoneInvalid: `Invalid number for ${dial}. Expected: ${rule.hint}.` });
+      return { phoneInvalid: true };
+    }
+    const cur = numControl.errors;
+    if (cur?.['phoneInvalid']) { const { phoneInvalid: _, ...rest } = cur; numControl.setErrors(Object.keys(rest).length ? rest : null); }
+    return null;
+  };
+}
+
 function passwordsMatchValidator(g: AbstractControl): ValidationErrors | null {
   const pw  = g.get('new_password')?.value;
   const cpw = g.get('confirm_password')?.value;
   if (!pw) return null;
   return pw === cpw ? null : { passwordsMismatch: true };
+}
+
+// ── Education year validator ───────────────────────────────────────────────
+function eduYearValidator(minYear: number, maxYear: number): ValidatorFn {
+  return (ctrl: AbstractControl): ValidationErrors | null => {
+    const v = ctrl.value;
+    if (v === null || v === '' || v === undefined) return null;
+    const n = Number(v);
+    if (!Number.isInteger(n)) return { eduYearInvalid: 'Must be a whole number.' };
+    if (String(v).replace('-', '').length !== 4) return { eduYearInvalid: 'Must be a 4-digit year.' };
+    if (n < minYear) return { eduYearInvalid: `Year must be ${minYear} or later.` };
+    if (n > maxYear) return { eduYearInvalid: `Year must be ${maxYear} or earlier.` };
+    return null;
+  };
+}
+
+function eduEndYearGroupValidator(g: AbstractControl): ValidationErrors | null {
+  const start = Number(g.get('start_year')?.value);
+  const end   = Number(g.get('end_year')?.value);
+  const endCtrl = g.get('end_year');
+  if (!endCtrl) return null;
+  if (!g.get('start_year')?.value || !g.get('end_year')?.value) {
+    const cur = endCtrl.errors;
+    if (cur?.['endBeforeStart']) { const { endBeforeStart: _, ...rest } = cur; endCtrl.setErrors(Object.keys(rest).length ? rest : null); }
+    return null;
+  }
+  if (end < start) {
+    endCtrl.setErrors({ ...(endCtrl.errors || {}), endBeforeStart: true });
+    return { endBeforeStart: true };
+  }
+  const cur = endCtrl.errors;
+  if (cur?.['endBeforeStart']) { const { endBeforeStart: _, ...rest } = cur; endCtrl.setErrors(Object.keys(rest).length ? rest : null); }
+  return null;
+}
+
+// ── Postal code rules ──────────────────────────────────────────────────────
+interface PostalRule { pattern: RegExp; hint: string; }
+const POSTAL_CODE_RULES: Record<string, PostalRule> = {
+  'India':          { pattern: /^\d{6}$/,                                hint: '6-digit PIN code (e.g. 400001)' },
+  'United States':  { pattern: /^\d{5}(-\d{4})?$/,                      hint: '5-digit ZIP or ZIP+4 (e.g. 94105)' },
+  'United Kingdom': { pattern: /^[A-Z]{1,2}\d[A-Z\d]?\s?\d[A-Z]{2}$/i, hint: 'UK postcode (e.g. SW1A 1AA)' },
+  'Canada':         { pattern: /^[A-Z]\d[A-Z]\s?\d[A-Z]\d$/i,           hint: 'Canadian postal code (e.g. K1A 0A9)' },
+  'Australia':      { pattern: /^\d{4}$/,                                hint: '4-digit postcode (e.g. 2000)' },
+  'Germany':        { pattern: /^\d{5}$/,                                hint: '5-digit PLZ (e.g. 10115)' },
+  'France':         { pattern: /^\d{5}$/,                                hint: '5-digit code (e.g. 75001)' },
+  'South Africa':   { pattern: /^\d{4}$/,                                hint: '4-digit code (e.g. 2000)' },
+  'Nigeria':        { pattern: /^\d{6}$/,                                hint: '6-digit postal code' },
+  'Kenya':          { pattern: /^\d{5}$/,                                hint: '5-digit postal code' },
+  'Pakistan':       { pattern: /^\d{5}$/,                                hint: '5-digit postal code' },
+  'Bangladesh':     { pattern: /^\d{4}$/,                                hint: '4-digit postal code' },
+  'Singapore':      { pattern: /^\d{6}$/,                                hint: '6-digit postal code (e.g. 018956)' },
+  'Netherlands':    { pattern: /^\d{4}\s?[A-Z]{2}$/i,                   hint: 'Dutch postcode (e.g. 1234 AB)' },
+  'Brazil':         { pattern: /^\d{5}-?\d{3}$/,                         hint: 'Brazilian CEP (e.g. 01310-100)' },
+  'China':          { pattern: /^\d{6}$/,                                hint: '6-digit postal code' },
+  'Japan':          { pattern: /^\d{3}-?\d{4}$/,                         hint: 'Japanese postcode (e.g. 100-0001)' },
+  'New Zealand':    { pattern: /^\d{4}$/,                                hint: '4-digit postcode' },
+  'Ireland':        { pattern: /^[A-Z]\d{2}\s?[A-Z\d]{4}$/i,           hint: 'Eircode (e.g. D02 AF30)' },
+};
+const POSTAL_FALLBACK: PostalRule = { pattern: /^[a-zA-Z0-9\s\-]{3,10}$/, hint: '3–10 alphanumeric characters' };
+const NO_FORMAT_COUNTRIES = ['United Arab Emirates', 'Hong Kong', 'Macau'];
+
+function makePostalCodeGroupValidator(countryCtrl: string, postalCtrl: string): ValidatorFn {
+  return (group: AbstractControl): ValidationErrors | null => {
+    const country = (group.get(countryCtrl)?.value as string || '').trim();
+    const postal  = (group.get(postalCtrl)?.value  as string || '').trim();
+    const posCtrl = group.get(postalCtrl);
+    if (!posCtrl) return null;
+    if (!postal) {
+      const cur = posCtrl.errors;
+      if (cur?.['postalCodeInvalid']) { const { postalCodeInvalid: _, ...rest } = cur; posCtrl.setErrors(Object.keys(rest).length ? rest : null); }
+      return null;
+    }
+    if (NO_FORMAT_COUNTRIES.includes(country)) {
+      const cur = posCtrl.errors;
+      if (cur?.['postalCodeInvalid']) { const { postalCodeInvalid: _, ...rest } = cur; posCtrl.setErrors(Object.keys(rest).length ? rest : null); }
+      return null;
+    }
+    const rule = POSTAL_CODE_RULES[country] ?? POSTAL_FALLBACK;
+    if (!rule.pattern.test(postal)) {
+      posCtrl.setErrors({ ...(posCtrl.errors || {}), postalCodeInvalid: rule.hint });
+      return { postalCodeInvalid: true };
+    }
+    const cur = posCtrl.errors;
+    if (cur?.['postalCodeInvalid']) { const { postalCodeInvalid: _, ...rest } = cur; posCtrl.setErrors(Object.keys(rest).length ? rest : null); }
+    return null;
+  };
 }
 
 @Component({
@@ -78,6 +231,8 @@ export class CandidateEditComponent implements OnInit {
   previewUrl: string | undefined;
   previewName: string | undefined;
 
+  private loadedCountry: string | null = null;
+
   readonly GENDERS       = ['male', 'female', 'non-binary', 'prefer_not_to_say'];
   readonly SALARY_TYPES  = ['monthly', 'annual', 'hourly'];
   readonly PROFICIENCY_SKILL = ['beginner', 'intermediate', 'expert'];
@@ -117,8 +272,17 @@ export class CandidateEditComponent implements OnInit {
     { value: 'placed',       label: 'Placed'       },
   ];
   readonly registrationFeeStatusOptions = REGISTRATION_FEE_STATUS_OPTIONS;
-  readonly cvFormatOptions = CV_FORMAT_OPTIONS;
-  readonly sourceOptions   = SOURCE_OPTIONS;
+  readonly cvFormatOptions             = CV_FORMAT_OPTIONS;
+  readonly sourceOptions               = SOURCE_OPTIONS;
+  readonly maritalStatusOptions: SelectOption[] = [
+    { value: 'single',   label: 'Single'   },
+    { value: 'married',  label: 'Married'  },
+    { value: 'divorced', label: 'Divorced' },
+    { value: 'widowed',  label: 'Widowed'  },
+  ];
+  readonly employmentStatusOptions     = EMPLOYMENT_STATUS_OPTIONS;
+  readonly visaStatusOptions           = VISA_STATUS_OPTIONS;
+  readonly reasonForLeavingOptions     = REASON_FOR_LEAVING_OPTIONS;
 
   // ── Computed SelectOption arrays ──────────────────────────────────────────
   countryOptions    = computed<SelectOption[]>(() =>
@@ -157,6 +321,11 @@ export class CandidateEditComponent implements OnInit {
   hobbyChipOptions = computed<ChipOption[]>(() =>
     this.master.hobbies().map(h => ({ value: h.name, label: h.name })));
 
+  get safePreviewUrl(): SafeResourceUrl | undefined {
+    if (!this.previewUrl) return undefined;
+    return this.sanitizer.bypassSecurityTrustResourceUrl(this.previewUrl);
+  }
+
   constructor(
     private fb: FormBuilder,
     private route: ActivatedRoute,
@@ -164,6 +333,7 @@ export class CandidateEditComponent implements OnInit {
     private empSvc: CandidateService,
     private toast: ToastService,
     public master: MasterDataService,
+    private sanitizer: DomSanitizer,
   ) {}
 
   ngOnInit(): void {
@@ -188,26 +358,46 @@ export class CandidateEditComponent implements OnInit {
           f.get('whatsapp_same_as_phone')!.valueChanges.subscribe((checked: boolean) => {
             if (checked) {
               const raw = f.getRawValue();
-              f.patchValue({ whatsapp_number: `${raw.dial_code || ''}${raw.phone || ''}`.trim() }, { emitEvent: false });
+              f.patchValue({ whatsapp_dial_code: raw.dial_code || '+1', whatsapp_number: raw.phone || '' }, { emitEvent: false });
+              f.get('whatsapp_number')!.updateValueAndValidity();
             }
           });
           f.get('phone')!.valueChanges.subscribe(() => {
             if (f.get('whatsapp_same_as_phone')?.value) {
               const raw = f.getRawValue();
-              f.patchValue({ whatsapp_number: `${raw.dial_code || ''}${raw.phone || ''}`.trim() }, { emitEvent: false });
+              f.patchValue({ whatsapp_dial_code: raw.dial_code || '+1', whatsapp_number: raw.phone || '' }, { emitEvent: false });
+              f.get('whatsapp_number')!.updateValueAndValidity();
             }
           });
           f.get('dial_code')!.valueChanges.subscribe(() => {
             if (f.get('whatsapp_same_as_phone')?.value) {
               const raw = f.getRawValue();
-              f.patchValue({ whatsapp_number: `${raw.dial_code || ''}${raw.phone || ''}`.trim() }, { emitEvent: false });
+              f.patchValue({ whatsapp_dial_code: raw.dial_code || '+1', whatsapp_number: raw.phone || '' }, { emitEvent: false });
+              f.get('whatsapp_number')!.updateValueAndValidity();
             }
           });
           // Pre-load cities if country already set
           const country = res.candidate.current_country;
+          this.loadedCountry = country ?? null;
           if (country) {
             const found = this.master.countries().find(c => c.name === country);
             if (found) this.master.loadCities(found.id);
+          }
+          // has_passport → nationality required
+          f.get('has_passport')!.valueChanges.subscribe((hasPassport: boolean) => {
+            const natCtrl = f.get('nationality')!;
+            if (hasPassport) {
+              natCtrl.addValidators(Validators.required);
+            } else {
+              natCtrl.removeValidators(Validators.required);
+              if (natCtrl.errors?.['required']) natCtrl.setErrors(null);
+            }
+            natCtrl.updateValueAndValidity({ emitEvent: false });
+          });
+          // Set initial nationality requirement based on loaded value
+          if (res.candidate.has_passport) {
+            f.get('nationality')!.addValidators(Validators.required);
+            f.get('nationality')!.updateValueAndValidity({ emitEvent: false });
           }
         }
       },
@@ -245,9 +435,14 @@ export class CandidateEditComponent implements OnInit {
   // ── Country change → load cities ──────────────────────────────────────────
   onCountryChange(countryName: string | number | null): void {
     if (!this.form) return;
-    this.form.patchValue({ current_city: '' }, { emitEvent: false });
-    if (!countryName) { this.master.cities.set([]); return; }
-    const country = this.master.countries().find(c => c.name === String(countryName));
+    const newCountry = countryName ? String(countryName) : null;
+    // Only clear city when user picks a different country (not on initial load)
+    if (newCountry !== this.loadedCountry) {
+      this.form.patchValue({ current_city: '' }, { emitEvent: false });
+    }
+    this.loadedCountry = newCountry;
+    if (!newCountry) { this.master.cities.set([]); return; }
+    const country = this.master.countries().find(c => c.name === newCountry);
     if (country) this.master.loadCities(country.id);
   }
 
@@ -269,8 +464,8 @@ export class CandidateEditComponent implements OnInit {
   removeLanguage(i: number): void { this.languages.removeAt(i); }
 
   addExperience(): void {    this.experience.push(this.fb.group({
-      company_name: [''], job_title: [''], start_date: [''],
-      end_date: [''], description: [''], location: [''],
+      company_name: ['', Validators.required], job_title: ['', Validators.required], start_date: ['', Validators.required],
+      end_date: [''], description: [''], location: ['', Validators.required],
       reason_for_leaving_select: [''],
       reason_for_leaving_other:  [''],
       currently_working: [false],
@@ -279,10 +474,15 @@ export class CandidateEditComponent implements OnInit {
   removeExperience(i: number): void { this.experience.removeAt(i); }
 
   addEducation(): void {
+    const yr = new Date().getFullYear();
     this.education.push(this.fb.group({
-      institution: [''], degree: [''], field_of_study: [''],
-      start_year: [null as number | null], end_year: [null as number | null], location: [''],
-    }));
+      institution:    ['', Validators.required],
+      degree:         ['', Validators.required],
+      field_of_study: ['', Validators.required],
+      start_year: [null as number | null, eduYearValidator(1950, yr)],
+      end_year:   [null as number | null, eduYearValidator(1950, yr + 6)],
+      location:       ['', Validators.required],
+    }, { validators: eduEndYearGroupValidator }));
   }
   removeEducation(i: number): void { this.education.removeAt(i); }
 
@@ -459,6 +659,7 @@ export class CandidateEditComponent implements OnInit {
   // ── Build form prefilled with candidate data ───────────────────────────────
   private buildForm(emp: Candidate): void {
     const { dialCode, number: phoneNumber } = this.splitPhone(emp.phone ?? '');
+    const { dialCode: waDial, number: waNumber } = this.splitPhone(emp.whatsapp_number ?? '');
 
     // Parse stored visa_status back into select + other controls
     let visaSelect = '';
@@ -475,14 +676,15 @@ export class CandidateEditComponent implements OnInit {
     }
 
     this.form = this.fb.group({
-      first_name:    [emp.first_name, [Validators.required, Validators.maxLength(100)]],
-      last_name:     [emp.last_name,  [Validators.required, Validators.maxLength(100)]],
-      date_of_birth: [emp.date_of_birth ?? ''],
-      gender:        [emp.gender ?? ''],
+      first_name:    [emp.first_name, [Validators.required, Validators.minLength(3), Validators.maxLength(100), Validators.pattern(/^[a-zA-Z\s'\-]+$/)]],
+      last_name:     [emp.last_name,  [Validators.required, Validators.minLength(3), Validators.maxLength(100), Validators.pattern(/^[a-zA-Z\s'\-]+$/)]],
+      date_of_birth: [emp.date_of_birth ?? '', [Validators.required, dobValidator()]],
+      gender:        [emp.gender ?? '', Validators.required],
       marital_status: [emp.marital_status ?? ''],
       dial_code:     [dialCode],
-      phone:         [phoneNumber],
-      whatsapp_number:       [emp.whatsapp_number ?? ''],
+      phone:         [phoneNumber, Validators.required],
+      whatsapp_dial_code:    [waDial],
+      whatsapp_number:       [waNumber, Validators.required],
       whatsapp_same_as_phone: [false],
       bio:           [emp.bio ?? '', this.bioWordLimitValidator(this.BIO_WORD_LIMIT)],
       profile_status:          [emp.profile_status          ?? 'active'],
@@ -493,17 +695,19 @@ export class CandidateEditComponent implements OnInit {
       visa_status_select: [visaSelect],
       visa_status_other:  [visaOther],
 
-      employment_status: [emp.employment_status ?? ''],
-      job_title:        [emp.job_title ?? ''],
-      occupation:       [emp.occupation ?? ''],
-      industry:         [emp.industry ?? ''],
-      years_experience: [emp.years_experience ?? null],
-      linkedin_url:     [emp.linkedin_url ?? ''],
+      employment_status: [emp.employment_status ?? '', Validators.required],
+      job_title:        [emp.job_title ?? '',        Validators.required],
+      occupation:       [emp.occupation ?? '',       Validators.required],
+      industry:         [emp.industry ?? '',         Validators.required],
+      years_experience: [emp.years_experience ?? 0],
+      linkedin_url:     [emp.linkedin_url ?? '', linkedInValidator()],
       notice_period_id: [(emp as any).notice_period_id ?? null],
 
-      current_country:  [emp.current_country ?? ''],
-      current_city:     [emp.current_city ?? ''],
+      current_country:  [emp.current_country ?? '', Validators.required],
+      current_city:     [emp.current_city ?? '',    Validators.required],
       nationality:      [emp.nationality ?? ''],
+      has_passport:     [emp.has_passport ?? false],
+      postal_code:      [emp.postal_code ?? '', [Validators.required, Validators.maxLength(20)]],
       target_locations: [Array.isArray(emp.target_locations) ? emp.target_locations : []],
       hobbies:          [Array.isArray(emp.hobbies) ? emp.hobbies : []],
 
@@ -529,31 +733,37 @@ export class CandidateEditComponent implements OnInit {
                 rflSel = e.reason_for_leaving ?? '';
               }
               return this.fb.group({
-                company_name: [e.company_name ?? ''], job_title: [e.job_title ?? ''],
-                start_date: [e.start_date ?? ''], end_date: [e.end_date ?? ''],
-                description: [e.description ?? ''], location: [e.location ?? ''],
+                company_name: [e.company_name ?? '', Validators.required], job_title: [e.job_title ?? '', Validators.required],
+                start_date: [e.start_date ?? '', Validators.required], end_date: [e.end_date ?? ''],
+                description: [e.description ?? ''], location: [e.location ?? '', Validators.required],
                 reason_for_leaving_select: [rflSel],
                 reason_for_leaving_other:  [rflOther],
                 currently_working: [!e.end_date],
               });
             })
-          : [this.fb.group({ company_name: [''], job_title: [''], start_date: [''], end_date: [''], description: [''], location: [''], reason_for_leaving_select: [''], reason_for_leaving_other: [''], currently_working: [false] })]
+          : [this.fb.group({ company_name: ['', Validators.required], job_title: ['', Validators.required], start_date: ['', Validators.required], end_date: [''], description: [''], location: ['', Validators.required], reason_for_leaving_select: [''], reason_for_leaving_other: [''], currently_working: [false] })]
       ),
       education: this.fb.array(
         emp.education?.length
-          ? emp.education.map(e => this.fb.group({
-              institution: [e.institution ?? ''], degree: [e.degree ?? ''],
-              field_of_study: [e.field_of_study ?? ''], start_year: [e.start_year ?? null],
-              end_year: [e.end_year ?? null], location: [e.location ?? ''],
-            }))
-          : [this.fb.group({ institution: [''], degree: [''], field_of_study: [''], start_year: [null as number | null], end_year: [null as number | null], location: [''] })]
+          ? emp.education.map(e => { const yr = new Date().getFullYear(); return this.fb.group({
+              institution: [e.institution ?? '', Validators.required], degree: [e.degree ?? '', Validators.required],
+              field_of_study: [e.field_of_study ?? '', Validators.required], start_year: [e.start_year ?? null, eduYearValidator(1950, yr)],
+              end_year: [e.end_year ?? null, eduYearValidator(1950, yr + 6)], location: [e.location ?? '', Validators.required],
+            }, { validators: eduEndYearGroupValidator }); })
+          : [(() => { const yr = new Date().getFullYear(); return this.fb.group({ institution: ['', Validators.required], degree: ['', Validators.required], field_of_study: ['', Validators.required], start_year: [null as number | null, eduYearValidator(1950, yr)], end_year: [null as number | null, eduYearValidator(1950, yr + 6)], location: ['', Validators.required] }, { validators: eduEndYearGroupValidator }); })()]
       ),
 
       // Credentials (optional)
       new_password:     ['', [Validators.minLength(8)]],
       confirm_password: [''],
-    }, { validators: passwordsMatchValidator });
-
+    }, {
+      validators: [
+        passwordsMatchValidator,
+        makePhoneGroupValidator('dial_code', 'phone'),
+        makePhoneGroupValidator('whatsapp_dial_code', 'whatsapp_number'),
+        makePostalCodeGroupValidator('current_country', 'postal_code'),
+      ],
+    });
   }
 
   // ── Submit ────────────────────────────────────────────────────────────────
@@ -564,6 +774,7 @@ export class CandidateEditComponent implements OnInit {
 
     const raw = this.form.getRawValue();
     const phone = raw.phone ? `${raw.dial_code || ''}${raw.phone}`.trim() : undefined;
+    const whatsapp = raw.whatsapp_number ? `${raw.whatsapp_dial_code || ''}${raw.whatsapp_number}`.trim() : undefined;
 
     const payload = {
       first_name:    raw.first_name,
@@ -572,7 +783,7 @@ export class CandidateEditComponent implements OnInit {
       gender:        raw.gender          || undefined,
       marital_status: raw.marital_status || undefined,
       phone:         phone               || undefined,
-      whatsapp_number: raw.whatsapp_number || undefined,
+      whatsapp_number: whatsapp          || undefined,
       bio:           raw.bio             || undefined,
       profile_status:          raw.profile_status          || undefined,
       registration_fee_status: raw.registration_fee_status || undefined,
@@ -590,6 +801,8 @@ export class CandidateEditComponent implements OnInit {
       current_country: raw.current_country || undefined,
       current_city:  raw.current_city    || undefined,
       nationality:   raw.nationality     || undefined,
+      postal_code:   raw.postal_code     || undefined,
+      has_passport:  raw.has_passport    ?? false,
       target_locations: Array.isArray(raw.target_locations) ? raw.target_locations : [],
       hobbies: Array.isArray(raw.hobbies) ? raw.hobbies : [],
       new_password: raw.new_password || undefined,

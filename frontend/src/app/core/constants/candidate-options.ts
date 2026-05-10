@@ -34,6 +34,32 @@ export const SOURCE_OPTIONS: SelectOption[] = [
   { value: 'Other',           label: 'Other'           },
 ];
 
+export const EMPLOYMENT_STATUS_OPTIONS: SelectOption[] = [
+  { value: 'Currently Employed',   label: 'Currently Employed'   },
+  { value: 'Currently Unemployed', label: 'Currently Unemployed' },
+  { value: 'Self Employed',        label: 'Self Employed'        },
+  { value: 'Student',              label: 'Student'              },
+  { value: 'Career Break',         label: 'Career Break'         },
+];
+
+export const VISA_STATUS_OPTIONS: SelectOption[] = [
+  { value: 'No visa — need full sponsorship',      label: 'No visa — need full sponsorship'      },
+  { value: 'Have valid visa in current country',   label: 'Have valid visa in current country'   },
+  { value: 'Have UK/EU visa already',              label: 'Have UK/EU visa already'              },
+  { value: 'Asylum seeker',                        label: 'Asylum seeker'                        },
+  { value: 'other',                                label: 'Other — specify'                      },
+];
+
+export const REASON_FOR_LEAVING_OPTIONS: SelectOption[] = [
+  { value: 'Career Growth',      label: 'Career Growth'      },
+  { value: 'Better Opportunity', label: 'Better Opportunity' },
+  { value: 'Relocation',         label: 'Relocation'         },
+  { value: 'Contract Ended',     label: 'Contract Ended'     },
+  { value: 'Redundancy',         label: 'Redundancy'         },
+  { value: 'Personal Reasons',   label: 'Personal Reasons'   },
+  { value: 'Other',              label: 'Other'              },
+];
+
 export const RECRUITER_SORT_OPTIONS: SortOption[] = [
   { value: 'newest',       label: 'Newest First'     },
   { value: 'oldest',       label: 'Oldest First'     },

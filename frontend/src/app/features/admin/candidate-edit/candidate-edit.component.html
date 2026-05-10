@@ -326,24 +326,33 @@
             <button type="button" class="file-preview-dialog__close" (click)="closePreview()"><i class="bi bi-x-lg"></i></button>
           </div>
         </div>
-        <div class="file-preview-dialog__body">
-          @if (previewType === 'image') {
-            <img [src]="previewUrl" [alt]="previewName" class="file-preview-dialog__image">
-          } @else if (previewType === 'video') {
-            <video [src]="previewUrl" controls autoplay class="file-preview-dialog__video"></video>
-          } @else {
-            <div class="file-preview-dialog__no-preview">
-              <i class="bi bi-file-earmark-pdf file-preview-dialog__no-preview-icon text-danger"></i>
-              <div class="fw-semibold mt-3">{{ previewName }}</div>
-              <div class="text-muted small mt-1 mb-3">PDF preview is not available inline.</div>
-              @if (previewUrl) {
-                <a [href]="previewUrl" target="_blank" class="btn btn-primary btn-sm">
+          <div class="file-preview-dialog__body">
+            @if (previewType === 'image') {
+              <img [src]="previewUrl" [alt]="previewName" class="file-preview-dialog__image">
+            } @else if (previewType === 'video') {
+              <video [src]="previewUrl" controls autoplay class="file-preview-dialog__video"></video>
+            } @else if (previewType === 'pdf') {
+              <iframe [src]="safePreviewUrl" class="file-preview-dialog__iframe"
+                style="width:100%;height:70vh;border:none;border-radius:var(--th-radius)">
+              </iframe>
+              <div class="text-center mt-2">
+                <a [href]="previewUrl" target="_blank" class="btn btn-sm btn-outline-primary">
                   <i class="bi bi-box-arrow-up-right me-1"></i> Open in new tab
                 </a>
-              }
-            </div>
-          }
-        </div>
+              </div>
+            } @else {
+              <div class="file-preview-dialog__no-preview">
+                <i class="bi bi-file-earmark-pdf file-preview-dialog__no-preview-icon text-danger"></i>
+                <div class="fw-semibold mt-3">{{ previewName }}</div>
+                <div class="text-muted small mt-1 mb-3">PDF preview is not available inline.</div>
+                @if (previewUrl) {
+                  <a [href]="previewUrl" target="_blank" class="btn btn-primary btn-sm">
+                    <i class="bi bi-box-arrow-up-right me-1"></i> Open in new tab
+                  </a>
+                }
+              </div>
+            }
+          </div>
       </div>
     </div>
   }
@@ -354,41 +363,77 @@
     <div class="form-card mb-4">
       <h5 class="card-section-header mb-4"><i class="bi bi-person"></i> Personal Information</h5>
       <div class="row g-3">
+        <!-- First Name -->
         <div class="col-md-6">
           <label class="form-label">First Name <span class="text-danger">*</span></label>
           <input type="text" class="form-control" formControlName="first_name" [class.is-invalid]="invalid('first_name')">
-          <div class="invalid-feedback">First name is required.</div>
+          @if (invalid('first_name') && form.get('first_name')?.errors) {
+            <div class="invalid-feedback d-block">
+              @if (form.get('first_name')?.errors?.['required'])   { First name is required. }
+              @else if (form.get('first_name')?.errors?.['minlength']) { Minimum 3 characters required. }
+              @else if (form.get('first_name')?.errors?.['maxlength']) { Maximum 100 characters allowed. }
+              @else if (form.get('first_name')?.errors?.['pattern'])   { Only letters, spaces, hyphens and apostrophes are allowed. }
+            </div>
+          }
         </div>
+        <!-- Last Name -->
         <div class="col-md-6">
           <label class="form-label">Last Name <span class="text-danger">*</span></label>
           <input type="text" class="form-control" formControlName="last_name" [class.is-invalid]="invalid('last_name')">
-          <div class="invalid-feedback">Last name is required.</div>
+          @if (invalid('last_name') && form.get('last_name')?.errors) {
+            <div class="invalid-feedback d-block">
+              @if (form.get('last_name')?.errors?.['required'])   { Last name is required. }
+              @else if (form.get('last_name')?.errors?.['minlength']) { Minimum 3 characters required. }
+              @else if (form.get('last_name')?.errors?.['maxlength']) { Maximum 100 characters allowed. }
+              @else if (form.get('last_name')?.errors?.['pattern'])   { Only letters, spaces, hyphens and apostrophes are allowed. }
+            </div>
+          }
         </div>
+        <!-- Date of Birth -->
         <div class="col-md-4">
-          <label class="form-label">Date of Birth</label>
-          <input type="date" class="form-control" formControlName="date_of_birth">
+          <label class="form-label">Date of Birth <span class="text-danger">*</span></label>
+          <input type="date" class="form-control"
+            formControlName="date_of_birth"
+            [class.is-invalid]="invalid('date_of_birth')"
+            [max]="(currentYear - 16) + '-12-31'"
+            [min]="(currentYear - 100) + '-01-01'">
+          @if (invalid('date_of_birth') && form.get('date_of_birth')?.errors) {
+            <div class="invalid-feedback d-block">
+              @if (form.get('date_of_birth')?.errors?.['required'])    { Date of birth is required. }
+              @else if (form.get('date_of_birth')?.errors?.['invalidDate'])  { Please enter a valid date. }
+              @else if (form.get('date_of_birth')?.errors?.['futureDate'])   { Date of birth cannot be in the future. }
+              @else if (form.get('date_of_birth')?.errors?.['tooYoung'])     { Candidate must be at least 16 years old. }
+              @else if (form.get('date_of_birth')?.errors?.['tooOld'])       { Please enter a valid date of birth. }
+            </div>
+          }
         </div>
+        <!-- Gender -->
         <div class="col-md-4">
-          <label class="form-label">Gender</label>
+          <label class="form-label">Gender <span class="text-danger">*</span></label>
           <app-searchable-select
             formControlName="gender"
             [options]="genderOptions"
             placeholder="Select gender…"
+            [allowClear]="true"
+            [invalid]="invalid('gender')">
+          </app-searchable-select>
+          @if (invalid('gender')) {
+            <div class="text-danger small mt-1">Gender is required.</div>
+          }
+        </div>
+        <!-- Marital Status -->
+        <div class="col-md-4">
+          <label class="form-label">Marital Status</label>
+          <app-searchable-select
+            formControlName="marital_status"
+            [options]="maritalStatusOptions"
+            placeholder="Select status…"
             [allowClear]="true">
           </app-searchable-select>
         </div>
+        <!-- Phone -->
         <div class="col-md-4">
-          <label class="form-label">Marital Status <span class="text-muted fw-normal">(Optional)</span></label>
-          <select class="form-select" formControlName="marital_status">
-            <option value="">— Select —</option>
-            <option value="single">Single</option>
-            <option value="married">Married</option>
-            <option value="divorced">Divorced</option>
-            <option value="widowed">Widowed</option>
-          </select>
-        </div>
-        <div class="col-md-4">
-          <label class="form-label">Phone</label>
+          <label class="form-label">Phone <span class="text-danger">*</span></label>
           <div class="phone-input-group">
             <app-searchable-select
               formControlName="dial_code"
@@ -397,18 +442,34 @@
               class="dial-select">
             </app-searchable-select>
             <input type="tel" class="form-control phone-number-input"
-              formControlName="phone" placeholder="e.g. 234 567 8900">
+              formControlName="phone"
+              placeholder="e.g. 9876543210"
+              [class.is-invalid]="invalid('phone')">
           </div>
+          @if (invalid('phone') && form.get('phone')?.errors) {
+            <div class="text-danger small mt-1">
+              @if (form.get('phone')?.errors?.['required'])     { Phone number is required. }
+              @else if (form.get('phone')?.errors?.['phoneInvalid']) { {{ form.get('phone')?.errors?.['phoneInvalid'] }} }
+            </div>
+          }
         </div>
-        <!-- WhatsApp number -->
+        <!-- WhatsApp -->
         <div class="col-md-4">
-          <label class="form-label">WhatsApp</label>
-          <div class="input-group">
-            <span class="input-group-text"><i class="bi bi-whatsapp text-success"></i></span>
-            <input type="tel" class="form-control"
-              formControlName="whatsapp_number"
-              placeholder="e.g. +44 7700 900000"
+          <label class="form-label">WhatsApp <span class="text-danger">*</span></label>
+          <div class="phone-input-group">
+            <app-searchable-select
+              formControlName="whatsapp_dial_code"
+              [options]="dialCodeOptions()"
+              placeholder="🌐"
+              class="dial-select"
               [class.bg-light]="form.get('whatsapp_same_as_phone')?.value"
+              [disabled]="form.get('whatsapp_same_as_phone')?.value">
+            </app-searchable-select>
+            <input type="tel" class="form-control phone-number-input"
+              formControlName="whatsapp_number"
+              placeholder="e.g. 9876543210"
+              [class.bg-light]="form.get('whatsapp_same_as_phone')?.value"
+              [class.is-invalid]="invalid('whatsapp_number')"
               [attr.readonly]="form.get('whatsapp_same_as_phone')?.value ? true : null">
           </div>
           <div class="form-check mt-1">
@@ -418,6 +479,12 @@
               Same as phone number
             </label>
           </div>
+          @if (invalid('whatsapp_number') && form.get('whatsapp_number')?.errors) {
+            <div class="text-danger small mt-1">
+              @if (form.get('whatsapp_number')?.errors?.['required'])     { WhatsApp number is required. }
+              @else if (form.get('whatsapp_number')?.errors?.['phoneInvalid']) { {{ form.get('whatsapp_number')?.errors?.['phoneInvalid'] }} }
+            </div>
+          }
         </div>
         <div class="col-12">
           <label class="form-label">Bio / Self Introduction</label>
@@ -481,42 +548,56 @@
       </h5>
       <div class="row g-3">
               <div class="col-md-6">
-                <label class="form-label">Employment Status</label>
-                <select class="form-select form-select-sm" formControlName="employment_status">
-                  <option value="">— Select status —</option>
-                  <option value="Currently Employed">Currently Employed</option>
-                  <option value="Currently Unemployed">Currently Unemployed</option>
-                  <option value="Self Employed">Self Employed</option>
-                  <option value="Student">Student</option>
-                  <option value="Career Break">Career Break</option>
-                </select>
+                <label class="form-label">Employment Status <span class="text-danger">*</span></label>
+                <app-searchable-select
+                  formControlName="employment_status"
+                  [options]="employmentStatusOptions"
+                  placeholder="Select status…"
+                  [allowClear]="false"
+                  [invalid]="invalid('employment_status')">
+                </app-searchable-select>
+                @if (invalid('employment_status')) {
+                  <div class="text-danger small mt-1">Employment status is required.</div>
+                }
               </div>
               <div class="col-md-6">
-                <label class="form-label">Job Title</label>
+                <label class="form-label">Job Title <span class="text-danger">*</span></label>
                 <app-searchable-select
                   formControlName="job_title"
                   [options]="jobTitleOptions()"
                   placeholder="e.g. Senior Developer"
-                  [allowClear]="true">
+                  [allowClear]="true"
+                  [invalid]="invalid('job_title')">
                 </app-searchable-select>
+                @if (invalid('job_title')) {
+                  <div class="text-danger small mt-1">Job title is required.</div>
+                }
               </div>
         <div class="col-md-6">
-          <label class="form-label">Occupation</label>
+          <label class="form-label">Occupation <span class="text-danger">*</span></label>
           <app-searchable-select
             formControlName="occupation"
             [options]="occupationOptions()"
             placeholder="e.g. Software Engineer"
-            [allowClear]="true">
+            [allowClear]="true"
+            [invalid]="invalid('occupation')">
           </app-searchable-select>
+          @if (invalid('occupation')) {
+            <div class="text-danger small mt-1">Occupation is required.</div>
+          }
         </div>
         <div class="col-md-6">
-          <label class="form-label">Industry</label>
+          <label class="form-label">Industry <span class="text-danger">*</span></label>
           <app-searchable-select
             formControlName="industry"
             [options]="industryOptions()"
             placeholder="e.g. Technology"
-            [allowClear]="true">
+            [allowClear]="true"
+            [invalid]="invalid('industry')">
           </app-searchable-select>
+          @if (invalid('industry')) {
+            <div class="text-danger small mt-1">Industry is required.</div>
+          }
         </div>
         <div class="col-md-6">
           <label class="form-label">Notice Period / Availability</label>
@@ -539,7 +620,14 @@
         </div>
         <div class="col-md-3">
           <label class="form-label">LinkedIn URL</label>
-          <input type="url" class="form-control" formControlName="linkedin_url" placeholder="https://linkedin.com/in/…">
+          <input type="url" class="form-control" formControlName="linkedin_url"
+            placeholder="https://linkedin.com/in/username"
+            [class.is-invalid]="invalid('linkedin_url')">
+          @if (invalid('linkedin_url')) {
+            <div class="invalid-feedback d-block">
+              Enter a valid LinkedIn URL (e.g. https://linkedin.com/in/username).
+            </div>
+          }
         </div>
         <div class="col-md-6">
           <label class="form-label">CV Format</label>
@@ -552,14 +640,12 @@
         </div>
         <div class="col-md-6">
           <label class="form-label">Visa / Work Permit Status</label>
-          <select class="form-select" formControlName="visa_status_select">
-            <option value="">— Select —</option>
-            <option value="No visa — need full sponsorship">No visa — need full sponsorship</option>
-            <option value="Have valid visa in current country">Have valid visa in current country</option>
-            <option value="Have UK/EU visa already">Have UK/EU visa already</option>
-            <option value="Asylum seeker">Asylum seeker</option>
-            <option value="other">Other — specify</option>
-          </select>
+          <app-searchable-select
+            formControlName="visa_status_select"
+            [options]="visaStatusOptions"
+            placeholder="Select visa status…"
+            [allowClear]="true">
+          </app-searchable-select>
         </div>
         @if (form.get('visa_status_select')?.value === 'other') {
           <div class="col-md-6">
@@ -581,13 +667,14 @@
       <div formArrayName="skills">
         @if (skills.length) {
           <div class="row g-2 mb-1">
-            <div class="col-md-6"><label class="form-label form-label-sm mb-0">Skill Name <span class="text-danger">*</span></label></div>
-            <div class="col-md-4"><label class="form-label form-label-sm mb-0">Proficiency</label></div>
+            <div class="col"><label class="form-label form-label-sm mb-0">Skill Name <span class="text-danger">*</span></label></div>
+            <div class="col"><label class="form-label form-label-sm mb-0">Proficiency</label></div>
+            <div class="col-auto" style="width:5rem"></div>
           </div>
         }
         @for (skill of skills.controls; track $index) {
-          <div [formGroupName]="$index" class="row g-2 mb-2 align-items-start">
-            <div class="col-md-6">
+          <div [formGroupName]="$index" class="row g-2 mb-2 align-items-center">
+            <div class="col">
               <input type="text" class="form-control form-control-sm" formControlName="skill_name"
                 placeholder="e.g. Angular"
                 [class.is-invalid]="skill.get('skill_name')!.invalid && skill.get('skill_name')!.touched">
@@ -595,7 +682,7 @@
                 <div class="invalid-feedback">Skill name is required.</div>
               }
             </div>
-            <div class="col-md-4">
+            <div class="col">
               <app-searchable-select
                 formControlName="proficiency"
                 [options]="proficiencySkillOptions"
@@ -607,7 +694,7 @@
                 <div class="text-danger" style="font-size:.875em;margin-top:.25rem">Select a proficiency level.</div>
               }
             </div>
-            <div class="col-md-2">
+            <div class="col-auto" style="width:5rem">
               <button type="button" class="btn btn-sm btn-outline-danger w-100"
                 (click)="removeSkill($index)" [disabled]="skills.length === 1">
                 <i class="bi bi-trash"></i>
@@ -629,13 +716,14 @@
       <div formArrayName="languages">
         @if (languages.length) {
           <div class="row g-2 mb-1">
-            <div class="col-md-6"><label class="form-label form-label-sm mb-0">Language <span class="text-danger">*</span></label></div>
-            <div class="col-md-4"><label class="form-label form-label-sm mb-0">Proficiency</label></div>
+            <div class="col"><label class="form-label form-label-sm mb-0">Language <span class="text-danger">*</span></label></div>
+            <div class="col"><label class="form-label form-label-sm mb-0">Proficiency</label></div>
+            <div class="col-auto" style="width:5rem"></div>
           </div>
         }
         @for (lang of languages.controls; track $index) {
-          <div [formGroupName]="$index" class="row g-2 mb-2 align-items-start">
-            <div class="col-md-6">
+          <div [formGroupName]="$index" class="row g-2 mb-2 align-items-center">
+            <div class="col">
               <app-searchable-select
                 formControlName="language"
                 [options]="languageOptions()"
@@ -646,7 +734,7 @@
                 <div class="text-danger" style="font-size:.875em;margin-top:.25rem">Language name is required.</div>
               }
             </div>
-            <div class="col-md-4">
+            <div class="col">
               <app-searchable-select
                 formControlName="proficiency"
                 [options]="proficiencyLangOptions"
@@ -658,7 +746,7 @@
                 <div class="text-danger" style="font-size:.875em;margin-top:.25rem">Select a proficiency level.</div>
               }
             </div>
-            <div class="col-md-2">
+            <div class="col-auto" style="width:5rem">
               <button type="button" class="btn btn-sm btn-outline-danger w-100"
                 (click)="removeLanguage($index)" [disabled]="languages.length === 1">
                 <i class="bi bi-trash"></i>
@@ -673,38 +761,92 @@
     <div class="form-card mb-4">
       <h5 class="card-section-header card-section-header--success mb-4"><i class="bi bi-geo-alt"></i> Location</h5>
       <div class="row g-3">
+
+        <!-- Current Country -->
         <div class="col-md-6">
-          <label class="form-label">Current Country of Residence</label>
+          <label class="form-label fw-semibold">Current Country of Residence <span class="text-danger">*</span></label>
           <app-searchable-select
             formControlName="current_country"
             [options]="countryOptions()"
             placeholder="Select country…"
-            [allowClear]="true">
+            [allowClear]="true"
+            [invalid]="invalid('current_country')">
           </app-searchable-select>
+          @if (invalid('current_country')) {
+            <div class="text-danger" style="font-size:.875em;margin-top:.25rem">Current country is required.</div>
+          }
           <div class="form-text">Where the candidate is currently living</div>
         </div>
+
+        <!-- Current City -->
         <div class="col-md-6">
-          <label class="form-label">Current City</label>
+          <label class="form-label fw-semibold">Current City <span class="text-danger">*</span></label>
           <app-searchable-select
             formControlName="current_city"
             [options]="cityOptions()"
             placeholder="Select city…"
-            [allowClear]="true">
+            [allowClear]="true"
+            [invalid]="invalid('current_city')">
           </app-searchable-select>
+          @if (invalid('current_city')) {
+            <div class="text-danger" style="font-size:.875em;margin-top:.25rem">Current city is required.</div>
+          }
           <div class="form-text">Select a country first to load cities</div>
         </div>
+
+        <!-- Postal Code -->
         <div class="col-md-6">
-          <label class="form-label">Passport Nationality</label>
-          <app-searchable-select
-            formControlName="nationality"
-            [options]="countryOptions()"
-            placeholder="Select passport country…"
-            [allowClear]="true">
-          </app-searchable-select>
-          <div class="form-text">Country of passport / citizenship</div>
+          <label class="form-label fw-semibold">Postal Code <span class="text-danger">*</span></label>
+          <input type="text" class="form-control" formControlName="postal_code"
+            placeholder="e.g. 400001"
+            [class.is-invalid]="invalid('postal_code')">
+          @if (form.get('postal_code')!.touched) {
+            @if (form.get('postal_code')!.errors?.['required']) {
+              <div class="invalid-feedback">Postal code is required.</div>
+            } @else if (form.get('postal_code')!.errors?.['postalCodeInvalid']) {
+              <div class="invalid-feedback">Invalid format — {{ form.get('postal_code')!.errors?.['postalCodeInvalid'] }}</div>
+            } @else if (form.get('postal_code')!.errors?.['maxlength']) {
+              <div class="invalid-feedback">Postal code is too long.</div>
+            }
+          }
         </div>
+
+        <!-- Passport toggle + Nationality -->
         <div class="col-md-6">
-          <label class="form-label">Target Locations</label>
+          <label class="form-label fw-semibold d-block mb-2">Passport</label>
+          <div class="form-check form-switch mb-2">
+            <input type="checkbox" class="form-check-input" role="switch"
+              formControlName="has_passport" id="hasPassportToggleEdit">
+            <label class="form-check-label" for="hasPassportToggleEdit">
+              Candidate has a passport
+            </label>
+          </div>
+          @if (form.get('has_passport')!.value) {
+            <label class="form-label fw-semibold mt-1">Passport Nationality <span class="text-danger">*</span></label>
+            <app-searchable-select
+              formControlName="nationality"
+              [options]="countryOptions()"
+              placeholder="Select passport country…"
+              [allowClear]="true"
+              [invalid]="invalid('nationality')">
+            </app-searchable-select>
+            @if (invalid('nationality')) {
+              <div class="text-danger" style="font-size:.875em;margin-top:.25rem">Passport nationality is required.</div>
+            }
+          } @else {
+            <label class="form-label fw-semibold mt-1">Passport Nationality <span class="text-muted fw-normal small">(optional)</span></label>
+            <app-searchable-select
+              formControlName="nationality"
+              [options]="countryOptions()"
+              placeholder="Select passport country…"
+              [allowClear]="true">
+            </app-searchable-select>
+          }
+        </div>
+
+        <!-- Target Locations -->
+        <div class="col-12">
+          <label class="form-label fw-semibold">Target Locations <span class="text-muted fw-normal small">(optional)</span></label>
           <app-chip-multi-select
             formControlName="target_locations"
             [options]="targetLocationChipOptions()"
@@ -734,16 +876,28 @@
             </div>
             <div class="row g-3">
               <div class="col-md-6">
-                <label class="form-label form-label-sm">Company Name</label>
-                <input class="form-control form-control-sm" formControlName="company_name" placeholder="e.g. Google Inc.">
+                <label class="form-label form-label-sm">Company Name <span class="text-danger">*</span></label>
+                <input class="form-control form-control-sm" formControlName="company_name" placeholder="e.g. Google Inc."
+                  [class.is-invalid]="experience.at($index).get('company_name')!.invalid && experience.at($index).get('company_name')!.touched">
+                @if (experience.at($index).get('company_name')!.invalid && experience.at($index).get('company_name')!.touched) {
+                  <div class="invalid-feedback">Company name is required.</div>
+                }
               </div>
               <div class="col-md-6">
-                <label class="form-label form-label-sm">Job Title</label>
-                <input class="form-control form-control-sm" formControlName="job_title" placeholder="e.g. Senior Developer">
+                <label class="form-label form-label-sm">Job Title <span class="text-danger">*</span></label>
+                <input class="form-control form-control-sm" formControlName="job_title" placeholder="e.g. Senior Developer"
+                  [class.is-invalid]="experience.at($index).get('job_title')!.invalid && experience.at($index).get('job_title')!.touched">
+                @if (experience.at($index).get('job_title')!.invalid && experience.at($index).get('job_title')!.touched) {
+                  <div class="invalid-feedback">Job title is required.</div>
+                }
               </div>
               <div class="col-md-3">
-                <label class="form-label form-label-sm">Start Date</label>
-                <input type="date" class="form-control form-control-sm" formControlName="start_date">
+                <label class="form-label form-label-sm">Start Date <span class="text-danger">*</span></label>
+                <input type="date" class="form-control form-control-sm" formControlName="start_date"
+                  [class.is-invalid]="experience.at($index).get('start_date')!.invalid && experience.at($index).get('start_date')!.touched">
+                @if (experience.at($index).get('start_date')!.invalid && experience.at($index).get('start_date')!.touched) {
+                  <div class="invalid-feedback">Start date is required.</div>
+                }
               </div>
               <div class="col-md-3">
                 <label class="form-label form-label-sm">End Date</label>
@@ -760,13 +914,17 @@
                 </div>
               </div>
               <div class="col-md-6">
-                <label class="form-label form-label-sm">Location</label>
+                <label class="form-label form-label-sm">Location <span class="text-danger">*</span></label>
                 <app-searchable-select
                   formControlName="location"
                   [options]="countryOptions()"
                   placeholder="e.g. New York, USA"
-                  [allowClear]="true">
+                  [allowClear]="true"
+                  [invalid]="experience.at($index).get('location')!.invalid && experience.at($index).get('location')!.touched">
                 </app-searchable-select>
+                @if (experience.at($index).get('location')!.invalid && experience.at($index).get('location')!.touched) {
+                  <div class="text-danger" style="font-size:.875em;margin-top:.25rem">Location is required.</div>
+                }
               </div>
               <div class="col-12">
                 <label class="form-label form-label-sm">Description</label>
@@ -775,16 +933,12 @@
               </div>
               <div class="col-md-6">
                 <label class="form-label form-label-sm">Reason for Leaving <span class="text-muted fw-normal" style="font-size:.7rem">(optional)</span></label>
-                <select class="form-select form-select-sm" formControlName="reason_for_leaving_select">
-                  <option value="">— Select —</option>
-                  <option value="Career Growth">Career Growth</option>
-                  <option value="Better Opportunity">Better Opportunity</option>
-                  <option value="Relocation">Relocation</option>
-                  <option value="Contract Ended">Contract Ended</option>
-                  <option value="Redundancy">Redundancy</option>
-                  <option value="Personal Reasons">Personal Reasons</option>
-                  <option value="Other">Other</option>
-                </select>
+                <app-searchable-select
+                  formControlName="reason_for_leaving_select"
+                  [options]="reasonForLeavingOptions"
+                  placeholder="— Select —"
+                  [allowClear]="true">
+                </app-searchable-select>
               </div>
               @if (experience.at($index).get('reason_for_leaving_select')?.value === 'Other') {
                 <div class="col-md-6">
@@ -818,49 +972,76 @@
             </div>
             <div class="row g-3">
               <div class="col-md-6">
-                <label class="form-label form-label-sm">Institution / University</label>
-                <input class="form-control form-control-sm" formControlName="institution" placeholder="e.g. MIT, Stanford University">
+                <label class="form-label form-label-sm">Institution / University <span class="text-danger">*</span></label>
+                <input class="form-control form-control-sm" formControlName="institution" placeholder="e.g. MIT, Stanford University"
+                  [class.is-invalid]="education.at($index).get('institution')!.invalid && education.at($index).get('institution')!.touched">
+                @if (education.at($index).get('institution')!.invalid && education.at($index).get('institution')!.touched) {
+                  <div class="invalid-feedback">Institution is required.</div>
+                }
               </div>
               <div class="col-md-6">
-                <label class="form-label form-label-sm">Degree</label>
+                <label class="form-label form-label-sm">Degree <span class="text-danger">*</span></label>
                 <app-searchable-select
                   formControlName="degree"
                   [options]="degreeOptions()"
                   placeholder="e.g. B.Sc., MBA"
-                  [allowClear]="true">
+                  [allowClear]="true"
+                  [invalid]="education.at($index).get('degree')!.invalid && education.at($index).get('degree')!.touched">
                 </app-searchable-select>
+                @if (education.at($index).get('degree')!.invalid && education.at($index).get('degree')!.touched) {
+                  <div class="text-danger" style="font-size:.875em;margin-top:.25rem">Degree is required.</div>
+                }
               </div>
               <div class="col-md-6">
-                <label class="form-label form-label-sm">Field of Study</label>
+                <label class="form-label form-label-sm">Field of Study <span class="text-danger">*</span></label>
                 <app-searchable-select
                   formControlName="field_of_study"
                   [options]="fieldOfStudyOptions()"
                   placeholder="e.g. Computer Science"
-                  [allowClear]="true">
+                  [allowClear]="true"
+                  [invalid]="education.at($index).get('field_of_study')!.invalid && education.at($index).get('field_of_study')!.touched">
                 </app-searchable-select>
+                @if (education.at($index).get('field_of_study')!.invalid && education.at($index).get('field_of_study')!.touched) {
+                  <div class="text-danger" style="font-size:.875em;margin-top:.25rem">Field of study is required.</div>
+                }
               </div>
               <div class="col-md-6">
-                <label class="form-label form-label-sm">Location</label>
+                <label class="form-label form-label-sm">Location <span class="text-danger">*</span></label>
                 <app-searchable-select
                   formControlName="location"
                   [options]="countryOptions()"
                   placeholder="e.g. Boston, USA"
-                  [allowClear]="true">
+                  [allowClear]="true"
+                  [invalid]="education.at($index).get('location')!.invalid && education.at($index).get('location')!.touched">
                 </app-searchable-select>
+                @if (education.at($index).get('location')!.invalid && education.at($index).get('location')!.touched) {
+                  <div class="text-danger" style="font-size:.875em;margin-top:.25rem">Location is required.</div>
+                }
               </div>
               <div class="col-12">
                 <label class="form-label form-label-sm">Duration (years)</label>
-                <div class="d-flex align-items-center gap-2">
+                <div class="d-flex align-items-start gap-2">
                   <div class="flex-grow-1">
                     <input type="number" class="form-control form-control-sm" formControlName="start_year"
-                      placeholder="Start year" min="1950" [max]="currentYear">
+                      placeholder="Start year" min="1950" [max]="currentYear"
+                      [class.is-invalid]="education.at($index).get('start_year')!.invalid && education.at($index).get('start_year')!.touched">
                     <div class="form-text" style="font-size:.7rem">Start year</div>
+                    @if (education.at($index).get('start_year')!.errors?.['eduYearInvalid'] && education.at($index).get('start_year')!.touched) {
+                      <div class="invalid-feedback d-block">{{ education.at($index).get('start_year')!.errors?.['eduYearInvalid'] }}</div>
+                    }
                   </div>
-                  <span class="text-muted fw-bold pb-3">–</span>
+                  <span class="text-muted fw-bold mt-1">–</span>
                   <div class="flex-grow-1">
                     <input type="number" class="form-control form-control-sm" formControlName="end_year"
-                      placeholder="End year" min="1950" [max]="currentYear + 6">
+                      placeholder="End year" min="1950" [max]="currentYear + 6"
+                      [class.is-invalid]="education.at($index).get('end_year')!.invalid && education.at($index).get('end_year')!.touched">
                     <div class="form-text" style="font-size:.7rem">End / expected year</div>
+                    @if (education.at($index).get('end_year')!.errors?.['eduYearInvalid'] && education.at($index).get('end_year')!.touched) {
+                      <div class="invalid-feedback d-block">{{ education.at($index).get('end_year')!.errors?.['eduYearInvalid'] }}</div>
+                    }
+                    @if (education.at($index).get('end_year')!.errors?.['endBeforeStart'] && education.at($index).get('end_year')!.touched) {
+                      <div class="invalid-feedback d-block">End year cannot be before start year.</div>
+                    }
                   </div>
                 </div>
               </div>

@@ -75,6 +75,7 @@ export interface Candidate {
   current_city?: string;
   nationality?: string;
   postal_code?: string;
+  has_passport?: boolean;
   target_locations?: string[];
   hobbies?: string[];
 

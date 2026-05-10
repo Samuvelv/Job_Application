@@ -3,6 +3,7 @@ import { Component, OnInit, ViewChild, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder } from '@angular/forms';
 import { RouterLink } from '@angular/router';
+import { distinctUntilChanged, skip } from 'rxjs';
 import { CandidateService } from '../../../core/services/candidate.service';
 import { MasterDataService } from '../../../core/services/master-data.service';
 import { Candidate, CandidateFilters } from '../../../core/models/candidate.model';
@@ -10,6 +11,7 @@ import { PageHeaderComponent } from '../../../shared/components/page-header/page
 import { EmptyStateComponent } from '../../../shared/components/empty-state/empty-state.component';
 import { CandidateFilterSidebarComponent } from '../../../shared/components/candidate-filter-sidebar/candidate-filter-sidebar.component';
 import { CandidateCardComponent } from '../../../shared/components/candidate-card/candidate-card.component';
+import { SearchableSelectComponent, SelectOption } from '../../../shared/components/searchable-select/searchable-select.component';
 import { ToastService } from '../../../core/services/toast.service';
 import { ConfirmDialogService } from '../../../core/services/confirm-dialog.service';
 import { SORT_OPTIONS } from '../../../core/constants/candidate-options';
@@ -21,6 +23,7 @@ import { SORT_OPTIONS } from '../../../core/constants/candidate-options';
     CommonModule, ReactiveFormsModule, RouterLink,
     PageHeaderComponent, EmptyStateComponent,
     CandidateFilterSidebarComponent, CandidateCardComponent,
+    SearchableSelectComponent,
   ],
   template: `
     <app-page-header title="Candidates" icon="bi-people-fill"
@@ -46,14 +49,12 @@ import { SORT_OPTIONS } from '../../../core/constants/candidate-options';
         <!-- Sort By -->
         <div class="cl-sort-wrap">
           <i class="bi bi-sort-down cl-sort-wrap__icon"></i>
-          <select class="form-select form-select-sm cl-sort-select"
+          <app-searchable-select
             [formControl]="sortCtrl"
-            (change)="onSortChange()"
-            title="Sort candidates">
-            @for (opt of SORT_OPTIONS; track opt.value) {
-              <option [value]="opt.value">{{ opt.label }}</option>
-            }
-          </select>
+            [options]="SORT_OPTIONS"
+            [allowClear]="false"
+            placeholder="Sort by…">
+          </app-searchable-select>
         </div>
         <button type="button" class="cfs-toggle-sidebar-btn"
           [class.active]="sidebarVisible"
@@ -503,8 +504,8 @@ export class CandidateListComponent implements OnInit {
   ];
 
   searchCtrl = this.fb.control('');
-  sortCtrl   = this.fb.control('newest');
-  readonly SORT_OPTIONS = SORT_OPTIONS;
+  sortCtrl   = this.fb.control<string>('newest');
+  readonly SORT_OPTIONS: SelectOption[] = SORT_OPTIONS;
   private sidebarFilters: CandidateFilters = {};
 
   constructor(
@@ -518,6 +519,11 @@ export class CandidateListComponent implements OnInit {
   ngOnInit(): void {
     this.master.loadAll();
     this.loadCandidates();
+    // Re-load on sort change (app-searchable-select uses formControl, no (change) event)
+    this.sortCtrl.valueChanges.pipe(
+      skip(1),
+      distinctUntilChanged(),
+    ).subscribe(() => this.onSortChange());
   }
 
   // ── View mode ────────────────────────────────────────────────────────────────

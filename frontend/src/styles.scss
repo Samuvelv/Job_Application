@@ -3871,6 +3871,22 @@ body {
 
   &::before { display: none; }
 
+  // Lift above siblings when a searchable/chip dropdown inside is open
+  &:has(.ss-wrap.ss-open),
+  &:has(.cms-wrap.cms-open) { z-index: 10; overflow: visible; }
+
+  // Size app-searchable-select to match form-control-sm height
+  app-searchable-select {
+    display: block;
+    width: 100%;
+
+    .ss-trigger {
+      font-size: .875rem;
+      padding: .3rem .65rem;
+      min-height: var(--th-field-height-sm, 2rem);
+    }
+  }
+
   &__title {
     font-size: .8125rem;
     font-weight: 600;
@@ -4537,6 +4553,12 @@ body {
   gap: .5rem;
   align-items: center;
   flex-shrink: 0;
+
+  @media (max-width: 575px) {
+    flex-wrap: wrap;
+    width: 100%;
+    justify-content: flex-end;
+  }
 }
 
 // Toggle sidebar button (topbar)
@@ -10188,6 +10210,22 @@ html { scroll-behavior: smooth; }
     color: var(--th-muted);
     font-size: .9rem;
     flex-shrink: 0;
+  }
+
+  // Size the searchable-select to match the former native select
+  app-searchable-select {
+    min-width: 140px;
+    max-width: 170px;
+
+    .ss-trigger {
+      font-size: .8125rem;
+      padding: .3rem .65rem;
+      min-height: 2rem;
+    }
+
+    .ss-dropdown {
+      min-width: 160px;
+    }
   }
 }
 

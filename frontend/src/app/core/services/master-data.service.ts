@@ -83,6 +83,7 @@ export class MasterDataService {
       this.cities.set(this.cityCache.get(countryId)!);
       return;
     }
+    // Don't clear cities before fetch — avoid flickering the selected value away
     const rows = await firstValueFrom(
       this.http.get<MasterCity[]>(`${this.base}/cities?country_id=${countryId}`)
     );

@@ -5,6 +5,7 @@ import {
   ReactiveFormsModule, FormBuilder, FormGroup,
   FormArray, Validators, AbstractControl, ValidationErrors, ValidatorFn,
 } from '@angular/forms';
+import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 import { CandidateService } from '../../../core/services/candidate.service';
 import { EditRequestService } from '../../../core/services/edit-request.service';
 import { Candidate } from '../../../core/models/candidate.model';
@@ -12,6 +13,7 @@ import { EditRequest } from '../../../core/models/edit-request.model';
 import { ToastService } from '../../../core/services/toast.service';
 import { MasterDataService } from '../../../core/services/master-data.service';
 import { SearchableSelectComponent, SelectOption } from '../../../shared/components/searchable-select/searchable-select.component';
+import { EMPLOYMENT_STATUS_OPTIONS, VISA_STATUS_OPTIONS, REASON_FOR_LEAVING_OPTIONS } from '../../../core/constants/candidate-options';
 
 function skillGroupValidator(g: AbstractControl): ValidationErrors | null {
   const name = g.get('skill_name')?.value?.trim();
@@ -27,6 +29,157 @@ function langGroupValidator(g: AbstractControl): ValidationErrors | null {
   if (name && !prof) { g.get('proficiency')!.setErrors({ required: true }); return { proficiencyRequired: true }; }
   if (!name || prof)  { const e = g.get('proficiency')!.errors; if (e?.['required']) { g.get('proficiency')!.setErrors(null); } }
   return null;
+}
+
+// ── LinkedIn URL validator ─────────────────────────────────────────────────
+function linkedInValidator(): ValidatorFn {
+  return (ctrl: AbstractControl): ValidationErrors | null => {
+    const v = (ctrl.value as string || '').trim();
+    if (!v) return null;
+    const ok = /^https?:\/\/(www\.)?linkedin\.com\/(in|company|pub|school)\/[a-zA-Z0-9\-_%]+\/?/.test(v);
+    return ok ? null : { invalidLinkedIn: true };
+  };
+}
+
+// ── Phone rules ────────────────────────────────────────────────────────────
+interface PhoneRule { minLen: number; maxLen: number; pattern?: RegExp; hint: string; }
+const PHONE_RULES: Record<string, PhoneRule> = {
+  '+91':  { minLen: 10, maxLen: 10, pattern: /^[6-9]\d{9}$/,   hint: '10 digits starting with 6–9 (India)' },
+  '+1':   { minLen: 10, maxLen: 10, pattern: /^\d{10}$/,        hint: '10 digits (US / Canada)' },
+  '+44':  { minLen: 10, maxLen: 11, pattern: /^7\d{9}$/,        hint: '10 digits starting with 7 (UK mobile)' },
+  '+61':  { minLen: 9,  maxLen: 9,  pattern: /^[4]\d{8}$/,      hint: '9 digits starting with 4 (Australia)' },
+  '+971': { minLen: 9,  maxLen: 9,  pattern: /^[5]\d{8}$/,      hint: '9 digits starting with 5 (UAE)' },
+  '+234': { minLen: 10, maxLen: 11, pattern: /^[7-9]\d{9,10}$/, hint: '10–11 digits starting with 7–9 (Nigeria)' },
+  '+254': { minLen: 9,  maxLen: 9,  pattern: /^[7]\d{8}$/,      hint: '9 digits starting with 7 (Kenya)' },
+  '+27':  { minLen: 9,  maxLen: 9,  pattern: /^[6-8]\d{8}$/,    hint: '9 digits starting with 6–8 (South Africa)' },
+  '+49':  { minLen: 10, maxLen: 12, pattern: /^\d{10,12}$/,     hint: '10–12 digits (Germany)' },
+  '+33':  { minLen: 9,  maxLen: 9,  pattern: /^[6-7]\d{8}$/,    hint: '9 digits starting with 6–7 (France)' },
+};
+const PHONE_FALLBACK: PhoneRule = { minLen: 5, maxLen: 15, pattern: /^\d{5,15}$/, hint: '5–15 digits' };
+function getPhoneRule(dialCode: string): PhoneRule { return PHONE_RULES[dialCode] ?? PHONE_FALLBACK; }
+
+function dobValidator(): ValidatorFn {
+  return (ctrl: AbstractControl): ValidationErrors | null => {
+    const v = ctrl.value;
+    if (!v) return null;
+    const date = new Date(v);
+    if (isNaN(date.getTime())) return { invalidDate: true };
+    const today = new Date(); today.setHours(0, 0, 0, 0);
+    if (date >= today) return { futureDate: true };
+    const age = today.getFullYear() - date.getFullYear()
+      - (today < new Date(today.getFullYear(), date.getMonth(), date.getDate()) ? 1 : 0);
+    if (age < 16) return { tooYoung: true };
+    if (age > 100) return { tooOld: true };
+    return null;
+  };
+}
+
+function makePhoneGroupValidator(dialCtrl: string, numCtrl: string): ValidatorFn {
+  return (group: AbstractControl): ValidationErrors | null => {
+    const dial = group.get(dialCtrl)?.value as string || '';
+    const num  = (group.get(numCtrl)?.value as string || '').replace(/\s+/g, '');
+    const numControl = group.get(numCtrl);
+    if (!numControl) return null;
+    if (!num) {
+      const cur = numControl.errors;
+      if (cur?.['phoneInvalid']) { const { phoneInvalid: _, ...rest } = cur; numControl.setErrors(Object.keys(rest).length ? rest : null); }
+      return null;
+    }
+    const rule = getPhoneRule(dial);
+    const ok = /^\d+$/.test(num) && num.length >= rule.minLen && num.length <= rule.maxLen && (rule.pattern ? rule.pattern.test(num) : true);
+    if (!ok) {
+      numControl.setErrors({ ...(numControl.errors || {}), phoneInvalid: `Invalid number for ${dial}. Expected: ${rule.hint}.` });
+      return { phoneInvalid: true };
+    }
+    const cur = numControl.errors;
+    if (cur?.['phoneInvalid']) { const { phoneInvalid: _, ...rest } = cur; numControl.setErrors(Object.keys(rest).length ? rest : null); }
+    return null;
+  };
+}
+
+function eduYearValidator(minYear: number, maxYear: number): ValidatorFn {
+  return (ctrl: AbstractControl): ValidationErrors | null => {
+    const v = ctrl.value;
+    if (v === null || v === '' || v === undefined) return null;
+    const n = Number(v);
+    if (!Number.isInteger(n)) return { eduYearInvalid: 'Must be a whole number.' };
+    if (String(v).replace('-', '').length !== 4) return { eduYearInvalid: 'Must be a 4-digit year.' };
+    if (n < minYear) return { eduYearInvalid: `Year must be ${minYear} or later.` };
+    if (n > maxYear) return { eduYearInvalid: `Year must be ${maxYear} or earlier.` };
+    return null;
+  };
+}
+
+function eduEndYearGroupValidator(g: AbstractControl): ValidationErrors | null {
+  const start = Number(g.get('start_year')?.value);
+  const end   = Number(g.get('end_year')?.value);
+  const endCtrl = g.get('end_year');
+  if (!endCtrl) return null;
+  if (!g.get('start_year')?.value || !g.get('end_year')?.value) {
+    const cur = endCtrl.errors;
+    if (cur?.['endBeforeStart']) { const { endBeforeStart: _, ...rest } = cur; endCtrl.setErrors(Object.keys(rest).length ? rest : null); }
+    return null;
+  }
+  if (end < start) {
+    endCtrl.setErrors({ ...(endCtrl.errors || {}), endBeforeStart: true });
+    return { endBeforeStart: true };
+  }
+  const cur = endCtrl.errors;
+  if (cur?.['endBeforeStart']) { const { endBeforeStart: _, ...rest } = cur; endCtrl.setErrors(Object.keys(rest).length ? rest : null); }
+  return null;
+}
+
+// ── Postal code rules ──────────────────────────────────────────────────────
+interface PostalRule { pattern: RegExp; hint: string; }
+const POSTAL_CODE_RULES: Record<string, PostalRule> = {
+  'India':          { pattern: /^\d{6}$/,                                hint: '6-digit PIN code (e.g. 400001)' },
+  'United States':  { pattern: /^\d{5}(-\d{4})?$/,                      hint: '5-digit ZIP or ZIP+4 (e.g. 94105)' },
+  'United Kingdom': { pattern: /^[A-Z]{1,2}\d[A-Z\d]?\s?\d[A-Z]{2}$/i, hint: 'UK postcode (e.g. SW1A 1AA)' },
+  'Canada':         { pattern: /^[A-Z]\d[A-Z]\s?\d[A-Z]\d$/i,           hint: 'Canadian postal code (e.g. K1A 0A9)' },
+  'Australia':      { pattern: /^\d{4}$/,                                hint: '4-digit postcode (e.g. 2000)' },
+  'Germany':        { pattern: /^\d{5}$/,                                hint: '5-digit PLZ (e.g. 10115)' },
+  'France':         { pattern: /^\d{5}$/,                                hint: '5-digit code (e.g. 75001)' },
+  'South Africa':   { pattern: /^\d{4}$/,                                hint: '4-digit code (e.g. 2000)' },
+  'Nigeria':        { pattern: /^\d{6}$/,                                hint: '6-digit postal code' },
+  'Kenya':          { pattern: /^\d{5}$/,                                hint: '5-digit postal code' },
+  'Pakistan':       { pattern: /^\d{5}$/,                                hint: '5-digit postal code' },
+  'Bangladesh':     { pattern: /^\d{4}$/,                                hint: '4-digit postal code' },
+  'Singapore':      { pattern: /^\d{6}$/,                                hint: '6-digit postal code (e.g. 018956)' },
+  'Netherlands':    { pattern: /^\d{4}\s?[A-Z]{2}$/i,                   hint: 'Dutch postcode (e.g. 1234 AB)' },
+  'Brazil':         { pattern: /^\d{5}-?\d{3}$/,                         hint: 'Brazilian CEP (e.g. 01310-100)' },
+  'China':          { pattern: /^\d{6}$/,                                hint: '6-digit postal code' },
+  'Japan':          { pattern: /^\d{3}-?\d{4}$/,                         hint: 'Japanese postcode (e.g. 100-0001)' },
+  'New Zealand':    { pattern: /^\d{4}$/,                                hint: '4-digit postcode' },
+  'Ireland':        { pattern: /^[A-Z]\d{2}\s?[A-Z\d]{4}$/i,           hint: 'Eircode (e.g. D02 AF30)' },
+};
+const POSTAL_FALLBACK: PostalRule = { pattern: /^[a-zA-Z0-9\s\-]{3,10}$/, hint: '3–10 alphanumeric characters' };
+const NO_FORMAT_COUNTRIES = ['United Arab Emirates', 'Hong Kong', 'Macau'];
+
+function makePostalCodeGroupValidator(countryCtrl: string, postalCtrl: string): ValidatorFn {
+  return (group: AbstractControl): ValidationErrors | null => {
+    const country = (group.get(countryCtrl)?.value as string || '').trim();
+    const postal  = (group.get(postalCtrl)?.value  as string || '').trim();
+    const posCtrl = group.get(postalCtrl);
+    if (!posCtrl) return null;
+    if (!postal) {
+      const cur = posCtrl.errors;
+      if (cur?.['postalCodeInvalid']) { const { postalCodeInvalid: _, ...rest } = cur; posCtrl.setErrors(Object.keys(rest).length ? rest : null); }
+      return null;
+    }
+    if (NO_FORMAT_COUNTRIES.includes(country)) {
+      const cur = posCtrl.errors;
+      if (cur?.['postalCodeInvalid']) { const { postalCodeInvalid: _, ...rest } = cur; posCtrl.setErrors(Object.keys(rest).length ? rest : null); }
+      return null;
+    }
+    const rule = POSTAL_CODE_RULES[country] ?? POSTAL_FALLBACK;
+    if (!rule.pattern.test(postal)) {
+      posCtrl.setErrors({ ...(posCtrl.errors || {}), postalCodeInvalid: rule.hint });
+      return { postalCodeInvalid: true };
+    }
+    const cur = posCtrl.errors;
+    if (cur?.['postalCodeInvalid']) { const { postalCodeInvalid: _, ...rest } = cur; posCtrl.setErrors(Object.keys(rest).length ? rest : null); }
+    return null;
+  };
 }
 import { PageHeaderComponent } from '../../../shared/components/page-header/page-header.component';
 
@@ -263,87 +416,206 @@ import { PageHeaderComponent } from '../../../shared/components/page-header/page
       <!-- ══ Profile fields form ════════════════════════════════════════════ -->
       <form [formGroup]="form" (ngSubmit)="submit()">
 
-        <!-- ── Personal ───────────────────────────────────────────────────── -->
-        <div class="form-card mb-4">
-          <h5 class="card-section-header"><i class="bi bi-person"></i> Personal Information</h5>
-          <div class="row g-3">
-            <div class="col-md-6">
-              <label class="form-label small fw-semibold">First Name</label>
-              <input formControlName="first_name" class="form-control form-control-sm">
-            </div>
-            <div class="col-md-6">
-              <label class="form-label small fw-semibold">Last Name</label>
-              <input formControlName="last_name" class="form-control form-control-sm">
-            </div>
-            <div class="col-md-4">
-              <label class="form-label small fw-semibold">Phone</label>
-              <input formControlName="phone" class="form-control form-control-sm">
-            </div>
-            <div class="col-md-4">
-              <label class="form-label small fw-semibold">Date of Birth</label>
-              <input formControlName="date_of_birth" type="date" class="form-control form-control-sm">
-            </div>
-            <div class="col-md-4">
-              <label class="form-label small fw-semibold">Gender</label>
-              <select formControlName="gender" class="form-select form-select-sm">
-                <option value="">— Select —</option>
-                <option value="male">Male</option>
-                <option value="female">Female</option>
-                <option value="non-binary">Non-binary</option>
-                <option value="prefer_not_to_say">Prefer not to say</option>
-              </select>
-            </div>
-            <div class="col-md-4">
-              <label class="form-label small fw-semibold">Marital Status <span class="text-muted fw-normal">(Optional)</span></label>
-              <select formControlName="marital_status" class="form-select form-select-sm">
-                <option value="">— Select —</option>
-                <option value="single">Single</option>
-                <option value="married">Married</option>
-                <option value="divorced">Divorced</option>
-                <option value="widowed">Widowed</option>
-              </select>
-            </div>
-            <div class="col-12">
-              <label class="form-label small fw-semibold">Bio</label>
-              <textarea formControlName="bio" class="form-control form-control-sm" rows="3"
-                [class.is-invalid]="form!.get('bio')?.invalid && form!.get('bio')?.dirty"></textarea>
-              <small class="d-block text-end mt-1"
-                [class.text-success]="bioWordCount <= BIO_WORD_LIMIT"
-                [class.text-danger]="bioWordCount > BIO_WORD_LIMIT">
-                {{ bioWordCount }} / {{ BIO_WORD_LIMIT }} words
-              </small>
-              @if (form!.get('bio')?.errors?.['bioWordLimit'] && form!.get('bio')?.dirty) {
-                <div class="text-danger small mt-1">
-                  You have exceeded the maximum limit of 2000 words. Please reduce your text.
-                </div>
-              }
-            </div>
-            <div class="col-12">
-              <label class="form-label small fw-semibold">LinkedIn URL</label>
-              <input formControlName="linkedin_url" class="form-control form-control-sm"
-                placeholder="https://linkedin.com/in/…">
-            </div>
-          </div>
-        </div>
+         <!-- ── Personal ───────────────────────────────────────────────────── -->
+         <div class="form-card mb-4">
+           <h5 class="card-section-header"><i class="bi bi-person"></i> Personal Information</h5>
+           <div class="row g-3">
+             <!-- First Name -->
+             <div class="col-md-6">
+               <label class="form-label small fw-semibold">First Name <span class="text-danger">*</span></label>
+               <input formControlName="first_name" class="form-control form-control-sm"
+                 [class.is-invalid]="form!.get('first_name')?.invalid && form!.get('first_name')?.touched">
+               @if (form!.get('first_name')?.touched && form!.get('first_name')?.errors) {
+                 <div class="invalid-feedback d-block small">
+                   @if (form!.get('first_name')?.errors?.['required'])   { First name is required. }
+                   @else if (form!.get('first_name')?.errors?.['minlength']) { Minimum 3 characters required. }
+                   @else if (form!.get('first_name')?.errors?.['maxlength']) { Maximum 100 characters allowed. }
+                   @else if (form!.get('first_name')?.errors?.['pattern'])   { Only letters, spaces, hyphens and apostrophes are allowed. }
+                 </div>
+               }
+             </div>
+             <!-- Last Name -->
+             <div class="col-md-6">
+               <label class="form-label small fw-semibold">Last Name <span class="text-danger">*</span></label>
+               <input formControlName="last_name" class="form-control form-control-sm"
+                 [class.is-invalid]="form!.get('last_name')?.invalid && form!.get('last_name')?.touched">
+               @if (form!.get('last_name')?.touched && form!.get('last_name')?.errors) {
+                 <div class="invalid-feedback d-block small">
+                   @if (form!.get('last_name')?.errors?.['required'])   { Last name is required. }
+                   @else if (form!.get('last_name')?.errors?.['minlength']) { Minimum 3 characters required. }
+                   @else if (form!.get('last_name')?.errors?.['maxlength']) { Maximum 100 characters allowed. }
+                   @else if (form!.get('last_name')?.errors?.['pattern'])   { Only letters, spaces, hyphens and apostrophes are allowed. }
+                 </div>
+               }
+             </div>
+             <!-- Phone -->
+             <div class="col-md-4">
+               <label class="form-label small fw-semibold">Phone <span class="text-danger">*</span></label>
+               <div class="phone-input-group">
+                 <app-searchable-select
+                   formControlName="phone_dial_code"
+                   [options]="dialCodeOptions()"
+                   placeholder="🌐"
+                   class="dial-select">
+                 </app-searchable-select>
+                 <input formControlName="phone_number" class="form-control form-control-sm phone-number-input"
+                   placeholder="e.g. 9876543210"
+                   [class.is-invalid]="form!.get('phone_number')?.invalid && form!.get('phone_number')?.touched">
+               </div>
+               @if (form!.get('phone_number')?.touched && form!.get('phone_number')?.errors) {
+                 <div class="text-danger small mt-1">
+                   @if (form!.get('phone_number')?.errors?.['required'])     { Phone number is required. }
+                   @else if (form!.get('phone_number')?.errors?.['phoneInvalid']) { {{ form!.get('phone_number')?.errors?.['phoneInvalid'] }} }
+                 </div>
+               }
+             </div>
+             <!-- WhatsApp -->
+             <div class="col-md-4">
+               <label class="form-label small fw-semibold">WhatsApp <span class="text-danger">*</span></label>
+               <div class="phone-input-group">
+                 <app-searchable-select
+                   formControlName="whatsapp_dial_code"
+                   [options]="dialCodeOptions()"
+                   placeholder="🌐"
+                   class="dial-select"
+                   [class.bg-light]="form!.get('whatsapp_same_as_phone')?.value"
+                   [disabled]="form!.get('whatsapp_same_as_phone')?.value">
+                 </app-searchable-select>
+                 <input formControlName="whatsapp_number" class="form-control form-control-sm phone-number-input"
+                   placeholder="e.g. 9876543210"
+                   [class.bg-light]="form!.get('whatsapp_same_as_phone')?.value"
+                   [class.is-invalid]="form!.get('whatsapp_number')?.invalid && form!.get('whatsapp_number')?.touched"
+                   [attr.readonly]="form!.get('whatsapp_same_as_phone')?.value ? true : null">
+               </div>
+               <div class="form-check mt-1">
+                 <input class="form-check-input" type="checkbox"
+                   formControlName="whatsapp_same_as_phone" id="wa_same_er">
+                 <label class="form-check-label small text-muted" for="wa_same_er">
+                   Same as phone
+                 </label>
+               </div>
+               @if (form!.get('whatsapp_number')?.touched && form!.get('whatsapp_number')?.errors) {
+                 <div class="text-danger small mt-1">
+                   @if (form!.get('whatsapp_number')?.errors?.['required'])     { WhatsApp number is required. }
+                   @else if (form!.get('whatsapp_number')?.errors?.['phoneInvalid']) { {{ form!.get('whatsapp_number')?.errors?.['phoneInvalid'] }} }
+                 </div>
+               }
+             </div>
+             <!-- Date of Birth -->
+             <div class="col-md-4">
+               <label class="form-label small fw-semibold">Date of Birth <span class="text-danger">*</span></label>
+               <input formControlName="date_of_birth" type="date" class="form-control form-control-sm"
+                 [class.is-invalid]="form!.get('date_of_birth')?.invalid && form!.get('date_of_birth')?.touched"
+                 [max]="(currentYear - 16) + '-12-31'"
+                 [min]="(currentYear - 100) + '-01-01'">
+               @if (form!.get('date_of_birth')?.touched && form!.get('date_of_birth')?.errors) {
+                 <div class="invalid-feedback d-block small">
+                   @if (form!.get('date_of_birth')?.errors?.['required'])    { Date of birth is required. }
+                   @else if (form!.get('date_of_birth')?.errors?.['invalidDate'])  { Please enter a valid date. }
+                   @else if (form!.get('date_of_birth')?.errors?.['futureDate'])   { Date of birth cannot be in the future. }
+                   @else if (form!.get('date_of_birth')?.errors?.['tooYoung'])     { Candidate must be at least 16 years old. }
+                   @else if (form!.get('date_of_birth')?.errors?.['tooOld'])       { Please enter a valid date of birth. }
+                 </div>
+               }
+             </div>
+             <!-- Gender -->
+             <div class="col-md-4">
+               <label class="form-label small fw-semibold">Gender <span class="text-danger">*</span></label>
+               <app-searchable-select
+                 formControlName="gender"
+                 [options]="genderOptions"
+                 placeholder="Select gender…"
+                 [allowClear]="true"
+                 [invalid]="!!(form!.get('gender')?.invalid && form!.get('gender')?.touched)">
+               </app-searchable-select>
+               @if (form!.get('gender')?.invalid && form!.get('gender')?.touched) {
+                 <div class="text-danger small mt-1">Gender is required.</div>
+               }
+             </div>
+             <!-- Marital Status -->
+             <div class="col-md-4">
+               <label class="form-label small fw-semibold">Marital Status</label>
+               <app-searchable-select
+                 formControlName="marital_status"
+                 [options]="maritalStatusOptions"
+                 placeholder="Select status…"
+                 [allowClear]="true">
+               </app-searchable-select>
+             </div>
+             <div class="col-12">
+               <label class="form-label small fw-semibold">Bio</label>
+               <textarea formControlName="bio" class="form-control form-control-sm" rows="3"
+                 [class.is-invalid]="form!.get('bio')?.invalid && form!.get('bio')?.dirty"></textarea>
+               <small class="d-block text-end mt-1"
+                 [class.text-success]="bioWordCount <= BIO_WORD_LIMIT"
+                 [class.text-danger]="bioWordCount > BIO_WORD_LIMIT">
+                 {{ bioWordCount }} / {{ BIO_WORD_LIMIT }} words
+               </small>
+               @if (form!.get('bio')?.errors?.['bioWordLimit'] && form!.get('bio')?.dirty) {
+                 <div class="text-danger small mt-1">
+                   You have exceeded the maximum limit of 2000 words. Please reduce your text.
+                 </div>
+               }
+             </div>
+              <div class="col-12">
+               <label class="form-label small fw-semibold">LinkedIn URL</label>
+               <input formControlName="linkedin_url" class="form-control form-control-sm"
+                 placeholder="https://linkedin.com/in/username"
+                 [class.is-invalid]="form!.get('linkedin_url')?.invalid && form!.get('linkedin_url')?.touched">
+               @if (form!.get('linkedin_url')?.invalid && form!.get('linkedin_url')?.touched) {
+                 <div class="invalid-feedback d-block small">
+                   Enter a valid LinkedIn URL (e.g. https://linkedin.com/in/username).
+                 </div>
+               }
+             </div>
+           </div>
+         </div>
 
         <!-- ── Professional ───────────────────────────────────────────────── -->
         <div class="form-card mb-4">
           <h5 class="card-section-header card-section-header--info">
             <i class="bi bi-briefcase"></i> Professional
           </h5>
-          <div class="row g-3">
-            <div class="col-md-4">
-              <label class="form-label small fw-semibold">Job Title</label>
-              <input formControlName="job_title" class="form-control form-control-sm">
-            </div>
-            <div class="col-md-4">
-              <label class="form-label small fw-semibold">Occupation</label>
-              <input formControlName="occupation" class="form-control form-control-sm">
-            </div>
-            <div class="col-md-4">
-              <label class="form-label small fw-semibold">Industry</label>
-              <input formControlName="industry" class="form-control form-control-sm">
-            </div>
+           <div class="row g-3">
+             <div class="col-md-4">
+               <label class="form-label small fw-semibold">Job Title <span class="text-danger">*</span></label>
+               <app-searchable-select
+                 formControlName="job_title"
+                 [options]="jobTitleOptions()"
+                 placeholder="e.g. Senior Developer"
+                 [allowClear]="true"
+                 [invalid]="!!(form!.get('job_title')?.invalid && form!.get('job_title')?.touched)">
+               </app-searchable-select>
+               @if (form!.get('job_title')?.invalid && form!.get('job_title')?.touched) {
+                 <div class="text-danger small mt-1">Job title is required.</div>
+               }
+             </div>
+             <div class="col-md-4">
+               <label class="form-label small fw-semibold">Occupation <span class="text-danger">*</span></label>
+               <app-searchable-select
+                 formControlName="occupation"
+                 [options]="occupationOptions()"
+                 placeholder="e.g. Software Engineer"
+                 [allowClear]="true"
+                 [invalid]="!!(form!.get('occupation')?.invalid && form!.get('occupation')?.touched)">
+               </app-searchable-select>
+               @if (form!.get('occupation')?.invalid && form!.get('occupation')?.touched) {
+                 <div class="text-danger small mt-1">Occupation is required.</div>
+               }
+             </div>
+             <div class="col-md-4">
+               <label class="form-label small fw-semibold">Industry <span class="text-danger">*</span></label>
+               <app-searchable-select
+                 formControlName="industry"
+                 [options]="industryOptions()"
+                 placeholder="e.g. Technology"
+                 [allowClear]="true"
+                 [invalid]="!!(form!.get('industry')?.invalid && form!.get('industry')?.touched)">
+               </app-searchable-select>
+               @if (form!.get('industry')?.invalid && form!.get('industry')?.touched) {
+                 <div class="text-danger small mt-1">Industry is required.</div>
+               }
+             </div>
             <div class="col-md-4">
               <label class="form-label small fw-semibold">Years Experience
                 <span class="badge bg-primary ms-2">{{ form.get('years_experience')?.value ?? 0 }} yrs</span>
@@ -365,16 +637,58 @@ import { PageHeaderComponent } from '../../../shared/components/page-header/page
           </h5>
           <div class="row g-3">
             <div class="col-md-4">
-              <label class="form-label small fw-semibold">Current Country</label>
-              <input formControlName="current_country" class="form-control form-control-sm">
+              <label class="form-label small fw-semibold">Current Country <span class="text-danger">*</span></label>
+              <input formControlName="current_country" class="form-control form-control-sm"
+                [class.is-invalid]="form.get('current_country')!.invalid && form.get('current_country')!.touched"
+                placeholder="e.g. United Arab Emirates">
+              @if (form.get('current_country')!.invalid && form.get('current_country')!.touched) {
+                <div class="invalid-feedback">Current country is required.</div>
+              }
             </div>
             <div class="col-md-4">
-              <label class="form-label small fw-semibold">Current City</label>
-              <input formControlName="current_city" class="form-control form-control-sm">
+              <label class="form-label small fw-semibold">Current City <span class="text-danger">*</span></label>
+              <input formControlName="current_city" class="form-control form-control-sm"
+                [class.is-invalid]="form.get('current_city')!.invalid && form.get('current_city')!.touched"
+                placeholder="e.g. Dubai">
+              @if (form.get('current_city')!.invalid && form.get('current_city')!.touched) {
+                <div class="invalid-feedback">Current city is required.</div>
+              }
             </div>
             <div class="col-md-4">
-              <label class="form-label small fw-semibold">Nationality</label>
-              <input formControlName="nationality" class="form-control form-control-sm">
+              <label class="form-label small fw-semibold">Postal / ZIP Code <span class="text-danger">*</span></label>
+              <input formControlName="postal_code" class="form-control form-control-sm"
+                [class.is-invalid]="form.get('postal_code')!.invalid && form.get('postal_code')!.touched"
+                placeholder="Postal code">
+              @if (form.get('postal_code')!.touched) {
+                @if (form.get('postal_code')!.errors?.['required']) {
+                  <div class="invalid-feedback d-block">Postal code is required.</div>
+                } @else if (form.get('postal_code')!.errors?.['postalCodeInvalid']) {
+                  <div class="invalid-feedback d-block">{{ form.get('postal_code')!.errors?.['postalCodeInvalid'] }}</div>
+                }
+              }
+            </div>
+
+            <!-- Passport toggle -->
+            <div class="col-12">
+              <div class="form-check form-switch">
+                <input class="form-check-input" type="checkbox" formControlName="has_passport" id="er_has_passport">
+                <label class="form-check-label small fw-semibold" for="er_has_passport">I hold a valid passport</label>
+              </div>
+            </div>
+
+            <!-- Nationality — required only if has_passport -->
+            <div class="col-md-4">
+              <label class="form-label small fw-semibold">
+                Nationality
+                @if (form.get('has_passport')!.value) { <span class="text-danger">*</span> }
+                @else { <span class="text-muted">(optional)</span> }
+              </label>
+              <input formControlName="nationality" class="form-control form-control-sm"
+                [class.is-invalid]="form.get('nationality')!.invalid && form.get('nationality')!.touched"
+                placeholder="e.g. Indian">
+              @if (form.get('nationality')!.invalid && form.get('nationality')!.touched) {
+                <div class="invalid-feedback">Nationality is required when passport is selected.</div>
+              }
             </div>
           </div>
         </div>
@@ -389,13 +703,14 @@ import { PageHeaderComponent } from '../../../shared/components/page-header/page
           </div>
           @if (skillsArray.length) {
               <div class="row g-2 mb-1">
-                <div class="col-md-6"><label class="form-label form-label-sm mb-0">Skill Name <span class="text-danger">*</span></label></div>
-                <div class="col-md-4"><label class="form-label form-label-sm mb-0">Proficiency</label></div>
+                <div class="col"><label class="form-label form-label-sm mb-0">Skill Name <span class="text-danger">*</span></label></div>
+                <div class="col"><label class="form-label form-label-sm mb-0">Proficiency</label></div>
+                <div class="col-auto" style="width:5rem"></div>
               </div>
             }
             @for (ctrl of skillsArray.controls; track $index) {
-            <div [formGroup]="asGroup(ctrl)" class="row g-2 mb-2 align-items-start">
-              <div class="col-md-6">
+            <div [formGroup]="asGroup(ctrl)" class="row g-2 mb-2 align-items-center">
+              <div class="col">
                 <input formControlName="skill_name" class="form-control form-control-sm"
                   placeholder="e.g. Angular"
                   [class.is-invalid]="asGroup(ctrl).get('skill_name')!.invalid && asGroup(ctrl).get('skill_name')!.touched">
@@ -403,19 +718,19 @@ import { PageHeaderComponent } from '../../../shared/components/page-header/page
                   <div class="invalid-feedback">Skill name is required.</div>
                 }
               </div>
-              <div class="col-md-4">
-                <select formControlName="proficiency" class="form-select form-select-sm"
-                  [class.is-invalid]="asGroup(ctrl).get('proficiency')!.invalid && asGroup(ctrl).get('proficiency')!.touched">
-                  <option value="">— Select —</option>
-                  <option value="beginner">Beginner</option>
-                  <option value="intermediate">Intermediate</option>
-                  <option value="expert">Expert</option>
-                </select>
+              <div class="col">
+                <app-searchable-select
+                  formControlName="proficiency"
+                  [options]="proficiencySkillOptions"
+                  placeholder="— Select —"
+                  [allowClear]="false"
+                  [invalid]="asGroup(ctrl).get('proficiency')!.invalid && asGroup(ctrl).get('proficiency')!.touched">
+                </app-searchable-select>
                 @if (asGroup(ctrl).get('proficiency')!.invalid && asGroup(ctrl).get('proficiency')!.touched) {
-                  <div class="invalid-feedback">Select a proficiency level.</div>
+                  <div class="text-danger" style="font-size:.875em;margin-top:.25rem">Select a proficiency level.</div>
                 }
               </div>
-              <div class="col-md-2">
+              <div class="col-auto" style="width:5rem">
                 <button type="button" class="btn btn-sm btn-outline-danger w-100"
                   (click)="removeSkill($index)"><i class="bi bi-trash"></i></button>
               </div>
@@ -433,37 +748,37 @@ import { PageHeaderComponent } from '../../../shared/components/page-header/page
           </div>
           @if (languagesArray.length) {
               <div class="row g-2 mb-1">
-                <div class="col-md-6"><label class="form-label form-label-sm mb-0">Language <span class="text-danger">*</span></label></div>
-                <div class="col-md-4"><label class="form-label form-label-sm mb-0">Proficiency</label></div>
+                <div class="col"><label class="form-label form-label-sm mb-0">Language <span class="text-danger">*</span></label></div>
+                <div class="col"><label class="form-label form-label-sm mb-0">Proficiency</label></div>
+                <div class="col-auto" style="width:5rem"></div>
               </div>
             }
             @for (ctrl of languagesArray.controls; track $index) {
-            <div [formGroup]="asGroup(ctrl)" class="row g-2 mb-2 align-items-start">
-              <div class="col-md-6">
-                <input formControlName="language" class="form-control form-control-sm"
+            <div [formGroup]="asGroup(ctrl)" class="row g-2 mb-2 align-items-center">
+              <div class="col">
+                <app-searchable-select
+                  formControlName="language"
+                  [options]="languageOptions()"
                   placeholder="e.g. English"
-                  [class.is-invalid]="asGroup(ctrl).get('language')!.invalid && asGroup(ctrl).get('language')!.touched">
+                  [invalid]="asGroup(ctrl).get('language')!.invalid && asGroup(ctrl).get('language')!.touched">
+                </app-searchable-select>
                 @if (asGroup(ctrl).get('language')!.invalid && asGroup(ctrl).get('language')!.touched) {
-                  <div class="invalid-feedback">Language name is required.</div>
+                  <div class="invalid-feedback d-block small">Language name is required.</div>
                 }
               </div>
-              <div class="col-md-4">
-                <select formControlName="proficiency" class="form-select form-select-sm"
-                  [class.is-invalid]="asGroup(ctrl).get('proficiency')!.invalid && asGroup(ctrl).get('proficiency')!.touched">
-                  <option value="">— Select —</option>
-                  <option value="A1">A1 — Beginner</option>
-                  <option value="A2">A2 — Elementary</option>
-                  <option value="B1">B1 — Intermediate</option>
-                  <option value="B2">B2 — Upper Intermediate</option>
-                  <option value="C1">C1 — Advanced</option>
-                  <option value="C2">C2 — Proficient</option>
-                  <option value="native">Native</option>
-                </select>
+              <div class="col">
+                <app-searchable-select
+                  formControlName="proficiency"
+                  [options]="proficiencyLangOptions"
+                  placeholder="— Select —"
+                  [allowClear]="false"
+                  [invalid]="asGroup(ctrl).get('proficiency')!.invalid && asGroup(ctrl).get('proficiency')!.touched">
+                </app-searchable-select>
                 @if (asGroup(ctrl).get('proficiency')!.invalid && asGroup(ctrl).get('proficiency')!.touched) {
-                  <div class="invalid-feedback">Select a proficiency level.</div>
+                  <div class="text-danger" style="font-size:.875em;margin-top:.25rem">Select a proficiency level.</div>
                 }
               </div>
-              <div class="col-md-2">
+              <div class="col-auto" style="width:5rem">
                 <button type="button" class="btn btn-sm btn-outline-danger w-100"
                   (click)="removeLanguage($index)"><i class="bi bi-trash"></i></button>
               </div>
@@ -481,29 +796,81 @@ import { PageHeaderComponent } from '../../../shared/components/page-header/page
           </div>
           @for (ctrl of experienceArray.controls; track $index) {
             <div [formGroup]="asGroup(ctrl)" class="glass-card p-3 mb-3">
+              <div class="d-flex justify-content-between align-items-center mb-2">
+                <span class="fw-semibold small text-muted"><i class="bi bi-briefcase me-1"></i> Experience #{{ $index + 1 }}</span>
+                <button type="button" class="btn btn-sm btn-outline-danger" (click)="removeExperience($index)">Remove</button>
+              </div>
               <div class="row g-2">
                 <div class="col-md-6">
-                  <input formControlName="job_title" class="form-control form-control-sm" placeholder="Job Title">
+                  <label class="form-label form-label-sm">Job Title <span class="text-danger">*</span></label>
+                  <input formControlName="job_title" class="form-control form-control-sm" placeholder="Job Title"
+                    [class.is-invalid]="asGroup(ctrl).get('job_title')!.invalid && asGroup(ctrl).get('job_title')!.touched">
+                  @if (asGroup(ctrl).get('job_title')!.invalid && asGroup(ctrl).get('job_title')!.touched) {
+                    <div class="invalid-feedback">Job title is required.</div>
+                  }
                 </div>
                 <div class="col-md-6">
-                  <input formControlName="company_name" class="form-control form-control-sm" placeholder="Company">
+                  <label class="form-label form-label-sm">Company <span class="text-danger">*</span></label>
+                  <input formControlName="company_name" class="form-control form-control-sm" placeholder="Company"
+                    [class.is-invalid]="asGroup(ctrl).get('company_name')!.invalid && asGroup(ctrl).get('company_name')!.touched">
+                  @if (asGroup(ctrl).get('company_name')!.invalid && asGroup(ctrl).get('company_name')!.touched) {
+                    <div class="invalid-feedback">Company name is required.</div>
+                  }
                 </div>
                 <div class="col-md-3">
-                  <input formControlName="start_date" type="date" class="form-control form-control-sm">
+                  <label class="form-label form-label-sm">Start Date <span class="text-danger">*</span></label>
+                  <input formControlName="start_date" type="date" class="form-control form-control-sm"
+                    [class.is-invalid]="asGroup(ctrl).get('start_date')!.invalid && asGroup(ctrl).get('start_date')!.touched">
+                  @if (asGroup(ctrl).get('start_date')!.invalid && asGroup(ctrl).get('start_date')!.touched) {
+                    <div class="invalid-feedback">Start date is required.</div>
+                  }
                 </div>
                 <div class="col-md-3">
-                  <input formControlName="end_date" type="date" class="form-control form-control-sm">
+                  <label class="form-label form-label-sm">End Date</label>
+                  @if (!asGroup(ctrl).get('currently_working')?.value) {
+                    <input formControlName="end_date" type="date" class="form-control form-control-sm">
+                  } @else {
+                    <div class="form-control form-control-sm bg-success-subtle text-success fw-semibold">Present</div>
+                  }
+                  <div class="form-check mt-1">
+                    <input type="checkbox" class="form-check-input" formControlName="currently_working" id="erCw_{{$index}}">
+                    <label class="form-check-label small text-muted" for="erCw_{{$index}}">Currently here</label>
+                  </div>
                 </div>
                 <div class="col-md-6">
-                  <input formControlName="location" class="form-control form-control-sm" placeholder="Location">
+                  <label class="form-label form-label-sm">Location <span class="text-danger">*</span></label>
+                  <app-searchable-select
+                    formControlName="location"
+                    [options]="countryOptions()"
+                    placeholder="Country / City"
+                    [allowClear]="true"
+                    [invalid]="asGroup(ctrl).get('location')!.invalid && asGroup(ctrl).get('location')!.touched">
+                  </app-searchable-select>
+                  @if (asGroup(ctrl).get('location')!.invalid && asGroup(ctrl).get('location')!.touched) {
+                    <div class="text-danger" style="font-size:.875em;margin-top:.25rem">Location is required.</div>
+                  }
                 </div>
                 <div class="col-12">
+                  <label class="form-label form-label-sm">Description</label>
                   <textarea formControlName="description" class="form-control form-control-sm"
                     rows="2" placeholder="Description"></textarea>
                 </div>
+                <div class="col-md-6">
+                  <label class="form-label form-label-sm">Reason for Leaving <span class="text-muted fw-normal" style="font-size:.7rem">(optional)</span></label>
+                  <app-searchable-select
+                    formControlName="reason_for_leaving_select"
+                    [options]="reasonForLeavingOptions"
+                    placeholder="— Select —"
+                    [allowClear]="true">
+                  </app-searchable-select>
+                </div>
+                @if (asGroup(ctrl).get('reason_for_leaving_select')?.value === 'Other') {
+                  <div class="col-md-6">
+                    <label class="form-label form-label-sm">Please specify</label>
+                    <input formControlName="reason_for_leaving_other" class="form-control form-control-sm" placeholder="Briefly describe the reason…">
+                  </div>
+                }
               </div>
-              <button type="button" class="btn btn-sm btn-outline-danger mt-2"
-                (click)="removeExperience($index)">Remove</button>
             </div>
           }
         </div>
@@ -518,34 +885,68 @@ import { PageHeaderComponent } from '../../../shared/components/page-header/page
           </div>
           @for (ctrl of educationArray.controls; track $index) {
             <div [formGroup]="asGroup(ctrl)" class="glass-card p-3 mb-3">
+              <div class="d-flex justify-content-between align-items-center mb-2">
+                <span class="fw-semibold small text-muted"><i class="bi bi-mortarboard me-1"></i> Education #{{ $index + 1 }}</span>
+                <button type="button" class="btn btn-sm btn-outline-danger" (click)="removeEducation($index)">Remove</button>
+              </div>
               <div class="row g-2">
                 <div class="col-md-6">
-                  <input formControlName="institution" class="form-control form-control-sm" placeholder="Institution">
+                  <label class="form-label form-label-sm">Institution <span class="text-danger">*</span></label>
+                  <input formControlName="institution" class="form-control form-control-sm" placeholder="Institution"
+                    [class.is-invalid]="asGroup(ctrl).get('institution')!.invalid && asGroup(ctrl).get('institution')!.touched">
+                  @if (asGroup(ctrl).get('institution')!.invalid && asGroup(ctrl).get('institution')!.touched) {
+                    <div class="invalid-feedback">Institution is required.</div>
+                  }
                 </div>
                 <div class="col-md-6">
-                  <input formControlName="degree" class="form-control form-control-sm" placeholder="Degree">
+                  <label class="form-label form-label-sm">Degree <span class="text-danger">*</span></label>
+                  <input formControlName="degree" class="form-control form-control-sm" placeholder="Degree"
+                    [class.is-invalid]="asGroup(ctrl).get('degree')!.invalid && asGroup(ctrl).get('degree')!.touched">
+                  @if (asGroup(ctrl).get('degree')!.invalid && asGroup(ctrl).get('degree')!.touched) {
+                    <div class="invalid-feedback">Degree is required.</div>
+                  }
                 </div>
                 <div class="col-md-6">
-                  <input formControlName="field_of_study" class="form-control form-control-sm" placeholder="Field of Study">
+                  <label class="form-label form-label-sm">Field of Study <span class="text-danger">*</span></label>
+                  <input formControlName="field_of_study" class="form-control form-control-sm" placeholder="Field of Study"
+                    [class.is-invalid]="asGroup(ctrl).get('field_of_study')!.invalid && asGroup(ctrl).get('field_of_study')!.touched">
+                  @if (asGroup(ctrl).get('field_of_study')!.invalid && asGroup(ctrl).get('field_of_study')!.touched) {
+                    <div class="invalid-feedback">Field of study is required.</div>
+                  }
                 </div>
                 <div class="col-md-3">
-                  <input formControlName="start_year" type="number" class="form-control form-control-sm" placeholder="Start Year">
+                  <label class="form-label form-label-sm">Start Year</label>
+                  <input formControlName="start_year" type="number" class="form-control form-control-sm" placeholder="Start Year"
+                    [class.is-invalid]="asGroup(ctrl).get('start_year')!.invalid && asGroup(ctrl).get('start_year')!.touched">
+                  @if (asGroup(ctrl).get('start_year')!.errors?.['eduYearInvalid'] && asGroup(ctrl).get('start_year')!.touched) {
+                    <div class="invalid-feedback d-block">{{ asGroup(ctrl).get('start_year')!.errors?.['eduYearInvalid'] }}</div>
+                  }
                 </div>
                 <div class="col-md-3">
-                  <input formControlName="end_year" type="number" class="form-control form-control-sm" placeholder="End Year">
+                  <label class="form-label form-label-sm">End Year</label>
+                  <input formControlName="end_year" type="number" class="form-control form-control-sm" placeholder="End Year"
+                    [class.is-invalid]="asGroup(ctrl).get('end_year')!.invalid && asGroup(ctrl).get('end_year')!.touched">
+                  @if (asGroup(ctrl).get('end_year')!.errors?.['eduYearInvalid'] && asGroup(ctrl).get('end_year')!.touched) {
+                    <div class="invalid-feedback d-block">{{ asGroup(ctrl).get('end_year')!.errors?.['eduYearInvalid'] }}</div>
+                  }
+                  @if (asGroup(ctrl).get('end_year')!.errors?.['endBeforeStart'] && asGroup(ctrl).get('end_year')!.touched) {
+                    <div class="invalid-feedback d-block">End year cannot be before start year.</div>
+                  }
                 </div>
                 <div class="col-md-6">
-                  <label class="form-label form-label-sm text-muted mb-1">Country of Institution</label>
+                  <label class="form-label form-label-sm text-muted mb-1">Country of Institution <span class="text-danger">*</span></label>
                   <app-searchable-select
                     formControlName="location"
                     [options]="countryOptions()"
                     placeholder="Select country…"
-                    [allowClear]="true">
+                    [allowClear]="true"
+                    [invalid]="asGroup(ctrl).get('location')!.invalid && asGroup(ctrl).get('location')!.touched">
                   </app-searchable-select>
+                  @if (asGroup(ctrl).get('location')!.invalid && asGroup(ctrl).get('location')!.touched) {
+                    <div class="text-danger" style="font-size:.875em;margin-top:.25rem">Location is required.</div>
+                  }
                 </div>
               </div>
-              <button type="button" class="btn btn-sm btn-outline-danger mt-2"
-                (click)="removeEducation($index)">Remove</button>
             </div>
           }
         </div>
@@ -630,25 +1031,33 @@ import { PageHeaderComponent } from '../../../shared/components/page-header/page
               <i class="bi bi-x-lg"></i>
             </button>
           </div>
-          <div class="file-preview-dialog__body">
-            @if (previewType === 'image') {
-              <img [src]="previewUrl" alt="Preview"
-                style="max-width:100%;max-height:70vh;border-radius:var(--th-radius);display:block;margin:0 auto">
-            } @else if (previewType === 'video') {
-              <video [src]="previewUrl" controls autoplay
-                style="max-width:100%;max-height:70vh;border-radius:var(--th-radius);display:block;margin:0 auto">
-              </video>
-            } @else {
-              <div style="text-align:center;padding:3rem 1rem">
-                <i class="bi bi-file-earmark-pdf-fill"
-                  style="font-size:4rem;color:var(--th-rose);display:block;margin-bottom:1rem"></i>
-                <p class="text-muted mb-3">PDF preview is not available inline.</p>
-                <a [href]="previewUrl" target="_blank" class="btn btn-primary">
-                  <i class="bi bi-box-arrow-up-right me-1"></i> Open in new tab
-                </a>
-              </div>
-            }
-          </div>
+           <div class="file-preview-dialog__body">
+             @if (previewType === 'image') {
+               <img [src]="previewUrl" alt="Preview"
+                 style="max-width:100%;max-height:70vh;border-radius:var(--th-radius);display:block;margin:0 auto">
+             } @else if (previewType === 'video') {
+               <video [src]="previewUrl" controls autoplay
+                 style="max-width:100%;max-height:70vh;border-radius:var(--th-radius);display:block;margin:0 auto">
+               </video>
+             } @else if (previewType === 'pdf') {
+               <iframe [src]="safePreviewUrl" style="width:100%;height:70vh;border:none;border-radius:var(--th-radius)">
+               </iframe>
+               <div style="text-align:center;margin-top:.5rem">
+                 <a [href]="previewUrl" target="_blank" class="btn btn-sm btn-outline-primary">
+                   <i class="bi bi-box-arrow-up-right me-1"></i> Open in new tab
+                 </a>
+               </div>
+             } @else {
+               <div style="text-align:center;padding:3rem 1rem">
+                 <i class="bi bi-file-earmark-pdf-fill"
+                   style="font-size:4rem;color:var(--th-rose);display:block;margin-bottom:1rem"></i>
+                 <p class="text-muted mb-3">PDF preview is not available inline.</p>
+                 <a [href]="previewUrl" target="_blank" class="btn btn-primary">
+                   <i class="bi bi-box-arrow-up-right me-1"></i> Open in new tab
+                 </a>
+               </div>
+             }
+           </div>
         </div>
       </div>
     }
@@ -679,10 +1088,77 @@ export class EditRequestComponent implements OnInit {
     private editRequestService: EditRequestService,
     private toast: ToastService,
     public master: MasterDataService,
+    private sanitizer: DomSanitizer,
   ) {}
 
   readonly countryOptions = computed<SelectOption[]>(() =>
     this.master.countries().map(c => ({ value: c.name, label: `${c.flag_emoji} ${c.name}` })));
+
+  readonly dialCodeOptions = computed<SelectOption[]>(() =>
+    this.master.countries().map(c => ({ value: c.dial_code, label: `${c.flag_emoji} ${c.dial_code}`, sublabel: c.name })));
+
+  readonly jobTitleOptions = computed<SelectOption[]>(() =>
+    this.master.jobTitles().map(j => ({ value: j.title, label: j.title, sublabel: j.occupation_name })));
+
+  readonly occupationOptions = computed<SelectOption[]>(() =>
+    this.master.occupations().map(o => ({ value: o.name, label: o.name })));
+
+  readonly industryOptions = computed<SelectOption[]>(() =>
+    this.master.industries().map(i => ({ value: i.name, label: i.name })));
+
+  readonly languageOptions = computed<SelectOption[]>(() =>
+    this.master.languages().map(l => ({ value: l.name, label: l.name })));
+
+  readonly proficiencySkillOptions: SelectOption[] = [
+    { value: 'beginner',     label: 'Beginner'     },
+    { value: 'intermediate', label: 'Intermediate' },
+    { value: 'expert',       label: 'Expert'       },
+  ];
+  readonly proficiencyLangOptions: SelectOption[] = [
+    { value: 'A1',     label: 'A1 — Beginner'           },
+    { value: 'A2',     label: 'A2 — Elementary'          },
+    { value: 'B1',     label: 'B1 — Intermediate'        },
+    { value: 'B2',     label: 'B2 — Upper Intermediate'  },
+    { value: 'C1',     label: 'C1 — Advanced'            },
+    { value: 'C2',     label: 'C2 — Proficient'          },
+    { value: 'native', label: 'Native'                   },
+  ];
+
+  readonly currentYear = new Date().getFullYear();
+
+  readonly genderOptions: SelectOption[] = [
+    { value: 'male',              label: 'Male'              },
+    { value: 'female',            label: 'Female'            },
+    { value: 'non-binary',        label: 'Non-binary'        },
+    { value: 'prefer_not_to_say', label: 'Prefer not to say' },
+  ];
+  readonly maritalStatusOptions: SelectOption[] = [
+    { value: 'single',   label: 'Single'   },
+    { value: 'married',  label: 'Married'  },
+    { value: 'divorced', label: 'Divorced' },
+    { value: 'widowed',  label: 'Widowed'  },
+  ];
+  readonly employmentStatusOptions = EMPLOYMENT_STATUS_OPTIONS;
+  readonly visaStatusOptions       = VISA_STATUS_OPTIONS;
+  readonly reasonForLeavingOptions = REASON_FOR_LEAVING_OPTIONS;
+
+  get safePreviewUrl(): SafeResourceUrl {
+    return this.sanitizer.bypassSecurityTrustResourceUrl(this.previewUrl);
+  }
+
+  private splitPhone(phone: string): { dialCode: string; number: string } {
+    if (!phone) return { dialCode: '+1', number: '' };
+    const codes = this.master.countries()
+      .map(c => c.dial_code)
+      .filter((v, i, a) => a.indexOf(v) === i)
+      .sort((a, b) => b.length - a.length);
+    for (const code of codes) {
+      if (phone.startsWith(code)) {
+        return { dialCode: code, number: phone.slice(code.length).trim() };
+      }
+    }
+    return { dialCode: '+1', number: phone };
+  }
 
   ngOnInit(): void {
     this.master.loadAll();
@@ -701,41 +1177,54 @@ export class EditRequestComponent implements OnInit {
   }
 
   buildForm(emp: Candidate): void {
+    const { dialCode: phoneDial, number: phoneNum } = this.splitPhone(emp.phone ?? '');
+    const { dialCode: waDial, number: waNum } = this.splitPhone(emp.whatsapp_number ?? '');
+
     this.form = this.fb.group({
-      first_name:       [emp.first_name       ?? '', Validators.required],
-      last_name:        [emp.last_name        ?? '', Validators.required],
-      phone:            [emp.phone            ?? ''],
-      date_of_birth:    [emp.date_of_birth    ?? ''],
-      gender:           [emp.gender           ?? ''],
-      marital_status:   [emp.marital_status   ?? ''],
-      bio:              [emp.bio              ?? '', this.bioWordLimitValidator(this.BIO_WORD_LIMIT)],
-      linkedin_url:     [emp.linkedin_url     ?? ''],
-      job_title:        [emp.job_title        ?? ''],
-      occupation:       [emp.occupation       ?? ''],
-      industry:         [emp.industry         ?? ''],
-      years_experience: [emp.years_experience ?? null],
-      current_country:  [emp.current_country  ?? ''],
-      current_city:     [emp.current_city     ?? ''],
-      nationality:      [emp.nationality      ?? ''],
+      first_name:          [emp.first_name ?? '', [Validators.required, Validators.minLength(3), Validators.maxLength(100), Validators.pattern(/^[a-zA-Z\s'\-]+$/)]],
+      last_name:           [emp.last_name  ?? '', [Validators.required, Validators.minLength(3), Validators.maxLength(100), Validators.pattern(/^[a-zA-Z\s'\-]+$/)]],
+      phone_dial_code:     [phoneDial],
+      phone_number:        [phoneNum, Validators.required],
+      whatsapp_dial_code:  [waDial],
+      whatsapp_number:     [waNum, Validators.required],
+      whatsapp_same_as_phone: [false],
+      date_of_birth:       [emp.date_of_birth ?? '', [Validators.required, dobValidator()]],
+      gender:              [emp.gender       ?? '', Validators.required],
+      marital_status:      [emp.marital_status   ?? ''],
+      bio:                 [emp.bio              ?? '', this.bioWordLimitValidator(this.BIO_WORD_LIMIT)],
+      linkedin_url:        [emp.linkedin_url     ?? '', linkedInValidator()],
+      job_title:           [emp.job_title        ?? '', Validators.required],
+      occupation:          [emp.occupation       ?? '', Validators.required],
+      industry:            [emp.industry         ?? '', Validators.required],
+      years_experience:    [emp.years_experience ?? 0],
+      current_country:     [emp.current_country  ?? '', Validators.required],
+      current_city:        [emp.current_city     ?? '', Validators.required],
+      postal_code:         [emp.postal_code      ?? '', [Validators.required, Validators.maxLength(20)]],
+      has_passport:        [emp.has_passport     ?? false],
+      nationality:         [emp.nationality      ?? ''],
       skills:     this.fb.array((emp.skills    ?? []).map((s) =>
         this.fb.group({ skill_name: [s.skill_name, Validators.required], proficiency: [s.proficiency ?? ''] }, { validators: skillGroupValidator }))),
       languages:  this.fb.array((emp.languages ?? []).map((l) =>
         this.fb.group({ language: [l.language, Validators.required], proficiency: [l.proficiency ?? ''] }, { validators: langGroupValidator }))),
       experience: this.fb.array((emp.experience ?? []).map((e) => this.fb.group({
-        job_title:    [e.job_title    ?? ''],
-        company_name: [e.company_name ?? ''],
-        start_date:   [e.start_date   ?? ''],
+        job_title:    [e.job_title    ?? '', Validators.required],
+        company_name: [e.company_name ?? '', Validators.required],
+        start_date:   [e.start_date   ?? '', Validators.required],
         end_date:     [e.end_date     ?? ''],
-        location:     [e.location     ?? ''],
+        location:     [e.location     ?? '', Validators.required],
         description:  [e.description  ?? ''],
+        reason_for_leaving_select: [e.reason_for_leaving ?? ''],
+        reason_for_leaving_other:  [''],
+        currently_working: [!e.end_date],
       }))),
-      education: this.fb.array((emp.education ?? []).map((e) => this.fb.group({
-        institution:    [e.institution    ?? ''],
-        degree:         [e.degree         ?? ''],
-        field_of_study: [e.field_of_study ?? ''],
-        start_year:     [e.start_year     ?? null],
-        end_year:       [e.end_year       ?? null],
-      }))),
+      education: this.fb.array((emp.education ?? []).map((e) => { const yr = new Date().getFullYear(); return this.fb.group({
+        institution:    [e.institution    ?? '', Validators.required],
+        degree:         [e.degree         ?? '', Validators.required],
+        field_of_study: [e.field_of_study ?? '', Validators.required],
+        start_year:     [e.start_year     ?? null, eduYearValidator(1950, yr)],
+        end_year:       [e.end_year       ?? null, eduYearValidator(1950, yr + 6)],
+        location:       [e.location       ?? '', Validators.required],
+      }, { validators: eduEndYearGroupValidator }); })),
       certificates: this.fb.array((emp.certificates ?? []).map((c) => this.fb.group({
         id:          [c.id          ?? null],
         name:        [c.name        ?? ''],
@@ -745,7 +1234,59 @@ export class EditRequestComponent implements OnInit {
         no_expiry:   [c.no_expiry   ?? false],
         file_url:    [c.file_url    ?? ''],
       }))),
+    }, {
+      validators: [
+        makePhoneGroupValidator('phone_dial_code', 'phone_number'),
+        makePhoneGroupValidator('whatsapp_dial_code', 'whatsapp_number'),
+        makePostalCodeGroupValidator('current_country', 'postal_code'),
+      ],
     });
+
+    // WhatsApp same-as-phone sync
+    this.form.get('whatsapp_same_as_phone')!.valueChanges.subscribe((checked: boolean) => {
+      if (checked) {
+        const raw = this.form!.getRawValue();
+        this.form!.patchValue({ whatsapp_dial_code: raw.phone_dial_code || '+1', whatsapp_number: raw.phone_number || '' }, { emitEvent: false });
+        this.form!.get('whatsapp_number')!.updateValueAndValidity();
+      }
+    });
+    this.form.get('phone_number')!.valueChanges.subscribe(() => {
+      if (this.form!.get('whatsapp_same_as_phone')?.value) {
+        const raw = this.form!.getRawValue();
+        this.form!.patchValue({ whatsapp_dial_code: raw.phone_dial_code || '+1', whatsapp_number: raw.phone_number || '' }, { emitEvent: false });
+      }
+    });
+    this.form.get('phone_dial_code')!.valueChanges.subscribe(() => {
+      if (this.form!.get('whatsapp_same_as_phone')?.value) {
+        const raw = this.form!.getRawValue();
+        this.form!.patchValue({ whatsapp_dial_code: raw.phone_dial_code || '+1', whatsapp_number: raw.phone_number || '' }, { emitEvent: false });
+        this.form!.get('whatsapp_number')!.updateValueAndValidity();
+      }
+    });
+    this.form.get('phone_number')!.valueChanges.subscribe(() => {
+      if (this.form!.get('whatsapp_same_as_phone')?.value) {
+        const raw = this.form!.getRawValue();
+        this.form!.patchValue({ whatsapp_dial_code: raw.phone_dial_code || '+1', whatsapp_number: raw.phone_number || '' }, { emitEvent: false });
+        this.form!.get('whatsapp_number')!.updateValueAndValidity();
+      }
+    });
+
+    // has_passport → nationality required
+    this.form.get('has_passport')!.valueChanges.subscribe((hasPassport: boolean) => {
+      const natCtrl = this.form!.get('nationality')!;
+      if (hasPassport) {
+        natCtrl.addValidators(Validators.required);
+      } else {
+        natCtrl.removeValidators(Validators.required);
+        if (natCtrl.errors?.['required']) natCtrl.setErrors(null);
+      }
+      natCtrl.updateValueAndValidity({ emitEvent: false });
+    });
+    // Set initial nationality requirement based on loaded value
+    if (emp.has_passport) {
+      this.form.get('nationality')!.addValidators(Validators.required);
+      this.form.get('nationality')!.updateValueAndValidity({ emitEvent: false });
+    }
 
   }
 
@@ -764,16 +1305,18 @@ export class EditRequestComponent implements OnInit {
   removeLanguage(i: number): void { this.languagesArray.removeAt(i); }
   addExperience(): void {
     this.experienceArray.push(this.fb.group({
-      job_title: [''], company_name: [''], start_date: [''],
-      end_date: [''], location: [''], description: [''],
+      job_title: ['', Validators.required], company_name: ['', Validators.required], start_date: ['', Validators.required],
+      end_date: [''], location: ['', Validators.required], description: [''],
+      reason_for_leaving_select: [''], reason_for_leaving_other: [''], currently_working: [false],
     }));
   }
   removeExperience(i: number): void { this.experienceArray.removeAt(i); }
   addEducation(): void {
+    const yr = new Date().getFullYear();
     this.educationArray.push(this.fb.group({
-      institution: [''], degree: [''], field_of_study: [''],
-      start_year: [null], end_year: [null], location: [''],
-    }));
+      institution: ['', Validators.required], degree: ['', Validators.required], field_of_study: ['', Validators.required],
+      start_year: [null, eduYearValidator(1950, yr)], end_year: [null, eduYearValidator(1950, yr + 6)], location: ['', Validators.required],
+    }, { validators: eduEndYearGroupValidator }));
   }
   removeEducation(i: number): void { this.educationArray.removeAt(i); }
 
@@ -853,14 +1396,23 @@ export class EditRequestComponent implements OnInit {
     this.submitError = '';
 
     const raw   = this.form.value;
-    const clean = Object.fromEntries(
-      Object.entries(raw).filter(([, v]) => v !== '' && v !== null),
+
+    // Combine dial code + number for phone and whatsapp
+    const phone = raw.phone_number ? `${raw.phone_dial_code || ''}${raw.phone_number}`.trim() : undefined;
+    const whatsapp = raw.whatsapp_number ? `${raw.whatsapp_dial_code || ''}${raw.whatsapp_number}`.trim() : undefined;
+
+    // Build clean payload (exclude helper controls and empty values)
+    const excluded = new Set(['phone_dial_code', 'phone_number', 'whatsapp_dial_code', 'whatsapp_same_as_phone']);
+    const clean: Record<string, unknown> = Object.fromEntries(
+      Object.entries(raw).filter(([k, v]) => !excluded.has(k) && v !== '' && v !== null),
     );
+    if (phone)    clean['phone']           = phone;
+    if (whatsapp) clean['whatsapp_number'] = whatsapp;
 
     // Attach any staged file relative paths into the payload
     Object.entries(this.stagedRelative).forEach(([type, relativePath]) => {
       const field = this.typeToField[type];
-      if (field) (clean as Record<string, unknown>)[field] = relativePath;
+      if (field) clean[field] = relativePath;
     });
 
     this.editRequestService.submit(clean).subscribe({
