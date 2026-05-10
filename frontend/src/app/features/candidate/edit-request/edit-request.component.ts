@@ -3,7 +3,7 @@ import { Component, OnInit, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import {
   ReactiveFormsModule, FormBuilder, FormGroup,
-  FormArray, Validators, AbstractControl, ValidationErrors,
+  FormArray, Validators, AbstractControl, ValidationErrors, ValidatorFn,
 } from '@angular/forms';
 import { CandidateService } from '../../../core/services/candidate.service';
 import { EditRequestService } from '../../../core/services/edit-request.service';
@@ -305,12 +305,18 @@ import { PageHeaderComponent } from '../../../shared/components/page-header/page
             </div>
             <div class="col-12">
               <label class="form-label small fw-semibold">Bio</label>
-              <textarea formControlName="bio" class="form-control form-control-sm" rows="3"></textarea>
+              <textarea formControlName="bio" class="form-control form-control-sm" rows="3"
+                [class.is-invalid]="form!.get('bio')?.invalid && form!.get('bio')?.dirty"></textarea>
               <small class="d-block text-end mt-1"
-                [class.text-muted]="bioWordCount < BIO_WORD_LIMIT"
-                [class.text-danger]="bioWordCount >= BIO_WORD_LIMIT">
+                [class.text-success]="bioWordCount <= BIO_WORD_LIMIT"
+                [class.text-danger]="bioWordCount > BIO_WORD_LIMIT">
                 {{ bioWordCount }} / {{ BIO_WORD_LIMIT }} words
               </small>
+              @if (form!.get('bio')?.errors?.['bioWordLimit'] && form!.get('bio')?.dirty) {
+                <div class="text-danger small mt-1">
+                  You have exceeded the maximum limit of 2000 words. Please reduce your text.
+                </div>
+              }
             </div>
             <div class="col-12">
               <label class="form-label small fw-semibold">LinkedIn URL</label>
@@ -606,7 +612,7 @@ import { PageHeaderComponent } from '../../../shared/components/page-header/page
 
         <div class="d-flex gap-2 mb-5">
           <button type="submit" class="btn btn-primary px-4"
-            [disabled]="submitting || existingRequest?.status === 'pending'">
+            [disabled]="submitting || existingRequest?.status === 'pending' || form!.get('bio')?.invalid">
             {{ submitting ? 'Submitting…' : 'Submit for Review' }}
           </button>
         </div>
@@ -695,7 +701,6 @@ export class EditRequestComponent implements OnInit {
   }
 
   buildForm(emp: Candidate): void {
-    this.bioWordCount = this.countWords(emp.bio ?? '');
     this.form = this.fb.group({
       first_name:       [emp.first_name       ?? '', Validators.required],
       last_name:        [emp.last_name        ?? '', Validators.required],
@@ -703,7 +708,7 @@ export class EditRequestComponent implements OnInit {
       date_of_birth:    [emp.date_of_birth    ?? ''],
       gender:           [emp.gender           ?? ''],
       marital_status:   [emp.marital_status   ?? ''],
-      bio:              [emp.bio              ?? ''],
+      bio:              [emp.bio              ?? '', this.bioWordLimitValidator(this.BIO_WORD_LIMIT)],
       linkedin_url:     [emp.linkedin_url     ?? ''],
       job_title:        [emp.job_title        ?? ''],
       occupation:       [emp.occupation       ?? ''],
@@ -742,17 +747,6 @@ export class EditRequestComponent implements OnInit {
       }))),
     });
 
-    this.form!.get('bio')!.valueChanges.subscribe((val: string | null) => {
-      const text  = val ?? '';
-      const words = text.trim() === '' ? [] : text.trim().split(/\s+/).filter(Boolean);
-      if (words.length > this.BIO_WORD_LIMIT) {
-        const clamped = words.slice(0, this.BIO_WORD_LIMIT).join(' ');
-        this.form!.get('bio')!.setValue(clamped, { emitEvent: false });
-        this.bioWordCount = this.BIO_WORD_LIMIT;
-      } else {
-        this.bioWordCount = words.length;
-      }
-    });
   }
 
   // ── FormArray getters ───────────────────────────────────────────────────
@@ -800,10 +794,20 @@ export class EditRequestComponent implements OnInit {
 
   // ── Bio word counter ────────────────────────────────────────────────────────
   readonly BIO_WORD_LIMIT = 2000;
-  bioWordCount = 0;
+
+  get bioWordCount(): number {
+    return this.countWords(this.form?.get('bio')?.value ?? '');
+  }
 
   countWords(text: string): number {
     return text.trim() === '' ? 0 : text.trim().split(/\s+/).filter(Boolean).length;
+  }
+
+  bioWordLimitValidator(limit: number): ValidatorFn {
+    return (control: AbstractControl): ValidationErrors | null => {
+      const wordCount = this.countWords(control.value ?? '');
+      return wordCount > limit ? { bioWordLimit: { actual: wordCount, max: limit } } : null;
+    };
   }
 
   stageFile(type: 'profiles' | 'resumes' | 'videos', event: Event): void {

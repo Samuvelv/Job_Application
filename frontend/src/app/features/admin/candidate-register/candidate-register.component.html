@@ -142,12 +142,18 @@
         <div class="col-12">
           <label class="form-label">Bio / Self Introduction</label>
           <textarea class="form-control" formControlName="bio" rows="3"
-            placeholder="Brief introduction about the candidate…"></textarea>
+            placeholder="Brief introduction about the candidate…"
+            [class.is-invalid]="form.get('bio')?.invalid && form.get('bio')?.dirty"></textarea>
           <small class="d-block text-end mt-1"
-            [class.text-muted]="bioWordCount < BIO_WORD_LIMIT"
-            [class.text-danger]="bioWordCount >= BIO_WORD_LIMIT">
+            [class.text-success]="bioWordCount <= BIO_WORD_LIMIT"
+            [class.text-danger]="bioWordCount > BIO_WORD_LIMIT">
             {{ bioWordCount }} / {{ BIO_WORD_LIMIT }} words
           </small>
+          @if (form.get('bio')?.errors?.['bioWordLimit'] && form.get('bio')?.dirty) {
+            <div class="text-danger small mt-1">
+              You have exceeded the maximum limit of 2000 words. Please reduce your text.
+            </div>
+          }
         </div>
         <!-- Hobbies -->
         <div class="col-12">
@@ -920,7 +926,7 @@
       </button>
     } @else {
       <button type="submit" class="btn btn-success px-4"
-        [disabled]="loading || !ctrl('confirm_terms').value || !ctrl('confirm_fee').value || !ctrl('confirm_docs').value">
+        [disabled]="loading || !ctrl('confirm_terms').value || !ctrl('confirm_fee').value || !ctrl('confirm_docs').value || form.get('bio')?.invalid">
         @if (loading) {
           <span class="spinner-border spinner-border-sm me-2"></span> Registering…
         } @else {

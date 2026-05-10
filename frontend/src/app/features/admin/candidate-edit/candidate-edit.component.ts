@@ -3,7 +3,7 @@ import { Component, OnInit, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import {
   ReactiveFormsModule, FormBuilder, FormGroup,
-  FormArray, Validators, AbstractControl, ValidationErrors,
+  FormArray, Validators, AbstractControl, ValidationErrors, ValidatorFn,
 } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { CandidateService } from '../../../core/services/candidate.service';
@@ -303,10 +303,20 @@ export class CandidateEditComponent implements OnInit {
 
   // ── Bio word counter ────────────────────────────────────────────────────────
   readonly BIO_WORD_LIMIT = 2000;
-  bioWordCount = 0;
+
+  get bioWordCount(): number {
+    return this.countWords(this.form?.get('bio')?.value ?? '');
+  }
 
   countWords(text: string): number {
     return text.trim() === '' ? 0 : text.trim().split(/\s+/).filter(Boolean).length;
+  }
+
+  bioWordLimitValidator(limit: number): ValidatorFn {
+    return (control: AbstractControl): ValidationErrors | null => {
+      const wordCount = this.countWords(control.value ?? '');
+      return wordCount > limit ? { bioWordLimit: { actual: wordCount, max: limit } } : null;
+    };
   }
 
   // ── Media handlers ─────────────────────────────────────────────────────────
@@ -448,7 +458,6 @@ export class CandidateEditComponent implements OnInit {
 
   // ── Build form prefilled with candidate data ───────────────────────────────
   private buildForm(emp: Candidate): void {
-    this.bioWordCount = this.countWords(emp.bio ?? '');
     const { dialCode, number: phoneNumber } = this.splitPhone(emp.phone ?? '');
 
     // Parse stored visa_status back into select + other controls
@@ -475,7 +484,7 @@ export class CandidateEditComponent implements OnInit {
       phone:         [phoneNumber],
       whatsapp_number:       [emp.whatsapp_number ?? ''],
       whatsapp_same_as_phone: [false],
-      bio:           [emp.bio ?? '', Validators.maxLength(2000)],
+      bio:           [emp.bio ?? '', this.bioWordLimitValidator(this.BIO_WORD_LIMIT)],
       profile_status:          [emp.profile_status          ?? 'active'],
       registration_fee_status: [emp.registration_fee_status ?? 'pending_payment'],
       cv_format:               [emp.cv_format               ?? 'not_yet_created'],
@@ -545,17 +554,6 @@ export class CandidateEditComponent implements OnInit {
       confirm_password: [''],
     }, { validators: passwordsMatchValidator });
 
-    this.form.get('bio')!.valueChanges.subscribe((val: string | null) => {
-      const text  = val ?? '';
-      const words = text.trim() === '' ? [] : text.trim().split(/\s+/).filter(Boolean);
-      if (words.length > this.BIO_WORD_LIMIT) {
-        const clamped = words.slice(0, this.BIO_WORD_LIMIT).join(' ');
-        this.form.get('bio')!.setValue(clamped, { emitEvent: false });
-        this.bioWordCount = this.BIO_WORD_LIMIT;
-      } else {
-        this.bioWordCount = words.length;
-      }
-    });
   }
 
   // ── Submit ────────────────────────────────────────────────────────────────

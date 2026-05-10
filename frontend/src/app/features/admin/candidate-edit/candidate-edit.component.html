@@ -422,12 +422,18 @@
         <div class="col-12">
           <label class="form-label">Bio / Self Introduction</label>
           <textarea class="form-control" formControlName="bio" rows="3"
-            placeholder="Brief introduction about the candidate…"></textarea>
+            placeholder="Brief introduction about the candidate…"
+            [class.is-invalid]="form.get('bio')?.invalid && form.get('bio')?.dirty"></textarea>
           <small class="d-block text-end mt-1"
-            [class.text-muted]="bioWordCount < BIO_WORD_LIMIT"
-            [class.text-danger]="bioWordCount >= BIO_WORD_LIMIT">
+            [class.text-success]="bioWordCount <= BIO_WORD_LIMIT"
+            [class.text-danger]="bioWordCount > BIO_WORD_LIMIT">
             {{ bioWordCount }} / {{ BIO_WORD_LIMIT }} words
           </small>
+          @if (form.get('bio')?.errors?.['bioWordLimit'] && form.get('bio')?.dirty) {
+            <div class="text-danger small mt-1">
+              You have exceeded the maximum limit of 2000 words. Please reduce your text.
+            </div>
+          }
         </div>
         <!-- Hobbies -->
         <div class="col-12">
@@ -938,7 +944,7 @@
       <a [routerLink]="['/admin/candidates', candidateId]" class="btn btn-outline-secondary">
         <i class="bi bi-x-lg me-1"></i> Cancel
       </a>
-      <button type="submit" class="btn btn-primary px-4" [disabled]="saving">
+      <button type="submit" class="btn btn-primary px-4" [disabled]="saving || form.get('bio')?.invalid">
         @if (saving) { <span class="spinner-border spinner-border-sm me-2"></span> Saving… }
         @else { <i class="bi bi-check-lg me-1"></i> Save Changes }
       </button>

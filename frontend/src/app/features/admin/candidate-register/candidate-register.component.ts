@@ -3,7 +3,7 @@ import { Component, OnInit, OnDestroy, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import {
   ReactiveFormsModule, FormBuilder, FormGroup,
-  FormArray, Validators, AbstractControl, ValidationErrors,
+  FormArray, Validators, AbstractControl, ValidationErrors, ValidatorFn,
 } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { Subscription, debounceTime } from 'rxjs';
@@ -159,7 +159,7 @@ export class CandidateRegisterComponent implements OnInit, OnDestroy {
       phone:                [''],
       whatsapp_number:      [''],
       whatsapp_same_as_phone: [false],
-      bio:                  ['', Validators.maxLength(2000)],
+      bio:                  ['', this.bioWordLimitValidator(this.BIO_WORD_LIMIT)],
       hobbies:       [[] as string[]],
 
       employment_status: [''],
@@ -232,19 +232,6 @@ export class CandidateRegisterComponent implements OnInit, OnDestroy {
       this.saveDraft();
     });
 
-    this.draftSub.add(
-      this.form.get('bio')!.valueChanges.subscribe((val: string | null) => {
-        const text  = val ?? '';
-        const words = text.trim() === '' ? [] : text.trim().split(/\s+/).filter(Boolean);
-        if (words.length > this.BIO_WORD_LIMIT) {
-          const clamped = words.slice(0, this.BIO_WORD_LIMIT).join(' ');
-          this.form.get('bio')!.setValue(clamped, { emitEvent: false });
-          this.bioWordCount = this.BIO_WORD_LIMIT;
-        } else {
-          this.bioWordCount = words.length;
-        }
-      })
-    );
   }
 
   ngOnDestroy(): void {
@@ -467,10 +454,20 @@ export class CandidateRegisterComponent implements OnInit, OnDestroy {
   }
 
   readonly BIO_WORD_LIMIT = 2000;
-  bioWordCount = 0;
+
+  get bioWordCount(): number {
+    return this.countWords(this.form?.get('bio')?.value ?? '');
+  }
 
   countWords(text: string): number {
     return text.trim() === '' ? 0 : text.trim().split(/\s+/).filter(Boolean).length;
+  }
+
+  bioWordLimitValidator(limit: number): ValidatorFn {
+    return (control: AbstractControl): ValidationErrors | null => {
+      const wordCount = this.countWords(control.value ?? '');
+      return wordCount > limit ? { bioWordLimit: { actual: wordCount, max: limit } } : null;
+    };
   }
 
   // ── Submit ─────────────────────────────────────────────────────────────────

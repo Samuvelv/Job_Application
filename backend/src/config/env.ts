@@ -35,6 +35,11 @@ const envSchema = z.object({
 
   APP_URL: z.string().default('http://localhost:3000'),
   FRONTEND_URL: z.string().default('http://localhost:4200'),
+
+  // File upload storage — absolute path on the host filesystem.
+  // Local dev  : ./uploads  (relative to project root, auto-resolved below)
+  // VPS prod   : /var/www/ntlcareernexus/uploads
+  UPLOADS_PATH: z.string().default('uploads'),
 });
 
 const parsed = envSchema.safeParse(process.env);
