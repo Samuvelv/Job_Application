@@ -44,46 +44,21 @@ export async function getCandidateStats(userId: string) {
   const candidate = await db('candidates').where({ user_id: userId }).first();
   if (!candidate) return { profileCompleteness: 0, pendingRequest: false };
 
-  // Fetch relation counts in parallel
-  const [skillsRow, langsRow, expRow, eduRow] = await Promise.all([
-    db('candidate_skills').where({ candidate_id: candidate.id }).count('id as count').first(),
-    db('candidate_languages').where({ candidate_id: candidate.id }).count('id as count').first(),
-    db('candidate_experience').where({ candidate_id: candidate.id }).count('id as count').first(),
-    db('candidate_education').where({ candidate_id: candidate.id }).count('id as count').first(),
-  ]);
+  // Mirrors the frontend candidate-card completionPercent formula exactly
+  // so the dashboard percentage always matches the admin candidate list.
+  // Base 15 (name always present after registration) + optional fields up to 100.
+  let score = 15;
+  if (candidate.profile_photo_url)                            score += 15;
+  if (candidate.job_title)                                    score += 10;
+  if (candidate.industry)                                     score += 10;
+  if (candidate.current_country)                              score += 10;
+  if (candidate.years_experience != null)                     score += 10;
+  if (candidate.english_level)                                score += 10;
+  if (candidate.intro_video_url)                              score += 10;
+  if (candidate.nationality)                                  score +=  5;
+  if (candidate.target_locations && candidate.target_locations.length > 0) score += 5;
 
-  const hasSkills  = Number(skillsRow?.count  ?? 0) > 0;
-  const hasLangs   = Number(langsRow?.count   ?? 0) > 0;
-  const hasExp     = Number(expRow?.count     ?? 0) > 0;
-  const hasEdu     = Number(eduRow?.count     ?? 0) > 0;
-
-  // Each item is [isFilled, weight] — weights sum to 100
-  const checks: [boolean, number][] = [
-    // Core identity (always present after registration, but keep for completeness)
-    [!!candidate.job_title,       10],
-    [!!candidate.bio,             10],
-    // Personal
-    [!!candidate.phone,            5],
-    [!!candidate.date_of_birth,    5],
-    [!!candidate.nationality,      5],
-    [!!candidate.current_country,  5],
-    // Professional
-    [!!candidate.industry,         5],
-    [!!candidate.occupation,       5],
-    [candidate.years_experience != null,  5],
-    // Media / documents
-    [!!candidate.profile_photo_url, 10],
-    [!!candidate.resume_url,        10],
-    // Relations
-    [hasSkills, 10],
-    [hasExp,     8],
-    [hasEdu,     5],
-    [hasLangs,   2],
-  ];
-
-  const totalWeight  = checks.reduce((s, [, w]) => s + w, 0);
-  const filledWeight = checks.reduce((s, [v, w]) => s + (v ? w : 0), 0);
-  const profileCompleteness = Math.round((filledWeight / totalWeight) * 100);
+  const profileCompleteness = Math.min(score, 100);
 
   const pendingRequest = !!(await db('profile_edit_requests')
     .where({ candidate_id: candidate.id, status: 'pending' })

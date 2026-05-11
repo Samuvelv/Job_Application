@@ -1,217 +1,374 @@
 // src/app/features/recruiter/dashboard/recruiter-dashboard.component.ts
-import { Component, signal, OnInit } from '@angular/core';
+import { Component, signal, OnInit, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
+import { forkJoin, of } from 'rxjs';
+import { catchError } from 'rxjs/operators';
 import { AuthService } from '../../../core/services/auth.service';
 import { StatsService, RecruiterStats } from '../../../core/services/stats.service';
 import { RecruiterService } from '../../../core/services/recruiter.service';
+import { Recruiter } from '../../../core/models/recruiter.model';
 
 @Component({
   selector: 'app-recruiter-dashboard',
   standalone: true,
   imports: [CommonModule, RouterLink],
+  styles: [`
+    /* ── Hero ─────────────────────────────────────────────────────────── */
+    .rd-hero {
+      background: var(--th-gradient-purple);
+      border-radius: var(--th-radius-xl);
+      padding: 28px 32px 24px;
+      margin-bottom: 24px;
+      position: relative;
+      overflow: hidden;
+    }
+    .rd-hero::before {
+      content: '';
+      position: absolute;
+      top: -40px; right: -40px;
+      width: 200px; height: 200px;
+      border-radius: 50%;
+      background: rgba(255,255,255,.06);
+      pointer-events: none;
+    }
+    .rd-hero::after {
+      content: '';
+      position: absolute;
+      bottom: -60px; right: 60px;
+      width: 140px; height: 140px;
+      border-radius: 50%;
+      background: rgba(255,255,255,.04);
+      pointer-events: none;
+    }
+
+    .rd-hero__eyebrow {
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: .1em;
+      text-transform: uppercase;
+      color: rgba(255,255,255,.65);
+      margin-bottom: 6px;
+    }
+    .rd-hero__name {
+      font-size: 1.75rem;
+      font-weight: 800;
+      color: #fff;
+      margin: 0 0 4px;
+      line-height: 1.2;
+    }
+    .rd-hero__chips {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 12px;
+    }
+    .rd-hero__chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      font-size: 12px;
+      color: rgba(255,255,255,.8);
+      background: rgba(255,255,255,.12);
+      border: 1px solid rgba(255,255,255,.18);
+      border-radius: 999px;
+      padding: 4px 12px;
+    }
+    .rd-hero__chip--warn {
+      background: rgba(239,68,68,.2);
+      border-color: rgba(239,68,68,.35);
+      color: #fca5a5;
+    }
+    .rd-hero__actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 20px;
+    }
+    .rd-hero__btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      padding: 9px 20px;
+      border-radius: 999px;
+      font-size: 13px;
+      font-weight: 600;
+      text-decoration: none;
+      transition: opacity .15s, transform .15s;
+    }
+    .rd-hero__btn:hover { opacity: .9; transform: translateY(-1px); }
+    .rd-hero__btn--solid {
+      background: #fff;
+      color: #5b21b6;
+    }
+    .rd-hero__btn--ghost {
+      background: rgba(255,255,255,.15);
+      border: 1px solid rgba(255,255,255,.25);
+      color: #fff;
+    }
+
+    /* ── Stat pills row ───────────────────────────────────────────────── */
+    .rd-stats {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 14px;
+      margin-bottom: 28px;
+    }
+    @media (max-width: 480px) {
+      .rd-stats { grid-template-columns: 1fr; }
+    }
+
+    .rd-stat {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      background: var(--th-surface);
+      border: 1px solid var(--th-border);
+      border-radius: var(--th-radius-xl);
+      padding: 18px 20px;
+      text-decoration: none;
+      transition: border-color .15s, box-shadow .15s, transform .15s;
+    }
+    .rd-stat:hover {
+      border-color: var(--th-border-strong);
+      box-shadow: var(--th-shadow-sm);
+      transform: translateY(-2px);
+    }
+    .rd-stat__icon {
+      width: 44px; height: 44px;
+      border-radius: var(--th-radius);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.2rem;
+      flex-shrink: 0;
+    }
+    .rd-stat__icon--purple { background: rgba(139,92,246,.12); color: var(--th-violet); }
+    .rd-stat__icon--cyan   { background: rgba(6,182,212,.12);  color: #0e7490; }
+    .rd-stat__body { flex: 1; min-width: 0; }
+    .rd-stat__value {
+      font-size: 1.6rem;
+      font-weight: 800;
+      color: var(--th-text);
+      line-height: 1;
+      margin-bottom: 2px;
+    }
+    .rd-stat__label {
+      font-size: 12px;
+      color: var(--th-muted);
+      font-weight: 500;
+    }
+    .rd-stat__arrow {
+      color: var(--th-muted);
+      font-size: 1rem;
+      flex-shrink: 0;
+    }
+    .skeleton {
+      background: linear-gradient(90deg, var(--th-border) 25%, var(--th-surface-2) 50%, var(--th-border) 75%);
+      background-size: 200% 100%;
+      animation: shimmer 1.4s infinite;
+      border-radius: 6px;
+    }
+    @keyframes shimmer { 0%{background-position:200% 0} 100%{background-position:-200% 0} }
+
+    /* ── Quick links ──────────────────────────────────────────────────── */
+    .rd-section-label {
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+      color: var(--th-muted);
+      margin-bottom: 14px;
+    }
+    .rd-links {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 14px;
+      margin-bottom: 0;
+    }
+    @media (max-width: 767px) {
+      .rd-links { grid-template-columns: 1fr; }
+    }
+
+    .rd-link-card {
+      display: flex;
+      flex-direction: column;
+      background: var(--th-surface);
+      border: 1px solid var(--th-border);
+      border-radius: var(--th-radius-xl);
+      padding: 22px 20px 18px;
+      text-decoration: none;
+      transition: border-color .15s, box-shadow .15s, transform .15s;
+      cursor: pointer;
+    }
+    .rd-link-card:hover {
+      border-color: var(--th-border-strong);
+      box-shadow: var(--th-shadow-md, 0 4px 20px rgba(0,0,0,.08));
+      transform: translateY(-3px);
+    }
+    .rd-link-card__icon {
+      width: 46px; height: 46px;
+      border-radius: var(--th-radius);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.25rem;
+      margin-bottom: 14px;
+    }
+    .rd-link-card__icon--cyan   { background: var(--th-gradient-info);   color: #fff; box-shadow: 0 4px 14px rgba(6,182,212,.3); }
+    .rd-link-card__icon--purple { background: var(--th-gradient-purple);  color: #fff; box-shadow: 0 4px 14px rgba(139,92,246,.3); }
+    .rd-link-card__icon--teal   { background: linear-gradient(135deg,#0d9488,#0891b2); color:#fff; box-shadow: 0 4px 14px rgba(13,148,136,.3); }
+    .rd-link-card__title {
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--th-text);
+      margin-bottom: 5px;
+    }
+    .rd-link-card__desc {
+      font-size: 12.5px;
+      color: var(--th-muted);
+      line-height: 1.55;
+      flex: 1;
+      margin-bottom: 16px;
+    }
+    .rd-link-card__cta {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--th-primary);
+      text-decoration: none;
+    }
+    .rd-link-card:hover .rd-link-card__cta { text-decoration: underline; }
+  `],
   template: `
-    <!-- ── Welcome Hero ──────────────────────────────────────────────────── -->
-    <div class="dash-hero" style="background:var(--th-gradient-purple);background-size:200% 200%">
-      <div class="d-flex align-items-start justify-content-between flex-wrap gap-3">
-        <div>
-          <div class="dash-hero__greeting">Recruiter Portal</div>
-           <h1 class="dash-hero__title mb-0">Good {{ timeOfDay() }},</h1>
-           <div class="dash-hero__subtitle mt-1">{{ contactName() }}</div>
-          <div class="dash-hero__meta">
-            <span class="dash-hero__chip">
-              <i class="bi bi-calendar3"></i>{{ today() }}
-            </span>
-            <span class="dash-hero__badge">
-              <i class="bi bi-search-heart"></i>Talent Recruiter
-            </span>
-          </div>
-        </div>
-        <div class="d-flex flex-column align-items-end gap-1">
-          <div class="dash-hero__stat">
-            <div class="dash-hero__stat-value">{{ stats()?.candidatesAvailable ?? '—' }}</div>
-            <div class="dash-hero__stat-label">Candidates Available</div>
-          </div>
-        </div>
+    <!-- ── Hero ──────────────────────────────────────────────────────────── -->
+    <div class="rd-hero">
+      <div class="rd-hero__eyebrow">Recruiter Portal</div>
+      <h1 class="rd-hero__name">Good {{ timeOfDay() }}, {{ contactName() || '…' }}</h1>
+
+      <div class="rd-hero__chips">
+        <span class="rd-hero__chip">
+          <i class="bi bi-calendar3"></i>{{ today() }}
+        </span>
+        @if (profile()?.access_expires_at) {
+          <span class="rd-hero__chip" [class.rd-hero__chip--warn]="isExpired()">
+            <i class="bi bi-clock"></i>
+            @if (isExpired()) {
+              Access expired
+            } @else {
+              Access expires {{ profile()!.access_expires_at | date:'d MMM yyyy' }}
+            }
+          </span>
+        }
+        @if (profile()?.company_name) {
+          <span class="rd-hero__chip">
+            <i class="bi bi-building"></i>{{ profile()!.company_name }}
+          </span>
+        }
       </div>
-      <div class="dash-hero__actions">
-        <a routerLink="/recruiter/candidates" class="dash-hero__btn dash-hero__btn--solid">
+
+      <div class="rd-hero__actions">
+        <a routerLink="/recruiter/candidates" class="rd-hero__btn rd-hero__btn--solid">
           <i class="bi bi-search"></i>Search Talent
         </a>
-        <a routerLink="/recruiter/shortlist" class="dash-hero__btn">
+        <a routerLink="/recruiter/shortlist" class="rd-hero__btn rd-hero__btn--ghost">
           <i class="bi bi-bookmark-star-fill"></i>My Shortlist
-          @if ((stats()?.shortlistCount ?? 0) > 0) {
-            <span class="badge rounded-pill ms-1"
-              style="background:rgba(255,255,255,.25);font-size:.65rem">
-              {{ stats()?.shortlistCount }}
-            </span>
-          }
         </a>
       </div>
     </div>
 
-    <!-- ── Stats Bento ──────────────────────────────────────────────────── -->
-    <div class="bento-grid mb-4">
+    <!-- ── Stats row ──────────────────────────────────────────────────────── -->
+    <div class="rd-stats">
 
-      <!-- Shortlist — wide card with saved count emphasis -->
-      <div class="bento-6">
-        <div class="stat-card-xl stat-card-xl--purple h-100">
-          <div class="stat-card-xl__header">
-            <div class="stat-card-xl__icon">
-              <i class="bi bi-bookmark-star-fill"></i>
-            </div>
-            <a routerLink="/recruiter/shortlist"
-              style="font-size:.72rem;color:#5b21b6;font-weight:600;text-decoration:none;
-                background:rgba(139,92,246,.10);padding:.2rem .625rem;border-radius:999px;border:1px solid rgba(139,92,246,.2)">
-              View all <i class="bi bi-arrow-right ms-1"></i>
-            </a>
-          </div>
-          <div class="stat-card-xl__value">
-            @if (loading()) {
-              <span class="skeleton" style="width:80px;height:40px;display:block"></span>
-            } @else {
-              {{ stats()?.shortlistCount ?? 0 }}
-            }
-          </div>
-          <div class="stat-card-xl__label">Saved in Shortlist</div>
-          <div class="stat-card-xl__trend" style="background:rgba(139,92,246,.10);color:#5b21b6">
-            <i class="bi bi-bookmark-check-fill"></i>Candidates saved
-          </div>
+      <!-- Shortlist -->
+      <a routerLink="/recruiter/shortlist" class="rd-stat">
+        <div class="rd-stat__icon rd-stat__icon--purple">
+          <i class="bi bi-bookmark-star-fill"></i>
         </div>
-      </div>
+        <div class="rd-stat__body">
+          @if (loading()) {
+            <span class="skeleton" style="width:56px;height:28px;display:block;margin-bottom:4px"></span>
+            <span class="skeleton" style="width:96px;height:12px;display:block"></span>
+          } @else {
+            <div class="rd-stat__value">{{ stats()?.shortlistCount ?? 0 }}</div>
+            <div class="rd-stat__label">Saved in Shortlist</div>
+          }
+        </div>
+        <i class="bi bi-chevron-right rd-stat__arrow"></i>
+      </a>
 
-      <!-- Candidates Available -->
-      <div class="bento-6">
-        <div class="stat-card-xl stat-card-xl--info h-100">
-          <div class="stat-card-xl__header">
-            <div class="stat-card-xl__icon">
-              <i class="bi bi-people-fill"></i>
-            </div>
-            <a routerLink="/recruiter/candidates"
-              style="font-size:.72rem;color:#0e7490;font-weight:600;text-decoration:none;
-                background:rgba(6,182,212,.10);padding:.2rem .625rem;border-radius:999px;border:1px solid rgba(6,182,212,.2)">
-              Search <i class="bi bi-arrow-right ms-1"></i>
-            </a>
-          </div>
-          <div class="stat-card-xl__value">
-            @if (loading()) {
-              <span class="skeleton" style="width:80px;height:40px;display:block"></span>
-            } @else {
-              {{ stats()?.candidatesAvailable ?? 0 }}
-            }
-          </div>
-          <div class="stat-card-xl__label">Candidates Available</div>
-          <div class="stat-card-xl__trend" style="background:rgba(6,182,212,.10);color:#0e7490">
-            <i class="bi bi-search"></i>Ready to discover
-          </div>
+      <!-- Candidates available -->
+      <a routerLink="/recruiter/candidates" class="rd-stat">
+        <div class="rd-stat__icon rd-stat__icon--cyan">
+          <i class="bi bi-people-fill"></i>
         </div>
-      </div>
+        <div class="rd-stat__body">
+          @if (loading()) {
+            <span class="skeleton" style="width:56px;height:28px;display:block;margin-bottom:4px"></span>
+            <span class="skeleton" style="width:120px;height:12px;display:block"></span>
+          } @else {
+            <div class="rd-stat__value">{{ stats()?.candidatesAvailable ?? 0 }}</div>
+            <div class="rd-stat__label">Candidates Available</div>
+          }
+        </div>
+        <i class="bi bi-chevron-right rd-stat__arrow"></i>
+      </a>
 
     </div>
 
-    <!-- ── Feature Cards ────────────────────────────────────────────────── -->
-    <div class="mb-3">
-      <div class="section-title">
-        <i class="bi bi-lightning-charge-fill" style="color:var(--th-violet)"></i>
-        Quick Actions
-      </div>
-    </div>
+    <!-- ── Quick links ─────────────────────────────────────────────────────── -->
+    <div class="rd-section-label">Quick Access</div>
+    <div class="rd-links">
 
-    <div class="row g-3 mb-2">
-      <!-- Search Talent feature card -->
-      <div class="col-md-6">
-        <div class="card p-0 h-100"
-          style="border-radius:var(--th-radius-xl);overflow:hidden;border:1px solid var(--th-border);
-            box-shadow:var(--th-shadow-sm);transition:var(--th-transition)"
-          onmouseover="this.style.transform='translateY(-3px)';this.style.boxShadow='var(--th-shadow-info)'"
-          onmouseout="this.style.transform='';this.style.boxShadow='var(--th-shadow-sm)'">
-          <!-- Top gradient band -->
-          <div style="height:6px;background:var(--th-gradient-info)"></div>
-          <div class="p-4">
-            <div class="d-flex align-items-center gap-3 mb-3">
-              <div style="width:48px;height:48px;border-radius:var(--th-radius);background:var(--th-gradient-info);
-                display:flex;align-items:center;justify-content:center;color:#fff;font-size:1.25rem;
-                box-shadow:0 4px 14px rgba(6,182,212,.3)">
-                <i class="bi bi-search"></i>
-              </div>
-              <div>
-                <div style="font-size:1rem;font-weight:700;color:var(--th-text)">Search Talent</div>
-                <div style="font-size:.75rem;color:var(--th-muted)">Find your perfect candidate</div>
-              </div>
-            </div>
-            <p style="font-size:.8125rem;color:var(--th-text-secondary);line-height:1.6;margin-bottom:1.25rem">
-              Filter candidates by skills, location, industry, experience, and more. Build your ideal team.
-            </p>
-            <div class="d-flex flex-wrap gap-1 mb-3">
-              @for (tag of searchTags; track tag) {
-                <span style="font-size:.7rem;padding:.2rem .6rem;border-radius:999px;
-                  background:var(--th-cyan-soft);color:var(--th-cyan);border:1px solid rgba(6,182,212,.2)">
-                  {{ tag }}
-                </span>
-              }
-            </div>
-            <a routerLink="/recruiter/candidates" class="btn btn-info btn-sm w-100">
-              <i class="bi bi-search me-2"></i>Start Searching
-            </a>
-          </div>
+      <!-- Search Talent -->
+      <a routerLink="/recruiter/candidates" class="rd-link-card">
+        <div class="rd-link-card__icon rd-link-card__icon--cyan">
+          <i class="bi bi-search"></i>
         </div>
-      </div>
+        <div class="rd-link-card__title">Search Talent</div>
+        <div class="rd-link-card__desc">
+          Filter candidates by skills, location, industry and experience to find your ideal hire.
+        </div>
+        <span class="rd-link-card__cta">
+          Browse candidates <i class="bi bi-arrow-right"></i>
+        </span>
+      </a>
 
-      <!-- My Shortlist feature card -->
-      <div class="col-md-6">
-        <div class="card p-0 h-100"
-          style="border-radius:var(--th-radius-xl);overflow:hidden;border:1px solid var(--th-border);
-            box-shadow:var(--th-shadow-sm);transition:var(--th-transition)"
-          onmouseover="this.style.transform='translateY(-3px)';this.style.boxShadow='var(--th-shadow-purple)'"
-          onmouseout="this.style.transform='';this.style.boxShadow='var(--th-shadow-sm)'">
-          <!-- Top gradient band -->
-          <div style="height:6px;background:var(--th-gradient-purple)"></div>
-          <div class="p-4">
-            <div class="d-flex align-items-center gap-3 mb-3">
-              <div style="width:48px;height:48px;border-radius:var(--th-radius);background:var(--th-gradient-purple);
-                display:flex;align-items:center;justify-content:center;color:#fff;font-size:1.25rem;
-                box-shadow:0 4px 14px rgba(139,92,246,.3);position:relative">
-                <i class="bi bi-bookmark-star-fill"></i>
-                @if ((stats()?.shortlistCount ?? 0) > 0) {
-                  <span style="position:absolute;top:-6px;right:-6px;width:20px;height:20px;
-                    border-radius:50%;background:#fff;color:var(--th-violet);font-size:.65rem;
-                    font-weight:800;display:flex;align-items:center;justify-content:center;
-                    border:2px solid var(--th-violet);line-height:1">
-                    {{ stats()?.shortlistCount }}
-                  </span>
-                }
-              </div>
-              <div>
-                <div style="font-size:1rem;font-weight:700;color:var(--th-text)">My Shortlist</div>
-                <div style="font-size:.75rem;color:var(--th-muted)">Your saved candidates</div>
-              </div>
-            </div>
-            <p style="font-size:.8125rem;color:var(--th-text-secondary);line-height:1.6;margin-bottom:1.25rem">
-              Review and manage the candidates you've saved. Compare profiles and make hiring decisions.
-            </p>
-            @if ((stats()?.shortlistCount ?? 0) === 0) {
-              <div style="font-size:.8125rem;color:var(--th-muted);text-align:center;
-                padding:.75rem;background:var(--th-surface-raised);border-radius:var(--th-radius);
-                border:1px dashed var(--th-border);margin-bottom:1.25rem">
-                <i class="bi bi-bookmark me-1"></i>No candidates saved yet
-              </div>
-            }
-            <a routerLink="/recruiter/shortlist" class="btn btn-sm w-100"
-              style="background:var(--th-gradient-purple);color:#fff;border:none">
-              <i class="bi bi-bookmark-star me-2"></i>View Shortlist
-            </a>
-          </div>
+      <!-- My Shortlist -->
+      <a routerLink="/recruiter/shortlist" class="rd-link-card">
+        <div class="rd-link-card__icon rd-link-card__icon--purple">
+          <i class="bi bi-bookmark-star-fill"></i>
         </div>
-      </div>
+        <div class="rd-link-card__title">My Shortlist</div>
+        <div class="rd-link-card__desc">
+          Review and manage the candidates you've saved. Compare profiles and make hiring decisions.
+        </div>
+        <span class="rd-link-card__cta">
+          View shortlist <i class="bi bi-arrow-right"></i>
+        </span>
+      </a>
+
+      <!-- Interest Requests -->
+      <a routerLink="/recruiter/interest-requests" class="rd-link-card">
+        <div class="rd-link-card__icon rd-link-card__icon--teal">
+          <i class="bi bi-briefcase-fill"></i>
+        </div>
+        <div class="rd-link-card__title">Interest Requests</div>
+        <div class="rd-link-card__desc">
+          Track the status of agency interest requests you've submitted and follow up on decisions.
+        </div>
+        <span class="rd-link-card__cta">
+          View requests <i class="bi bi-arrow-right"></i>
+        </span>
+      </a>
+
     </div>
   `,
 })
 export class RecruiterDashboardComponent implements OnInit {
-  stats   = signal<RecruiterStats | null>(null);
-  loading = signal(true);
-  contactName = signal<string>('');
+  stats    = signal<RecruiterStats | null>(null);
+  loading  = signal(true);
+  profile  = signal<Recruiter | null>(null);
 
-  readonly searchTags = ['Skills', 'Location', 'Experience', 'Industry', 'Salary'];
+  contactName = computed(() => this.profile()?.contact_name ?? '');
 
   constructor(
     private auth: AuthService,
@@ -220,24 +377,20 @@ export class RecruiterDashboardComponent implements OnInit {
   ) {}
 
   ngOnInit(): void {
-    // Load recruiter profile for contact name
-    this.recruiterService.getMyProfile().subscribe({
-      next: (res) => {
-        this.contactName.set(res.recruiter.contact_name);
-      },
-      error: () => {
-        // Fallback to email if profile fetch fails
-        this.contactName.set(this.auth.currentUser()?.email ?? '');
-      },
-    });
-
-    this.statsService.getRecruiterStats().subscribe({
-      next:  s => { this.stats.set(s); this.loading.set(false); },
-      error: () => this.loading.set(false),
+    forkJoin({
+      profile: this.recruiterService.getMyProfile().pipe(catchError(() => of(null))),
+      stats:   this.statsService.getRecruiterStats().pipe(catchError(() => of(null))),
+    }).subscribe(({ profile, stats }) => {
+      if (profile) this.profile.set(profile.recruiter);
+      if (stats)   this.stats.set(stats);
+      this.loading.set(false);
     });
   }
 
-  email(): string { return this.auth.currentUser()?.email ?? ''; }
+  isExpired(): boolean {
+    const exp = this.profile()?.access_expires_at;
+    return !!exp && new Date(exp) < new Date();
+  }
 
   timeOfDay(): string {
     const h = new Date().getHours();

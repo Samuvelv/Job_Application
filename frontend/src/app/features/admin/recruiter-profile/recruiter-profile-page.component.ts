@@ -1,19 +1,16 @@
 // src/app/features/admin/recruiter-profile/recruiter-profile-page.component.ts
-import { Component, OnInit, computed } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormsModule } from '@angular/forms';
-import { ActivatedRoute, RouterLink } from '@angular/router';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { RecruiterService } from '../../../core/services/recruiter.service';
 import { Recruiter, ShortlistEntry } from '../../../core/models/recruiter.model';
 import { ToastService } from '../../../core/services/toast.service';
 import { ConfirmDialogService } from '../../../core/services/confirm-dialog.service';
-import { MasterDataService } from '../../../core/services/master-data.service';
-import { ChipMultiSelectComponent, ChipOption } from '../../../shared/components/chip-multi-select/chip-multi-select.component';
 
 @Component({
   selector: 'app-recruiter-profile-page',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink, ChipMultiSelectComponent],
+  imports: [CommonModule, RouterLink],
   template: `
     <!-- Back + actions row -->
     <div class="d-flex align-items-center justify-content-between mb-4 gap-2 flex-wrap">
@@ -22,10 +19,12 @@ import { ChipMultiSelectComponent, ChipOption } from '../../../shared/components
       </a>
       @if (recruiter) {
         <div class="tbl-actions">
-          <button class="tbl-actions__btn tbl-actions__btn--edit"
-            (click)="openEdit()" title="Edit recruiter">
+          <a [routerLink]="['/admin/recruiters']"
+             [queryParams]="{ editId: recruiter.id }"
+             class="tbl-actions__btn tbl-actions__btn--edit"
+             title="Edit recruiter in admin panel">
             <i class="bi bi-pencil me-1"></i> Edit
-          </button>
+          </a>
           <div class="tbl-actions__sep"></div>
           <button class="tbl-actions__btn tbl-actions__btn--token"
             (click)="resendCredentials()">
@@ -52,18 +51,14 @@ import { ChipMultiSelectComponent, ChipOption } from '../../../shared/components
 
       <!-- ── Hero ──────────────────────────────────────────────────────── -->
       <div class="rp-hero mb-4">
-        <!-- Cover banner -->
         <div class="rp-hero__cover"></div>
-
         <div class="rp-hero__body">
-          <!-- Avatar -->
           <div class="rp-hero__avatar-wrap">
             <div class="rp-hero__avatar">
               {{ recruiter.contact_name[0].toUpperCase() }}
             </div>
           </div>
 
-          <!-- Name / company / status row -->
           <div class="rp-hero__info">
             <div class="rp-hero__name-row">
               <h2 class="rp-hero__name">{{ recruiter.contact_name }}</h2>
@@ -78,11 +73,17 @@ import { ChipMultiSelectComponent, ChipOption } from '../../../shared/components
                   [class.bi-shield-fill-x]="!recruiter.is_active"></i>
                 {{ recruiter.is_active ? 'Active' : 'Inactive' }}
               </span>
+              @if (recruiter.free_account) {
+                <span class="badge bg-info text-dark ms-1">Free Account</span>
+              }
             </div>
 
             @if (recruiter.company_name) {
               <div class="rp-hero__company">
                 <i class="bi bi-building-fill me-1"></i>{{ recruiter.company_name }}
+                @if (recruiter.type === 'recruitment_agency') {
+                  <span class="badge bg-purple ms-2" style="background:#6f42c1">Recruitment Agency</span>
+                }
               </div>
             }
 
@@ -90,6 +91,11 @@ import { ChipMultiSelectComponent, ChipOption } from '../../../shared/components
               <span class="rp-hero__chip">
                 <i class="bi bi-envelope-fill"></i>{{ recruiter.email }}
               </span>
+              @if (recruiter.phone) {
+                <span class="rp-hero__chip">
+                  <i class="bi bi-telephone-fill"></i>{{ recruiter.phone }}
+                </span>
+              }
               <span class="rp-hero__chip" [class.text-danger]="isExpired(recruiter.access_expires_at)">
                 <i class="bi bi-clock"></i>
                 Access expires: {{ recruiter.access_expires_at | date:'dd MMM yyyy, HH:mm' }}
@@ -103,7 +109,6 @@ import { ChipMultiSelectComponent, ChipOption } from '../../../shared/components
             </div>
           </div>
 
-          <!-- Stat pills -->
           <div class="rp-hero__stats">
             <div class="rp-hero__stat">
               <span class="rp-hero__stat-num">{{ shortlist.length }}</span>
@@ -113,10 +118,10 @@ import { ChipMultiSelectComponent, ChipOption } from '../../../shared/components
         </div>
       </div>
 
-      <!-- ── Info cards row ─────────────────────────────────────────────── -->
-      <div class="row g-3 mb-4">
+      <!-- ── Row 1: Contact + Company ───────────────────────────────────── -->
+      <div class="row g-3 mb-3">
 
-        <!-- Contact details -->
+        <!-- Contact Details -->
         <div class="col-md-6">
           <div class="rp-info-card h-100">
             <div class="rp-info-card__header">
@@ -131,13 +136,15 @@ import { ChipMultiSelectComponent, ChipOption } from '../../../shared/components
                   <div class="rp-info-card__value">{{ recruiter.contact_name }}</div>
                 </div>
               </div>
-              <div class="rp-info-card__row">
-                <i class="bi bi-building"></i>
-                <div>
-                  <div class="rp-info-card__label">Company</div>
-                  <div class="rp-info-card__value">{{ recruiter.company_name || '—' }}</div>
+              @if (recruiter.contact_job_title) {
+                <div class="rp-info-card__row">
+                  <i class="bi bi-person-badge"></i>
+                  <div>
+                    <div class="rp-info-card__label">Job Title</div>
+                    <div class="rp-info-card__value">{{ recruiter.contact_job_title }}</div>
+                  </div>
                 </div>
-              </div>
+              }
               <div class="rp-info-card__row">
                 <i class="bi bi-envelope"></i>
                 <div>
@@ -145,11 +152,287 @@ import { ChipMultiSelectComponent, ChipOption } from '../../../shared/components
                   <div class="rp-info-card__value text-break">{{ recruiter.email }}</div>
                 </div>
               </div>
+              <div class="rp-info-card__row">
+                <i class="bi bi-telephone"></i>
+                <div>
+                  <div class="rp-info-card__label">Phone</div>
+                  <div class="rp-info-card__value">{{ recruiter.phone || '—' }}</div>
+                </div>
+              </div>
+              <div class="rp-info-card__row">
+                <i class="bi bi-whatsapp"></i>
+                <div>
+                  <div class="rp-info-card__label">WhatsApp</div>
+                  <div class="rp-info-card__value">{{ recruiter.whatsapp_number || '—' }}</div>
+                </div>
+              </div>
             </div>
           </div>
         </div>
 
-        <!-- Account info -->
+        <!-- Company Details -->
+        <div class="col-md-6">
+          <div class="rp-info-card h-100">
+            <div class="rp-info-card__header">
+              <i class="bi bi-building-fill rp-info-card__icon rp-info-card__icon--info"></i>
+              <span>Company Details</span>
+            </div>
+            <div class="rp-info-card__rows">
+              <div class="rp-info-card__row">
+                <i class="bi bi-building"></i>
+                <div>
+                  <div class="rp-info-card__label">Company Name</div>
+                  <div class="rp-info-card__value">{{ recruiter.company_name || '—' }}</div>
+                </div>
+              </div>
+              <div class="rp-info-card__row">
+                <i class="bi bi-geo-alt"></i>
+                <div>
+                  <div class="rp-info-card__label">Location</div>
+                  <div class="rp-info-card__value">
+                    @if (recruiter.company_city || recruiter.company_country) {
+                      {{ companyLocation }}
+                    } @else {
+                      —
+                    }
+                  </div>
+                </div>
+              </div>
+              <div class="rp-info-card__row">
+                <i class="bi bi-globe"></i>
+                <div>
+                  <div class="rp-info-card__label">Website</div>
+                  <div class="rp-info-card__value">
+                    @if (recruiter.company_website) {
+                      <a [href]="recruiter.company_website" target="_blank" rel="noopener"
+                        class="text-break">{{ recruiter.company_website }}</a>
+                    } @else {
+                      —
+                    }
+                  </div>
+                </div>
+              </div>
+              <div class="rp-info-card__row">
+                <i class="bi bi-briefcase"></i>
+                <div>
+                  <div class="rp-info-card__label">Industry</div>
+                  <div class="rp-info-card__value">{{ recruiter.industry || '—' }}</div>
+                </div>
+              </div>
+              <div class="rp-info-card__row">
+                <i class="bi bi-people"></i>
+                <div>
+                  <div class="rp-info-card__label">Company Size</div>
+                  <div class="rp-info-card__value">{{ recruiter.company_size || '—' }}</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- ── Row 2: Sponsor Licence + Hiring Preferences ───────────────── -->
+      <div class="row g-3 mb-3">
+
+        <!-- Sponsor Licence -->
+        <div class="col-md-6">
+          <div class="rp-info-card h-100">
+            <div class="rp-info-card__header">
+              <i class="bi bi-patch-check-fill rp-info-card__icon rp-info-card__icon--success"></i>
+              <span>Sponsor Licence</span>
+            </div>
+            <div class="rp-info-card__rows">
+              <div class="rp-info-card__row">
+                <i class="bi bi-card-checklist"></i>
+                <div>
+                  <div class="rp-info-card__label">Has Sponsor Licence</div>
+                  <div class="rp-info-card__value">
+                    @if (recruiter.has_sponsor_licence === 'yes') {
+                      <span class="badge bg-success">Yes</span>
+                    } @else if (recruiter.has_sponsor_licence === 'no') {
+                      <span class="badge bg-secondary">No</span>
+                    } @else if (recruiter.has_sponsor_licence === 'applied') {
+                      <span class="badge bg-warning text-dark">Applied</span>
+                    } @else if (recruiter.has_sponsor_licence === 'unknown') {
+                      <span class="badge bg-secondary">Unknown</span>
+                    } @else {
+                      <span class="text-muted">—</span>
+                    }
+                  </div>
+                </div>
+              </div>
+              @if (recruiter.has_sponsor_licence === 'yes') {
+                <div class="rp-info-card__row">
+                  <i class="bi bi-upc-scan"></i>
+                  <div>
+                    <div class="rp-info-card__label">Licence Number</div>
+                    <div class="rp-info-card__value">{{ recruiter.sponsor_licence_number || '—' }}</div>
+                  </div>
+                </div>
+                <div class="rp-info-card__row">
+                  <i class="bi bi-star-half"></i>
+                  <div>
+                    <div class="rp-info-card__label">Licence Rating</div>
+                    <div class="rp-info-card__value">
+                      @if (recruiter.licence_rating === 'A') {
+                        <span class="badge bg-success">A — Satisfactory</span>
+                      } @else if (recruiter.licence_rating === 'B') {
+                        <span class="badge bg-warning text-dark">B — Action Plan</span>
+                      } @else {
+                        {{ recruiter.licence_rating || '—' }}
+                      }
+                    </div>
+                  </div>
+                </div>
+                <div class="rp-info-card__row">
+                  <i class="bi bi-shield-check"></i>
+                  <div>
+                    <div class="rp-info-card__label">Verified by Admin</div>
+                    <div class="rp-info-card__value">
+                      @if (recruiter.licence_verified) {
+                        <span class="badge bg-success"><i class="bi bi-check-lg me-1"></i>Verified</span>
+                      } @else {
+                        <span class="badge bg-secondary">Not Verified</span>
+                      }
+                    </div>
+                  </div>
+                </div>
+                @if (recruiter.sponsor_licence_countries?.length) {
+                  <div class="rp-info-card__row">
+                    <i class="bi bi-flag"></i>
+                    <div>
+                      <div class="rp-info-card__label">Sponsor Licence Countries</div>
+                      <div class="rp-info-card__value">
+                        <div class="d-flex flex-wrap gap-1 mt-1">
+                          @for (c of recruiter.sponsor_licence_countries; track c) {
+                            <span class="badge bg-primary">{{ c }}</span>
+                          }
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                }
+              }
+            </div>
+          </div>
+        </div>
+
+        <!-- Hiring Preferences -->
+        <div class="col-md-6">
+          <div class="rp-info-card h-100">
+            <div class="rp-info-card__header">
+              <i class="bi bi-people-fill rp-info-card__icon rp-info-card__icon--purple"></i>
+              <span>Hiring Preferences</span>
+            </div>
+            <div class="rp-info-card__rows">
+              <div class="rp-info-card__row">
+                <i class="bi bi-graph-up"></i>
+                <div>
+                  <div class="rp-info-card__label">Typical Hires Per Year</div>
+                  <div class="rp-info-card__value">{{ recruiter.hires_per_year || '—' }}</div>
+                </div>
+              </div>
+              <div class="rp-info-card__row">
+                <i class="bi bi-tags"></i>
+                <div>
+                  <div class="rp-info-card__label">Job Types Offered</div>
+                  <div class="rp-info-card__value">
+                    @if (recruiter.job_types?.length) {
+                      <div class="d-flex flex-wrap gap-1 mt-1">
+                        @for (j of recruiter.job_types; track j) {
+                          <span class="badge bg-secondary">{{ j }}</span>
+                        }
+                      </div>
+                    } @else {
+                      <span class="text-muted">—</span>
+                    }
+                  </div>
+                </div>
+              </div>
+              @if (recruiter.target_nationalities?.length) {
+                <div class="rp-info-card__row">
+                  <i class="bi bi-globe2"></i>
+                  <div>
+                    <div class="rp-info-card__label">Target Nationalities</div>
+                    <div class="rp-info-card__value">
+                      <div class="d-flex flex-wrap gap-1 mt-1">
+                        @for (n of recruiter.target_nationalities; track n) {
+                          <span class="badge bg-info text-dark">{{ n }}</span>
+                        }
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              }
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- ── Agency Details (agency only) ───────────────────────────────── -->
+      @if (recruiter.type === 'recruitment_agency') {
+        <div class="row g-3 mb-3">
+          <div class="col-12">
+            <div class="rp-info-card">
+              <div class="rp-info-card__header">
+                <i class="bi bi-briefcase-fill rp-info-card__icon rp-info-card__icon--purple"></i>
+                <span>Recruitment Agency Details</span>
+              </div>
+              <div class="row g-0">
+                <div class="col-md-6">
+                  <div class="rp-info-card__rows">
+                    <div class="rp-info-card__row">
+                      <i class="bi bi-tags"></i>
+                      <div>
+                        <div class="rp-info-card__label">Sectors They Recruit For</div>
+                        <div class="rp-info-card__value">
+                          @if (recruiter.sectors_recruit_for?.length) {
+                            <div class="d-flex flex-wrap gap-1 mt-1">
+                              @for (s of recruiter.sectors_recruit_for; track s) {
+                                <span class="badge bg-secondary">{{ s }}</span>
+                              }
+                            </div>
+                          } @else {
+                            <span class="text-muted">—</span>
+                          }
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <div class="col-md-6">
+                  <div class="rp-info-card__rows">
+                    <div class="rp-info-card__row">
+                      <i class="bi bi-globe2"></i>
+                      <div>
+                        <div class="rp-info-card__label">Countries They Place In</div>
+                        <div class="rp-info-card__value">
+                          @if (recruiter.countries_place_in?.length) {
+                            <div class="d-flex flex-wrap gap-1 mt-1">
+                              @for (c of recruiter.countries_place_in; track c) {
+                                <span class="badge bg-info text-dark">{{ c }}</span>
+                              }
+                            </div>
+                          } @else {
+                            <span class="text-muted">—</span>
+                          }
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      }
+
+      <!-- ── Row 3: Account Info + Admin Notes ──────────────────────────── -->
+      <div class="row g-3 mb-4">
+
+        <!-- Account Info -->
         <div class="col-md-6">
           <div class="rp-info-card h-100">
             <div class="rp-info-card__header">
@@ -167,6 +450,34 @@ import { ChipMultiSelectComponent, ChipOption } from '../../../shared/components
                       [class.badge-status-inactive]="!recruiter.is_active">
                       {{ recruiter.is_active ? 'Active' : 'Inactive' }}
                     </span>
+                    @if (recruiter.account_status && recruiter.account_status !== 'active') {
+                      <span class="badge rounded-pill ms-1"
+                        [class.bg-warning]="recruiter.account_status === 'pending'"
+                        [class.bg-danger]="recruiter.account_status === 'suspended'">
+                        {{ recruiter.account_status | titlecase }}
+                      </span>
+                    }
+                  </div>
+                </div>
+              </div>
+              @if (recruiter.access_start_date) {
+                <div class="rp-info-card__row">
+                  <i class="bi bi-calendar-event"></i>
+                  <div>
+                    <div class="rp-info-card__label">Access Start</div>
+                    <div class="rp-info-card__value">{{ recruiter.access_start_date | date:'dd MMM yyyy' }}</div>
+                  </div>
+                </div>
+              }
+              <div class="rp-info-card__row">
+                <i class="bi bi-calendar-x"></i>
+                <div>
+                  <div class="rp-info-card__label">Access Expires</div>
+                  <div class="rp-info-card__value" [class.text-danger]="isExpired(recruiter.access_expires_at)">
+                    {{ recruiter.access_expires_at | date:'dd MMM yyyy, HH:mm' }}
+                    @if (isExpired(recruiter.access_expires_at)) {
+                      <span class="badge bg-danger ms-1">Expired</span>
+                    }
                   </div>
                 </div>
               </div>
@@ -178,10 +489,38 @@ import { ChipMultiSelectComponent, ChipOption } from '../../../shared/components
                 </div>
               </div>
               <div class="rp-info-card__row">
-                <i class="bi bi-key"></i>
+                <i class="bi bi-gift"></i>
                 <div>
-                  <div class="rp-info-card__label">Login</div>
-                  <div class="rp-info-card__value">Email &amp; password</div>
+                  <div class="rp-info-card__label">Free Account</div>
+                  <div class="rp-info-card__value">
+                    @if (recruiter.free_account) {
+                      <span class="badge bg-info text-dark">Yes</span>
+                    } @else {
+                      <span class="text-muted">No</span>
+                    }
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Admin Notes -->
+        <div class="col-md-6">
+          <div class="rp-info-card h-100">
+            <div class="rp-info-card__header">
+              <i class="bi bi-journal-text rp-info-card__icon rp-info-card__icon--warning"></i>
+              <span>Admin Notes</span>
+            </div>
+            <div class="rp-info-card__rows">
+              <div class="rp-info-card__row align-items-start">
+                <i class="bi bi-sticky mt-1"></i>
+                <div class="flex-grow-1">
+                  @if (recruiter.admin_notes) {
+                    <div class="rp-info-card__value" style="white-space:pre-wrap">{{ recruiter.admin_notes }}</div>
+                  } @else {
+                    <div class="text-muted fst-italic">No notes recorded.</div>
+                  }
                 </div>
               </div>
             </div>
@@ -190,69 +529,8 @@ import { ChipMultiSelectComponent, ChipOption } from '../../../shared/components
 
       </div>
 
-      <!-- ── Agency Details card (agency only) ──────────────────────────── -->
-      @if (recruiter.type === 'recruitment_agency') {
-        <div class="row g-3 mb-4">
-          <div class="col-12">
-            <div class="rp-info-card">
-              <div class="rp-info-card__header">
-                <i class="bi bi-briefcase-fill rp-info-card__icon rp-info-card__icon--purple"></i>
-                <span>Recruitment Agency Details</span>
-              </div>
-              <div class="rp-info-card__rows">
-                @if (recruiter.contact_job_title) {
-                  <div class="rp-info-card__row">
-                    <i class="bi bi-person-badge"></i>
-                    <div>
-                      <div class="rp-info-card__label">Job Title</div>
-                      <div class="rp-info-card__value">{{ recruiter.contact_job_title }}</div>
-                    </div>
-                  </div>
-                }
-                <div class="rp-info-card__row">
-                  <i class="bi bi-tags"></i>
-                  <div>
-                    <div class="rp-info-card__label">Sectors They Recruit For</div>
-                    <div class="rp-info-card__value">
-                      @if (recruiter.sectors_recruit_for?.length) {
-                        <div class="d-flex flex-wrap gap-1 mt-1">
-                          @for (s of recruiter.sectors_recruit_for; track s) {
-                            <span class="badge bg-secondary">{{ s }}</span>
-                          }
-                        </div>
-                      } @else {
-                        <span class="text-muted">—</span>
-                      }
-                    </div>
-                  </div>
-                </div>
-                <div class="rp-info-card__row">
-                  <i class="bi bi-globe2"></i>
-                  <div>
-                    <div class="rp-info-card__label">Countries They Place In</div>
-                    <div class="rp-info-card__value">
-                      @if (recruiter.countries_place_in?.length) {
-                        <div class="d-flex flex-wrap gap-1 mt-1">
-                          @for (c of recruiter.countries_place_in; track c) {
-                            <span class="badge bg-info text-dark">{{ c }}</span>
-                          }
-                        </div>
-                      } @else {
-                        <span class="text-muted">—</span>
-                      }
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      }
-
       <!-- ── Shortlisted Candidates ─────────────────────────────────────── -->
       <div class="rp-shortlist-section">
-
-        <!-- Section header — matches rp-info-card header style -->
         <div class="rp-shortlist-section__header">
           <div class="rp-shortlist-section__title">
             <i class="bi bi-bookmark-heart-fill rp-shortlist-section__icon"></i>
@@ -261,7 +539,6 @@ import { ChipMultiSelectComponent, ChipOption } from '../../../shared/components
           <span class="rp-shortlist-section__count">{{ shortlist.length }}</span>
         </div>
 
-        <!-- Body -->
         <div class="rp-shortlist-section__body">
           @if (shortlistLoading) {
             <div class="loading-state py-4">
@@ -277,8 +554,6 @@ import { ChipMultiSelectComponent, ChipOption } from '../../../shared/components
             <div class="sl-list">
               @for (entry of shortlist; track entry.shortlist_id) {
                 <div class="sl-row">
-
-                  <!-- Avatar -->
                   <div class="sl-row__avatar-wrap">
                     @if (entry.profile_photo_url) {
                       <img [src]="entry.profile_photo_url" alt=""
@@ -290,8 +565,6 @@ import { ChipMultiSelectComponent, ChipOption } from '../../../shared/components
                       </div>
                     }
                   </div>
-
-                  <!-- Identity + chips -->
                   <div class="sl-row__main">
                     <div class="sl-row__name">{{ entry.first_name }} {{ entry.last_name }}</div>
                     <div class="sl-row__email">{{ entry.email }}</div>
@@ -318,8 +591,6 @@ import { ChipMultiSelectComponent, ChipOption } from '../../../shared/components
                       }
                     </div>
                   </div>
-
-                  <!-- Date + action -->
                   <div class="sl-row__end">
                     <span class="sl-row__date">
                       <i class="bi bi-bookmark-fill"></i>{{ entry.shortlisted_at | date:'dd MMM yyyy' }}
@@ -329,153 +600,12 @@ import { ChipMultiSelectComponent, ChipOption } from '../../../shared/components
                       <i class="bi bi-eye me-1"></i>View
                     </a>
                   </div>
-
                 </div>
               }
             </div>
           }
         </div>
       </div>
-
-      <!-- ── Edit Panel ─────────────────────────────────────────────────── -->
-      @if (editOpen) {
-        <div class="file-preview-overlay" (click)="closeEdit()">
-          <div class="edit-panel" (click)="$event.stopPropagation()">
-            <div class="edit-panel__header">
-              <div>
-                <div class="fw-bold">Edit Recruiter</div>
-                <div class="text-muted small">{{ recruiter.email }}</div>
-              </div>
-              <button type="button" class="file-preview-dialog__close" (click)="closeEdit()">
-                <i class="bi bi-x-lg"></i>
-              </button>
-            </div>
-            <div class="edit-panel__body">
-              <!-- Basic fields -->
-              <div class="mb-3">
-                <label class="form-label fw-semibold">Contact Name <span class="text-danger">*</span></label>
-                <input class="form-control" [(ngModel)]="editName"
-                  [class.is-invalid]="editSubmitted && !editName.trim()">
-                <div class="invalid-feedback">Contact name is required.</div>
-              </div>
-              <div class="mb-3">
-                <label class="form-label fw-semibold">Company Name</label>
-                <input class="form-control" [(ngModel)]="editCompany" placeholder="Optional">
-              </div>
-
-              <!-- Agency-only fields -->
-              @if (recruiter.type === 'recruitment_agency') {
-                <div class="mb-3">
-                  <label class="form-label fw-semibold">Job Title <span class="text-muted fw-normal">(e.g. Recruitment Consultant)</span></label>
-                  <input class="form-control" [(ngModel)]="editJobTitle" placeholder="e.g. Recruitment Consultant">
-                </div>
-                <div class="mb-3">
-                  <label class="form-label fw-semibold">Sectors They Recruit For</label>
-                  <app-chip-multi-select
-                    [(ngModel)]="editSectorsRecruitFor"
-                    [options]="industryChipOpts()"
-                    placeholder="Select sectors" />
-                </div>
-                <div class="mb-3">
-                  <label class="form-label fw-semibold">Countries They Place In</label>
-                  <app-chip-multi-select
-                    [(ngModel)]="editCountriesPlaceIn"
-                    [options]="nationalityChipOpts()"
-                    placeholder="Select countries" />
-                </div>
-              }
-
-              <!-- Access Duration -->
-              <div class="mb-3">
-                <label class="form-label fw-semibold">Extend Access Duration</label>
-                <div class="d-flex gap-2">
-                  <input type="number" [(ngModel)]="editDurationValue" class="form-control"
-                    placeholder="e.g. 6" min="1" style="width:100px;flex-shrink:0"
-                    (ngModelChange)="onDurationChange()">
-                  <select class="form-select" [(ngModel)]="editDurationUnit"
-                    (ngModelChange)="onDurationChange()">
-                    <option value="">— Unit —</option>
-                    <option value="hours">Hours</option>
-                    <option value="days">Days</option>
-                    <option value="weeks">Weeks</option>
-                    <option value="months">Months</option>
-                    <option value="years">Years</option>
-                  </select>
-                </div>
-                @if (editExpiryPreview) {
-                  <div class="form-text text-info mt-1">
-                    <i class="bi bi-clock me-1"></i>Expires on: {{ editExpiryPreview }}
-                  </div>
-                }
-                <div class="form-text text-muted">Leave blank to keep current expiry.</div>
-              </div>
-
-              <!-- Credentials -->
-              <hr class="my-3">
-              <div class="mb-2">
-                <label class="form-label fw-semibold small text-uppercase text-muted" style="letter-spacing:.05em">Credentials</label>
-              </div>
-              <div class="mb-3">
-                <label class="form-label fw-semibold">Current Password</label>
-                <div class="input-group">
-                  <input [type]="showCurrentPw ? 'text' : 'password'"
-                    class="form-control" [value]="recruiter.plain_password ?? ''" readonly
-                    style="background:#f8f9fa">
-                  <button type="button" class="btn btn-outline-secondary"
-                    (click)="showCurrentPw = !showCurrentPw">
-                    <i class="bi" [class.bi-eye]="!showCurrentPw" [class.bi-eye-slash]="showCurrentPw"></i>
-                  </button>
-                </div>
-              </div>
-              <div class="mb-3">
-                <label class="form-label fw-semibold">New Password <span class="text-muted fw-normal">(optional)</span></label>
-                <div class="input-group">
-                  <input [type]="showNewPw ? 'text' : 'password'" [(ngModel)]="editNewPassword"
-                    class="form-control" placeholder="Min 8 characters">
-                  <button type="button" class="btn btn-outline-secondary"
-                    (click)="showNewPw = !showNewPw">
-                    <i class="bi" [class.bi-eye]="!showNewPw" [class.bi-eye-slash]="showNewPw"></i>
-                  </button>
-                </div>
-                @if (editSubmitted && editNewPassword && editNewPassword.length < 8) {
-                  <div class="text-danger small mt-1">Minimum 8 characters.</div>
-                }
-              </div>
-              <div class="mb-4">
-                <label class="form-label fw-semibold">Confirm New Password</label>
-                <div class="input-group">
-                  <input [type]="showConfirmPw ? 'text' : 'password'" [(ngModel)]="editConfirmPassword"
-                    class="form-control" placeholder="Repeat new password">
-                  <button type="button" class="btn btn-outline-secondary"
-                    (click)="showConfirmPw = !showConfirmPw">
-                    <i class="bi" [class.bi-eye]="!showConfirmPw" [class.bi-eye-slash]="showConfirmPw"></i>
-                  </button>
-                </div>
-                @if (editSubmitted && editNewPassword && editNewPassword !== editConfirmPassword) {
-                  <div class="text-danger small mt-1">Passwords do not match.</div>
-                }
-              </div>
-
-              @if (editError) {
-                <div class="alert alert-danger small py-2">{{ editError }}</div>
-              }
-              <div class="d-flex gap-2">
-                <button type="button" class="btn btn-outline-secondary flex-grow-1" (click)="closeEdit()">
-                  Cancel
-                </button>
-                <button type="button" class="btn btn-primary flex-grow-1"
-                  [disabled]="editSaving" (click)="saveEdit()">
-                  @if (editSaving) {
-                    <span class="spinner-border spinner-border-sm me-1"></span> Saving…
-                  } @else {
-                    <i class="bi bi-check-lg me-1"></i> Save
-                  }
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      }
 
     }
   `,
@@ -487,54 +617,28 @@ export class RecruiterProfilePageComponent implements OnInit {
   loadError = '';
   shortlistLoading = false;
 
-  // Computed options for agency fields
-  industryChipOpts = computed<ChipOption[]>(() =>
-    this.master.industries().map(i => ({ value: i.name, label: i.name }))
-  );
-  nationalityChipOpts = computed<ChipOption[]>(() =>
-    this.master.countries().map(c => ({ value: c.name, label: `${c.flag_emoji} ${c.name}` }))
-  );
-
-  // Edit panel state
-  editOpen = false;
-  editName = '';
-  editCompany = '';
-  editJobTitle = '';
-  editSectorsRecruitFor: string[] = [];
-  editCountriesPlaceIn: string[] = [];
-  editSaving = false;
-  editError = '';
-  editSubmitted = false;
-
-  // Duration picker state
-  editDurationValue: number | null = null;
-  editDurationUnit = '';
-  editExpiryPreview = '';
-
-  // Password state
-  editNewPassword = '';
-  editConfirmPassword = '';
-  showCurrentPw = false;
-  showNewPw     = false;
-  showConfirmPw = false;
-
   constructor(
     private route: ActivatedRoute,
+    private router: Router,
     private recruiterSvc: RecruiterService,
     private toast: ToastService,
     private confirm: ConfirmDialogService,
-    private master: MasterDataService,
   ) {}
 
   ngOnInit(): void {
     this.recruiterId = this.route.snapshot.paramMap.get('id') ?? '';
     if (!this.recruiterId) { this.loadError = 'Invalid recruiter ID.'; return; }
-    this.master.loadAll();
     this.load();
   }
 
   isExpired(dateStr: string): boolean {
     return new Date(dateStr) < new Date();
+  }
+
+  get companyLocation(): string {
+    if (!this.recruiter) return '—';
+    return [this.recruiter.company_city, this.recruiter.company_country]
+      .filter(Boolean).join(', ');
   }
 
   private load(): void {
@@ -555,98 +659,7 @@ export class RecruiterProfilePageComponent implements OnInit {
     });
   }
 
-  // ── Edit ────────────────────────────────────────────────────────────────────
-  openEdit(): void {
-    if (!this.recruiter) return;
-    this.editName               = this.recruiter.contact_name;
-    this.editCompany            = this.recruiter.company_name ?? '';
-    this.editJobTitle           = this.recruiter.contact_job_title ?? '';
-    this.editSectorsRecruitFor  = [...(this.recruiter.sectors_recruit_for ?? [])];
-    this.editCountriesPlaceIn   = [...(this.recruiter.countries_place_in ?? [])];
-    this.editError              = '';
-    this.editSubmitted          = false;
-    this.editDurationValue      = null;
-    this.editDurationUnit       = '';
-    this.editExpiryPreview      = '';
-    this.editNewPassword        = '';
-    this.editConfirmPassword    = '';
-    this.showCurrentPw          = false;
-    this.showNewPw              = false;
-    this.showConfirmPw          = false;
-    this.editOpen               = true;
-  }
-
-  closeEdit(): void {
-    this.editOpen    = false;
-    this.editSaving  = false;
-    this.editError   = '';
-    this.editSubmitted = false;
-  }
-
-  onDurationChange(): void {
-    if (this.editDurationValue && this.editDurationUnit && this.editDurationValue >= 1) {
-      const dt = this.computeExpiry(this.editDurationValue, this.editDurationUnit);
-      this.editExpiryPreview = dt.toLocaleDateString('en-GB', {
-        day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit',
-      });
-    } else {
-      this.editExpiryPreview = '';
-    }
-  }
-
-  private computeExpiry(value: number, unit: string): Date {
-    const dt = new Date();
-    switch (unit) {
-      case 'hours':  dt.setHours(dt.getHours() + value);        break;
-      case 'days':   dt.setDate(dt.getDate() + value);           break;
-      case 'weeks':  dt.setDate(dt.getDate() + value * 7);       break;
-      case 'months': dt.setMonth(dt.getMonth() + value);         break;
-      case 'years':  dt.setFullYear(dt.getFullYear() + value);   break;
-    }
-    return dt;
-  }
-
-  saveEdit(): void {
-    this.editSubmitted = true;
-    if (!this.editName.trim()) return;
-    if (this.editNewPassword && this.editNewPassword.length < 8) return;
-    if (this.editNewPassword && this.editNewPassword !== this.editConfirmPassword) return;
-
-    this.editSaving = true;
-    this.editError  = '';
-
-    const payload: Record<string, unknown> = {
-      contact_name: this.editName.trim(),
-      company_name: this.editCompany.trim() || null,
-    };
-
-    if (this.recruiter!.type === 'recruitment_agency') {
-      payload['contact_job_title']    = this.editJobTitle.trim() || null;
-      payload['sectors_recruit_for']  = this.editSectorsRecruitFor.length ? this.editSectorsRecruitFor : null;
-      payload['countries_place_in']   = this.editCountriesPlaceIn.length ? this.editCountriesPlaceIn : null;
-    }
-
-    if (this.editNewPassword) payload['new_password'] = this.editNewPassword;
-
-    if (this.editDurationValue && this.editDurationUnit) {
-      payload['access_expires_at'] = this.computeExpiry(this.editDurationValue, this.editDurationUnit).toISOString();
-    }
-
-    this.recruiterSvc.update(this.recruiterId, payload as any).subscribe({
-      next: (res) => {
-        this.recruiter = res.recruiter;
-        this.editSaving = false;
-        this.toast.success('Recruiter updated');
-        this.closeEdit();
-      },
-      error: (err) => {
-        this.editSaving = false;
-        this.editError  = err?.error?.message ?? 'Update failed.';
-      },
-    });
-  }
-
-  // ── Resend credentials ────────────────────────────────────────────────────────
+  // ── Resend credentials ─────────────────────────────────────────────────────
   async resendCredentials(): Promise<void> {
     if (!this.recruiter) return;
     const ok = await this.confirm.confirm({
@@ -662,7 +675,7 @@ export class RecruiterProfilePageComponent implements OnInit {
     });
   }
 
-  // ── Delete ────────────────────────────────────────────────────────────────────
+  // ── Delete ─────────────────────────────────────────────────────────────────
   async deleteRecruiter(): Promise<void> {
     if (!this.recruiter) return;
     const ok = await this.confirm.confirm({

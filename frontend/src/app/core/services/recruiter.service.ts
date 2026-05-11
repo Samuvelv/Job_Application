@@ -78,13 +78,21 @@ export class RecruiterService {
     company_website?: string | null;
     industry?: string | null;
     phone?: string | null;
+    whatsapp_number?: string | null;
+    company_size?: string | null;
     has_sponsor_licence?: 'yes' | 'no' | 'applied' | 'unknown' | null;
     sponsor_licence_number?: string | null;
     sponsor_licence_countries?: string[] | null;
+    licence_rating?: string | null;
+    licence_verified?: boolean;
     target_nationalities?: string[] | null;
     sectors_recruit_for?: string[] | null;
     countries_place_in?: string[] | null;
     hires_per_year?: string | null;
+    job_types?: string[] | null;
+    account_status?: 'active' | 'pending' | 'suspended';
+    free_account?: boolean;
+    access_start_date?: string | null;
     admin_notes?: string | null;
     new_password?: string;
     access_expires_at?: string;
@@ -102,7 +110,6 @@ export class RecruiterService {
   }
 
   exportCsv(filters: RecruiterFilters = {}): Observable<Blob> {
-    debugger
     let params = new HttpParams();
     Object.entries(filters).forEach(([k, v]) => {
       if (v !== undefined && v !== null && v !== '') params = params.set(k, String(v));

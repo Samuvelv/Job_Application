@@ -178,14 +178,26 @@ export async function listRecruiters(filters: RecruiterFilterDto) {
       'r.company_name',
       'r.company_logo_url',
       'r.company_country',
+      'r.company_city',
+      'r.company_website',
       'r.industry',
+      'r.phone',
+      'r.whatsapp_number',
+      'r.company_size',
       'r.has_sponsor_licence',
+      'r.sponsor_licence_number',
       'r.sponsor_licence_countries',
+      'r.licence_rating',
+      'r.licence_verified',
       'r.target_nationalities',
       'r.sectors_recruit_for',
       'r.countries_place_in',
+      'r.hires_per_year',
+      'r.job_types',
       'r.account_status',
+      'r.access_start_date',
       'r.free_account',
+      'r.admin_notes',
       'r.access_expires_at',
       'r.plain_password',
       'u.is_active',
@@ -309,6 +321,14 @@ export async function updateRecruiter(id: string, dto: UpdateRecruiterDto) {
   if (dto.target_nationalities      !== undefined) patch['target_nationalities']      = dto.target_nationalities ?? null;
   if (dto.sectors_recruit_for       !== undefined) patch['sectors_recruit_for']       = dto.sectors_recruit_for ?? null;
   if (dto.countries_place_in        !== undefined) patch['countries_place_in']        = dto.countries_place_in ?? null;
+  if (dto.whatsapp_number    !== undefined) patch['whatsapp_number']   = dto.whatsapp_number ?? null;
+  if (dto.company_size       !== undefined) patch['company_size']      = dto.company_size ?? null;
+  if (dto.licence_rating     !== undefined) patch['licence_rating']    = dto.licence_rating ?? null;
+  if (dto.licence_verified   !== undefined) patch['licence_verified']  = dto.licence_verified;
+  if (dto.job_types          !== undefined) patch['job_types']         = dto.job_types ?? null;
+  if (dto.account_status     !== undefined) patch['account_status']    = dto.account_status;
+  if (dto.access_start_date  !== undefined) patch['access_start_date'] = dto.access_start_date ? new Date(dto.access_start_date) : null;
+  if (dto.free_account       !== undefined) patch['free_account']      = dto.free_account;
   if (dto.hires_per_year     !== undefined) patch['hires_per_year']    = dto.hires_per_year ?? null;
   if (dto.admin_notes        !== undefined) patch['admin_notes']       = dto.admin_notes ?? null;
   if (dto.access_expires_at  !== undefined) patch['access_expires_at'] = new Date(dto.access_expires_at);

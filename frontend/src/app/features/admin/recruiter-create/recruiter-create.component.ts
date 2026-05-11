@@ -1,7 +1,7 @@
 // src/app/features/admin/recruiter-create/recruiter-create.component.ts
 import { Component, OnInit, computed, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { ReactiveFormsModule, FormBuilder, FormGroup, Validators, AbstractControl, ValidationErrors } from '@angular/forms';
+import { ReactiveFormsModule, FormBuilder, FormGroup, Validators, AbstractControl, ValidationErrors, ValidatorFn } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { RecruiterService } from '../../../core/services/recruiter.service';
 import { PageHeaderComponent } from '../../../shared/components/page-header/page-header.component';
@@ -9,11 +9,89 @@ import { MasterDataService } from '../../../core/services/master-data.service';
 import { SearchableSelectComponent, SelectOption } from '../../../shared/components/searchable-select/searchable-select.component';
 import { ChipMultiSelectComponent, ChipOption } from '../../../shared/components/chip-multi-select/chip-multi-select.component';
 
+// ── Duration validator ─────────────────────────────────────────────────────
 function durationRequiredValidator(g: AbstractControl): ValidationErrors | null {
   const val  = g.get('duration_value')?.value;
   const unit = g.get('duration_unit')?.value;
   if (val && val >= 1 && unit) return null;
   return { durationRequired: true };
+}
+
+// ── Phone rules map ────────────────────────────────────────────────────────
+interface PhoneRule { minLen: number; maxLen: number; pattern?: RegExp; hint: string; }
+const PHONE_RULES: Record<string, PhoneRule> = {
+  '+91':  { minLen: 10, maxLen: 10, pattern: /^[6-9]\d{9}$/,   hint: '10 digits starting with 6–9 (India)' },
+  '+1':   { minLen: 10, maxLen: 10, pattern: /^\d{10}$/,        hint: '10 digits (US / Canada)' },
+  '+44':  { minLen: 10, maxLen: 11, pattern: /^7\d{9}$/,        hint: '10 digits starting with 7 (UK mobile)' },
+  '+61':  { minLen: 9,  maxLen: 9,  pattern: /^[4]\d{8}$/,      hint: '9 digits starting with 4 (Australia)' },
+  '+971': { minLen: 9,  maxLen: 9,  pattern: /^[5]\d{8}$/,      hint: '9 digits starting with 5 (UAE)' },
+  '+234': { minLen: 10, maxLen: 11, pattern: /^[7-9]\d{9,10}$/, hint: '10–11 digits starting with 7–9 (Nigeria)' },
+  '+254': { minLen: 9,  maxLen: 9,  pattern: /^[7]\d{8}$/,      hint: '9 digits starting with 7 (Kenya)' },
+  '+27':  { minLen: 9,  maxLen: 9,  pattern: /^[6-8]\d{8}$/,    hint: '9 digits starting with 6–8 (South Africa)' },
+  '+49':  { minLen: 10, maxLen: 12, pattern: /^\d{10,12}$/,     hint: '10–12 digits (Germany)' },
+  '+33':  { minLen: 9,  maxLen: 9,  pattern: /^[6-7]\d{8}$/,    hint: '9 digits starting with 6–7 (France)' },
+};
+const PHONE_FALLBACK: PhoneRule = { minLen: 5, maxLen: 15, pattern: /^\d{5,15}$/, hint: '5–15 digits' };
+
+function getPhoneRule(dialCode: string): PhoneRule {
+  return PHONE_RULES[dialCode] ?? PHONE_FALLBACK;
+}
+
+// ── Phone group validator factory ──────────────────────────────────────────
+function makePhoneGroupValidator(dialCtrl: string, numCtrl: string): ValidatorFn {
+  return (group: AbstractControl): ValidationErrors | null => {
+    const dial = group.get(dialCtrl)?.value as string || '';
+    const num  = (group.get(numCtrl)?.value as string || '').replace(/\s+/g, '');
+    const numControl = group.get(numCtrl);
+    if (!numControl) return null;
+
+    if (!num) {
+      const cur = numControl.errors;
+      if (cur?.['phoneInvalid']) {
+        const { phoneInvalid: _, ...rest } = cur;
+        numControl.setErrors(Object.keys(rest).length ? rest : null);
+      }
+      return null;
+    }
+
+    const rule = getPhoneRule(dial);
+    const digitsOnly = /^\d+$/.test(num);
+    const lenOk = num.length >= rule.minLen && num.length <= rule.maxLen;
+    const patOk = rule.pattern ? rule.pattern.test(num) : true;
+
+    if (!digitsOnly || !lenOk || !patOk) {
+      const msg = `Invalid number for ${dial}. Expected: ${rule.hint}.`;
+      numControl.setErrors({ ...(numControl.errors || {}), phoneInvalid: msg });
+      return { phoneInvalid: true };
+    }
+
+    const cur = numControl.errors;
+    if (cur?.['phoneInvalid']) {
+      const { phoneInvalid: _, ...rest } = cur;
+      numControl.setErrors(Object.keys(rest).length ? rest : null);
+    }
+    return null;
+  };
+}
+
+// ── Website URL validator ──────────────────────────────────────────────────
+function websiteValidator(): ValidatorFn {
+  return (ctrl: AbstractControl): ValidationErrors | null => {
+    const v = (ctrl.value as string || '').trim();
+    if (!v) return null; // optional field — required handles empty separately
+    const ok = /^(https?:\/\/)?(www\.)?[\w-]+(\.[\w-]{2,})(\/\S*)?$/.test(v);
+    return ok ? null : { invalidWebsite: true };
+  };
+}
+
+// ── Email validator (trims before checking) ────────────────────────────────
+function emailValidator(): ValidatorFn {
+  return (ctrl: AbstractControl): ValidationErrors | null => {
+    const v = (ctrl.value as string || '').trim();
+    if (!v) return null;
+    const ok = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(v);
+    return ok ? null : { invalidEmail: true };
+  };
 }
 
 @Component({
@@ -29,7 +107,7 @@ function durationRequiredValidator(g: AbstractControl): ValidationErrors | null 
 
     <app-page-header title="Add Recruiter" icon="bi-person-plus" subtitle="Create a new recruiter account" />
 
-    <div class="form-card" style="max-width:760px;">
+    <div class="form-card">
 
       @if (success) {
         <div class="reg-success-banner">
@@ -63,22 +141,39 @@ function durationRequiredValidator(g: AbstractControl): ValidationErrors | null 
               <input formControlName="contact_name" class="form-control"
                 [class.is-invalid]="invalid('contact_name')" placeholder="Jane Smith">
               @if (invalid('contact_name')) {
-                <div class="invalid-feedback">Contact name is required.</div>
+                @if (ctrl('contact_name').hasError('required')) {
+                  <div class="invalid-feedback">Full name is required.</div>
+                } @else if (ctrl('contact_name').hasError('minlength')) {
+                  <div class="invalid-feedback">Name must be at least 3 characters.</div>
+                } @else if (ctrl('contact_name').hasError('maxlength')) {
+                  <div class="invalid-feedback">Name must be 100 characters or fewer.</div>
+                } @else if (ctrl('contact_name').hasError('pattern')) {
+                  <div class="invalid-feedback">Name may only contain letters, spaces, hyphens, apostrophes and dots.</div>
+                }
               }
             </div>
 
             <div class="col-md-6">
               <label class="form-label fw-semibold">Recruiter Type</label>
-              <select formControlName="type" class="form-select" (change)="onTypeChange()">
-                <option value="direct_employer">Direct Employer</option>
-                <option value="recruitment_agency">Recruitment Agency</option>
-              </select>
+              <app-searchable-select
+                formControlName="type"
+                [options]="RECRUITER_TYPE_OPTS"
+                [allowClear]="false"
+                placeholder="Select type" />
             </div>
 
             <div class="col-md-6">
               <label class="form-label fw-semibold">Job Title / Role</label>
               <input formControlName="contact_job_title" class="form-control"
+                [class.is-invalid]="invalid('contact_job_title')"
                 placeholder="e.g. HR Manager, Director, Owner">
+              @if (invalid('contact_job_title')) {
+                @if (ctrl('contact_job_title').hasError('minlength')) {
+                  <div class="invalid-feedback">Job title must be at least 2 characters.</div>
+                } @else if (ctrl('contact_job_title').hasError('maxlength')) {
+                  <div class="invalid-feedback">Job title must be 100 characters or fewer.</div>
+                }
+              }
             </div>
 
             <div class="col-md-6">
@@ -86,30 +181,68 @@ function durationRequiredValidator(g: AbstractControl): ValidationErrors | null 
               <input formControlName="email" type="email" class="form-control"
                 [class.is-invalid]="invalid('email')" placeholder="recruiter@company.com">
               @if (invalid('email')) {
-                <div class="invalid-feedback">Valid email is required.</div>
+                @if (ctrl('email').hasError('required')) {
+                  <div class="invalid-feedback">Work email is required.</div>
+                } @else if (ctrl('email').hasError('invalidEmail')) {
+                  <div class="invalid-feedback">Please enter a valid email address.</div>
+                }
               }
             </div>
 
+            <!-- Phone -->
             <div class="col-md-6">
-              <label class="form-label fw-semibold">Phone Number</label>
-              <input formControlName="phone" class="form-control" placeholder="+44 7700 900000">
+              <label class="form-label fw-semibold">Phone Number <span class="text-danger">*</span></label>
+              <div class="phone-input-group">
+                <app-searchable-select
+                  formControlName="phone_dial_code"
+                  [options]="dialCodeOptions()"
+                  [allowClear]="false"
+                  placeholder="🌐"
+                  class="dial-select" />
+                <input type="tel" class="form-control phone-number-input"
+                  formControlName="phone_number"
+                  placeholder="7700 900000"
+                  [class.is-invalid]="invalid('phone_number') || (submitted && ctrl('phone_number').hasError('phoneInvalid'))">
+              </div>
+              @if (ctrl('phone_number').touched && ctrl('phone_number').errors) {
+                <div class="text-danger small mt-1">
+                  @if (ctrl('phone_number').errors?.['required']) { Phone number is required. }
+                  @else if (ctrl('phone_number').errors?.['phoneInvalid']) { {{ ctrl('phone_number').errors?.['phoneInvalid'] }} }
+                </div>
+              }
             </div>
 
+            <!-- WhatsApp -->
             <div class="col-md-6">
-              <label class="form-label fw-semibold">WhatsApp Number</label>
-              <div class="input-group">
-                <span class="input-group-text"><i class="bi bi-whatsapp text-success"></i></span>
-                <input formControlName="whatsapp_number" class="form-control" placeholder="+44 7700 900000"
+              <label class="form-label fw-semibold">WhatsApp Number <span class="text-danger">*</span></label>
+              <div class="phone-input-group">
+                <app-searchable-select
+                  formControlName="whatsapp_dial_code"
+                  [options]="dialCodeOptions()"
+                  [allowClear]="false"
+                  placeholder="🌐"
+                  class="dial-select"
+                  [class.bg-light]="form.get('whatsapp_same_as_phone')?.value" />
+                <input type="tel" class="form-control phone-number-input"
+                  formControlName="whatsapp_number"
+                  placeholder="7700 900000"
                   [class.bg-light]="form.get('whatsapp_same_as_phone')?.value"
+                  [class.is-invalid]="invalid('whatsapp_number') || (submitted && ctrl('whatsapp_number').hasError('phoneInvalid'))"
                   [attr.readonly]="form.get('whatsapp_same_as_phone')?.value ? true : null">
               </div>
               <div class="form-check mt-1">
-                <input class="form-check-input" type="checkbox" formControlName="whatsapp_same_as_phone"
-                  id="whatsappSameAsPhone">
+                <input class="form-check-input" type="checkbox"
+                  formControlName="whatsapp_same_as_phone" id="whatsappSameAsPhone">
                 <label class="form-check-label small text-muted" for="whatsappSameAsPhone">
                   Same as phone number
                 </label>
               </div>
+              @if (ctrl('whatsapp_number').touched && ctrl('whatsapp_number').errors) {
+                <div class="text-danger small mt-1">
+                  @if (ctrl('whatsapp_number').errors?.['required']) { WhatsApp number is required. }
+                  @else if (ctrl('whatsapp_number').errors?.['phoneInvalid']) { {{ ctrl('whatsapp_number').errors?.['phoneInvalid'] }} }
+                </div>
+              }
             </div>
 
           </div>
@@ -122,14 +255,26 @@ function durationRequiredValidator(g: AbstractControl): ValidationErrors | null 
 
             <div class="col-md-6">
               <label class="form-label fw-semibold">Company Name</label>
-              <input formControlName="company_name" class="form-control" placeholder="Acme Recruiting Ltd">
+              <input formControlName="company_name" class="form-control"
+                [class.is-invalid]="invalid('company_name')" placeholder="Acme Recruiting Ltd">
+              @if (invalid('company_name')) {
+                @if (ctrl('company_name').hasError('minlength')) {
+                  <div class="text-danger mt-1" style="font-size:.875em">Company name must be at least 2 characters.</div>
+                } @else if (ctrl('company_name').hasError('maxlength')) {
+                  <div class="text-danger mt-1" style="font-size:.875em">Company name must be 150 characters or fewer.</div>
+                }
+              }
             </div>
 
             <div class="col-md-6">
               <label class="form-label fw-semibold">Company Website</label>
               <div class="input-group">
                 <span class="input-group-text"><i class="bi bi-globe"></i></span>
-                <input formControlName="company_website" class="form-control" placeholder="https://example.com">
+                <input formControlName="company_website" class="form-control"
+                  [class.is-invalid]="invalid('company_website')" placeholder="https://example.com">
+                @if (invalid('company_website')) {
+                  <div class="invalid-feedback">Please enter a valid URL (e.g. https://example.com or www.example.com).</div>
+                }
               </div>
             </div>
 
@@ -152,30 +297,20 @@ function durationRequiredValidator(g: AbstractControl): ValidationErrors | null 
 
             <div class="col-md-6">
               <label class="form-label fw-semibold">Industry / Sector</label>
-              <select formControlName="industry" class="form-select">
-                <option value="">— Select industry —</option>
-                <option value="Healthcare">Healthcare</option>
-                <option value="IT">IT</option>
-                <option value="Engineering">Engineering</option>
-                <option value="Care">Care</option>
-                <option value="Education">Education</option>
-                <option value="Hospitality">Hospitality</option>
-                <option value="Construction">Construction</option>
-                <option value="Finance">Finance</option>
-                <option value="Other">Other</option>
-              </select>
+              <app-searchable-select
+                formControlName="industry"
+                [options]="INDUSTRY_OPTS"
+                [allowClear]="true"
+                placeholder="— Select industry —" />
             </div>
 
             <div class="col-md-6">
               <label class="form-label fw-semibold">Company Size</label>
-              <select formControlName="company_size" class="form-select">
-                <option value="">— Select size —</option>
-                <option value="1-10">1 – 10 employees</option>
-                <option value="11-50">11 – 50 employees</option>
-                <option value="51-200">51 – 200 employees</option>
-                <option value="201-500">201 – 500 employees</option>
-                <option value="500+">500+ employees</option>
-              </select>
+              <app-searchable-select
+                formControlName="company_size"
+                [options]="COMPANY_SIZE_OPTS"
+                [allowClear]="true"
+                placeholder="— Select size —" />
             </div>
 
           </div>
@@ -215,20 +350,28 @@ function durationRequiredValidator(g: AbstractControl): ValidationErrors | null 
 
             <div class="col-md-6">
               <label class="form-label fw-semibold">Holds Sponsor Licence</label>
-              <select formControlName="has_sponsor_licence" class="form-select">
-                <option value="">— Select —</option>
-                <option value="yes">Yes</option>
-                <option value="no">No</option>
-                <option value="applied">Applied</option>
-                <option value="unknown">Unknown</option>
-              </select>
+              <app-searchable-select
+                formControlName="has_sponsor_licence"
+                [options]="SPONSOR_LICENCE_OPTS"
+                [allowClear]="true"
+                placeholder="— Select —" />
             </div>
 
             @if (sponsorYes) {
               <div class="col-md-6">
-                <label class="form-label fw-semibold">Licence Number</label>
+                <label class="form-label fw-semibold">Licence Number <span class="text-danger">*</span></label>
                 <input formControlName="sponsor_licence_number" class="form-control"
+                  [class.is-invalid]="invalid('sponsor_licence_number')"
                   placeholder="e.g. 1Z3GF3C...">
+                @if (invalid('sponsor_licence_number')) {
+                  @if (ctrl('sponsor_licence_number').hasError('required')) {
+                    <div class="text-danger mt-1" style="font-size:.875em">Licence number is required.</div>
+                  } @else if (ctrl('sponsor_licence_number').hasError('minlength')) {
+                    <div class="text-danger mt-1" style="font-size:.875em">Licence number must be at least 3 characters.</div>
+                  } @else if (ctrl('sponsor_licence_number').hasError('maxlength')) {
+                    <div class="text-danger mt-1" style="font-size:.875em">Licence number must be 100 characters or fewer.</div>
+                  }
+                }
                 <div class="form-text">Verifiable at gov.uk</div>
               </div>
 
@@ -242,18 +385,17 @@ function durationRequiredValidator(g: AbstractControl): ValidationErrors | null 
 
               <div class="col-md-6">
                 <label class="form-label fw-semibold">Licence Rating</label>
-                <select formControlName="licence_rating" class="form-select">
-                  <option value="">— Select rating —</option>
-                  <option value="A-Rating">A-Rating</option>
-                  <option value="B-Rating">B-Rating</option>
-                  <option value="Not Applicable">Not Applicable</option>
-                </select>
-                @if (form.get('licence_rating')?.value === 'A-Rating') {
+                <app-searchable-select
+                  formControlName="licence_rating"
+                  [options]="LICENCE_RATING_OPTS"
+                  [allowClear]="true"
+                  placeholder="— Select rating —" />
+                @if (licenceRatingA) {
                   <div class="form-text text-success fw-semibold">
                     <i class="bi bi-check-circle-fill me-1"></i>A-Rating — valid for approvals
                   </div>
                 }
-                @if (form.get('licence_rating')?.value === 'B-Rating') {
+                @if (licenceRatingB) {
                   <div class="form-text text-warning fw-semibold">
                     <i class="bi bi-exclamation-triangle-fill me-1"></i>B-Rating — not valid for approvals
                   </div>
@@ -314,13 +456,11 @@ function durationRequiredValidator(g: AbstractControl): ValidationErrors | null 
 
             <div class="col-md-6">
               <label class="form-label fw-semibold">Typical Hires Per Year</label>
-              <select formControlName="hires_per_year" class="form-select">
-                <option value="">— Select —</option>
-                <option value="1-5">1 – 5</option>
-                <option value="6-20">6 – 20</option>
-                <option value="21-50">21 – 50</option>
-                <option value="50+">50+</option>
-              </select>
+              <app-searchable-select
+                formControlName="hires_per_year"
+                [options]="HIRES_PER_YEAR_OPTS"
+                [allowClear]="true"
+                placeholder="— Select —" />
             </div>
 
             <div class="col-md-6">
@@ -343,24 +483,32 @@ function durationRequiredValidator(g: AbstractControl): ValidationErrors | null 
               <label class="form-label fw-semibold">Password <span class="text-danger">*</span></label>
               <div class="input-group">
                 <input [type]="showPw ? 'text' : 'password'" formControlName="password"
-                  class="form-control" placeholder="Min 8 characters"
-                  [class.is-invalid]="invalid('password')">
-                <button type="button" class="btn btn-outline-secondary" (click)="showPw = !showPw">
+                  class="form-control"
+                  placeholder="Min 8 chars, upper + lower + number"
+                  [class.is-invalid]="ctrl('password').invalid && ctrl('password').touched">
+                <button type="button" class="btn btn-outline-secondary" (click)="showPw = !showPw"
+                  [attr.aria-label]="showPw ? 'Hide password' : 'Show password'">
                   <i class="bi" [class.bi-eye]="!showPw" [class.bi-eye-slash]="showPw"></i>
                 </button>
-                @if (invalid('password')) {
-                  <div class="invalid-feedback">Minimum 8 characters required.</div>
-                }
               </div>
+              @if (ctrl('password').touched) {
+                @if (ctrl('password').errors?.['required']) {
+                  <div class="text-danger mt-1" style="font-size:.875em">Password is required.</div>
+                } @else if (ctrl('password').errors?.['minlength']) {
+                  <div class="text-danger mt-1" style="font-size:.875em">Minimum 8 characters required.</div>
+                } @else if (ctrl('password').errors?.['pattern']) {
+                  <div class="text-danger mt-1" style="font-size:.875em">Must include uppercase, lowercase, and a number.</div>
+                }
+              }
             </div>
 
             <div class="col-md-6">
               <label class="form-label fw-semibold">Account Status</label>
-              <select formControlName="account_status" class="form-select">
-                <option value="active">Active</option>
-                <option value="pending">Pending</option>
-                <option value="suspended">Suspended</option>
-              </select>
+              <app-searchable-select
+                formControlName="account_status"
+                [options]="ACCOUNT_STATUS_OPTS"
+                [allowClear]="false"
+                placeholder="Select status" />
             </div>
 
             <div class="col-md-6">
@@ -374,15 +522,14 @@ function durationRequiredValidator(g: AbstractControl): ValidationErrors | null 
                 <input type="number" formControlName="duration_value" class="form-control"
                   placeholder="e.g. 6" min="1" style="width:100px;flex-shrink:0"
                   [class.is-invalid]="submitted && form.hasError('durationRequired')">
-                <select formControlName="duration_unit" class="form-select"
-                  [class.is-invalid]="submitted && form.hasError('durationRequired')">
-                  <option value="">— Unit —</option>
-                  <option value="hours">Hours</option>
-                  <option value="days">Days</option>
-                  <option value="weeks">Weeks</option>
-                  <option value="months">Months</option>
-                  <option value="years">Years</option>
-                </select>
+                <div style="min-width:140px;flex-shrink:0">
+                  <app-searchable-select
+                    formControlName="duration_unit"
+                    [options]="DURATION_UNIT_OPTS"
+                    [allowClear]="false"
+                    [invalid]="submitted && form.hasError('durationRequired')"
+                    placeholder="— Unit —" />
+                </div>
               </div>
               @if (submitted && form.hasError('durationRequired')) {
                 <div class="text-danger small mt-1">Please enter a valid duration and select a unit.</div>
@@ -431,7 +578,6 @@ function durationRequiredValidator(g: AbstractControl): ValidationErrors | null 
             <p class="small fw-semibold text-muted mb-2" style="letter-spacing:.03em">Direct Employer Verification</p>
             <div class="mb-4" style="border:1px solid var(--th-border);border-radius:var(--th-radius);overflow:hidden">
 
-              <!-- DE Row 1 -->
               <label class="d-flex align-items-center gap-3 px-3 py-3 mb-0"
                 style="cursor:pointer;border-bottom:1px solid var(--th-border);transition:background .15s"
                 [style.background]="form.get('verify_de_website')?.value ? 'var(--bs-success-bg-subtle)' : 'var(--th-surface-raised)'">
@@ -447,7 +593,6 @@ function durationRequiredValidator(g: AbstractControl): ValidationErrors | null 
                 }
               </label>
 
-              <!-- DE Row 2 -->
               <label class="d-flex align-items-center gap-3 px-3 py-3 mb-0"
                 style="cursor:pointer;border-bottom:1px solid var(--th-border);transition:background .15s"
                 [style.background]="form.get('verify_de_licence')?.value ? 'var(--bs-success-bg-subtle)' : 'var(--th-surface-raised)'">
@@ -463,7 +608,6 @@ function durationRequiredValidator(g: AbstractControl): ValidationErrors | null 
                 }
               </label>
 
-              <!-- DE Row 3 -->
               <label class="d-flex align-items-center gap-3 px-3 py-3 mb-0"
                 style="cursor:pointer;border-bottom:1px solid var(--th-border);transition:background .15s"
                 [style.background]="form.get('verify_de_linkedin')?.value ? 'var(--bs-success-bg-subtle)' : 'var(--th-surface-raised)'">
@@ -479,7 +623,6 @@ function durationRequiredValidator(g: AbstractControl): ValidationErrors | null 
                 }
               </label>
 
-              <!-- DE Row 4 -->
               <label class="d-flex align-items-center gap-3 px-3 py-3 mb-0"
                 style="cursor:pointer;transition:background .15s"
                 [style.background]="form.get('verify_de_briefed')?.value ? 'var(--bs-success-bg-subtle)' : 'var(--th-surface-raised)'">
@@ -501,7 +644,6 @@ function durationRequiredValidator(g: AbstractControl): ValidationErrors | null 
             <p class="small fw-semibold text-muted mb-2" style="letter-spacing:.03em">Recruitment Agency Verification</p>
             <div class="mb-4" style="border:1px solid var(--th-border);border-radius:var(--th-radius);overflow:hidden">
 
-              <!-- RA Row 1 -->
               <label class="d-flex align-items-center gap-3 px-3 py-3 mb-0"
                 style="cursor:pointer;border-bottom:1px solid var(--th-border);transition:background .15s"
                 [style.background]="form.get('verify_ra_website')?.value ? 'var(--bs-success-bg-subtle)' : 'var(--th-surface-raised)'">
@@ -517,7 +659,6 @@ function durationRequiredValidator(g: AbstractControl): ValidationErrors | null 
                 }
               </label>
 
-              <!-- RA Row 2 -->
               <label class="d-flex align-items-center gap-3 px-3 py-3 mb-0"
                 style="cursor:pointer;border-bottom:1px solid var(--th-border);transition:background .15s"
                 [style.background]="form.get('verify_ra_ch')?.value ? 'var(--bs-success-bg-subtle)' : 'var(--th-surface-raised)'">
@@ -533,7 +674,6 @@ function durationRequiredValidator(g: AbstractControl): ValidationErrors | null 
                 }
               </label>
 
-              <!-- RA Row 3 -->
               <label class="d-flex align-items-center gap-3 px-3 py-3 mb-0"
                 style="cursor:pointer;border-bottom:1px solid var(--th-border);transition:background .15s"
                 [style.background]="form.get('verify_ra_rec')?.value ? 'var(--bs-success-bg-subtle)' : 'var(--th-surface-raised)'">
@@ -549,7 +689,6 @@ function durationRequiredValidator(g: AbstractControl): ValidationErrors | null 
                 }
               </label>
 
-              <!-- RA Row 4 -->
               <label class="d-flex align-items-center gap-3 px-3 py-3 mb-0"
                 style="cursor:pointer;border-bottom:1px solid var(--th-border);transition:background .15s"
                 [style.background]="form.get('verify_ra_sponsor')?.value ? 'var(--bs-success-bg-subtle)' : 'var(--th-surface-raised)'">
@@ -565,7 +704,6 @@ function durationRequiredValidator(g: AbstractControl): ValidationErrors | null 
                 }
               </label>
 
-              <!-- RA Row 5 -->
               <label class="d-flex align-items-center gap-3 px-3 py-3 mb-0"
                 style="cursor:pointer;border-bottom:1px solid var(--th-border);transition:background .15s"
                 [style.background]="form.get('verify_ra_linkedin')?.value ? 'var(--bs-success-bg-subtle)' : 'var(--th-surface-raised)'">
@@ -581,7 +719,6 @@ function durationRequiredValidator(g: AbstractControl): ValidationErrors | null 
                 }
               </label>
 
-              <!-- RA Row 6 -->
               <label class="d-flex align-items-center gap-3 px-3 py-3 mb-0"
                 style="cursor:pointer;transition:background .15s"
                 [style.background]="form.get('verify_ra_briefed')?.value ? 'var(--bs-success-bg-subtle)' : 'var(--th-surface-raised)'">
@@ -627,7 +764,7 @@ function durationRequiredValidator(g: AbstractControl): ValidationErrors | null 
   `,
 })
 export class RecruiterCreateComponent implements OnInit {
-  form: FormGroup;
+  form!: FormGroup;
   submitting = false;
   submitted  = false;
   error = '';
@@ -648,32 +785,99 @@ export class RecruiterCreateComponent implements OnInit {
     this.master.countries().map(c => ({ value: c.name, label: `${c.flag_emoji} ${c.name}` }))
   );
 
+  dialCodeOptions = computed<SelectOption[]>(() =>
+    this.master.countries().map(c => ({
+      value: c.dial_code,
+      label: `${c.flag_emoji} ${c.dial_code}`,
+      sublabel: c.name,
+    }))
+  );
+
   // ── Static option arrays ────────────────────────────────────────────────────
+  readonly RECRUITER_TYPE_OPTS: SelectOption[] = [
+    { value: 'direct_employer',    label: 'Direct Employer' },
+    { value: 'recruitment_agency', label: 'Recruitment Agency' },
+  ];
+
+  readonly INDUSTRY_OPTS: SelectOption[] = [
+    { value: 'Healthcare',   label: 'Healthcare' },
+    { value: 'IT',           label: 'IT' },
+    { value: 'Engineering',  label: 'Engineering' },
+    { value: 'Care',         label: 'Care' },
+    { value: 'Education',    label: 'Education' },
+    { value: 'Hospitality',  label: 'Hospitality' },
+    { value: 'Construction', label: 'Construction' },
+    { value: 'Finance',      label: 'Finance' },
+    { value: 'Other',        label: 'Other' },
+  ];
+
+  readonly COMPANY_SIZE_OPTS: SelectOption[] = [
+    { value: '1-10',    label: '1–10 employees' },
+    { value: '11-50',   label: '11–50 employees' },
+    { value: '51-200',  label: '51–200 employees' },
+    { value: '201-500', label: '201–500 employees' },
+    { value: '500+',    label: '500+ employees' },
+  ];
+
+  readonly SPONSOR_LICENCE_OPTS: SelectOption[] = [
+    { value: 'yes',     label: 'Yes' },
+    { value: 'no',      label: 'No' },
+    { value: 'applied', label: 'Applied' },
+    { value: 'unknown', label: 'Unknown' },
+  ];
+
+  readonly LICENCE_RATING_OPTS: SelectOption[] = [
+    { value: 'A-Rating',       label: 'A-Rating' },
+    { value: 'B-Rating',       label: 'B-Rating' },
+    { value: 'Not Applicable', label: 'Not Applicable' },
+  ];
+
+  readonly HIRES_PER_YEAR_OPTS: SelectOption[] = [
+    { value: '1-5',   label: '1–5' },
+    { value: '6-20',  label: '6–20' },
+    { value: '21-50', label: '21–50' },
+    { value: '50+',   label: '50+' },
+  ];
+
+  readonly ACCOUNT_STATUS_OPTS: SelectOption[] = [
+    { value: 'active',    label: 'Active' },
+    { value: 'pending',   label: 'Pending' },
+    { value: 'suspended', label: 'Suspended' },
+  ];
+
+  readonly DURATION_UNIT_OPTS: SelectOption[] = [
+    { value: 'hours',  label: 'Hours' },
+    { value: 'days',   label: 'Days' },
+    { value: 'weeks',  label: 'Weeks' },
+    { value: 'months', label: 'Months' },
+    { value: 'years',  label: 'Years' },
+  ];
+
   readonly industryChipOpts: ChipOption[] = [
-    { value: 'Healthcare',    label: 'Healthcare' },
-    { value: 'IT',            label: 'IT' },
-    { value: 'Engineering',   label: 'Engineering' },
-    { value: 'Care',          label: 'Care' },
-    { value: 'Education',     label: 'Education' },
-    { value: 'Hospitality',   label: 'Hospitality' },
-    { value: 'Construction',  label: 'Construction' },
-    { value: 'Finance',       label: 'Finance' },
-    { value: 'Other',         label: 'Other' },
+    { value: 'Healthcare',   label: 'Healthcare' },
+    { value: 'IT',           label: 'IT' },
+    { value: 'Engineering',  label: 'Engineering' },
+    { value: 'Care',         label: 'Care' },
+    { value: 'Education',    label: 'Education' },
+    { value: 'Hospitality',  label: 'Hospitality' },
+    { value: 'Construction', label: 'Construction' },
+    { value: 'Finance',      label: 'Finance' },
+    { value: 'Other',        label: 'Other' },
   ];
 
   readonly sponsorCountryOpts: ChipOption[] = [
-    { value: 'United Kingdom',  label: '🇬🇧 United Kingdom' },
-    { value: 'Germany',         label: '🇩🇪 Germany' },
-    { value: 'Netherlands',     label: '🇳🇱 Netherlands' },
-    { value: 'Canada',          label: '🇨🇦 Canada' },
-    { value: 'Australia',       label: '🇦🇺 Australia' },
+    { value: 'United Kingdom', label: '🇬🇧 United Kingdom' },
+    { value: 'Germany',        label: '🇩🇪 Germany' },
+    { value: 'Netherlands',    label: '🇳🇱 Netherlands' },
+    { value: 'Canada',         label: '🇨🇦 Canada' },
+    { value: 'Australia',      label: '🇦🇺 Australia' },
   ];
 
   readonly jobTypeOpts: ChipOption[] = [
-    { value: 'Full Time',   label: 'Full Time' },
-    { value: 'Part Time',   label: 'Part Time' },
-    { value: 'Contract',    label: 'Contract' },
-    { value: 'Internship',  label: 'Internship' },
+    { value: 'Full Time',  label: 'Full Time' },
+    { value: 'Part Time',  label: 'Part Time' },
+    { value: 'Contract',   label: 'Contract' },
+    { value: 'Internship', label: 'Internship' },
   ];
 
   constructor(
@@ -684,56 +888,62 @@ export class RecruiterCreateComponent implements OnInit {
   ) {
     this.form = this.fb.group({
       // Section 1: Contact
-      contact_name:      ['', Validators.required],
-      contact_job_title: [''],
+      contact_name:      ['', [Validators.required, Validators.minLength(3), Validators.maxLength(100), Validators.pattern(/^[a-zA-Z\s'\-\.]+$/)]],
+      contact_job_title: ['', [Validators.minLength(2), Validators.maxLength(100)]],
       type:              ['direct_employer'],
-      email:             ['', [Validators.required, Validators.email]],
-      phone:             [''],
-      whatsapp_number:   [''],
+      email:             ['', [Validators.required, emailValidator()]],
+      phone_dial_code:      ['+44'],
+      phone_number:         ['', Validators.required],
+      whatsapp_dial_code:   ['+44'],
+      whatsapp_number:      ['', Validators.required],
       whatsapp_same_as_phone: [false],
       // Section 2: Company
-      company_name:      [''],
-      company_website:   [''],
+      company_name:      ['', [Validators.minLength(2), Validators.maxLength(150)]],
+      company_website:   ['', [websiteValidator()]],
       company_country:   [null],
       company_city:      [null],
-      industry:          [''],
-      company_size:      [''],
+      industry:          [null],
+      company_size:      [null],
       // Section 4: Sponsor Licence
-      has_sponsor_licence:       [''],
+      has_sponsor_licence:       [null],
       sponsor_licence_number:    [''],
       sponsor_licence_countries: [[]],
-      licence_rating:            [''],
+      licence_rating:            [null],
       licence_verified:          [false],
       // Section 3a: Agency-only (also used in Hiring Preferences)
       sectors_recruit_for:  [[]],
       countries_place_in:   [[]],
       // Section 5: Hiring Preferences
       target_nationalities: [[]],
-      hires_per_year:       [''],
+      hires_per_year:       [null],
       job_types:            [[]],
       // Section 6: Account Setup
-      password:           ['', [Validators.required, Validators.minLength(8)]],
+      password:           ['', [Validators.required, Validators.minLength(8), Validators.pattern(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,}$/)]],
       account_status:     ['active'],
       access_start_date:  [''],
       duration_value:     [null as number | null],
-      duration_unit:      [''],
+      duration_unit:      [null],
       free_account:       [false],
       // Section 7: Notes
       admin_notes: [''],
       // Section 8: Verification checklist (not sent to backend)
-      // Direct Employer checks
       verify_de_website:  [false],
       verify_de_licence:  [false],
       verify_de_linkedin: [false],
       verify_de_briefed:  [false],
-      // Recruitment Agency checks
       verify_ra_website:  [false],
       verify_ra_ch:       [false],
       verify_ra_rec:      [false],
       verify_ra_sponsor:  [false],
       verify_ra_linkedin: [false],
       verify_ra_briefed:  [false],
-    }, { validators: durationRequiredValidator });
+    }, {
+      validators: [
+        durationRequiredValidator,
+        makePhoneGroupValidator('phone_dial_code', 'phone_number'),
+        makePhoneGroupValidator('whatsapp_dial_code', 'whatsapp_number'),
+      ],
+    });
   }
 
   async ngOnInit(): Promise<void> {
@@ -742,16 +952,46 @@ export class RecruiterCreateComponent implements OnInit {
     // Cascade: company country → load company cities
     this.form.get('company_country')!.valueChanges.subscribe(v => this.onCompanyCountryChange(v));
 
-    // WhatsApp same-as-phone sync
+    // Sponsor licence conditional: licence number becomes required when 'yes'
+    this.form.get('has_sponsor_licence')!.valueChanges.subscribe((v: string | null) => {
+      const licCtrl = this.ctrl('sponsor_licence_number');
+      if (v === 'yes') {
+        licCtrl.addValidators([Validators.required, Validators.minLength(3), Validators.maxLength(100)]);
+      } else {
+        licCtrl.clearValidators();
+      }
+      licCtrl.updateValueAndValidity();
+    });
+
+    // Recruiter type change → reset verification checklist
+    this.form.get('type')!.valueChanges.subscribe(() => this.onTypeChange());
+
+    // WhatsApp "same as phone" — sync both dial code AND number
     this.form.get('whatsapp_same_as_phone')!.valueChanges.subscribe((checked: boolean) => {
       if (checked) {
-        const phone = this.form.get('phone')?.value ?? '';
-        this.form.patchValue({ whatsapp_number: phone }, { emitEvent: false });
+        const raw = this.form.getRawValue();
+        this.form.patchValue({
+          whatsapp_dial_code: raw.phone_dial_code || '+44',
+          whatsapp_number:    raw.phone_number    || '',
+        }, { emitEvent: false });
+        this.ctrl('whatsapp_number').updateValueAndValidity();
       }
     });
-    this.form.get('phone')!.valueChanges.subscribe((phone: string) => {
+
+    this.form.get('phone_number')!.valueChanges.subscribe(() => {
       if (this.form.get('whatsapp_same_as_phone')?.value) {
-        this.form.patchValue({ whatsapp_number: phone }, { emitEvent: false });
+        const raw = this.form.getRawValue();
+        this.form.patchValue({
+          whatsapp_dial_code: raw.phone_dial_code || '+44',
+          whatsapp_number:    raw.phone_number    || '',
+        }, { emitEvent: false });
+      }
+    });
+
+    this.form.get('phone_dial_code')!.valueChanges.subscribe(() => {
+      if (this.form.get('whatsapp_same_as_phone')?.value) {
+        const raw = this.form.getRawValue();
+        this.form.patchValue({ whatsapp_dial_code: raw.phone_dial_code }, { emitEvent: false });
       }
     });
   }
@@ -763,12 +1003,23 @@ export class RecruiterCreateComponent implements OnInit {
     if (country) this.master.loadCities(country.id);
   }
 
+  // ── Getters ────────────────────────────────────────────────────────────────
+  ctrl(name: string) { return this.form.get(name)!; }
+
   get sponsorYes(): boolean {
     return this.form.get('has_sponsor_licence')?.value === 'yes';
   }
 
   get isAgency(): boolean {
     return this.form.get('type')?.value === 'recruitment_agency';
+  }
+
+  get licenceRatingA(): boolean {
+    return this.form.get('licence_rating')?.value === 'A-Rating';
+  }
+
+  get licenceRatingB(): boolean {
+    return this.form.get('licence_rating')?.value === 'B-Rating';
   }
 
   get allChecked(): boolean {
@@ -790,6 +1041,21 @@ export class RecruiterCreateComponent implements OnInit {
     );
   }
 
+  get expiryPreview(): string {
+    const val  = this.form.get('duration_value')?.value;
+    const unit = this.form.get('duration_unit')?.value;
+    if (!val || !unit || val < 1) return '';
+    return this.computeExpiry(val, unit).toLocaleDateString('en-GB', {
+      day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit',
+    });
+  }
+
+  // ── Helpers ────────────────────────────────────────────────────────────────
+  invalid(field: string): boolean {
+    const c = this.form.get(field);
+    return !!(c && c.invalid && c.touched);
+  }
+
   onTypeChange(): void {
     this.form.patchValue({
       verify_de_website:  false,
@@ -805,28 +1071,14 @@ export class RecruiterCreateComponent implements OnInit {
     }, { emitEvent: false });
   }
 
-  invalid(field: string): boolean {
-    const c = this.form.get(field);
-    return !!(c && c.invalid && c.touched);
-  }
-
-  get expiryPreview(): string {
-    const val  = this.form.get('duration_value')?.value;
-    const unit = this.form.get('duration_unit')?.value;
-    if (!val || !unit || val < 1) return '';
-    return this.computeExpiry(val, unit).toLocaleDateString('en-GB', {
-      day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit',
-    });
-  }
-
   private computeExpiry(value: number, unit: string): Date {
     const dt = new Date();
     switch (unit) {
-      case 'hours':  dt.setHours(dt.getHours() + value);        break;
-      case 'days':   dt.setDate(dt.getDate() + value);           break;
-      case 'weeks':  dt.setDate(dt.getDate() + value * 7);       break;
-      case 'months': dt.setMonth(dt.getMonth() + value);         break;
-      case 'years':  dt.setFullYear(dt.getFullYear() + value);   break;
+      case 'hours':  dt.setHours(dt.getHours() + value);       break;
+      case 'days':   dt.setDate(dt.getDate() + value);          break;
+      case 'weeks':  dt.setDate(dt.getDate() + value * 7);      break;
+      case 'months': dt.setMonth(dt.getMonth() + value);        break;
+      case 'years':  dt.setFullYear(dt.getFullYear() + value);  break;
     }
     return dt;
   }
@@ -839,6 +1091,8 @@ export class RecruiterCreateComponent implements OnInit {
     this.error = '';
 
     const v = this.form.value;
+    const phone        = `${v.phone_dial_code}${v.phone_number}`;
+    const whatsapp     = v.whatsapp_same_as_phone ? phone : `${v.whatsapp_dial_code}${v.whatsapp_number}`;
     const accessExpiresAt = this.computeExpiry(v.duration_value, v.duration_unit).toISOString();
 
     this.recruiterService.create({
@@ -846,8 +1100,8 @@ export class RecruiterCreateComponent implements OnInit {
       contact_name:      v.contact_name,
       type:              v.type || 'direct_employer',
       contact_job_title: v.contact_job_title || undefined,
-      phone:             v.phone || undefined,
-      whatsapp_number:   v.whatsapp_number || undefined,
+      phone:             phone || undefined,
+      whatsapp_number:   whatsapp || undefined,
       company_name:      v.company_name || undefined,
       company_website:   v.company_website || undefined,
       company_country:   v.company_country || undefined,
@@ -891,17 +1145,23 @@ export class RecruiterCreateComponent implements OnInit {
     this.master.cities.set([]);
     this.form.reset({
       contact_name: '', contact_job_title: '', type: 'direct_employer',
-      email: '', phone: '', whatsapp_number: '', whatsapp_same_as_phone: false,
+      email: '',
+      phone_dial_code: '+44', phone_number: '',
+      whatsapp_dial_code: '+44', whatsapp_number: '', whatsapp_same_as_phone: false,
       company_name: '', company_website: '', company_country: null, company_city: null,
-      industry: '', company_size: '',
-      has_sponsor_licence: '', sponsor_licence_number: '', sponsor_licence_countries: [],
-      licence_rating: '', licence_verified: false,
+      industry: null, company_size: null,
+      has_sponsor_licence: null, sponsor_licence_number: '', sponsor_licence_countries: [],
+      licence_rating: null, licence_verified: false,
       sectors_recruit_for: [], countries_place_in: [],
-      target_nationalities: [], hires_per_year: '', job_types: [],
+      target_nationalities: [], hires_per_year: null, job_types: [],
       password: '', account_status: 'active', access_start_date: '',
-      duration_value: null, duration_unit: '',
+      duration_value: null, duration_unit: null,
       free_account: false, admin_notes: '',
-      verify_company: false, verify_licence: false, verify_linkedin: false, verify_briefed: false,
+      verify_de_website: false, verify_de_licence: false,
+      verify_de_linkedin: false, verify_de_briefed: false,
+      verify_ra_website: false, verify_ra_ch: false,
+      verify_ra_rec: false, verify_ra_sponsor: false,
+      verify_ra_linkedin: false, verify_ra_briefed: false,
     });
   }
 }

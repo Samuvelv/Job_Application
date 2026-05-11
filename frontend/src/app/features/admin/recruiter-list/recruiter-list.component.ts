@@ -1,8 +1,8 @@
 // src/app/features/admin/recruiter-list/recruiter-list.component.ts
 import { Component, OnInit, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { ReactiveFormsModule, FormBuilder, FormGroup, FormControl, Validators, AbstractControl, ValidationErrors } from '@angular/forms';
-import { RouterLink } from '@angular/router';
+import { ReactiveFormsModule, FormBuilder, FormGroup, FormControl, Validators, AbstractControl, ValidationErrors, ValidatorFn } from '@angular/forms';
+import { RouterLink, ActivatedRoute } from '@angular/router';
 import { catchError, of, distinctUntilChanged, skip } from 'rxjs';
 import { RecruiterService } from '../../../core/services/recruiter.service';
 import { MasterDataService } from '../../../core/services/master-data.service';
@@ -16,11 +16,82 @@ import { RecruiterCardComponent } from '../../../shared/components/recruiter-car
 import { SearchableSelectComponent, SelectOption } from '../../../shared/components/searchable-select/searchable-select.component';
 import { ChipMultiSelectComponent, ChipOption } from '../../../shared/components/chip-multi-select/chip-multi-select.component';
 
+// ── Password match validator ───────────────────────────────────────────────
 function passwordsMatchValidator(g: AbstractControl): ValidationErrors | null {
   const pw  = g.get('new_password')?.value;
   const cpw = g.get('confirm_password')?.value;
   if (!pw) return null; // password optional — no match check if empty
   return pw === cpw ? null : { passwordsMismatch: true };
+}
+
+// ── Phone rules map ────────────────────────────────────────────────────────
+interface PhoneRule { minLen: number; maxLen: number; pattern?: RegExp; hint: string; }
+const PHONE_RULES: Record<string, PhoneRule> = {
+  '+91':  { minLen: 10, maxLen: 10, pattern: /^[6-9]\d{9}$/,   hint: '10 digits starting with 6–9 (India)' },
+  '+1':   { minLen: 10, maxLen: 10, pattern: /^\d{10}$/,        hint: '10 digits (US / Canada)' },
+  '+44':  { minLen: 10, maxLen: 11, pattern: /^7\d{9}$/,        hint: '10 digits starting with 7 (UK mobile)' },
+  '+61':  { minLen: 9,  maxLen: 9,  pattern: /^[4]\d{8}$/,      hint: '9 digits starting with 4 (Australia)' },
+  '+971': { minLen: 9,  maxLen: 9,  pattern: /^[5]\d{8}$/,      hint: '9 digits starting with 5 (UAE)' },
+  '+234': { minLen: 10, maxLen: 11, pattern: /^[7-9]\d{9,10}$/, hint: '10–11 digits starting with 7–9 (Nigeria)' },
+  '+254': { minLen: 9,  maxLen: 9,  pattern: /^[7]\d{8}$/,      hint: '9 digits starting with 7 (Kenya)' },
+  '+27':  { minLen: 9,  maxLen: 9,  pattern: /^[6-8]\d{8}$/,    hint: '9 digits starting with 6–8 (South Africa)' },
+  '+49':  { minLen: 10, maxLen: 12, pattern: /^\d{10,12}$/,     hint: '10–12 digits (Germany)' },
+  '+33':  { minLen: 9,  maxLen: 9,  pattern: /^[6-7]\d{8}$/,    hint: '9 digits starting with 6–7 (France)' },
+};
+const PHONE_FALLBACK: PhoneRule = { minLen: 5, maxLen: 15, pattern: /^\d{5,15}$/, hint: '5–15 digits' };
+
+function getPhoneRule(dialCode: string): PhoneRule {
+  return PHONE_RULES[dialCode] ?? PHONE_FALLBACK;
+}
+
+function makePhoneGroupValidator(dialCtrl: string, numCtrl: string): ValidatorFn {
+  return (group: AbstractControl): ValidationErrors | null => {
+    const dial = group.get(dialCtrl)?.value as string || '';
+    const num  = (group.get(numCtrl)?.value as string || '').replace(/\s+/g, '');
+    const numControl = group.get(numCtrl);
+    if (!numControl) return null;
+    if (!num) {
+      const cur = numControl.errors;
+      if (cur?.['phoneInvalid']) {
+        const { phoneInvalid: _, ...rest } = cur;
+        numControl.setErrors(Object.keys(rest).length ? rest : null);
+      }
+      return null;
+    }
+    const rule = getPhoneRule(dial);
+    const digitsOnly = /^\d+$/.test(num);
+    const lenOk = num.length >= rule.minLen && num.length <= rule.maxLen;
+    const patOk = rule.pattern ? rule.pattern.test(num) : true;
+    if (!digitsOnly || !lenOk || !patOk) {
+      const msg = `Invalid number for ${dial}. Expected: ${rule.hint}.`;
+      numControl.setErrors({ ...(numControl.errors || {}), phoneInvalid: msg });
+      return { phoneInvalid: true };
+    }
+    const cur = numControl.errors;
+    if (cur?.['phoneInvalid']) {
+      const { phoneInvalid: _, ...rest } = cur;
+      numControl.setErrors(Object.keys(rest).length ? rest : null);
+    }
+    return null;
+  };
+}
+
+function emailValidator(): ValidatorFn {
+  return (ctrl: AbstractControl): ValidationErrors | null => {
+    const v = (ctrl.value as string || '').trim();
+    if (!v) return null;
+    const ok = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(v);
+    return ok ? null : { invalidEmail: true };
+  };
+}
+
+function websiteValidator(): ValidatorFn {
+  return (ctrl: AbstractControl): ValidationErrors | null => {
+    const v = (ctrl.value as string || '').trim();
+    if (!v) return null;
+    const ok = /^(https?:\/\/)?(www\.)?[\w-]+(\.[\w-]{2,})(\/\S*)?$/.test(v);
+    return ok ? null : { invalidWebsite: true };
+  };
 }
 
 @Component({
@@ -387,303 +458,522 @@ function passwordsMatchValidator(g: AbstractControl): ValidationErrors | null {
       }
     }
 
-    <!-- ── Edit Recruiter Panel (slide-in overlay) ── -->
-    @if (editingRecruiter) {
-      <div class="file-preview-overlay" (click)="closeEdit()">
-        <div class="rec-edit-panel" (click)="$event.stopPropagation()">
+    <!-- ═══════════════════════════════════════════════════════════════════════
+         Edit Recruiter — Bootstrap Modal
+    ═══════════════════════════════════════════════════════════════════════════ -->
+    @if (editingRecruiter && editForm) {
+      <!-- Backdrop -->
+      <div class="modal-backdrop fade show" style="z-index:1050"></div>
 
-          <!-- Header -->
-          <div class="rec-edit-panel__header">
-            <div class="rec-edit-panel__avatar">
-              {{ editingRecruiter.contact_name.charAt(0).toUpperCase() }}
+      <!-- Modal -->
+      <div class="modal fade show d-block" tabindex="-1" style="z-index:1055" role="dialog"
+        aria-labelledby="editRecruiterModalLabel" aria-modal="true">
+        <div class="modal-dialog modal-xl modal-dialog-scrollable">
+          <div class="modal-content">
+
+            <!-- ── Modal Header ── -->
+            <div class="modal-header">
+              <div class="d-flex align-items-center gap-3">
+                <div class="rec-edit-panel__avatar">
+                  {{ editingRecruiter.contact_name.charAt(0).toUpperCase() }}
+                </div>
+                <div>
+                  <h5 class="modal-title mb-0" id="editRecruiterModalLabel">Edit Recruiter</h5>
+                  <div class="text-muted small">{{ editingRecruiter.contact_name }}</div>
+                </div>
+              </div>
+              <button type="button" class="btn-close" (click)="closeEdit()" aria-label="Close"></button>
             </div>
-            <div class="rec-edit-panel__title-group">
-              <div class="rec-edit-panel__title">Edit Recruiter</div>
-              <div class="rec-edit-panel__subtitle">{{ editingRecruiter.contact_name }}</div>
-            </div>
-            <button type="button" class="file-preview-dialog__close" (click)="closeEdit()">
-              <i class="bi bi-x-lg"></i>
-            </button>
-          </div>
 
-          <!-- Scrollable body -->
-          <div class="rec-edit-panel__body">
-            <form [formGroup]="editForm" (ngSubmit)="saveEdit()">
+            <!-- ── Modal Body ── -->
+            <div class="modal-body">
+              <form [formGroup]="editForm" (ngSubmit)="saveEdit()" id="editRecruiterForm">
 
-              <!-- ── Section: Profile ── -->
-              <div class="rep-section">
-                <div class="rep-section__label">
-                  <i class="bi bi-person"></i> Profile
-                </div>
-                <div class="mb-3">
-                   <label class="form-label">Contact Name <span class="text-danger">*</span></label>
-                   <input formControlName="contact_name" class="form-control"
-                     placeholder="Full name"
-                     [class.is-invalid]="editInvalid('contact_name')">
-                   @if (editInvalid('contact_name')) {
-                     <div class="invalid-feedback">Contact name is required.</div>
-                   }
-                 </div>
-                 <div class="mb-3">
-                   <label class="form-label">Recruiter Type</label>
-                   <select formControlName="type" class="form-select">
-                     <option value="direct_employer">Direct Employer</option>
-                     <option value="recruitment_agency">Recruitment Agency</option>
-                   </select>
-                 </div>
-                 <div class="mb-0">
-                   <label class="form-label">Company Name <span class="rep-optional">optional</span></label>
-                   <input formControlName="company_name" class="form-control" placeholder="e.g. Acme Corp">
-                 </div>
-              </div>
+                <!-- ══ Section 1: Contact Person Details ══ -->
+                <h6 class="form-section-heading">
+                  <i class="bi bi-person-vcard me-2"></i>Contact Person Details
+                </h6>
+                <div class="row g-3 mb-4">
 
-              <!-- ── Section: Contact Details ── -->
-              <div class="rep-section">
-                <div class="rep-section__label">
-                  <i class="bi bi-envelope"></i> Contact Details
-                </div>
-                <div class="mb-3">
-                  <label class="form-label">Job Title / Role <span class="rep-optional">optional</span></label>
-                  <input formControlName="contact_job_title" class="form-control" placeholder="e.g. Talent Acquisition Manager">
-                </div>
-                <div class="mb-3">
-                  <label class="form-label">Work Email <span class="text-danger">*</span></label>
-                  <input formControlName="email" type="email" class="form-control"
-                    [class.is-invalid]="editInvalid('email')"
-                    placeholder="recruiter@company.com">
-                  @if (editInvalid('email')) {
-                    <div class="invalid-feedback">Valid email is required.</div>
-                  }
-                </div>
-                <div class="mb-0">
-                  <label class="form-label">Phone / WhatsApp <span class="rep-optional">optional</span></label>
-                  <input formControlName="phone" class="form-control" placeholder="+44 7700 900000">
-                </div>
-              </div>
-
-              <!-- ── Section: Company Details ── -->
-              <div class="rep-section">
-                <div class="rep-section__label">
-                  <i class="bi bi-building"></i> Company Details
-                </div>
-                <div class="mb-3">
-                  <label class="form-label">Company Website <span class="rep-optional">optional</span></label>
-                  <input formControlName="company_website" class="form-control" placeholder="https://example.com">
-                </div>
-                <div class="mb-3">
-                  <label class="form-label">Company Country</label>
-                  <app-searchable-select formControlName="company_country" [options]="countryOpts()" placeholder="Select country" />
-                </div>
-                <div class="mb-3">
-                  <label class="form-label">Company City <span class="rep-optional">optional</span></label>
-                  <input formControlName="company_city" class="form-control" placeholder="London">
-                </div>
-                <div class="mb-0">
-                  <label class="form-label">Industry / Sector</label>
-                  <app-searchable-select formControlName="industry" [options]="industryOpts()" placeholder="Select industry" />
-                </div>
-              </div>
-
-              <!-- ── Section: Sponsor Licence ── -->
-              <div class="rep-section">
-                <div class="rep-section__label">
-                  <i class="bi bi-patch-check"></i> Sponsor Licence
-                </div>
-                <div class="mb-3">
-                  <label class="form-label">Holds Sponsor Licence</label>
-                  <select formControlName="has_sponsor_licence" class="form-select">
-                    <option value="">— Select —</option>
-                    <option value="yes">Yes</option>
-                    <option value="no">No</option>
-                    <option value="unknown">Unknown</option>
-                  </select>
-                </div>
-                @if (editSponsorYes) {
-                  <div class="mb-3">
-                    <label class="form-label">Licence Number <span class="rep-optional">optional</span></label>
-                    <input formControlName="sponsor_licence_number" class="form-control" placeholder="e.g. 1Z3GF3C...">
-                  </div>
-                  <div class="mb-0">
-                    <label class="form-label">Licence Countries</label>
-                    <app-chip-multi-select formControlName="sponsor_licence_countries" [options]="nationalityOpts()" placeholder="Select countries" />
-                  </div>
-                }
-              </div>
-
-              <!-- ── Section: Recruitment Agency Details ── -->
-              @if (editIsAgency) {
-                <div class="rep-section">
-                  <div class="rep-section__label">
-                    <i class="bi bi-briefcase"></i> Recruitment Agency Details
-                  </div>
-                  <div class="mb-3">
-                    <label class="form-label">Job Title <span class="rep-optional">e.g. Recruitment Consultant</span></label>
-                    <input formControlName="contact_job_title" class="form-control" placeholder="e.g. Recruitment Consultant">
-                  </div>
-                  <div class="mb-3">
-                    <label class="form-label">Sectors They Recruit For</label>
-                    <app-chip-multi-select formControlName="sectors_recruit_for" [options]="industryChipOpts()" placeholder="Select sectors" />
-                  </div>
-                  <div class="mb-0">
-                    <label class="form-label">Countries They Place In</label>
-                    <app-chip-multi-select formControlName="countries_place_in" [options]="nationalityOpts()" placeholder="Select countries" />
-                  </div>
-                </div>
-              }
-
-              <!-- ── Section: Hiring Preferences ── -->
-              <div class="rep-section">
-                <div class="rep-section__label">
-                  <i class="bi bi-people"></i> Hiring Preferences
-                </div>                <div class="mb-3">
-                  <label class="form-label">Target Nationalities</label>
-                  <app-chip-multi-select formControlName="target_nationalities" [options]="nationalityOpts()" placeholder="Select nationalities to hire" />
-                </div>
-                <div class="mb-0">
-                  <label class="form-label">Hires Per Year</label>
-                  <select formControlName="hires_per_year" class="form-select">
-                    <option value="">— Select —</option>
-                    <option value="1-5">1 – 5</option>
-                    <option value="6-10">6 – 10</option>
-                    <option value="11-20">11 – 20</option>
-                    <option value="21-50">21 – 50</option>
-                    <option value="51+">51+</option>
-                  </select>
-                </div>
-              </div>
-
-              <!-- ── Section: Access Expiry ── -->
-              <div class="rep-section">
-                <div class="rep-section__label">
-                  <i class="bi bi-clock-history"></i> Extend Access
-                </div>
-                <div class="mb-2">
-                  <label class="form-label">Duration <span class="rep-optional">leave blank to keep current</span></label>
-                  <div class="rep-duration-row">
-                    <input type="number" formControlName="duration_value" class="form-control rep-duration-num"
-                      placeholder="e.g. 6" min="1">
-                    <select formControlName="duration_unit" class="form-select rep-duration-unit">
-                      <option value="">— Unit —</option>
-                      <option value="hours">Hours</option>
-                      <option value="days">Days</option>
-                      <option value="weeks">Weeks</option>
-                      <option value="months">Months</option>
-                      <option value="years">Years</option>
-                    </select>
-                  </div>
-                </div>
-                @if (expiryPreview) {
-                  <div class="rep-expiry-preview">
-                    <i class="bi bi-calendar-check"></i>
-                    New expiry: <strong>{{ expiryPreview }}</strong>
-                  </div>
-                } @else if (editingRecruiter.access_expires_at) {
-                  <div class="rep-expiry-current" [class.rep-expiry-current--expired]="isExpired(editingRecruiter.access_expires_at)">
-                    <i class="bi bi-calendar{{ isExpired(editingRecruiter.access_expires_at) ? '-x' : '2' }}"></i>
-                    Current expiry: <strong>{{ editingRecruiter.access_expires_at | date:'dd MMM yyyy, HH:mm' }}</strong>
-                    @if (isExpired(editingRecruiter.access_expires_at)) {
-                      <span class="badge bg-danger ms-1" style="font-size:.65rem">Expired</span>
+                  <div class="col-md-6">
+                    <label class="form-label fw-semibold">Full Name <span class="text-danger">*</span></label>
+                    <input formControlName="contact_name" class="form-control"
+                      [class.is-invalid]="editInvalid('contact_name')" placeholder="Jane Smith">
+                    @if (editInvalid('contact_name')) {
+                      @if (editCtrl('contact_name').hasError('required')) {
+                        <div class="invalid-feedback">Full name is required.</div>
+                      } @else if (editCtrl('contact_name').hasError('minlength')) {
+                        <div class="invalid-feedback">Name must be at least 3 characters.</div>
+                      } @else if (editCtrl('contact_name').hasError('maxlength')) {
+                        <div class="invalid-feedback">Name must be 100 characters or fewer.</div>
+                      } @else if (editCtrl('contact_name').hasError('pattern')) {
+                        <div class="invalid-feedback">Name may only contain letters, spaces, hyphens, apostrophes and dots.</div>
+                      }
                     }
                   </div>
+
+                  <div class="col-md-6">
+                    <label class="form-label fw-semibold">Recruiter Type</label>
+                    <app-searchable-select
+                      formControlName="type"
+                      [options]="RECRUITER_TYPE_OPTS"
+                      [allowClear]="false"
+                      placeholder="Select type" />
+                  </div>
+
+                  <div class="col-md-6">
+                    <label class="form-label fw-semibold">Job Title / Role</label>
+                    <input formControlName="contact_job_title" class="form-control"
+                      [class.is-invalid]="editInvalid('contact_job_title')"
+                      placeholder="e.g. HR Manager, Director, Owner">
+                    @if (editInvalid('contact_job_title')) {
+                      @if (editCtrl('contact_job_title').hasError('minlength')) {
+                        <div class="invalid-feedback">Job title must be at least 2 characters.</div>
+                      } @else if (editCtrl('contact_job_title').hasError('maxlength')) {
+                        <div class="invalid-feedback">Job title must be 100 characters or fewer.</div>
+                      }
+                    }
+                  </div>
+
+                  <div class="col-md-6">
+                    <label class="form-label fw-semibold">Work Email <span class="text-danger">*</span></label>
+                    <input formControlName="email" type="email" class="form-control"
+                      [class.is-invalid]="editInvalid('email')" placeholder="recruiter@company.com">
+                    @if (editInvalid('email')) {
+                      @if (editCtrl('email').hasError('required')) {
+                        <div class="invalid-feedback">Work email is required.</div>
+                      } @else if (editCtrl('email').hasError('invalidEmail')) {
+                        <div class="invalid-feedback">Please enter a valid email address.</div>
+                      }
+                    }
+                  </div>
+
+                  <!-- Phone -->
+                  <div class="col-md-6">
+                    <label class="form-label fw-semibold">Phone Number <span class="text-danger">*</span></label>
+                    <div class="phone-input-group">
+                      <app-searchable-select
+                        formControlName="phone_dial_code"
+                        [options]="dialCodeOptions()"
+                        [allowClear]="false"
+                        placeholder="🌐"
+                        class="dial-select" />
+                      <input type="tel" class="form-control phone-number-input"
+                        formControlName="phone_number"
+                        placeholder="7700 900000"
+                        [class.is-invalid]="editInvalid('phone_number') || (editSubmitted && editCtrl('phone_number').hasError('phoneInvalid'))">
+                    </div>
+                    @if (editCtrl('phone_number').touched && editCtrl('phone_number').errors) {
+                      <div class="text-danger small mt-1">
+                        @if (editCtrl('phone_number').errors?.['required']) { Phone number is required. }
+                        @else if (editCtrl('phone_number').errors?.['phoneInvalid']) { {{ editCtrl('phone_number').errors?.['phoneInvalid'] }} }
+                      </div>
+                    }
+                  </div>
+
+                  <!-- WhatsApp -->
+                  <div class="col-md-6">
+                    <label class="form-label fw-semibold">WhatsApp Number <span class="text-danger">*</span></label>
+                    <div class="phone-input-group">
+                      <app-searchable-select
+                        formControlName="whatsapp_dial_code"
+                        [options]="dialCodeOptions()"
+                        [allowClear]="false"
+                        placeholder="🌐"
+                        class="dial-select"
+                        [class.bg-light]="editForm.get('whatsapp_same_as_phone')?.value" />
+                      <input type="tel" class="form-control phone-number-input"
+                        formControlName="whatsapp_number"
+                        placeholder="7700 900000"
+                        [class.bg-light]="editForm.get('whatsapp_same_as_phone')?.value"
+                        [class.is-invalid]="editInvalid('whatsapp_number') || (editSubmitted && editCtrl('whatsapp_number').hasError('phoneInvalid'))"
+                        [attr.readonly]="editForm.get('whatsapp_same_as_phone')?.value ? true : null">
+                    </div>
+                    <div class="form-check mt-1">
+                      <input class="form-check-input" type="checkbox"
+                        formControlName="whatsapp_same_as_phone" id="editWaSameAsPhone">
+                      <label class="form-check-label small text-muted" for="editWaSameAsPhone">
+                        Same as phone number
+                      </label>
+                    </div>
+                    @if (editCtrl('whatsapp_number').touched && editCtrl('whatsapp_number').errors) {
+                      <div class="text-danger small mt-1">
+                        @if (editCtrl('whatsapp_number').errors?.['required']) { WhatsApp number is required. }
+                        @else if (editCtrl('whatsapp_number').errors?.['phoneInvalid']) { {{ editCtrl('whatsapp_number').errors?.['phoneInvalid'] }} }
+                      </div>
+                    }
+                  </div>
+
+                </div>
+
+                <!-- ══ Section 2: Company Details ══ -->
+                <h6 class="form-section-heading">
+                  <i class="bi bi-building me-2"></i>Company Details
+                </h6>
+                <div class="row g-3 mb-4">
+
+                  <div class="col-md-6">
+                    <label class="form-label fw-semibold">Company Name</label>
+                    <input formControlName="company_name" class="form-control"
+                      [class.is-invalid]="editInvalid('company_name')" placeholder="Acme Recruiting Ltd">
+                    @if (editInvalid('company_name')) {
+                      @if (editCtrl('company_name').hasError('minlength')) {
+                        <div class="text-danger mt-1" style="font-size:.875em">Company name must be at least 2 characters.</div>
+                      } @else if (editCtrl('company_name').hasError('maxlength')) {
+                        <div class="text-danger mt-1" style="font-size:.875em">Company name must be 150 characters or fewer.</div>
+                      }
+                    }
+                  </div>
+
+                  <div class="col-md-6">
+                    <label class="form-label fw-semibold">Company Website</label>
+                    <div class="input-group">
+                      <span class="input-group-text"><i class="bi bi-globe"></i></span>
+                      <input formControlName="company_website" class="form-control"
+                        [class.is-invalid]="editInvalid('company_website')" placeholder="https://example.com">
+                      @if (editInvalid('company_website')) {
+                        <div class="invalid-feedback">Please enter a valid URL (e.g. https://example.com or www.example.com).</div>
+                      }
+                    </div>
+                  </div>
+
+                  <div class="col-md-6">
+                    <label class="form-label fw-semibold">Company Country</label>
+                    <app-searchable-select
+                      formControlName="company_country"
+                      [options]="countryOpts()"
+                      placeholder="Select country" />
+                  </div>
+
+                  <div class="col-md-6">
+                    <label class="form-label fw-semibold">Company City</label>
+                    <app-searchable-select
+                      formControlName="company_city"
+                      [options]="editCityOpts()"
+                      placeholder="Select city" />
+                    <div class="form-text">Select a country first to load cities.</div>
+                  </div>
+
+                  <div class="col-md-6">
+                    <label class="form-label fw-semibold">Industry / Sector</label>
+                    <app-searchable-select
+                      formControlName="industry"
+                      [options]="EDIT_INDUSTRY_OPTS"
+                      [allowClear]="true"
+                      placeholder="— Select industry —" />
+                  </div>
+
+                  <div class="col-md-6">
+                    <label class="form-label fw-semibold">Company Size</label>
+                    <app-searchable-select
+                      formControlName="company_size"
+                      [options]="COMPANY_SIZE_OPTS"
+                      [allowClear]="true"
+                      placeholder="— Select size —" />
+                  </div>
+
+                </div>
+
+                <!-- ══ Section 3: Recruitment Agency Details (conditional) ══ -->
+                @if (editIsAgency) {
+                  <h6 class="form-section-heading">
+                    <i class="bi bi-diagram-3 me-2"></i>Recruitment Agency Details
+                  </h6>
+                  <div class="row g-3 mb-4">
+                    <div class="col-12">
+                      <label class="form-label fw-semibold">Sectors They Recruit For</label>
+                      <app-chip-multi-select formControlName="sectors_recruit_for"
+                        [options]="industryChipOpts()" placeholder="Select sectors" />
+                    </div>
+                    <div class="col-12">
+                      <label class="form-label fw-semibold">Countries They Place In</label>
+                      <app-chip-multi-select formControlName="countries_place_in"
+                        [options]="nationalityOpts()" placeholder="Select countries" />
+                    </div>
+                  </div>
                 }
-              </div>
 
-              <!-- ── Section: Credentials ── -->
-              <div class="rep-section">
-                <div class="rep-section__label">
-                  <i class="bi bi-shield-lock"></i> Credentials
-                </div>
+                <!-- ══ Section 4: Sponsor Licence ══ -->
+                <h6 class="form-section-heading">
+                  <i class="bi bi-shield-check me-2"></i>Sponsor Licence Details
+                  <span class="badge bg-danger ms-2" style="font-size:.65rem;font-weight:600;letter-spacing:.04em">CRITICAL</span>
+                </h6>
+                <div class="row g-3 mb-4">
 
-                <!-- Current password (read-only) -->
-                <div class="mb-3">
-                  <label class="form-label">Current Password</label>
-                  <div class="rep-pw-wrap">
-                    <input [type]="showCurrentPw ? 'text' : 'password'"
-                      class="form-control rep-pw-input"
-                      [value]="editingRecruiter.plain_password ?? ''" readonly>
-                    <button type="button" class="rep-pw-eye" (click)="showCurrentPw = !showCurrentPw"
-                      [title]="showCurrentPw ? 'Hide' : 'Show'">
-                      <i class="bi" [class.bi-eye]="!showCurrentPw" [class.bi-eye-slash]="showCurrentPw"></i>
-                    </button>
+                  <div class="col-md-6">
+                    <label class="form-label fw-semibold">Holds Sponsor Licence</label>
+                    <app-searchable-select
+                      formControlName="has_sponsor_licence"
+                      [options]="SPONSOR_LICENCE_EDIT_OPTS"
+                      [allowClear]="true"
+                      placeholder="— Select —" />
                   </div>
-                </div>
 
-                <!-- New password -->
-                <div class="mb-3">
-                  <label class="form-label">New Password <span class="rep-optional">optional</span></label>
-                  <div class="rep-pw-wrap">
-                    <input [type]="showNewPw ? 'text' : 'password'" formControlName="new_password"
-                      class="form-control rep-pw-input" placeholder="Min 8 characters"
-                      [class.is-invalid]="editInvalid('new_password')">
-                    <button type="button" class="rep-pw-eye" (click)="showNewPw = !showNewPw"
-                      [title]="showNewPw ? 'Hide' : 'Show'">
-                      <i class="bi" [class.bi-eye]="!showNewPw" [class.bi-eye-slash]="showNewPw"></i>
-                    </button>
-                  </div>
-                  @if (editInvalid('new_password')) {
-                    <div class="rep-field-error">Minimum 8 characters.</div>
+                  @if (editSponsorYes) {
+                    <div class="col-md-6">
+                      <label class="form-label fw-semibold">Licence Number <span class="text-danger">*</span></label>
+                      <input formControlName="sponsor_licence_number" class="form-control"
+                        [class.is-invalid]="editInvalid('sponsor_licence_number')"
+                        placeholder="e.g. 1Z3GF3C...">
+                      @if (editInvalid('sponsor_licence_number')) {
+                        @if (editCtrl('sponsor_licence_number').hasError('required')) {
+                          <div class="text-danger mt-1" style="font-size:.875em">Licence number is required.</div>
+                        } @else if (editCtrl('sponsor_licence_number').hasError('minlength')) {
+                          <div class="text-danger mt-1" style="font-size:.875em">Licence number must be at least 3 characters.</div>
+                        } @else if (editCtrl('sponsor_licence_number').hasError('maxlength')) {
+                          <div class="text-danger mt-1" style="font-size:.875em">Licence number must be 100 characters or fewer.</div>
+                        }
+                      }
+                      <div class="form-text">Verifiable at gov.uk</div>
+                    </div>
+
+                    <div class="col-12">
+                      <label class="form-label fw-semibold">Sponsor Licence Countries</label>
+                      <app-chip-multi-select formControlName="sponsor_licence_countries"
+                        [options]="sponsorCountryChipOpts" placeholder="Select countries covered by licence" />
+                    </div>
+
+                    <div class="col-md-6">
+                      <label class="form-label fw-semibold">Licence Rating</label>
+                      <app-searchable-select
+                        formControlName="licence_rating"
+                        [options]="LICENCE_RATING_OPTS"
+                        [allowClear]="true"
+                        placeholder="— Select rating —" />
+                      @if (editLicenceRatingA) {
+                        <div class="form-text text-success fw-semibold">
+                          <i class="bi bi-check-circle-fill me-1"></i>A-Rating — valid for approvals
+                        </div>
+                      }
+                      @if (editLicenceRatingB) {
+                        <div class="form-text text-warning fw-semibold">
+                          <i class="bi bi-exclamation-triangle-fill me-1"></i>B-Rating — not valid for approvals
+                        </div>
+                      }
+                    </div>
+
+                    <div class="col-md-6">
+                      <label class="form-label fw-semibold d-block">Licence Verified by Admin</label>
+                      <div class="d-flex align-items-center gap-3 mt-1">
+                        <div class="form-check form-switch mb-0">
+                          <input class="form-check-input" type="checkbox" role="switch"
+                            formControlName="licence_verified" id="editLicenceVerifiedToggle"
+                            style="width:2.5rem;height:1.25rem">
+                          <label class="form-check-label ms-2 fw-semibold" for="editLicenceVerifiedToggle"
+                            [style.color]="editForm.get('licence_verified')?.value ? 'var(--bs-success)' : 'var(--bs-warning)'">
+                            {{ editForm.get('licence_verified')?.value ? 'Verified' : 'Not Verified' }}
+                          </label>
+                        </div>
+                        @if (editForm.get('licence_verified')?.value) {
+                          <i class="bi bi-patch-check-fill text-success"></i>
+                        }
+                      </div>
+                      <div class="form-text">Admin confirms after gov.uk verification.</div>
+                    </div>
                   }
+
                 </div>
 
-                <!-- Confirm password -->
-                <div class="mb-0">
-                  <label class="form-label">Confirm New Password</label>
-                  <div class="rep-pw-wrap">
-                    <input [type]="showConfirmPw ? 'text' : 'password'" formControlName="confirm_password"
-                      class="form-control rep-pw-input" placeholder="Repeat new password"
-                      [class.is-invalid]="editForm.hasError('passwordsMismatch') && editForm.get('confirm_password')?.touched">
-                    <button type="button" class="rep-pw-eye" (click)="showConfirmPw = !showConfirmPw"
-                      [title]="showConfirmPw ? 'Hide' : 'Show'">
-                      <i class="bi" [class.bi-eye]="!showConfirmPw" [class.bi-eye-slash]="showConfirmPw"></i>
-                    </button>
+                <!-- ══ Section 5: Hiring Preferences ══ -->
+                <h6 class="form-section-heading">
+                  <i class="bi bi-people me-2"></i>Hiring Preferences
+                </h6>
+                <div class="row g-3 mb-4">
+                  <div class="col-12">
+                    <label class="form-label fw-semibold">Which Nationalities Looking to Hire</label>
+                    <app-chip-multi-select formControlName="target_nationalities"
+                      [options]="nationalityOpts()" placeholder="Select nationalities to hire" />
                   </div>
-                  @if (editForm.hasError('passwordsMismatch') && editForm.get('confirm_password')?.touched) {
-                    <div class="rep-field-error">Passwords do not match.</div>
-                  }
+                  <div class="col-12">
+                    <label class="form-label fw-semibold">Target Candidate Countries</label>
+                    <app-chip-multi-select formControlName="countries_place_in"
+                      [options]="nationalityOpts()" placeholder="Where they want candidates from" />
+                  </div>
+                  <div class="col-12">
+                    <label class="form-label fw-semibold">Sectors Hiring For</label>
+                    <app-chip-multi-select formControlName="sectors_recruit_for"
+                      [options]="industryChipOpts()" placeholder="Select sectors" />
+                  </div>
+                  <div class="col-md-6">
+                    <label class="form-label fw-semibold">Typical Hires Per Year</label>
+                    <app-searchable-select
+                      formControlName="hires_per_year"
+                      [options]="HIRES_PER_YEAR_OPTS"
+                      [allowClear]="true"
+                      placeholder="— Select —" />
+                  </div>
+                  <div class="col-md-6">
+                    <label class="form-label fw-semibold">Job Types Offered</label>
+                    <app-chip-multi-select formControlName="job_types"
+                      [options]="jobTypeChipOpts" placeholder="Select job types" />
+                  </div>
                 </div>
-              </div>
 
-              <!-- ── Section: Account Management ── -->
-              <div class="rep-section">
-                <div class="rep-section__label">
-                  <i class="bi bi-gear"></i> Account Management
+                <!-- ══ Section 6: Access & Account Settings ══ -->
+                <h6 class="form-section-heading">
+                  <i class="bi bi-gear me-2"></i>Access &amp; Account Settings
+                </h6>
+                <div class="row g-3 mb-4">
+
+                  <div class="col-md-6">
+                    <label class="form-label fw-semibold">Account Status</label>
+                    <app-searchable-select
+                      formControlName="is_active_str"
+                      [options]="ACCOUNT_STATUS_EDIT_OPTS"
+                      [allowClear]="false"
+                      placeholder="Select status" />
+                  </div>
+
+                  <div class="col-12">
+                    <label class="form-label fw-semibold">
+                      Extend Access Duration
+                      <span class="text-muted fw-normal small ms-1">— leave blank to keep current</span>
+                    </label>
+                    <div class="d-flex gap-2">
+                      <input type="number" formControlName="duration_value" class="form-control"
+                        placeholder="e.g. 6" min="1" style="width:110px;flex-shrink:0">
+                      <div style="min-width:140px;flex-shrink:0">
+                        <app-searchable-select
+                          formControlName="duration_unit"
+                          [options]="DURATION_UNIT_OPTS"
+                          [allowClear]="false"
+                          placeholder="— Unit —" />
+                      </div>
+                    </div>
+                    @if (expiryPreview) {
+                      <div class="form-text text-info mt-1">
+                        <i class="bi bi-calendar-check me-1"></i>New expiry: <strong>{{ expiryPreview }}</strong>
+                      </div>
+                    } @else if (editingRecruiter.access_expires_at) {
+                      <div class="form-text mt-1"
+                        [class.text-danger]="isExpired(editingRecruiter.access_expires_at)">
+                        <i class="bi bi-calendar{{ isExpired(editingRecruiter.access_expires_at) ? '-x' : '2' }} me-1"></i>
+                        Current expiry: <strong>{{ editingRecruiter.access_expires_at | date:'dd MMM yyyy, HH:mm' }}</strong>
+                        @if (isExpired(editingRecruiter.access_expires_at)) {
+                          <span class="badge bg-danger ms-1" style="font-size:.65rem">Expired</span>
+                        }
+                      </div>
+                    }
+                  </div>
+
+                  <div class="col-md-6">
+                    <label class="form-label fw-semibold d-block">Free Account</label>
+                    <div class="d-flex align-items-center gap-3 mt-1">
+                      <div class="form-check form-switch mb-0">
+                        <input class="form-check-input" type="checkbox" role="switch"
+                          formControlName="free_account" id="editFreeAccountToggle"
+                          style="width:2.5rem;height:1.25rem">
+                        <label class="form-check-label ms-2 fw-semibold" for="editFreeAccountToggle"
+                          [style.color]="editForm.get('free_account')?.value ? 'var(--bs-success)' : 'var(--bs-secondary)'">
+                          {{ editForm.get('free_account')?.value ? 'Free Account' : 'Paid Account' }}
+                        </label>
+                      </div>
+                    </div>
+                  </div>
+
                 </div>
-                <div class="mb-3">
-                  <label class="form-label">Account Status</label>
-                  <select formControlName="is_active_str" class="form-select">
-                    <option value="active">Active</option>
-                    <option value="inactive">Inactive</option>
-                  </select>
+
+                <!-- ══ Section 7: Credentials ══ -->
+                <h6 class="form-section-heading">
+                  <i class="bi bi-shield-lock me-2"></i>Credentials
+                </h6>
+                <div class="row g-3 mb-4">
+
+                  <!-- Current password read-only -->
+                  <div class="col-md-6">
+                    <label class="form-label fw-semibold">Current Password</label>
+                    <div class="input-group">
+                      <input [type]="showCurrentPw ? 'text' : 'password'"
+                        class="form-control"
+                        [value]="editingRecruiter.plain_password ?? ''" readonly>
+                      <button type="button" class="btn btn-outline-secondary"
+                        (click)="showCurrentPw = !showCurrentPw"
+                        [attr.aria-label]="showCurrentPw ? 'Hide password' : 'Show password'">
+                        <i class="bi" [class.bi-eye]="!showCurrentPw" [class.bi-eye-slash]="showCurrentPw"></i>
+                      </button>
+                    </div>
+                  </div>
+
+                  <!-- New password -->
+                  <div class="col-md-6">
+                    <label class="form-label fw-semibold">
+                      New Password
+                      <span class="text-muted fw-normal small ms-1">— optional</span>
+                    </label>
+                    <div class="input-group">
+                      <input [type]="showNewPw ? 'text' : 'password'" formControlName="new_password"
+                        class="form-control"
+                        placeholder="Min 8 chars, upper + lower + number"
+                        [class.is-invalid]="editCtrl('new_password').invalid && editCtrl('new_password').touched">
+                      <button type="button" class="btn btn-outline-secondary"
+                        (click)="showNewPw = !showNewPw"
+                        [attr.aria-label]="showNewPw ? 'Hide password' : 'Show password'">
+                        <i class="bi" [class.bi-eye]="!showNewPw" [class.bi-eye-slash]="showNewPw"></i>
+                      </button>
+                    </div>
+                    @if (editCtrl('new_password').touched) {
+                      @if (editCtrl('new_password').errors?.['minlength']) {
+                        <div class="text-danger mt-1" style="font-size:.875em">Minimum 8 characters required.</div>
+                      } @else if (editCtrl('new_password').errors?.['pattern']) {
+                        <div class="text-danger mt-1" style="font-size:.875em">Must include uppercase, lowercase, and a number.</div>
+                      }
+                    }
+                  </div>
+
+                  <!-- Confirm new password -->
+                  <div class="col-md-6">
+                    <label class="form-label fw-semibold">Confirm New Password</label>
+                    <div class="input-group">
+                      <input [type]="showConfirmPw ? 'text' : 'password'" formControlName="confirm_password"
+                        class="form-control"
+                        placeholder="Repeat new password"
+                        [class.is-invalid]="editForm.hasError('passwordsMismatch') && editCtrl('confirm_password').touched">
+                      <button type="button" class="btn btn-outline-secondary"
+                        (click)="showConfirmPw = !showConfirmPw"
+                        [attr.aria-label]="showConfirmPw ? 'Hide' : 'Show'">
+                        <i class="bi" [class.bi-eye]="!showConfirmPw" [class.bi-eye-slash]="showConfirmPw"></i>
+                      </button>
+                    </div>
+                    @if (editForm.hasError('passwordsMismatch') && editCtrl('confirm_password').touched) {
+                      <div class="text-danger mt-1" style="font-size:.875em">Passwords do not match.</div>
+                    }
+                  </div>
+
                 </div>
-                <div class="mb-0">
-                  <label class="form-label">Admin Notes <span class="rep-optional">internal only</span></label>
+
+                <!-- ══ Section 8: Admin Notes ══ -->
+                <h6 class="form-section-heading">
+                  <i class="bi bi-journal-text me-2"></i>Admin Notes
+                </h6>
+                <div class="mb-4">
                   <textarea formControlName="admin_notes" class="form-control" rows="3"
-                    placeholder="Internal notes — not visible to recruiter"></textarea>
+                    placeholder="Internal notes — not visible to the recruiter"></textarea>
                 </div>
-              </div>
 
-              <!-- Error -->
-              @if (editError) {
-                <div class="alert alert-danger small py-2 mb-3">
-                  <i class="bi bi-exclamation-triangle me-1"></i>{{ editError }}
-                </div>
-              }
+                <!-- Error alert -->
+                @if (editError) {
+                  <div class="alert alert-danger small py-2 mb-3">
+                    <i class="bi bi-exclamation-triangle me-1"></i>{{ editError }}
+                  </div>
+                }
 
-              <!-- Footer actions -->
-              <div class="rec-edit-panel__footer">
-                <button type="button" class="btn btn-outline-secondary" (click)="closeEdit()">
-                  Cancel
-                </button>
-                <button type="submit" class="btn btn-primary" [disabled]="editSaving">
-                  @if (editSaving) {
-                    <span class="spinner-border spinner-border-sm me-1"></span> Saving…
-                  } @else {
-                    <i class="bi bi-check-lg me-1"></i> Save Changes
-                  }
-                </button>
-              </div>
+              </form>
+            </div>
 
-            </form>
+            <!-- ── Modal Footer ── -->
+            <div class="modal-footer">
+              <button type="button" class="btn btn-outline-secondary" (click)="closeEdit()">
+                Cancel
+              </button>
+              <button type="submit" form="editRecruiterForm" class="btn btn-primary" [disabled]="editSaving">
+                @if (editSaving) {
+                  <span class="spinner-border spinner-border-sm me-1"></span> Saving…
+                } @else {
+                  <i class="bi bi-check-lg me-1"></i> Save Changes
+                }
+              </button>
+            </div>
+
           </div>
         </div>
       </div>
@@ -693,6 +983,7 @@ function passwordsMatchValidator(g: AbstractControl): ValidationErrors | null {
 export class RecruiterListComponent implements OnInit {
   readonly RECRUITER_SORT_OPTIONS: SelectOption[] = RECRUITER_SORT_OPTIONS;
 
+  // ── Computed signals ────────────────────────────────────────────────────────
   countryOpts = computed<SelectOption[]>(() =>
     this.master.countries().map(c => ({ value: c.name, label: `${c.flag_emoji} ${c.name}` }))
   );
@@ -705,17 +996,18 @@ export class RecruiterListComponent implements OnInit {
   nationalityOpts = computed<ChipOption[]>(() =>
     this.master.countries().map(c => ({ value: c.name, label: `${c.flag_emoji} ${c.name}` }))
   );
+  dialCodeOptions = computed<SelectOption[]>(() =>
+    this.master.countries().map(c => ({
+      value: c.dial_code,
+      label: `${c.flag_emoji} ${c.dial_code}`,
+      sublabel: c.name,
+    }))
+  );
+  editCityOpts = computed<SelectOption[]>(() =>
+    this.master.cities().map(c => ({ value: c.name, label: c.name }))
+  );
 
-  readonly INDUSTRY_OPTIONS = [
-    'Healthcare', 'IT', 'Engineering', 'Finance',
-    'Care', 'Education', 'Hospitality', 'Construction',
-  ];
-  readonly SPONSOR_COUNTRY_OPTIONS = [
-    'United Kingdom', 'Germany', 'Netherlands', 'Canada', 'Australia',
-    'United States', 'France', 'Ireland', 'New Zealand', 'Singapore',
-  ];
-
-  // ── Filter SelectOption[] arrays for app-searchable-select ─────────────────
+  // ── Filter SelectOption[] arrays ────────────────────────────────────────────
   readonly INDUSTRY_SELECT_OPTS: SelectOption[] = [
     'Healthcare', 'IT', 'Engineering', 'Finance',
     'Care', 'Education', 'Hospitality', 'Construction',
@@ -744,6 +1036,82 @@ export class RecruiterListComponent implements OnInit {
     { value: '90_days', label: 'Within 90 days' },
   ];
 
+  // ── Edit modal static option arrays ────────────────────────────────────────
+  readonly RECRUITER_TYPE_OPTS: SelectOption[] = [
+    { value: 'direct_employer',    label: 'Direct Employer' },
+    { value: 'recruitment_agency', label: 'Recruitment Agency' },
+  ];
+
+  readonly EDIT_INDUSTRY_OPTS: SelectOption[] = [
+    { value: 'Healthcare',   label: 'Healthcare' },
+    { value: 'IT',           label: 'IT' },
+    { value: 'Engineering',  label: 'Engineering' },
+    { value: 'Care',         label: 'Care' },
+    { value: 'Education',    label: 'Education' },
+    { value: 'Hospitality',  label: 'Hospitality' },
+    { value: 'Construction', label: 'Construction' },
+    { value: 'Finance',      label: 'Finance' },
+    { value: 'Other',        label: 'Other' },
+  ];
+
+  readonly COMPANY_SIZE_OPTS: SelectOption[] = [
+    { value: '1-10',    label: '1–10 employees' },
+    { value: '11-50',   label: '11–50 employees' },
+    { value: '51-200',  label: '51–200 employees' },
+    { value: '201-500', label: '201–500 employees' },
+    { value: '500+',    label: '500+ employees' },
+  ];
+
+  readonly SPONSOR_LICENCE_EDIT_OPTS: SelectOption[] = [
+    { value: 'yes',     label: 'Yes' },
+    { value: 'no',      label: 'No' },
+    { value: 'applied', label: 'Applied' },
+    { value: 'unknown', label: 'Unknown' },
+  ];
+
+  readonly LICENCE_RATING_OPTS: SelectOption[] = [
+    { value: 'A-Rating',       label: 'A-Rating' },
+    { value: 'B-Rating',       label: 'B-Rating' },
+    { value: 'Not Applicable', label: 'Not Applicable' },
+  ];
+
+  readonly HIRES_PER_YEAR_OPTS: SelectOption[] = [
+    { value: '1-5',   label: '1–5' },
+    { value: '6-20',  label: '6–20' },
+    { value: '21-50', label: '21–50' },
+    { value: '50+',   label: '50+' },
+  ];
+
+  readonly DURATION_UNIT_OPTS: SelectOption[] = [
+    { value: 'hours',  label: 'Hours' },
+    { value: 'days',   label: 'Days' },
+    { value: 'weeks',  label: 'Weeks' },
+    { value: 'months', label: 'Months' },
+    { value: 'years',  label: 'Years' },
+  ];
+
+  readonly ACCOUNT_STATUS_EDIT_OPTS: SelectOption[] = [
+    { value: 'active',    label: 'Active' },
+    { value: 'inactive',  label: 'Inactive' },
+    { value: 'suspended', label: 'Suspended' },
+  ];
+
+  readonly sponsorCountryChipOpts: ChipOption[] = [
+    { value: 'United Kingdom', label: '🇬🇧 United Kingdom' },
+    { value: 'Germany',        label: '🇩🇪 Germany' },
+    { value: 'Netherlands',    label: '🇳🇱 Netherlands' },
+    { value: 'Canada',         label: '🇨🇦 Canada' },
+    { value: 'Australia',      label: '🇦🇺 Australia' },
+  ];
+
+  readonly jobTypeChipOpts: ChipOption[] = [
+    { value: 'Full Time',  label: 'Full Time' },
+    { value: 'Part Time',  label: 'Part Time' },
+    { value: 'Contract',   label: 'Contract' },
+    { value: 'Internship', label: 'Internship' },
+  ];
+
+  // ── List state ──────────────────────────────────────────────────────────────
   recruiters: Recruiter[] = [];
   pagination = { page: 1, limit: 20, total: 0, pages: 0 };
   loading = false;
@@ -755,15 +1123,15 @@ export class RecruiterListComponent implements OnInit {
   exporting  = false;
   filterForm: FormGroup;
 
-  // Selection state
   selectedIds = new Set<string>();
   bulkProcessing = false;
 
-  // Edit panel state
+  // ── Edit modal state ────────────────────────────────────────────────────────
   editingRecruiter: Recruiter | null = null;
   editForm!: FormGroup;
-  editSaving = false;
-  editError  = '';
+  editSaving    = false;
+  editError     = '';
+  editSubmitted = false;
   showCurrentPw = false;
   showNewPw     = false;
   showConfirmPw = false;
@@ -774,6 +1142,7 @@ export class RecruiterListComponent implements OnInit {
     private master: MasterDataService,
     private toast: ToastService,
     private confirm: ConfirmDialogService,
+    private route: ActivatedRoute,
   ) {
     this.filterForm = this.fb.group({
       company:            [''],
@@ -791,13 +1160,23 @@ export class RecruiterListComponent implements OnInit {
   ngOnInit(): void {
     this.master.loadAll();
     this.load();
-    // Re-load on sort change (app-searchable-select uses formControl, no (change) event)
     this.sortCtrl.valueChanges.pipe(
       skip(1),
       distinctUntilChanged(),
     ).subscribe(() => this.onSortChange());
+
+    // Auto-open edit modal when navigated from profile page with ?editId=
+    const editId = this.route.snapshot.queryParamMap.get('editId');
+    if (editId) {
+      // Wait for list to load, then find and open the matching recruiter
+      this.recruiterService.getById(editId).subscribe({
+        next: (res) => this.openEdit(res.recruiter),
+        error: () => { /* silently ignore if not found */ },
+      });
+    }
   }
 
+  // ── Filter helpers ──────────────────────────────────────────────────────────
   get activeAdvCount(): number {
     const v = this.filterForm.value;
     return [
@@ -816,12 +1195,23 @@ export class RecruiterListComponent implements OnInit {
     return new Date(dateStr) < new Date();
   }
 
+  // ── Edit modal getters ──────────────────────────────────────────────────────
+  editCtrl(name: string) { return this.editForm.get(name)!; }
+
   get editSponsorYes(): boolean {
     return this.editForm?.get('has_sponsor_licence')?.value === 'yes';
   }
 
   get editIsAgency(): boolean {
     return this.editForm?.get('type')?.value === 'recruitment_agency';
+  }
+
+  get editLicenceRatingA(): boolean {
+    return this.editForm?.get('licence_rating')?.value === 'A-Rating';
+  }
+
+  get editLicenceRatingB(): boolean {
+    return this.editForm?.get('licence_rating')?.value === 'B-Rating';
   }
 
   get expiryPreview(): string {
@@ -832,27 +1222,33 @@ export class RecruiterListComponent implements OnInit {
     return dt.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' });
   }
 
+  // ── Utility ─────────────────────────────────────────────────────────────────
   private computeExpiry(value: number, unit: string): Date {
     const dt = new Date();
     switch (unit) {
-      case 'hours':  dt.setHours(dt.getHours() + value);        break;
-      case 'days':   dt.setDate(dt.getDate() + value);           break;
-      case 'weeks':  dt.setDate(dt.getDate() + value * 7);       break;
-      case 'months': dt.setMonth(dt.getMonth() + value);         break;
-      case 'years':  dt.setFullYear(dt.getFullYear() + value);   break;
+      case 'hours':  dt.setHours(dt.getHours() + value);       break;
+      case 'days':   dt.setDate(dt.getDate() + value);          break;
+      case 'weeks':  dt.setDate(dt.getDate() + value * 7);      break;
+      case 'months': dt.setMonth(dt.getMonth() + value);        break;
+      case 'years':  dt.setFullYear(dt.getFullYear() + value);  break;
     }
     return dt;
   }
 
-  onSortChange(): void {
-    this.pagination.page = 1;
-    this.load();
+  /** Split a combined phone string like "+447700900000" into dial code + number. */
+  private splitPhone(combined: string | undefined | null): { dial: string; num: string } {
+    if (!combined) return { dial: '+44', num: '' };
+    const knownDials = ['+971', '+234', '+254', '+91', '+44', '+61', '+27', '+49', '+33', '+1'];
+    for (const d of knownDials) {
+      if (combined.startsWith(d)) return { dial: d, num: combined.slice(d.length) };
+    }
+    return { dial: '+44', num: combined };
   }
 
-  search(): void {
-    this.pagination.page = 1;
-    this.load();
-  }
+  // ── List actions ────────────────────────────────────────────────────────────
+  onSortChange(): void { this.pagination.page = 1; this.load(); }
+
+  search(): void { this.pagination.page = 1; this.load(); }
 
   load(): void {
     this.loading = true;
@@ -876,8 +1272,8 @@ export class RecruiterListComponent implements OnInit {
       .subscribe((res) => {
         this.loading = false;
         if (res) {
-          this.recruiters  = res.data;
-          this.pagination  = res.pagination;
+          this.recruiters = res.data;
+          this.pagination = res.pagination;
         }
       });
   }
@@ -894,32 +1290,21 @@ export class RecruiterListComponent implements OnInit {
     this.load();
   }
 
-  // ── Selection ───────────────────────────────────────────────────────────────
+  // ── Selection ────────────────────────────────────────────────────────────────
   get selectionCount(): number { return this.selectedIds.size; }
-
   isSelected(id: string): boolean { return this.selectedIds.has(id); }
-
   toggleSelect(id: string): void {
     if (this.selectedIds.has(id)) this.selectedIds.delete(id);
     else this.selectedIds.add(id);
   }
-
   isAllSelected(): boolean {
     return this.recruiters.length > 0 && this.recruiters.every(r => this.selectedIds.has(r.id));
   }
-
-  isIndeterminate(): boolean {
-    return this.selectedIds.size > 0 && !this.isAllSelected();
-  }
-
+  isIndeterminate(): boolean { return this.selectedIds.size > 0 && !this.isAllSelected(); }
   toggleSelectAll(): void {
-    if (this.isAllSelected()) {
-      this.recruiters.forEach(r => this.selectedIds.delete(r.id));
-    } else {
-      this.recruiters.forEach(r => this.selectedIds.add(r.id));
-    }
+    if (this.isAllSelected()) this.recruiters.forEach(r => this.selectedIds.delete(r.id));
+    else this.recruiters.forEach(r => this.selectedIds.add(r.id));
   }
-
   clearSelection(): void { this.selectedIds.clear(); }
 
   // ── Bulk actions ─────────────────────────────────────────────────────────────
@@ -935,9 +1320,7 @@ export class RecruiterListComponent implements OnInit {
     this.recruiterService.bulkStatus(ids, true).subscribe({
       next: (res) => {
         this.toast.success(`${res.updated} recruiter${res.updated === 1 ? '' : 's'} activated`);
-        this.clearSelection();
-        this.bulkProcessing = false;
-        this.load();
+        this.clearSelection(); this.bulkProcessing = false; this.load();
       },
       error: (err) => {
         this.toast.error(err?.error?.message ?? 'Bulk activate failed');
@@ -958,9 +1341,7 @@ export class RecruiterListComponent implements OnInit {
     this.recruiterService.bulkStatus(ids, false).subscribe({
       next: (res) => {
         this.toast.success(`${res.updated} recruiter${res.updated === 1 ? '' : 's'} deactivated`);
-        this.clearSelection();
-        this.bulkProcessing = false;
-        this.load();
+        this.clearSelection(); this.bulkProcessing = false; this.load();
       },
       error: (err) => {
         this.toast.error(err?.error?.message ?? 'Bulk deactivate failed');
@@ -977,10 +1358,7 @@ export class RecruiterListComponent implements OnInit {
         this._downloadBlob(blob, `recruiters-selected-${new Date().toISOString().slice(0, 10)}.csv`);
         this.bulkProcessing = false;
       },
-      error: () => {
-        this.toast.error('Export failed. Please try again.');
-        this.bulkProcessing = false;
-      },
+      error: () => { this.toast.error('Export failed. Please try again.'); this.bulkProcessing = false; },
     });
   }
 
@@ -990,24 +1368,21 @@ export class RecruiterListComponent implements OnInit {
     const v = this.filterForm.value;
     this.recruiterService.exportCsv({
       search:            this.searchCtrl.value || undefined,
-      company:           v.company           || undefined,
-      companyCountry:    v.companyCountry    || undefined,
-      industry:          v.industry          || undefined,
-      hasSponsorLicence: v.hasSponsorLicence || undefined,
-      sponsorCountry:    v.sponsorCountry    || undefined,
-      accountStatus:     v.accountStatus     || undefined,
-      lastActive:        v.lastActive        || undefined,
-      joinedFrom:        v.joinedFrom        || undefined,
-      joinedTo:          v.joinedTo          || undefined,
+      company:           v.company            || undefined,
+      companyCountry:    v.companyCountry     || undefined,
+      industry:          v.industry           || undefined,
+      hasSponsorLicence: v.hasSponsorLicence  || undefined,
+      sponsorCountry:    v.sponsorCountry     || undefined,
+      accountStatus:     v.accountStatus      || undefined,
+      lastActive:        v.lastActive         || undefined,
+      joinedFrom:        v.joinedFrom         || undefined,
+      joinedTo:          v.joinedTo           || undefined,
     }).subscribe({
       next: (blob) => {
         this._downloadBlob(blob, `recruiters-${new Date().toISOString().slice(0, 10)}.csv`);
         this.exporting = false;
       },
-      error: () => {
-        this.toast.error('Export failed. Please try again.');
-        this.exporting = false;
-      },
+      error: () => { this.toast.error('Export failed. Please try again.'); this.exporting = false; },
     });
   }
 
@@ -1015,10 +1390,8 @@ export class RecruiterListComponent implements OnInit {
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url; a.download = filename;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
+    document.body.appendChild(a); a.click();
+    document.body.removeChild(a); URL.revokeObjectURL(url);
   }
 
   goToPage(page: number): void {
@@ -1034,53 +1407,129 @@ export class RecruiterListComponent implements OnInit {
     return Array.from({ length: end - start + 1 }, (_, i) => start + i);
   }
 
-  // ── Edit panel ─────────────────────────────────────────────────────────────
+  // ── Edit modal ──────────────────────────────────────────────────────────────
   openEdit(rec: Recruiter): void {
     this.editingRecruiter = rec;
     this.editError        = '';
+    this.editSubmitted    = false;
     this.showCurrentPw    = false;
     this.showNewPw        = false;
     this.showConfirmPw    = false;
+
+    const ph = this.splitPhone(rec.phone);
+    const wa = this.splitPhone(rec.whatsapp_number);
+
     this.editForm = this.fb.group({
-      // Profile
-      contact_name:      [rec.contact_name, Validators.required],
+      // Section 1: Contact
+      contact_name:      [rec.contact_name, [Validators.required, Validators.minLength(3), Validators.maxLength(100), Validators.pattern(/^[a-zA-Z\s'\-\.]+$/)]],
       type:              [rec.type ?? 'direct_employer'],
-      company_name:      [rec.company_name ?? ''],
-      // Contact Details
-      contact_job_title: [rec.contact_job_title ?? ''],
-      email:             [rec.email, [Validators.required, Validators.email]],
-      phone:             [rec.phone ?? ''],
-      // Company Details
-      company_website:   [rec.company_website ?? ''],
-      company_country:   [rec.company_country ?? null],
-      company_city:      [rec.company_city ?? ''],
-      industry:          [rec.industry ?? null],
-      // Sponsor Licence
-      has_sponsor_licence:       [rec.has_sponsor_licence ?? ''],
-      sponsor_licence_number:    [rec.sponsor_licence_number ?? ''],
+      contact_job_title: [rec.contact_job_title ?? '', [Validators.minLength(2), Validators.maxLength(100)]],
+      email:             [rec.email, [Validators.required, emailValidator()]],
+      phone_dial_code:   [ph.dial],
+      phone_number:      [ph.num, Validators.required],
+      whatsapp_dial_code:    [wa.dial],
+      whatsapp_number:       [wa.num, Validators.required],
+      whatsapp_same_as_phone: [false],
+      // Section 2: Company
+      company_name:    [rec.company_name    ?? '', [Validators.minLength(2), Validators.maxLength(150)]],
+      company_website: [rec.company_website ?? '', [websiteValidator()]],
+      company_country: [rec.company_country ?? null],
+      company_city:    [rec.company_city    ?? null],
+      industry:        [rec.industry        ?? null],
+      company_size:    [rec.company_size    ?? null],
+      // Section 4: Sponsor Licence
+      has_sponsor_licence:       [rec.has_sponsor_licence       ?? null],
+      sponsor_licence_number:    [rec.sponsor_licence_number    ?? ''],
       sponsor_licence_countries: [rec.sponsor_licence_countries ?? []],
-      // Hiring Preferences
+      licence_rating:            [rec.licence_rating            ?? null],
+      licence_verified:          [rec.licence_verified          ?? false],
+      // Section 5: Hiring Preferences
       target_nationalities: [rec.target_nationalities ?? []],
-      hires_per_year:       [rec.hires_per_year ?? ''],
-      // Agency fields
-      sectors_recruit_for: [rec.sectors_recruit_for ?? []],
-      countries_place_in:  [rec.countries_place_in ?? []],
-      // Account Management
-      is_active_str: [rec.is_active ? 'active' : 'inactive'],
-      admin_notes:   [rec.admin_notes ?? ''],
-      // Access extension
-      duration_value:   [null as number | null],
-      duration_unit:    [''],
-      // Credentials
-      new_password:     ['', [Validators.minLength(8)]],
+      countries_place_in:   [rec.countries_place_in   ?? []],
+      sectors_recruit_for:  [rec.sectors_recruit_for  ?? []],
+      hires_per_year:       [rec.hires_per_year        ?? null],
+      job_types:            [rec.job_types             ?? []],
+      // Section 6: Account
+      is_active_str:  [rec.is_active ? 'active' : 'inactive'],
+      free_account:   [rec.free_account ?? false],
+      admin_notes:    [rec.admin_notes  ?? ''],
+      duration_value: [null as number | null],
+      duration_unit:  [null],
+      // Section 7: Credentials
+      new_password:     ['', [Validators.minLength(8), Validators.pattern(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,}$/)]],
       confirm_password: [''],
-    }, { validators: passwordsMatchValidator });
+    }, {
+      validators: [
+        passwordsMatchValidator,
+        makePhoneGroupValidator('phone_dial_code', 'phone_number'),
+        makePhoneGroupValidator('whatsapp_dial_code', 'whatsapp_number'),
+      ],
+    });
+
+    // Sponsor licence → conditional required on licence number
+    this.editForm.get('has_sponsor_licence')!.valueChanges.subscribe((v: string | null) => {
+      const licCtrl = this.editCtrl('sponsor_licence_number');
+      if (v === 'yes') {
+        licCtrl.addValidators([Validators.required, Validators.minLength(3), Validators.maxLength(100)]);
+      } else {
+        licCtrl.clearValidators();
+      }
+      licCtrl.updateValueAndValidity();
+    });
+    // Trigger immediately if already 'yes'
+    if (rec.has_sponsor_licence === 'yes') {
+      const licCtrl = this.editCtrl('sponsor_licence_number');
+      licCtrl.addValidators([Validators.required, Validators.minLength(3), Validators.maxLength(100)]);
+      licCtrl.updateValueAndValidity();
+    }
+
+    // Company country → city cascade
+    this.editForm.get('company_country')!.valueChanges.subscribe((v: string | null) => {
+      this.editForm.patchValue({ company_city: null }, { emitEvent: false });
+      if (!v) { this.master.cities.set([]); return; }
+      const country = this.master.countries().find(c => c.name === String(v));
+      if (country) this.master.loadCities(country.id);
+    });
+    // Pre-load cities for current country
+    if (rec.company_country) {
+      const country = this.master.countries().find(c => c.name === rec.company_country);
+      if (country) this.master.loadCities(country.id);
+    }
+
+    // WhatsApp "same as phone" sync
+    this.editForm.get('whatsapp_same_as_phone')!.valueChanges.subscribe((checked: boolean) => {
+      if (checked) {
+        const raw = this.editForm.getRawValue();
+        this.editForm.patchValue({
+          whatsapp_dial_code: raw.phone_dial_code || '+44',
+          whatsapp_number:    raw.phone_number    || '',
+        }, { emitEvent: false });
+        this.editCtrl('whatsapp_number').updateValueAndValidity();
+      }
+    });
+    this.editForm.get('phone_number')!.valueChanges.subscribe(() => {
+      if (this.editForm.get('whatsapp_same_as_phone')?.value) {
+        const raw = this.editForm.getRawValue();
+        this.editForm.patchValue({
+          whatsapp_dial_code: raw.phone_dial_code || '+44',
+          whatsapp_number:    raw.phone_number    || '',
+        }, { emitEvent: false });
+      }
+    });
+    this.editForm.get('phone_dial_code')!.valueChanges.subscribe(() => {
+      if (this.editForm.get('whatsapp_same_as_phone')?.value) {
+        const raw = this.editForm.getRawValue();
+        this.editForm.patchValue({ whatsapp_dial_code: raw.phone_dial_code }, { emitEvent: false });
+      }
+    });
   }
 
   closeEdit(): void {
     this.editingRecruiter = null;
     this.editSaving       = false;
     this.editError        = '';
+    this.editSubmitted    = false;
+    this.master.cities.set([]);
   }
 
   editInvalid(field: string): boolean {
@@ -1089,45 +1538,48 @@ export class RecruiterListComponent implements OnInit {
   }
 
   saveEdit(): void {
+    this.editSubmitted = true;
     if (this.editForm.invalid) { this.editForm.markAllAsTouched(); return; }
     if (!this.editingRecruiter) return;
     this.editSaving = true;
     this.editError  = '';
 
     const val = this.editForm.value;
+    const phone    = `${val.phone_dial_code}${val.phone_number}`;
+    const whatsapp = val.whatsapp_same_as_phone
+      ? phone
+      : `${val.whatsapp_dial_code}${val.whatsapp_number}`;
     const sponsorYes = val.has_sponsor_licence === 'yes';
 
     const payload: Record<string, unknown> = {
-      // Profile
       contact_name:      val.contact_name,
       type:              val.type,
-      company_name:      val.company_name || null,
-      // Contact Details
-      email:             val.email,
       contact_job_title: val.contact_job_title || null,
-      phone:             val.phone || null,
-      // Company Details
-      company_website:   val.company_website || null,
-      company_country:   val.company_country || null,
-      company_city:      val.company_city || null,
-      industry:          val.industry || null,
-      // Sponsor Licence
+      email:             val.email,
+      phone:             phone || null,
+      whatsapp_number:   whatsapp || null,
+      company_name:      val.company_name      || null,
+      company_website:   val.company_website   || null,
+      company_country:   val.company_country   || null,
+      company_city:      val.company_city      || null,
+      company_size:      val.company_size      || null,
+      industry:          val.industry          || null,
       has_sponsor_licence:       val.has_sponsor_licence || null,
       sponsor_licence_number:    sponsorYes ? (val.sponsor_licence_number || null) : null,
       sponsor_licence_countries: sponsorYes ? (val.sponsor_licence_countries?.length ? val.sponsor_licence_countries : null) : null,
-      // Hiring Preferences
+      licence_rating:            sponsorYes ? (val.licence_rating || null) : null,
+      licence_verified:          sponsorYes ? (val.licence_verified ?? false) : false,
       target_nationalities: val.target_nationalities?.length ? val.target_nationalities : null,
+      countries_place_in:   val.countries_place_in?.length  ? val.countries_place_in  : null,
+      sectors_recruit_for:  val.sectors_recruit_for?.length ? val.sectors_recruit_for : null,
       hires_per_year:       val.hires_per_year || null,
-      // Agency fields
-      sectors_recruit_for: val.sectors_recruit_for?.length ? val.sectors_recruit_for : null,
-      countries_place_in:  val.countries_place_in?.length ? val.countries_place_in : null,
-      // Account Management
-      is_active:  val.is_active_str !== 'inactive',
-      admin_notes: val.admin_notes || null,
+      job_types:            val.job_types?.length ? val.job_types : null,
+      is_active:    val.is_active_str !== 'inactive',
+      free_account: val.free_account ?? false,
+      admin_notes:  val.admin_notes  || null,
     };
 
     if (val.new_password) payload['new_password'] = val.new_password;
-
     if (val.duration_value && val.duration_unit) {
       payload['access_expires_at'] = this.computeExpiry(val.duration_value, val.duration_unit).toISOString();
     }
@@ -1146,13 +1598,12 @@ export class RecruiterListComponent implements OnInit {
     });
   }
 
-  // ── Resend credentials ──────────────────────────────────────────────────────
+  // ── Other actions ────────────────────────────────────────────────────────────
   async resendCredentials(rec: Recruiter): Promise<void> {
     const ok = await this.confirm.confirm({
       title: 'Resend Credentials',
       message: `Resend login credentials to ${rec.email}?`,
-      confirmLabel: 'Send',
-      confirmClass: 'btn-primary',
+      confirmLabel: 'Send', confirmClass: 'btn-primary',
     });
     if (!ok) return;
     this.recruiterService.resendCredentials(rec.id).subscribe({
@@ -1165,8 +1616,7 @@ export class RecruiterListComponent implements OnInit {
     const ok = await this.confirm.confirm({
       title: 'Delete Recruiter',
       message: `Delete ${rec.contact_name}? This action is irreversible.`,
-      confirmLabel: 'Delete',
-      confirmClass: 'btn-danger',
+      confirmLabel: 'Delete', confirmClass: 'btn-danger',
     });
     if (!ok) return;
     this.recruiterService.delete(rec.id).subscribe({

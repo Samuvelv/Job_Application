@@ -27,4 +27,10 @@ export const recruiterRoutes: Routes = [
     loadComponent: () =>
       import('./shortlist/shortlist.component').then((m) => m.ShortlistComponent),
   },
+  {
+    path: 'interest-requests',
+    loadComponent: () =>
+      import('./interest-requests/recruiter-interest-requests.component')
+        .then((m) => m.RecruiterInterestRequestsComponent),
+  },
 ];
