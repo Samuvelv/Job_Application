@@ -225,7 +225,20 @@ export async function reviewEditRequest(
       ? JSON.parse(request.requested_data)
       : request.requested_data;
 
-    await updateCandidate(request.candidate_id, requestedData);
+    // Strip problematic fields from certificates before passing to updateCandidate.
+    // The edit-request form stores { id, file_url, ... } on each cert entry.
+    // Passing `id` into a fresh INSERT causes a PK/unique constraint violation,
+    // and `file_url` is not a writable column in this context.
+    const { certificates, ...dataWithoutCerts } = requestedData;
+    const cleanCerts = Array.isArray(certificates)
+      ? certificates.map(({ id: _id, file_url: _fu, ...rest }: any) => rest)
+      : undefined;
+    const dataToApply = {
+      ...dataWithoutCerts,
+      ...(cleanCerts !== undefined ? { certificates: cleanCerts } : {}),
+    };
+
+    await updateCandidate(request.candidate_id, dataToApply);
 
     // Reset status to active
     await db('candidates')

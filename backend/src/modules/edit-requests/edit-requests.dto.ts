@@ -13,13 +13,15 @@ export const ReviewEditRequestSchema = z.object({
 });
 
 export const REQUEST_TYPE_GROUPS: Record<string, string[]> = {
-  personal:     ['first_name', 'last_name', 'date_of_birth', 'gender', 'marital_status', 'bio', 'phone'],
-  professional: ['job_title', 'occupation', 'industry', 'years_experience', 'linkedin_url'],
-  location:     ['current_country', 'current_city', 'nationality'],
+  personal:     ['first_name', 'last_name', 'date_of_birth', 'gender', 'marital_status', 'bio', 'phone', 'whatsapp_number', 'linkedin_url'],
+  professional: ['job_title', 'occupation', 'industry', 'years_experience', 'employment_status', 'visa_status', 'notice_period_id'],
+  location:     ['current_country', 'current_city', 'nationality', 'postal_code', 'has_passport', 'target_locations'],
   skills:       ['skills'],
   languages:    ['languages'],
   experience:   ['experience'],
   education:    ['education'],
+  hobbies:      ['hobbies'],
+  media:        ['profile_photo_url', 'resume_url', 'intro_video_url'],
 };
 
 export const EditRequestFilterSchema = z.object({
@@ -27,7 +29,7 @@ export const EditRequestFilterSchema = z.object({
   search:       z.string().trim().optional(),
   date_from:    z.string().optional(),
   date_to:      z.string().optional(),
-  request_type: z.enum(['personal', 'professional', 'location', 'skills', 'languages', 'experience', 'education']).optional(),
+  request_type: z.enum(['personal', 'professional', 'location', 'skills', 'languages', 'experience', 'education', 'hobbies', 'media']).optional(),
   sort:         z.enum(['newest', 'oldest']).optional(),
   page:         z.coerce.number().int().positive().default(1),
   limit:        z.coerce.number().int().positive().max(100).default(20),

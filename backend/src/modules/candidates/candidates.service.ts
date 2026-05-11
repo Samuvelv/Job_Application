@@ -366,6 +366,20 @@ export async function getCandidateByUserId(userId: string) {
 
 // ── Update ────────────────────────────────────────────────────────────────────
 
+// ── Date helper ───────────────────────────────────────────────────────────────
+// Converts ISO datetime strings ("2024-03-03T18:30:00.000Z") to date-only ("2024-03-03").
+// Returns null for empty strings, null, or undefined so PostgreSQL date columns
+// never receive invalid input.
+function toDateOnly(value: string | null | undefined): string | null {
+  if (!value) return null;
+  // Already a plain date string (YYYY-MM-DD)
+  if (/^\d{4}-\d{2}-\d{2}$/.test(value)) return value;
+  // ISO datetime — extract the date part
+  const d = new Date(value);
+  if (isNaN(d.getTime())) return null;
+  return d.toISOString().slice(0, 10);
+}
+
 export async function updateCandidate(id: string, dto: UpdateCandidateDto) {
   const candidate = await db('candidates').where({ id }).first();
   if (!candidate) throw new AppError(404, 'Candidate not found');
@@ -408,8 +422,10 @@ export async function updateCandidate(id: string, dto: UpdateCandidateDto) {
             candidate_id:       id,
             company_name:       e.company_name       || null,
             job_title:          e.job_title          || null,
-            start_date:         e.start_date         || null,
-            end_date:           e.end_date           || null,
+            // Normalise date: strip time component from ISO strings (e.g. "2024-03-03T18:30:00.000Z" → "2024-03-03")
+            // and convert empty strings to null so PostgreSQL date columns are not given invalid input.
+            start_date:         toDateOnly(e.start_date),
+            end_date:           toDateOnly(e.end_date),
             description:        e.description        || null,
             location:           e.location           || null,
             reason_for_leaving: e.reason_for_leaving || null,
@@ -434,7 +450,19 @@ export async function updateCandidate(id: string, dto: UpdateCandidateDto) {
     if (certificates !== undefined) {
       await trx('candidate_certificates').where({ candidate_id: id }).delete();
       if (certificates.length)
-        await trx('candidate_certificates').insert(certificates.map((c) => ({ candidate_id: id, ...c })));
+        await trx('candidate_certificates').insert(
+          certificates.map((c: any) => ({
+            candidate_id: id,
+            name:         c.name         || null,
+            issuer:       c.issuer       || null,
+            // Empty strings crash PostgreSQL date columns — convert to null.
+            issue_date:   toDateOnly(c.issue_date),
+            expiry_date:  toDateOnly(c.expiry_date),
+            no_expiry:    c.no_expiry    ?? false,
+            // Preserve existing file_url (could be a full URL or relative path).
+            file_url:     c.file_url     || null,
+          })),
+        );
     }
   });
 
