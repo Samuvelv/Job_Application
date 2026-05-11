@@ -17,7 +17,7 @@ import { ContactSubmission } from '../../../core/models/contact-submission.model
     <div class="dash-hero">
       <div class="d-flex align-items-start justify-content-between flex-wrap gap-3">
         <div>
-          <div class="dash-hero__greeting">Admin Portal</div>
+          <div class="dash-hero__greeting">NTL Career Nexus — Admin Portal</div>
            <h1 class="dash-hero__title mb-0">Good {{ timeOfDay() }}{{ adminName() ? ', ' + adminName() : '' }}</h1>
           <div class="dash-hero__meta">
             <span class="dash-hero__chip">

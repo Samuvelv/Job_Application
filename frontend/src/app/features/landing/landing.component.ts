@@ -24,7 +24,7 @@ import { ContactSubmissionService } from '../../core/services/contact-submission
     <!-- Logo -->
     <a class="lp-nav__logo" href="#">
       <span class="lp-nav__logo-icon"><i class="bi bi-briefcase-fill"></i></span>
-      <span class="lp-nav__logo-text">Talent<span>Hub</span></span>
+      <span class="lp-nav__logo-text">NTL Career<span>Nexus</span></span>
     </a>
 
     <!-- Desktop links -->
@@ -285,13 +285,13 @@ import { ContactSubmissionService } from '../../core/services/contact-submission
 </section>
 
 <!-- ══════════════════════════════════════════════
-     WHY TALENTHUB IS DIFFERENT
+     WHY NTL CAREER NEXUS IS DIFFERENT
 ══════════════════════════════════════════════ -->
 <section class="lp-why" id="why-us">
   <div class="lp-container">
     <div class="lp-section-header">
       <div class="lp-section-eyebrow">Why Us</div>
-      <h2 class="lp-section-title">Why TalentHub is Different</h2>
+      <h2 class="lp-section-title">Why NTL Career Nexus is Different</h2>
     </div>
 
     <div class="lp-features__grid">
@@ -463,7 +463,7 @@ import { ContactSubmissionService } from '../../core/services/contact-submission
             <a class="lp-contact__social-btn" href="https://www.youtube.com/@namakal2london" target="_blank" title="YouTube">
               <i class="bi bi-youtube"></i>
             </a>
-            <a class="lp-contact__social-btn" href="mailto:ntlcustomerservicecenter@gmail.com" title="Email">
+            <a class="lp-contact__social-btn" href="mailto:hello@ntlcareernexus.com" title="Email">
               <i class="bi bi-envelope-fill"></i>
             </a>
           </div>
@@ -538,12 +538,12 @@ import { ContactSubmissionService } from '../../core/services/contact-submission
     <div class="lp-footer__brand">
       <div class="lp-footer__logo">
         <span class="lp-footer__logo-icon"><i class="bi bi-briefcase-fill"></i></span>
-        <span>Talent<span>Hub</span></span>
+        <span>NTL<span>CareerNexus</span></span>
       </div>
       <p class="lp-footer__tagline">
-        Bridging talent and opportunity — one career at a time.
+        Connecting Global Talent to Sponsored Opportunities
       </p>
-      <p class="lp-footer__copy">© {{ year }} TalentHub. All rights reserved.</p>
+      <p class="lp-footer__copy">© {{ year }} NTL Career Nexus. All rights reserved.</p>
     </div>
 
     <!-- Quick links -->
@@ -573,7 +573,7 @@ import { ContactSubmissionService } from '../../core/services/contact-submission
     <!-- CTA block -->
     <div class="lp-footer__cta-block">
       <div class="lp-footer__cta-heading">Ready to get started?</div>
-      <p class="lp-footer__cta-sub">Join TalentHub and find your next big opportunity.</p>
+      <p class="lp-footer__cta-sub">Join NTL Career Nexus and find your next big opportunity.</p>
       <a class="lp-btn-primary" routerLink="/login">Sign In <i class="bi bi-arrow-right ms-2"></i></a>
     </div>
 
@@ -581,7 +581,7 @@ import { ContactSubmissionService } from '../../core/services/contact-submission
 
   <div class="lp-footer__bottom">
     <div class="lp-container lp-footer__bottom-inner">
-      <span>Made with <i class="bi bi-heart-fill" style="color:#f43f5e"></i> by TalentHub</span>
+      <span>Made with <i class="bi bi-heart-fill" style="color:#f43f5e"></i> by NTL Career Nexus</span>
       <div class="lp-footer__bottom-links">
         <a href="#">Privacy Policy</a>
         <a href="#">Terms of Service</a>
@@ -703,8 +703,8 @@ export class LandingComponent implements OnInit, OnDestroy {
 
   testimonials = [
     {
-      quote: 'TalentHub made finding the right frontend role incredibly simple. Within two weeks I had three interview requests from companies I genuinely wanted to work for.',
-      name: 'Anjali Sharma', role: 'Frontend Developer, Hired via TalentHub',
+      quote: 'NTL Career Nexus made finding the right frontend role incredibly simple. Within two weeks I had three interview requests from companies I genuinely wanted to work for.',
+      name: 'Anjali Sharma', role: 'Frontend Developer, Hired via NTL Career Nexus',
       initials: 'AS', color: 'var(--th-gradient-pink)',
     },
     {
@@ -713,22 +713,22 @@ export class LandingComponent implements OnInit, OnDestroy {
       initials: 'DP', color: 'var(--th-gradient-teal)',
     },
     {
-      quote: 'I was skeptical about yet another jobs platform, but TalentHub\'s profile system is genuinely detailed. Recruiters could see my full skill set without a back-and-forth.',
+      quote: 'I was skeptical about yet another jobs platform, but NTL Career Nexus\'s profile system is genuinely detailed. Recruiters could see my full skill set without a back-and-forth.',
       name: 'Ravi Kumar', role: 'Full-Stack Engineer, Placed in 3 weeks',
       initials: 'RK', color: 'var(--th-gradient-orange)',
     },
     {
-      quote: 'Managing our hiring pipeline through TalentHub has cut our time-to-hire in half. The shortlist and contact workflow is exactly what we needed.',
+      quote: 'Managing our hiring pipeline through NTL Career Nexus has cut our time-to-hire in half. The shortlist and contact workflow is exactly what we needed.',
       name: 'Sophie Martin', role: 'HR Manager, StartupX',
       initials: 'SM', color: 'var(--th-gradient-purple)',
     },
   ];
 
   contactInfoChannels = [
-    { icon: 'bi-whatsapp',       label: 'WhatsApp', value: '+91 93604 54326',                      href: 'https://wa.me/919360454326?text=Hi%2C%20I%20would%20like%20to%20know%20more%20about%20TalentHub' },
-    { icon: 'bi-telephone-fill', label: 'Call Us',  value: '+91 82485 38157',                      href: 'tel:+918248538157' },
-    { icon: 'bi-envelope-fill',  label: 'Email',    value: 'ntlcustomerservicecenter@gmail.com',   href: 'mailto:ntlcustomerservicecenter@gmail.com' },
-    { icon: 'bi-youtube',        label: 'YouTube',  value: '@namakal2london',                      href: 'https://www.youtube.com/@namakal2london' },
+    { icon: 'bi-whatsapp',       label: 'WhatsApp', value: '+91 93604 54326',        href: 'https://wa.me/919360454326?text=Hi%2C%20I%20would%20like%20to%20know%20more%20about%20NTL%20Career%20Nexus' },
+    { icon: 'bi-telephone-fill', label: 'Call Us',  value: '+91 82485 38157',        href: 'tel:+918248538157' },
+    { icon: 'bi-envelope-fill',  label: 'Email',    value: 'hello@ntlcareernexus.com', href: 'mailto:hello@ntlcareernexus.com' },
+    { icon: 'bi-youtube',        label: 'YouTube',  value: '@namakal2london',         href: 'https://www.youtube.com/@namakal2london' },
   ];
 
   contactInfoDetails = [

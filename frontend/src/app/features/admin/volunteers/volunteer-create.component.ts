@@ -187,7 +187,7 @@ import { CandidateService } from '../../../core/services/candidate.service';
             <div class="col-12">
               <label class="form-label fw-semibold">Short Success Story <span class="rep-optional">optional</span></label>
               <textarea formControlName="success_story" class="form-control" rows="3"
-                placeholder="2–3 sentences about their journey — how they secured a job abroad through TalentHub…"
+                placeholder="2–3 sentences about their journey — how they secured a job abroad through NTL Career Nexus…"
                 maxlength="1000"></textarea>
               <div class="form-text text-end">
                 {{ form.get('success_story')?.value?.length || 0 }} / 1000

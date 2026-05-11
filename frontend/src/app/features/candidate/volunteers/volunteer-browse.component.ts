@@ -56,7 +56,7 @@ import { EmptyStateComponent }  from '../../../shared/components/empty-state/emp
         <app-empty-state
           icon="bi-people"
           title="No volunteers yet"
-          subtitle="Volunteers are candidates who successfully secured jobs abroad through TalentHub and have chosen to give back by supporting new job seekers."
+          subtitle="Volunteers are candidates who successfully secured jobs abroad through NTL Career Nexus and have chosen to give back by supporting new job seekers."
         />
       }
 

@@ -20,18 +20,18 @@ export async function seed(knex: Knex): Promise<void> {
   // ── Default admin user ─────────────────────────────────────────────────────
   let adminUserId: string;
 
-  const existingAdmin = await knex('users').where({ email: 'admin@talenthub.com' }).first();
+  const existingAdmin = await knex('users').where({ email: 'admin@ntlcareernexus.com' }).first();
   if (!existingAdmin) {
     const passwordHash = await bcrypt.hash('Admin@1234', 12);
     adminUserId = uuidv4();
     await knex('users').insert({
       id: adminUserId,
-      email: 'admin@talenthub.com',
+      email: 'admin@ntlcareernexus.com',
       password_hash: passwordHash,
       role_id: adminRole.id,
       is_active: true,
     });
-    console.log('[SEED] Admin user created → admin@talenthub.com / Admin@1234');
+    console.log('[SEED] Admin user created → admin@ntlcareernexus.com / Admin@1234');
   } else {
     adminUserId = existingAdmin.id;
     console.log('[SEED] Admin user already exists, skipping.');

@@ -47,7 +47,7 @@ interface MailOptions {
 
 async function sendMail(opts: MailOptions): Promise<void> {
   const transport = await getTransporter();
-  const from = env.EMAIL_FROM ?? 'TalentHub <noreply@talenthub.local>';
+  const from = env.EMAIL_FROM ?? 'NTL Career Nexus <hello@ntlcareernexus.com>';
 
   const info = await transport.sendMail({
     from,
@@ -81,15 +81,15 @@ export async function sendCandidateWelcomeEmail(
 ): Promise<void> {
   await sendMail({
     to: email,
-    subject: 'Welcome to TalentHub — Your Account is Under Review',
+    subject: 'Welcome to NTL Career Nexus — Your Account is Under Review',
     html: `
       <div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;">
         <div style="background:linear-gradient(135deg,#4f46e5,#6366f1);padding:32px 24px;border-radius:12px 12px 0 0;text-align:center;">
-          <h1 style="color:#fff;margin:0;font-size:26px;">Welcome to TalentHub, ${name}!</h1>
+          <h1 style="color:#fff;margin:0;font-size:26px;">Welcome to NTL Career Nexus, ${name}!</h1>
         </div>
         <div style="background:#fff;padding:32px 24px;border:1px solid #e5e7eb;border-top:none;border-radius:0 0 12px 12px;">
           <p style="font-size:16px;line-height:1.7;color:#111827;">
-            Thank you for joining TalentHub. Your profile has been created and is currently <strong>under review</strong> by our team.
+            Thank you for joining NTL Career Nexus. Your profile has been created and is currently <strong>under review</strong> by our team.
             We will be in touch once your profile has been assessed.
           </p>
           <p style="font-size:15px;color:#374151;line-height:1.7;">
@@ -117,7 +117,7 @@ export async function sendCandidateWelcomeEmail(
             </p>
           </div>
           <p style="color:#9ca3af;font-size:12px;margin-top:24px;border-top:1px solid #f3f4f6;padding-top:16px;">
-            This email was sent by the TalentHub admin team. Please do not reply to this email.
+            This email was sent by the NTL Career Nexus admin team. Please do not reply to this email.
           </p>
         </div>
       </div>
@@ -165,9 +165,9 @@ export async function sendRecruiterCredentials(
 ): Promise<void> {
   await sendMail({
     to: email,
-    subject: 'Your TalentHub Recruiter Account Credentials',
+    subject: 'Your NTL Career Nexus Recruiter Account Credentials',
     html: `
-      <h2>Welcome to TalentHub, ${contactName}!</h2>
+      <h2>Welcome to NTL Career Nexus, ${contactName}!</h2>
       <p>Your recruiter account has been created by the administrator. Below are your login credentials:</p>
       <table style="border-collapse:collapse;">
         <tr><td style="padding:8px;font-weight:bold;">Email:</td><td style="padding:8px;">${email}</td></tr>
@@ -188,10 +188,10 @@ export async function sendRecruiterAccessLink(
   const link = `${env.FRONTEND_URL}/recruiter/login?token=${accessToken}`;
   await sendMail({
     to: email,
-    subject: 'Your TalentHub Recruiter Access Link',
+    subject: 'Your NTL Career Nexus Recruiter Access Link',
     html: `
       <h2>Hello ${contactName},</h2>
-      <p>You have been granted temporary access to the TalentHub talent pool.</p>
+      <p>You have been granted temporary access to the NTL Career Nexus talent pool.</p>
       <p><a href="${link}" style="background:#4f46e5;color:#fff;padding:12px 24px;border-radius:6px;text-decoration:none;">Access Talent Pool</a></p>
       <p style="margin-top:16px;">This link expires on: <strong>${expiresAt.toUTCString()}</strong></p>
       <p style="color:#888;font-size:12px;">Do not share this link. It is personal to you and time-limited.</p>
@@ -451,7 +451,7 @@ export async function sendContactRevokedNotification(
 ): Promise<void> {
   await sendMail({
     to: recruiterEmail,
-    subject: 'Contact Access Revoked — TalentHub',
+    subject: 'Contact Access Revoked — NTL Career Nexus',
     html: `
       <div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;">
         <div style="background:linear-gradient(135deg,#dc2626,#b91c1c);padding:32px 24px;border-radius:12px 12px 0 0;text-align:center;">
@@ -464,10 +464,10 @@ export async function sendContactRevokedNotification(
           </p>
           ${reason ? '<div style="background:#fef2f2;border:1px solid #fecaca;border-radius:8px;padding:16px;margin:20px 0;"><p style="margin:0;font-size:14px;color:#991b1b;"><strong>Reason:</strong> ' + reason + '</p></div>' : ''}
           <p style="font-size:14px;color:#6b7280;line-height:1.7;">
-            If you believe this was done in error or wish to regain access, you may submit a new contact access request through the TalentHub platform.
+            If you believe this was done in error or wish to regain access, you may submit a new contact access request through the NTL Career Nexus platform.
           </p>
           <p style="color:#888;font-size:12px;margin-top:24px;border-top:1px solid #f3f4f6;padding-top:16px;">
-            This notification was sent by the TalentHub admin team.
+            This notification was sent by the NTL Career Nexus admin team.
           </p>
         </div>
       </div>
@@ -481,7 +481,7 @@ export async function sendVolunteerInvitation(
 ): Promise<void> {
   await sendMail({
     to: email,
-    subject: '🎉 Congratulations on Your Placement — Join the TalentHub Volunteer Team!',
+    subject: '🎉 Congratulations on Your Placement — Join the NTL Career Nexus Volunteer Team!',
     html: `
       <div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;">
         <div style="background:linear-gradient(135deg,#22c55e,#16a34a);padding:32px 24px;border-radius:12px 12px 0 0;text-align:center;">
@@ -489,7 +489,7 @@ export async function sendVolunteerInvitation(
         </div>
         <div style="background:#fff;padding:32px 24px;border:1px solid #e5e7eb;border-top:none;border-radius:0 0 12px 12px;">
           <p style="font-size:16px;line-height:1.7;color:#111827;">
-            Congratulations on your placement! You are now part of the <strong>TalentHub success family</strong>.
+            Congratulations on your placement! You are now part of the <strong>NTL Career Nexus success family</strong>.
           </p>
           <p style="font-size:16px;line-height:1.7;color:#111827;">
             Would you like to help other candidates on their journey?
@@ -497,7 +497,7 @@ export async function sendVolunteerInvitation(
           </p>
           <div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:10px;padding:20px;margin:24px 0;">
             <p style="margin:0;font-size:15px;color:#15803d;font-weight:600;">
-              As a TalentHub Volunteer, you can:
+              As a NTL Career Nexus Volunteer, you can:
             </p>
             <ul style="margin:12px 0 0;padding-left:20px;color:#374151;font-size:14px;line-height:1.8;">
               <li>Share your experience and advice with aspiring candidates</li>
@@ -509,7 +509,7 @@ export async function sendVolunteerInvitation(
             Our team will be in touch to help you get started. We look forward to having you on board!
           </p>
           <p style="color:#888;font-size:12px;margin-top:20px;border-top:1px solid #f3f4f6;padding-top:16px;">
-            This invitation was sent by the TalentHub admin team. If you have any questions, please reply to this email.
+            This invitation was sent by the NTL Career Nexus admin team. If you have any questions, please reply to this email.
           </p>
         </div>
       </div>

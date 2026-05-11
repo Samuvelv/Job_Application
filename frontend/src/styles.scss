@@ -598,7 +598,7 @@ body {
   .app-sidebar.collapsed {
     width: var(--th-sidebar-collapsed-width);
 
-    // Hide the entire brand area (TalentHub + badge)
+    // Hide the entire brand area (NTL Career Nexus + badge)
     .sidebar-brand {
       display: none;
     }
@@ -9043,7 +9043,7 @@ html { scroll-behavior: smooth; }
 }
 
 // ══════════════════════════════════════════════
-//  STATS BAR
+//  STATS BAR (hidden from public — data tracked)
 // ══════════════════════════════════════════════
 .lp-stats {
   background: var(--lp-section-alt);
@@ -9168,7 +9168,7 @@ html { scroll-behavior: smooth; }
 }
 
 // ══════════════════════════════════════════════
-//  WHY TALENTHUB IS DIFFERENT
+//  WHY NTL CAREER NEXUS IS DIFFERENT
 // ══════════════════════════════════════════════
 .lp-why {
   background: var(--lp-section-alt);

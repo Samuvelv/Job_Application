@@ -20,7 +20,7 @@ import { SidebarService } from '../../../core/services/sidebar.service';
           <i class="bi bi-list fs-5"></i>
         </button>
         <a [routerLink]="dashboardRoute()" class="topbar-brand">
-          TalentHub
+          NTL Career Nexus
         </a>
       </div>
 

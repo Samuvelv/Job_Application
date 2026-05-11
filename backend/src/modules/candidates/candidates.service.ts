@@ -148,7 +148,7 @@ export async function createCandidate(dto: CreateCandidateDto, createdByAdminId:
   if (dto.whatsapp_number) {
     sendWhatsAppMessage(
       dto.whatsapp_number,
-      `Hi ${dto.first_name}, welcome to TalentHub! Your profile has been created and is under review. We'll be in touch soon.`,
+      `Hi ${dto.first_name}, welcome to NTL Career Nexus! Your profile has been created and is under review. We'll be in touch soon.`,
     ).catch((err) => console.error('[WHATSAPP] Failed to send WhatsApp message:', err));
   }
 

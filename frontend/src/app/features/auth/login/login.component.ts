@@ -203,12 +203,12 @@ import { AuthService } from '../../../core/services/auth.service';
             <div class="auth-card-logo__icon">
               <i class="bi bi-briefcase-fill"></i>
             </div>
-            <div class="auth-card-logo__name">Talent<span>Hub</span></div>
+            <div class="auth-card-logo__name">NTL Career<span>Nexus</span></div>
           </div>
 
           <!-- Heading -->
           <div class="auth-card-heading">
-            <div class="auth-card-title">Welcome to TalentHub</div>
+            <div class="auth-card-title">Welcome to NTL Career Nexus</div>
             <div class="auth-card-sub">Sign in to your account</div>
           </div>
 
@@ -235,7 +235,7 @@ import { AuthService } from '../../../core/services/auth.service';
                   class="auth-underline-field"
                   [class.is-invalid]="submitted && f['email'].errors"
                   formControlName="email"
-                  placeholder="you@talenthub.com"
+                  placeholder="you@example.com"
                   autocomplete="email"
                 />
                 <span class="auth-field-underline"></span>
@@ -317,7 +317,7 @@ import { AuthService } from '../../../core/services/auth.service';
             <div class="auth-register-note__btns">
               <a
                 class="auth-register-note__btn auth-register-note__btn--whatsapp"
-                href="https://wa.me/919360454326?text=Hi%2C%20I%20would%20like%20to%20register%20on%20TalentHub"
+                href="https://wa.me/919360454326?text=Hi%2C%20I%20would%20like%20to%20register%20on%20NTL%20Career%20Nexus.%20I%20am%20a%20%5BCandidate%2FRecruiter%5D%20from%20%5BCountry%5D%20looking%20for%20opportunities%20in%20%5BTarget%20Country%5D."
                 target="_blank"
                 rel="noopener noreferrer"
               >
