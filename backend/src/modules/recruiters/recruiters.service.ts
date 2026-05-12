@@ -5,6 +5,7 @@ import { db } from '../../config/db';
 import { AppError } from '../../middleware/errorHandler';
 import { revokeRecruiterToken } from '../../services/token.service';
 import { sendRecruiterCredentials } from '../../services/email.service';
+import { sendWhatsAppMessage } from '../../services/whatsapp.service';
 import type { CreateRecruiterDto, UpdateRecruiterDto, RecruiterFilterDto } from './recruiters.dto';
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
@@ -89,6 +90,14 @@ export async function createRecruiter(dto: CreateRecruiterDto, createdByAdminId:
   // Send credentials email (non-blocking)
   sendRecruiterCredentials(dto.email.toLowerCase(), dto.contact_name, dto.password)
     .catch((err) => console.error('[EMAIL] Failed to send recruiter credentials:', err));
+
+  // Send WhatsApp welcome message (non-blocking, only if number provided)
+  if (dto.whatsapp_number) {
+    sendWhatsAppMessage(
+      dto.whatsapp_number,
+      `Welcome to NTL Career Nexus. Your recruiter account has been created successfully. Our team looks forward to working with you.`,
+    ).catch((err) => console.error('[WHATSAPP] Failed to send WhatsApp to recruiter:', err));
+  }
 
   const recruiter = await getRecruiterById(recruiterId);
   return { recruiter };

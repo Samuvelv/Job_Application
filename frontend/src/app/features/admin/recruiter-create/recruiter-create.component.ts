@@ -8,6 +8,7 @@ import { PageHeaderComponent } from '../../../shared/components/page-header/page
 import { MasterDataService } from '../../../core/services/master-data.service';
 import { SearchableSelectComponent, SelectOption } from '../../../shared/components/searchable-select/searchable-select.component';
 import { ChipMultiSelectComponent, ChipOption } from '../../../shared/components/chip-multi-select/chip-multi-select.component';
+import { ToastService } from '../../../core/services/toast.service';
 
 // ── Duration validator ─────────────────────────────────────────────────────
 function durationRequiredValidator(g: AbstractControl): ValidationErrors | null {
@@ -115,7 +116,15 @@ function emailValidator(): ValidatorFn {
             <i class="bi bi-check-circle-fill"></i>
           </div>
           <div class="reg-success-banner__body">
-            <div class="reg-success-banner__title">Recruiter created! Login credentials have been emailed.</div>
+            <div class="reg-success-banner__title">
+              {{ createdContactName }}{{ createdCompanyName ? ' from ' + createdCompanyName : '' }} created successfully!
+            </div>
+            <div class="text-muted small mt-1">
+              Login credentials have been emailed.
+              @if (createdWhatsApp) {
+                A WhatsApp welcome message has been sent.
+              }
+            </div>
             @if (createdRecruiterNumber) {
               <div class="reg-success-banner__code-row">
                 Recruiter ID: <span class="reg-success-banner__code">{{ createdRecruiterNumber }}</span>
@@ -125,6 +134,7 @@ function emailValidator(): ValidatorFn {
               <a routerLink="/admin/recruiters" class="btn btn-sm btn-primary">View Recruiters</a>
               <button class="btn btn-sm btn-outline-secondary" (click)="reset()">Add Another</button>
             </div>
+            <div class="text-muted small mt-2">Redirecting to Recruiters list…</div>
           </div>
         </div>
       } @else {
@@ -770,6 +780,9 @@ export class RecruiterCreateComponent implements OnInit {
   error = '';
   success = false;
   createdRecruiterNumber = '';
+  createdContactName     = '';
+  createdCompanyName     = '';
+  createdWhatsApp        = false;
   showPw = false;
 
   // ── Computed signals from master data ──────────────────────────────────────
@@ -885,6 +898,7 @@ export class RecruiterCreateComponent implements OnInit {
     private recruiterService: RecruiterService,
     private router: Router,
     private master: MasterDataService,
+    private toast: ToastService,
   ) {
     this.form = this.fb.group({
       // Section 1: Contact
@@ -1129,7 +1143,16 @@ export class RecruiterCreateComponent implements OnInit {
       next: (res) => {
         this.submitting = false;
         this.createdRecruiterNumber = res.recruiter?.recruiter_number ?? '';
-        this.success    = true;
+        this.createdContactName     = res.recruiter?.contact_name     ?? 'Recruiter';
+        this.createdCompanyName     = (res.recruiter as any)?.company_name ?? '';
+        this.createdWhatsApp        = !!(res.recruiter as any)?.whatsapp_number;
+        this.success = true;
+
+        const name    = this.createdContactName;
+        const company = this.createdCompanyName ? ` from ${this.createdCompanyName}` : '';
+        this.toast.success(`${name}${company} created successfully`);
+
+        setTimeout(() => this.router.navigate(['/admin/recruiters']), 2000);
       },
       error: (err) => {
         this.submitting = false;
@@ -1142,6 +1165,9 @@ export class RecruiterCreateComponent implements OnInit {
     this.success   = false;
     this.submitted = false;
     this.createdRecruiterNumber = '';
+    this.createdContactName     = '';
+    this.createdCompanyName     = '';
+    this.createdWhatsApp        = false;
     this.master.cities.set([]);
     this.form.reset({
       contact_name: '', contact_job_title: '', type: 'direct_employer',

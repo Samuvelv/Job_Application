@@ -24,6 +24,15 @@ export class AuditLogService {
     return this.http.get<PaginatedAuditLogs>(this.api, { params });
   }
 
+  /** Export all logs matching the given filters as a CSV blob. */
+  exportCsv(filters: Omit<AuditLogFilters, 'page' | 'limit'> = {}): Observable<Blob> {
+    let params = new HttpParams();
+    Object.entries(filters).forEach(([k, v]) => {
+      if (v !== undefined && v !== null && v !== '') params = params.set(k, String(v));
+    });
+    return this.http.get(`${this.api}/export`, { params, responseType: 'blob' });
+  }
+
   getDistinctActions(): Observable<{ actions: string[] }> {
     return this.http.get<{ actions: string[] }>(`${this.api}/actions`);
   }

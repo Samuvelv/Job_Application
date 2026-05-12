@@ -11,10 +11,12 @@ export interface InterestRequest {
   sector: string;
   country: string;
   message: string;
-  status: 'pending' | 'approved' | 'rejected';
+  status: 'pending' | 'approved' | 'rejected' | 'revoked';
   admin_note?: string | null;
   created_at: string;
   reviewed_at?: string | null;
+  revoked_at?: string | null;
+  revocation_reason?: string | null;
   // joined fields (admin list view)
   recruiter_name?: string;
   recruiter_company?: string;
@@ -22,6 +24,14 @@ export interface InterestRequest {
   candidate_first_name?: string;
   candidate_last_name?: string;
   candidate_number?: string;
+}
+
+export interface InterestRequestCounts {
+  pending: number;
+  approved: number;
+  rejected: number;
+  revoked: number;
+  total: number;
 }
 
 export interface PaginatedInterestRequests {
@@ -66,6 +76,16 @@ export class InterestRequestService {
   // Admin: approve or reject
   review(id: string, data: { status: 'approved' | 'rejected'; admin_note?: string }): Observable<{ request: InterestRequest }> {
     return this.http.patch<{ request: InterestRequest }>(`${this.api}/${id}/review`, data);
+  }
+
+  // Admin: revoke an approved request
+  revoke(id: string, reason?: string): Observable<{ request: InterestRequest }> {
+    return this.http.post<{ request: InterestRequest }>(`${this.api}/${id}/revoke`, { reason });
+  }
+
+  // Admin: status counts for tabs
+  getCounts(): Observable<InterestRequestCounts> {
+    return this.http.get<InterestRequestCounts>(`${this.api}/counts`);
   }
 
   // Admin: pending count for sidebar badge

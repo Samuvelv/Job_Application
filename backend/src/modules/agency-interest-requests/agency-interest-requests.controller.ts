@@ -4,10 +4,12 @@ import * as svc from './agency-interest-requests.service';
 import {
   CreateInterestRequestSchema,
   ReviewInterestRequestSchema,
+  RevokeInterestRequestSchema,
   InterestRequestFilterSchema,
 } from './agency-interest-requests.dto';
 import { getRecruiterByUserId } from '../recruiters/recruiters.service';
 import { AppError } from '../../middleware/errorHandler';
+import { logAudit } from '../../services/audit.service';
 
 // ── Recruiter: submit interest request ──────────────────────────────────────
 
@@ -43,13 +45,46 @@ export async function list(req: Request, res: Response, next: NextFunction): Pro
   } catch (err) { next(err); }
 }
 
-// ── Admin: review ────────────────────────────────────────────────────────────
+// ── Admin: review (approve / reject) ────────────────────────────────────────
 
 export async function review(req: Request, res: Response, next: NextFunction): Promise<void> {
   try {
     const dto     = ReviewInterestRequestSchema.parse(req.body);
     const updated = await svc.reviewInterestRequest(req.params['id'] as string, dto, req.user!.sub);
     res.json({ request: updated });
+  } catch (err) { next(err); }
+}
+
+// ── Admin: revoke an approved request ───────────────────────────────────────
+
+export async function revoke(req: Request, res: Response, next: NextFunction): Promise<void> {
+  try {
+    const id      = req.params['id'] as string;
+    const dto     = RevokeInterestRequestSchema.parse(req.body);
+    const updated = await svc.revokeInterestRequest(id, dto, req.user!.sub);
+
+    await logAudit({
+      userId:     req.user!.sub,
+      action:     'INTEREST_REQUEST_REVOKED',
+      resource:   'agency_interest_request',
+      resourceId: id,
+      ipAddress:  req.ip,
+      metadata: {
+        agency_name:        (updated as any).recruiter_company ?? null,
+        revocation_reason:  dto.reason ?? null,
+      },
+    });
+
+    res.json({ request: updated });
+  } catch (err) { next(err); }
+}
+
+// ── Admin: status counts ─────────────────────────────────────────────────────
+
+export async function counts(req: Request, res: Response, next: NextFunction): Promise<void> {
+  try {
+    const result = await svc.getInterestRequestCounts();
+    res.json(result);
   } catch (err) { next(err); }
 }
 

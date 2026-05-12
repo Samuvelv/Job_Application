@@ -7,6 +7,9 @@ import * as ctrl from './agency-interest-requests.controller';
 const router = Router();
 router.use(authenticate);
 
+// Admin: status counts (before /:id to avoid param clash)
+router.get('/counts',       authorize('admin'), ctrl.counts);
+
 // Admin: pending count (before /:id to avoid param clash)
 router.get('/pending-count', authorize('admin'), ctrl.pendingCount);
 
@@ -24,5 +27,8 @@ router.post('/', authorize('recruiter'), ctrl.create);
 
 // Admin: approve / reject
 router.patch('/:id/review', authorize('admin'), ctrl.review);
+
+// Admin: revoke an approved request
+router.post('/:id/revoke',  authorize('admin'), ctrl.revoke);
 
 export default router;

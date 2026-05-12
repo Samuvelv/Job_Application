@@ -13,8 +13,12 @@ export const ReviewInterestRequestSchema = z.object({
   admin_note: z.string().max(500).optional(),
 });
 
+export const RevokeInterestRequestSchema = z.object({
+  reason: z.string().max(500).optional(),
+});
+
 export const InterestRequestFilterSchema = z.object({
-  status:    z.enum(['pending', 'approved', 'rejected']).optional(),
+  status:    z.enum(['pending', 'approved', 'rejected', 'revoked']).optional(),
   search:    z.string().trim().optional(),
   date_from: z.string().optional(),
   date_to:   z.string().optional(),
@@ -24,4 +28,5 @@ export const InterestRequestFilterSchema = z.object({
 
 export type CreateInterestRequestDto  = z.infer<typeof CreateInterestRequestSchema>;
 export type ReviewInterestRequestDto  = z.infer<typeof ReviewInterestRequestSchema>;
+export type RevokeInterestRequestDto  = z.infer<typeof RevokeInterestRequestSchema>;
 export type InterestRequestFilterDto  = z.infer<typeof InterestRequestFilterSchema>;

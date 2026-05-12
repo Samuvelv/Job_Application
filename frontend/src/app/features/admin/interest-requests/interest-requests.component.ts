@@ -3,8 +3,9 @@ import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, FormGroup, FormsModule } from '@angular/forms';
 import { Subject, debounceTime, distinctUntilChanged, takeUntil } from 'rxjs';
-import { InterestRequestService, InterestRequest, PaginatedInterestRequests } from '../../../core/services/interest-request.service';
+import { InterestRequestService, InterestRequest, InterestRequestCounts, PaginatedInterestRequests } from '../../../core/services/interest-request.service';
 import { ToastService } from '../../../core/services/toast.service';
+import { ConfirmDialogService } from '../../../core/services/confirm-dialog.service';
 import { PageHeaderComponent } from '../../../shared/components/page-header/page-header.component';
 import { EmptyStateComponent } from '../../../shared/components/empty-state/empty-state.component';
 
@@ -13,6 +14,7 @@ import { EmptyStateComponent } from '../../../shared/components/empty-state/empt
   standalone: true,
   imports: [CommonModule, ReactiveFormsModule, FormsModule, PageHeaderComponent, EmptyStateComponent],
   styles: [`
+    /* ── Filter bar ───────────────────────────────────────────── */
     .filter-bar {
       background: var(--th-surface);
       border: 1px solid var(--th-border);
@@ -94,6 +96,58 @@ import { EmptyStateComponent } from '../../../shared/components/empty-state/empt
       font-size: 10px;
       font-weight: 700;
     }
+
+    /* ── Tabs ─────────────────────────────────────────────────── */
+    .tabs-row {
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+      margin-bottom: 20px;
+    }
+    .tab-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 7px 14px;
+      border-radius: 8px;
+      border: 1px solid var(--th-border);
+      background: var(--th-surface);
+      color: var(--th-muted);
+      font-size: 13px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.15s;
+      white-space: nowrap;
+    }
+    .tab-btn:hover {
+      border-color: var(--th-primary);
+      color: var(--th-primary);
+    }
+    .tab-btn--active {
+      background: var(--th-primary);
+      border-color: var(--th-primary);
+      color: #fff;
+    }
+    .tab-btn--active:hover {
+      opacity: 0.9;
+      color: #fff;
+    }
+    .tab-count {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 20px;
+      height: 18px;
+      padding: 0 5px;
+      border-radius: 9px;
+      font-size: 11px;
+      font-weight: 700;
+      background: rgba(0,0,0,.12);
+      color: inherit;
+    }
+    .tab-btn--active .tab-count { background: rgba(255,255,255,.25); }
+
+    /* ── Request cards ────────────────────────────────────────── */
     .request-card {
       background: var(--th-surface);
       border: 1px solid var(--th-border);
@@ -133,6 +187,8 @@ import { EmptyStateComponent } from '../../../shared/components/empty-state/empt
       margin-top: 14px;
       flex-wrap: wrap;
     }
+
+    /* ── Status badges ────────────────────────────────────────── */
     .status-badge {
       display: inline-flex;
       align-items: center;
@@ -145,6 +201,24 @@ import { EmptyStateComponent } from '../../../shared/components/empty-state/empt
     .status-badge--pending  { background: var(--th-amber-soft,  #fef3c7); color: var(--th-amber,  #d97706); }
     .status-badge--approved { background: var(--th-emerald-soft, #d1fae5); color: var(--th-emerald,#059669); }
     .status-badge--rejected { background: var(--th-red-soft,    #fee2e2); color: var(--th-red,    #dc2626); }
+    .status-badge--revoked  { background: #f3e8ff;                         color: #7c3aed; }
+
+    /* ── Revocation info strip ────────────────────────────────── */
+    .revocation-info {
+      display: flex;
+      align-items: flex-start;
+      gap: 6px;
+      margin-top: 10px;
+      padding: 8px 12px;
+      background: #faf5ff;
+      border: 1px solid #e9d5ff;
+      border-radius: 8px;
+      font-size: 12px;
+      color: #6d28d9;
+    }
+    .revocation-info i { margin-top: 1px; flex-shrink: 0; }
+
+    /* ── Review modal ─────────────────────────────────────────── */
     .modal-backdrop {
       position: fixed; inset: 0; background: rgba(0,0,0,.45);
       display: flex; align-items: center; justify-content: center; z-index: 1000;
@@ -173,6 +247,30 @@ import { EmptyStateComponent } from '../../../shared/components/empty-state/empt
   template: `
     <app-page-header title="Agency Interest Requests" subtitle="Review interest requests submitted by recruitment agencies." />
 
+    <!-- Status tabs -->
+    <div class="tabs-row">
+      <button class="tab-btn" [class.tab-btn--active]="activeTab === ''"         (click)="setTab('')">
+        <i class="bi bi-grid"></i>All
+        <span class="tab-count">{{ counts.total }}</span>
+      </button>
+      <button class="tab-btn" [class.tab-btn--active]="activeTab === 'pending'"  (click)="setTab('pending')">
+        <i class="bi bi-hourglass-split"></i>Pending
+        <span class="tab-count">{{ counts.pending }}</span>
+      </button>
+      <button class="tab-btn" [class.tab-btn--active]="activeTab === 'approved'" (click)="setTab('approved')">
+        <i class="bi bi-check-circle"></i>Approved
+        <span class="tab-count">{{ counts.approved }}</span>
+      </button>
+      <button class="tab-btn" [class.tab-btn--active]="activeTab === 'rejected'" (click)="setTab('rejected')">
+        <i class="bi bi-x-circle"></i>Rejected
+        <span class="tab-count">{{ counts.rejected }}</span>
+      </button>
+      <button class="tab-btn" [class.tab-btn--active]="activeTab === 'revoked'"  (click)="setTab('revoked')">
+        <i class="bi bi-slash-circle"></i>Revoked
+        <span class="tab-count">{{ counts.revoked }}</span>
+      </button>
+    </div>
+
     <!-- Filter bar -->
     <div class="filter-bar">
       <div class="filter-bar__row">
@@ -183,11 +281,12 @@ import { EmptyStateComponent } from '../../../shared/components/empty-state/empt
         </div>
         <div class="filter-bar__group">
           <label class="filter-bar__label">Status</label>
-          <select class="filter-bar__select" [(ngModel)]="statusFilter" (ngModelChange)="onFilterChange()">
+          <select class="filter-bar__select" [(ngModel)]="statusFilter" (ngModelChange)="onStatusFilterChange()">
             <option value="">All</option>
             <option value="pending">Pending</option>
             <option value="approved">Approved</option>
             <option value="rejected">Rejected</option>
+            <option value="revoked">Revoked</option>
           </select>
         </div>
 
@@ -232,8 +331,9 @@ import { EmptyStateComponent } from '../../../shared/components/empty-state/empt
         <div class="spinner-border" style="color:var(--th-primary)"></div>
       </div>
     } @else if (requests.length === 0) {
-      <app-empty-state icon="bi-inbox" title="No interest requests found"
-        message="When recruitment agencies submit interest requests, they will appear here." />
+      <app-empty-state icon="bi-inbox"
+        [title]="emptyTitle"
+        [message]="emptyMessage" />
     } @else {
       @for (r of requests; track r.id) {
         <div class="request-card">
@@ -243,9 +343,11 @@ import { EmptyStateComponent } from '../../../shared/components/empty-state/empt
               <div class="request-card__meta">{{ r.recruiter_email }} · Submitted {{ r.created_at | date:'dd MMM yyyy, HH:mm' }}</div>
             </div>
             <span class="status-badge status-badge--{{ r.status }}">
-              <i class="bi" [class.bi-hourglass-split]="r.status === 'pending'"
-                           [class.bi-check-circle-fill]="r.status === 'approved'"
-                           [class.bi-x-circle-fill]="r.status === 'rejected'"></i>
+              <i class="bi"
+                [class.bi-hourglass-split]="r.status === 'pending'"
+                [class.bi-check-circle-fill]="r.status === 'approved'"
+                [class.bi-x-circle-fill]="r.status === 'rejected'"
+                [class.bi-slash-circle-fill]="r.status === 'revoked'"></i>
               {{ r.status | titlecase }}
             </span>
           </div>
@@ -267,6 +369,18 @@ import { EmptyStateComponent } from '../../../shared/components/empty-state/empt
             </div>
           }
 
+          <!-- Revocation details -->
+          @if (r.status === 'revoked' && r.revoked_at) {
+            <div class="revocation-info">
+              <i class="bi bi-slash-circle-fill"></i>
+              <span>
+                <strong>Revoked</strong> {{ r.revoked_at | date:'dd MMM yyyy, HH:mm' }}
+                @if (r.revocation_reason) { · {{ r.revocation_reason }} }
+              </span>
+            </div>
+          }
+
+          <!-- Actions -->
           @if (r.status === 'pending') {
             <div class="request-card__actions">
               <button class="btn btn-sm btn-success" (click)="openReview(r, 'approved')">
@@ -274,6 +388,13 @@ import { EmptyStateComponent } from '../../../shared/components/empty-state/empt
               </button>
               <button class="btn btn-sm btn-danger" (click)="openReview(r, 'rejected')">
                 <i class="bi bi-x-lg me-1"></i>Reject
+              </button>
+            </div>
+          }
+          @if (r.status === 'approved') {
+            <div class="request-card__actions">
+              <button class="btn btn-sm btn-outline-warning" (click)="onRevokeClick(r)">
+                <i class="bi bi-slash-circle me-1"></i>Revoke
               </button>
             </div>
           }
@@ -290,7 +411,7 @@ import { EmptyStateComponent } from '../../../shared/components/empty-state/empt
       }
     }
 
-    <!-- Review modal -->
+    <!-- Review modal (approve / reject) -->
     @if (reviewTarget) {
       <div class="modal-backdrop" (click)="closeModal()">
         <div class="modal-box" (click)="$event.stopPropagation()">
@@ -306,7 +427,9 @@ import { EmptyStateComponent } from '../../../shared/components/empty-state/empt
           </div>
           <div class="d-flex gap-2 justify-content-end">
             <button class="btn btn-sm btn-outline-secondary" (click)="closeModal()">Cancel</button>
-            <button class="btn btn-sm" [class.btn-success]="reviewAction === 'approved'" [class.btn-danger]="reviewAction === 'rejected'"
+            <button class="btn btn-sm"
+              [class.btn-success]="reviewAction === 'approved'"
+              [class.btn-danger]="reviewAction === 'rejected'"
               [disabled]="submitting" (click)="submitReview()">
               @if (submitting) { <span class="spinner-border spinner-border-sm me-1"></span> }
               {{ reviewAction === 'approved' ? 'Approve' : 'Reject' }}
@@ -323,33 +446,53 @@ export class InterestRequestsComponent implements OnInit, OnDestroy {
   page = 1;
   pagination: { page: number; limit: number; total: number; pages: number } | null = null;
 
-  searchTerm = '';
+  counts: InterestRequestCounts = { pending: 0, approved: 0, rejected: 0, revoked: 0, total: 0 };
+  activeTab: '' | 'pending' | 'approved' | 'rejected' | 'revoked' = '';
+
+  searchTerm   = '';
   statusFilter = '';
-  dateFrom = '';
-  dateTo = '';
-  exporting = false;
+  dateFrom     = '';
+  dateTo       = '';
+  exporting    = false;
 
   get activeFilterCount(): number {
     return [this.searchTerm, this.statusFilter, this.dateFrom, this.dateTo]
       .filter(v => !!v).length;
   }
 
+  get emptyTitle(): string {
+    if (this.activeTab === 'pending')  return 'No pending requests';
+    if (this.activeTab === 'approved') return 'No approved requests';
+    if (this.activeTab === 'rejected') return 'No rejected requests';
+    if (this.activeTab === 'revoked')  return 'No revoked requests';
+    return 'No interest requests found';
+  }
+
+  get emptyMessage(): string {
+    if (this.activeTab === 'pending')  return 'There are no pending agency interest requests at this time.';
+    if (this.activeTab === 'revoked')  return 'No agency interest requests have been revoked.';
+    return 'When recruitment agencies submit interest requests, they will appear here.';
+  }
+
   reviewTarget: InterestRequest | null = null;
   reviewAction: 'approved' | 'rejected' = 'approved';
-  adminNote = '';
+  adminNote  = '';
   submitting = false;
 
   private destroy$ = new Subject<void>();
-  private search$ = new Subject<string>();
+  private search$  = new Subject<string>();
 
   constructor(
-    private svc: InterestRequestService,
-    private toast: ToastService,
+    private svc:           InterestRequestService,
+    private toast:         ToastService,
+    private confirmDialog: ConfirmDialogService,
   ) {}
 
   ngOnInit(): void {
     this.search$.pipe(debounceTime(350), distinctUntilChanged(), takeUntil(this.destroy$))
-      .subscribe(() => { this.page = 1; this.load(); });    this.load();
+      .subscribe(() => { this.page = 1; this.load(); });
+    this.loadCounts();
+    this.load();
   }
 
   ngOnDestroy(): void {
@@ -357,10 +500,30 @@ export class InterestRequestsComponent implements OnInit, OnDestroy {
     this.destroy$.complete();
   }
 
+  // ── Tab navigation ────────────────────────────────────────────────────────
+
+  setTab(tab: '' | 'pending' | 'approved' | 'rejected' | 'revoked'): void {
+    this.activeTab    = tab;
+    this.statusFilter = tab;
+    this.page         = 1;
+    this.load();
+  }
+
+  // ── Filter handlers ───────────────────────────────────────────────────────
+
   onSearchChange(val: string): void {
     this.search$.next(val);
-  }  onFilterChange(): void {
+  }
+
+  onFilterChange(): void {
     this.page = 1;
+    this.load();
+  }
+
+  /** When admin changes the status dropdown, also sync the active tab */
+  onStatusFilterChange(): void {
+    this.activeTab = this.statusFilter as typeof this.activeTab;
+    this.page      = 1;
     this.load();
   }
 
@@ -369,9 +532,12 @@ export class InterestRequestsComponent implements OnInit, OnDestroy {
     this.statusFilter = '';
     this.dateFrom     = '';
     this.dateTo       = '';
+    this.activeTab    = '';
     this.page         = 1;
     this.load();
   }
+
+  // ── Data loading ──────────────────────────────────────────────────────────
 
   load(): void {
     this.loading = true;
@@ -393,6 +559,81 @@ export class InterestRequestsComponent implements OnInit, OnDestroy {
       },
     });
   }
+
+  loadCounts(): void {
+    this.svc.getCounts().subscribe({
+      next:  (c) => (this.counts = c),
+      error: () => { /* non-fatal — counts are cosmetic */ },
+    });
+  }
+
+  // ── Pagination ────────────────────────────────────────────────────────────
+
+  goToPage(p: number): void {
+    this.page = p;
+    this.load();
+  }
+
+  // ── Approve / Reject (inline modal) ──────────────────────────────────────
+
+  openReview(r: InterestRequest, action: 'approved' | 'rejected'): void {
+    this.reviewTarget = r;
+    this.reviewAction = action;
+    this.adminNote    = '';
+  }
+
+  closeModal(): void {
+    this.reviewTarget = null;
+  }
+
+  submitReview(): void {
+    if (!this.reviewTarget) return;
+    this.submitting = true;
+    this.svc.review(this.reviewTarget.id, { status: this.reviewAction, admin_note: this.adminNote || undefined })
+      .subscribe({
+        next: () => {
+          this.submitting = false;
+          this.toast.success(`Request ${this.reviewAction}`);
+          this.closeModal();
+          this.load();
+          this.loadCounts();
+        },
+        error: (err) => {
+          this.submitting = false;
+          this.toast.error(err?.error?.message ?? 'Failed to review request');
+        },
+      });
+  }
+
+  // ── Revoke (confirm dialog) ───────────────────────────────────────────────
+
+  onRevokeClick(r: InterestRequest): void {
+    const agencyLabel = r.recruiter_company ?? r.recruiter_name ?? 'this agency';
+    const candidateLabel = `${r.candidate_first_name ?? ''} ${r.candidate_last_name ?? ''}`.trim() || 'this candidate';
+
+    this.confirmDialog.confirm({
+      title:           'Revoke Agency Interest Request?',
+      message:         `Are you sure you want to revoke the approved interest request from ${agencyLabel} for ${candidateLabel}? The agency will be notified by email.`,
+      confirmLabel:    'Revoke',
+      cancelLabel:     'Cancel',
+      confirmClass:    'btn-danger',
+      showNoteField:   true,
+      noteLabel:       'Reason for Revocation (Optional)',
+      notePlaceholder: 'Explain why this interest request is being revoked…',
+    }).then(result => {
+      if (!result.confirmed) return;
+      this.svc.revoke(r.id, result.notes || undefined).subscribe({
+        next: () => {
+          this.toast.success('Interest request revoked');
+          this.load();
+          this.loadCounts();
+        },
+        error: (err) => this.toast.error(err?.error?.message ?? 'Failed to revoke request'),
+      });
+    });
+  }
+
+  // ── CSV Export ────────────────────────────────────────────────────────────
 
   exportCsv(): void {
     if (this.exporting) return;
@@ -422,38 +663,5 @@ export class InterestRequestsComponent implements OnInit, OnDestroy {
         this.toast.error('Export failed. Please try again.');
       },
     });
-  }
-
-  goToPage(p: number): void {
-    this.page = p;
-    this.load();
-  }
-
-  openReview(r: InterestRequest, action: 'approved' | 'rejected'): void {
-    this.reviewTarget = r;
-    this.reviewAction = action;
-    this.adminNote    = '';
-  }
-
-  closeModal(): void {
-    this.reviewTarget = null;
-  }
-
-  submitReview(): void {
-    if (!this.reviewTarget) return;
-    this.submitting = true;
-    this.svc.review(this.reviewTarget.id, { status: this.reviewAction, admin_note: this.adminNote || undefined })
-      .subscribe({
-        next: () => {
-          this.submitting = false;
-          this.toast.success(`Request ${this.reviewAction}`);
-          this.closeModal();
-          this.load();
-        },
-        error: (err) => {
-          this.submitting = false;
-          this.toast.error(err?.error?.message ?? 'Failed to review request');
-        },
-      });
   }
 }

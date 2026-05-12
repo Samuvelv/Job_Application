@@ -443,6 +443,38 @@ export async function sendInterestRequestReviewed(
   await sendMail({ to: recruiterEmail, subject, html });
 }
 
+export async function sendInterestRequestRevokedNotification(
+  recruiterEmail: string,
+  recruiterName: string,
+  candidateName: string,
+  reason?: string,
+): Promise<void> {
+  await sendMail({
+    to: recruiterEmail,
+    subject: 'Agency Interest Request Revoked — NTL Career Nexus',
+    html: `
+      <div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;">
+        <div style="background:linear-gradient(135deg,#7c3aed,#6d28d9);padding:32px 24px;border-radius:12px 12px 0 0;text-align:center;">
+          <h1 style="color:#fff;margin:0;font-size:24px;">Agency Interest Request Revoked</h1>
+        </div>
+        <div style="background:#fff;padding:32px 24px;border:1px solid #e5e7eb;border-top:none;border-radius:0 0 12px 12px;">
+          <p style="font-size:16px;color:#111827;">Dear <strong>${recruiterName}</strong>,</p>
+          <p style="font-size:15px;color:#374151;line-height:1.7;">
+            Your previously approved agency interest request for <strong>${candidateName}</strong> has been <strong>revoked</strong> by an administrator.
+          </p>
+          ${reason ? `<div style="background:#faf5ff;border:1px solid #e9d5ff;border-radius:8px;padding:16px;margin:20px 0;"><p style="margin:0;font-size:14px;color:#6d28d9;"><strong>Reason:</strong> ${reason}</p></div>` : ''}
+          <p style="font-size:14px;color:#6b7280;line-height:1.7;">
+            Please contact support for further clarification if required. You may submit a new interest request through the NTL Career Nexus platform if appropriate.
+          </p>
+          <p style="color:#888;font-size:12px;margin-top:24px;border-top:1px solid #f3f4f6;padding-top:16px;">
+            This notification was sent by the NTL Career Nexus admin team.
+          </p>
+        </div>
+      </div>
+    `,
+  });
+}
+
 export async function sendContactRevokedNotification(
   recruiterEmail: string,
   recruiterName: string,

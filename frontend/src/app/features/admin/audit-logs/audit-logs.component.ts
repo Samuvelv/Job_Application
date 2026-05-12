@@ -6,6 +6,7 @@ import { debounceTime, distinctUntilChanged } from 'rxjs';
 import { AuditLogService } from '../../../core/services/audit-log.service';
 import { AuditLog } from '../../../core/models/audit-log.model';
 import { PageHeaderComponent } from '../../../shared/components/page-header/page-header.component';
+import { ToastService } from '../../../core/services/toast.service';
 
 @Component({
   selector: 'app-audit-logs',
@@ -19,6 +20,12 @@ import { PageHeaderComponent } from '../../../shared/components/page-header/page
       [subtitle]="pagination.total + ' total entries'"
       icon="bi-shield-check"
     >
+      <button class="btn btn-sm btn-outline-success"
+        [disabled]="exporting || logs.length === 0"
+        (click)="exportCsv()">
+        <i class="bi bi-download me-1"></i>
+        {{ exporting ? 'Exporting…' : 'Export CSV' }}
+      </button>
       <button class="btn btn-sm btn-outline-secondary" (click)="clearFilters()">
         <i class="bi bi-x-circle me-1"></i>Clear Filters
       </button>
@@ -287,8 +294,9 @@ import { PageHeaderComponent } from '../../../shared/components/page-header/page
 export class AuditLogsComponent implements OnInit {
   logs: AuditLog[]       = [];
   knownActions: string[] = [];
-  pagination = { page: 1, limit: 50, total: 0, pages: 1 };
+  pagination = { page: 1, limit: 25, total: 0, pages: 1 };
   loading    = true;
+  exporting  = false;
   expandedId: string | null = null;
 
   filterForm!: FormGroup;
@@ -297,6 +305,7 @@ export class AuditLogsComponent implements OnInit {
     private auditSvc: AuditLogService,
     private fb: FormBuilder,
     private datePipe: DatePipe,
+    private toast: ToastService,
   ) {}
 
   ngOnInit(): void {
@@ -365,6 +374,46 @@ export class AuditLogsComponent implements OnInit {
     const start = Math.max(1, page - 2);
     const end   = Math.min(pages, page + 2);
     return Array.from({ length: end - start + 1 }, (_, i) => start + i);
+  }
+
+  // ── CSV Export ─────────────────────────────────────────────────────────────
+
+  exportCsv(): void {
+    if (this.logs.length === 0) {
+      this.toast.show('No audit logs available to export.', 'warning');
+      return;
+    }
+    this.exporting = true;
+    const v = this.filterForm.value;
+    const filters: Record<string, unknown> = {};
+    if (v.action)     filters['action']   = v.action;
+    if (v.resource)   filters['resource'] = v.resource;
+    if (v.userSearch) filters['userId']   = v.userSearch;
+    if (v.from)       filters['from']     = v.from;
+    if (v.to)         filters['to']       = v.to;
+
+    this.auditSvc.exportCsv(filters).subscribe({
+      next: (blob) => {
+        const date = new Date().toISOString().slice(0, 10);
+        this._downloadBlob(blob, `audit-logs-${date}.csv`);
+        this.exporting = false;
+      },
+      error: () => {
+        this.toast.show('Export failed. Please try again.', 'error');
+        this.exporting = false;
+      },
+    });
+  }
+
+  private _downloadBlob(blob: Blob, filename: string): void {
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
   }
 
   // ── Expand / collapse ──────────────────────────────────────────────────────
@@ -446,6 +495,7 @@ export class AuditLogsComponent implements OnInit {
       CREATE_AGENCY_REFERRAL:          'Added an agency referral record',
       UPDATE_AGENCY_REFERRAL:          'Updated an agency referral record',
       DELETE_AGENCY_REFERRAL:          'Deleted an agency referral record',
+      INTEREST_REQUEST_REVOKED:        'Agency interest request was revoked',
     };
     if (map[action]) return map[action];
     // Fallback: convert SNAKE_CASE → Title Case

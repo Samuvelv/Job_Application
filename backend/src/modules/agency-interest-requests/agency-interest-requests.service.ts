@@ -4,10 +4,16 @@ import { AppError } from '../../middleware/errorHandler';
 import {
   sendInterestRequestNotification,
   sendInterestRequestReviewed,
+  sendInterestRequestRevokedNotification,
   sendCandidateInterestApprovalEmail,
   sendAdminInterestApprovalReminder,
 } from '../../services/email.service';
-import type { CreateInterestRequestDto, ReviewInterestRequestDto, InterestRequestFilterDto } from './agency-interest-requests.dto';
+import type {
+  CreateInterestRequestDto,
+  ReviewInterestRequestDto,
+  RevokeInterestRequestDto,
+  InterestRequestFilterDto,
+} from './agency-interest-requests.dto';
 
 // ── Submit (agency recruiter) ────────────────────────────────────────────────
 
@@ -22,7 +28,7 @@ export async function createInterestRequest(recruiterId: string, dto: CreateInte
   if (existing) {
     if (existing.status === 'approved') throw new AppError(409, 'An approved introduction already exists for this candidate.');
     if (existing.status === 'pending')  throw new AppError(409, 'An interest request is already pending for this candidate.');
-    // rejected — allow re-request
+    // rejected or revoked — allow re-request by deleting the old row
     await db('agency_interest_requests').where({ id: existing.id }).delete();
   }
 
@@ -77,6 +83,9 @@ export async function listInterestRequests(filters: InterestRequestFilterDto) {
       'ir.admin_note',
       'ir.created_at',
       'ir.reviewed_at',
+      'ir.revoked_at',
+      'ir.revoked_by_id',
+      'ir.revocation_reason',
       'r.contact_name as recruiter_name',
       'r.company_name as recruiter_company',
       'ru.email as recruiter_email',
@@ -120,11 +129,11 @@ export async function listInterestRequests(filters: InterestRequestFilterDto) {
 export async function getMyInterestRequests(recruiterId: string) {
   return db('agency_interest_requests')
     .where({ recruiter_id: recruiterId })
-    .select('id', 'candidate_id', 'sector', 'country', 'message', 'status', 'admin_note', 'created_at', 'reviewed_at')
+    .select('id', 'candidate_id', 'sector', 'country', 'message', 'status', 'admin_note', 'created_at', 'reviewed_at', 'revoked_at', 'revocation_reason')
     .orderBy('created_at', 'desc');
 }
 
-// ── Review (admin) ───────────────────────────────────────────────────────────
+// ── Review (admin: approve / reject) ────────────────────────────────────────
 
 export async function reviewInterestRequest(
   id: string,
@@ -210,6 +219,87 @@ export async function reviewInterestRequest(
   return updated;
 }
 
+// ── Revoke an approved request (admin) ──────────────────────────────────────
+
+export async function revokeInterestRequest(
+  id: string,
+  dto: RevokeInterestRequestDto,
+  adminUserId?: string,
+) {
+  const req = await db('agency_interest_requests').where({ id }).first();
+  if (!req) throw new AppError(404, 'Interest request not found');
+  if (req.status !== 'approved') throw new AppError(400, 'Only approved requests can be revoked');
+
+  const [updated] = await db('agency_interest_requests')
+    .where({ id })
+    .update({
+      status:            'revoked',
+      revoked_at:        new Date(),
+      revoked_by_id:     adminUserId ?? null,
+      revocation_reason: dto.reason ?? null,
+    })
+    .returning('*');
+
+  // Fetch recruiter + candidate for notifications (non-fatal)
+  const recruiter = await db('recruiters as r')
+    .join('users as u', 'u.id', 'r.user_id')
+    .select('r.contact_name', 'r.company_name', 'u.email')
+    .where('r.id', req.recruiter_id)
+    .first();
+
+  const candidate = await db('candidates')
+    .select('first_name', 'last_name')
+    .where('id', req.candidate_id)
+    .first();
+
+  const agencyName = recruiter?.company_name ?? recruiter?.contact_name ?? 'Agency';
+
+  // Email: notify recruiter (non-fatal)
+  if (recruiter && candidate) {
+    sendInterestRequestRevokedNotification(
+      recruiter.email,
+      recruiter.contact_name,
+      `${candidate.first_name} ${candidate.last_name}`,
+      dto.reason,
+    ).catch(() => { /* non-fatal */ });
+  }
+
+  // Log to candidate_activity (non-fatal)
+  db('candidate_activity').insert({
+    candidate_id: req.candidate_id,
+    type:         'agency_interest_revoked',
+    description:  `Agency interest — ${agencyName} — Revoked`,
+    metadata:     JSON.stringify({
+      request_id:   id,
+      recruiter_id: req.recruiter_id,
+      agency:       agencyName,
+      reason:       dto.reason ?? null,
+    }),
+  }).catch(() => { /* non-fatal */ });
+
+  return updated;
+}
+
+// ── Status counts (admin) ────────────────────────────────────────────────────
+
+export async function getInterestRequestCounts() {
+  const rows = await db('agency_interest_requests')
+    .select('status')
+    .count('id as count')
+    .groupBy('status');
+
+  const result = { pending: 0, approved: 0, rejected: 0, revoked: 0, total: 0 };
+  for (const row of rows as any[]) {
+    const n = Number(row.count);
+    if (row.status === 'pending')  result.pending  = n;
+    if (row.status === 'approved') result.approved = n;
+    if (row.status === 'rejected') result.rejected = n;
+    if (row.status === 'revoked')  result.revoked  = n;
+    result.total += n;
+  }
+  return result;
+}
+
 // ── Export CSV (admin) ───────────────────────────────────────────────────────
 
 export async function exportInterestRequests(
@@ -231,6 +321,8 @@ export async function exportInterestRequests(
       'ir.admin_note',
       'ir.created_at',
       'ir.reviewed_at',
+      'ir.revoked_at',
+      'ir.revocation_reason',
       'r.contact_name as recruiter_name',
       'r.company_name as recruiter_company',
       'ru.email as recruiter_email',
@@ -276,24 +368,28 @@ export async function exportInterestRequests(
     'Admin Note',
     'Date Submitted',
     'Reviewed At',
+    'Revoked At',
+    'Revocation Reason',
   ];
 
   const lines = [
     headers.map(escape).join(','),
     ...rows.map((r: any) => [
       r.id,
-      r.recruiter_company ?? '',
-      r.recruiter_name    ?? '',
-      r.recruiter_email   ?? '',
+      r.recruiter_company  ?? '',
+      r.recruiter_name     ?? '',
+      r.recruiter_email    ?? '',
       `${r.candidate_first_name ?? ''} ${r.candidate_last_name ?? ''}`.trim(),
-      r.candidate_number  ?? '',
-      r.sector            ?? '',
-      r.country           ?? '',
-      r.message           ?? '',
-      r.status            ?? '',
-      r.admin_note        ?? '',
+      r.candidate_number   ?? '',
+      r.sector             ?? '',
+      r.country            ?? '',
+      r.message            ?? '',
+      r.status             ?? '',
+      r.admin_note         ?? '',
       fmtDate(r.created_at),
       fmtDate(r.reviewed_at),
+      fmtDate(r.revoked_at),
+      r.revocation_reason  ?? '',
     ].map(escape).join(',')),
   ];
 
