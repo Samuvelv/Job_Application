@@ -8,11 +8,13 @@ export async function listVolunteers(filters: {
   country_placed?: string;
   availability?: string;
   language?: string;
+  sector?: string;
+  nationality?: string;
   sort?: string;
   page: number;
   limit: number;
 }) {
-  const { search, country_placed, availability, language, sort, page, limit } = filters;
+  const { search, country_placed, availability, language, sector, nationality, sort, page, limit } = filters;
   const offset = (page - 1) * limit;
 
   let query = db('volunteers').select('*');
@@ -28,6 +30,8 @@ export async function listVolunteers(filters: {
     if (country_placed) q = q.whereILike('country_placed', `%${country_placed}%`);
     if (availability)   q = q.where('availability', availability);
     if (language)       q = q.whereRaw(`languages::jsonb @> ?::jsonb`, [JSON.stringify([language])]);
+    if (sector)         q = q.whereILike('sector', `%${sector}%`);
+    if (nationality)    q = q.whereILike('nationality', `%${nationality}%`);
     return q;
   }
 
@@ -53,9 +57,11 @@ export async function exportVolunteers(filters: {
   country_placed?: string;
   availability?: string;
   language?: string;
+  sector?: string;
+  nationality?: string;
   sort?: string;
 }) {
-  const { search, country_placed, availability, language, sort } = filters;
+  const { search, country_placed, availability, language, sector, nationality, sort } = filters;
 
   let q = db('volunteers').select('*');
 
@@ -68,7 +74,8 @@ export async function exportVolunteers(filters: {
   if (country_placed) q = q.whereILike('country_placed', `%${country_placed}%`);
   if (availability)   q = q.where('availability', availability);
   if (language)       q = q.whereRaw(`languages::jsonb @> ?::jsonb`, [JSON.stringify([language])]);
-
+  if (sector)         q = q.whereILike('sector', `%${sector}%`);
+  if (nationality)    q = q.whereILike('nationality', `%${nationality}%`);
   let orderCol = 'created_at';
   let orderDir: 'asc' | 'desc' = 'desc';
   if (sort === 'oldest')       { orderCol = 'created_at';      orderDir = 'asc'; }
@@ -77,7 +84,7 @@ export async function exportVolunteers(filters: {
 
   const rows = await q.orderBy(orderCol, orderDir);
 
-  const headers = ['Name', 'Email', 'Phone', 'Role', 'Nationality', 'Country Placed', 'Year Placed', 'Languages', 'Availability', 'Candidates Helped', 'Created At'];
+  const headers = ['Name', 'Email', 'Phone', 'Role', 'Sector', 'Nationality', 'Country Placed', 'Year Placed', 'Languages', 'Availability', 'Candidates Helped', 'Created At'];
   const escape = (v: unknown) => {
     const s = String(v ?? '').replace(/"/g, '""');
     return `"${s}"`;
@@ -85,7 +92,7 @@ export async function exportVolunteers(filters: {
   const lines = [
     headers.map(escape).join(','),
     ...rows.map((r: any) => [
-      r.name, r.email ?? '', r.phone ?? '', r.role ?? '',
+      r.name, r.email ?? '', r.phone ?? '', r.role ?? '', r.sector ?? '',
       r.nationality ?? '', r.country_placed ?? '',
       r.year_placed ?? '',
       Array.isArray(r.languages) ? r.languages.join('; ') : (r.languages ? JSON.parse(r.languages).join('; ') : ''),
@@ -103,6 +110,7 @@ export async function createVolunteer(dto: CreateVolunteerDto, createdBy: string
       email:              dto.email              ?? null,
       phone:              dto.phone              ?? null,
       role:               dto.role               ?? null,
+      sector:             dto.sector             ?? null,
       notes:              dto.notes              ?? null,
       photo_url:          dto.photo_url          ?? null,
       nationality:        dto.nationality        ?? null,
@@ -119,6 +127,16 @@ export async function createVolunteer(dto: CreateVolunteerDto, createdBy: string
       created_by:         createdBy,
     })
     .returning('*');
+
+  // Sync: mark the originating candidate as 'converted' if email matches
+  if (dto.email) {
+    db('candidates as e')
+      .join('users as u', 'u.id', 'e.user_id')
+      .whereRaw('LOWER(u.email) = LOWER(?)', [dto.email])
+      .update({ 'e.volunteer_invite_status': 'converted', 'e.updated_at': new Date() })
+      .catch(() => { /* non-fatal — candidate may not exist in this system */ });
+  }
+
   return row;
 }
 
@@ -131,6 +149,7 @@ export async function updateVolunteer(id: string, dto: UpdateVolunteerDto) {
   if (dto.email              !== undefined) patch['email']              = dto.email              ?? null;
   if (dto.phone              !== undefined) patch['phone']              = dto.phone              ?? null;
   if (dto.role               !== undefined) patch['role']               = dto.role               ?? null;
+  if (dto.sector             !== undefined) patch['sector']             = dto.sector             ?? null;
   if (dto.notes              !== undefined) patch['notes']              = dto.notes              ?? null;
   if (dto.photo_url          !== undefined) patch['photo_url']          = dto.photo_url          ?? null;
   if (dto.nationality        !== undefined) patch['nationality']        = dto.nationality        ?? null;

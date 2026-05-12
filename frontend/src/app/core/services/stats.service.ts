@@ -6,14 +6,18 @@ import { environment } from '../../../environments/environment';
 
 export interface AdminStats {
   candidates:                number;
+  activeCandidates:          number;
   recruiters:                number;
   pendingEdits:              number;
   auditLogsToday:            number;
   registrationsToday:        number;
   profilesForwardedToday:    number;
+  interviewsArrangedToday:   number;
   totalVolunteers:           number;
   activeVolunteers:          number;
   candidatesHelpedThisMonth: number;
+  placementsMade:            number;
+  countriesActive:           number;
 }
 
 export interface CandidateStats {

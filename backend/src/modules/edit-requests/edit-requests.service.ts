@@ -333,21 +333,50 @@ export async function exportEditRequests(filters: Omit<EditRequestFilterDto, 'pa
 
   const rows = await base
     .select(
-      'r.id', 'r.status', 'r.reason', 'r.created_at', 'r.reviewed_at', 'r.admin_note',
-      'e.first_name', 'e.last_name', 'u.email',
+      'r.id', 'r.status', 'r.reason', 'r.created_at', 'r.reviewed_at',
+      'r.old_values', 'r.requested_data',
+      'e.first_name', 'e.last_name',
       db.raw(`TRIM(a.first_name || ' ' || COALESCE(a.last_name, '')) as reviewed_by_name`),
     )
     .orderBy('r.created_at', orderDir);
 
-  const headers = ['Candidate', 'Email', 'Status', 'Reason', 'Admin Note', 'Reviewed By', 'Submitted', 'Reviewed At'];
-  const escape = (v: unknown) => { const s = String(v ?? '').replace(/"/g, '""'); return `"${s}"`; };
+  const escape  = (v: unknown) => { const s = String(v ?? '').replace(/"/g, '""'); return `"${s}"`; };
+  const fmtDate = (v: unknown) => v ? new Date(String(v)).toISOString().split('T')[0] : '';
+
+  // Flatten a JSON object to "key: value; key: value" string
+  const flattenJson = (raw: unknown): string => {
+    if (!raw) return '';
+    try {
+      const obj = typeof raw === 'string' ? JSON.parse(raw) : raw;
+      return Object.entries(obj as Record<string, unknown>)
+        .map(([k, v]) => {
+          const label = k.replace(/_/g, ' ');
+          const val   = Array.isArray(v) ? v.join(', ') : String(v ?? '');
+          return `${label}: ${val}`;
+        })
+        .join('; ');
+    } catch {
+      return String(raw);
+    }
+  };
+
+  const headers = [
+    'Request ID', 'Candidate Name', 'Request Type',
+    'Old Value', 'New Value',
+    'Status', 'Date Submitted', 'Admin Decision Date',
+  ];
+
   const lines = [
     headers.map(escape).join(','),
     ...rows.map((r: any) => [
-      `${r.first_name} ${r.last_name}`, r.email, r.status, r.reason ?? '',
-      r.admin_note ?? '', r.reviewed_by_name ?? '',
-      new Date(r.created_at).toISOString().split('T')[0],
-      r.reviewed_at ? new Date(r.reviewed_at).toISOString().split('T')[0] : '',
+      r.id,
+      `${r.first_name} ${r.last_name}`,
+      r.reason ?? '',
+      flattenJson(r.old_values),
+      flattenJson(r.requested_data),
+      r.status,
+      fmtDate(r.created_at),
+      fmtDate(r.reviewed_at),
     ].map(escape).join(',')),
   ];
   return lines.join('\n');

@@ -21,8 +21,8 @@ export class ContactRequestService {
   constructor(private http: HttpClient) {}
 
   // Recruiter: request contact info for a candidate
-  create(candidateId: string): Observable<{ request: ContactRequest }> {
-    return this.http.post<{ request: ContactRequest }>(`${this.api}/${candidateId}`, {});
+  create(candidateId: string, requestReason?: string): Observable<{ request: ContactRequest }> {
+    return this.http.post<{ request: ContactRequest }>(`${this.api}/${candidateId}`, { request_reason: requestReason ?? null });
   }
 
   // Recruiter: get own requests
@@ -52,6 +52,15 @@ export class ContactRequestService {
   // Admin: revoke an approved request
   revoke(id: string, reason?: string): Observable<{ request: ContactRequest }> {
     return this.http.post<{ request: ContactRequest }>(`${this.api}/${id}/revoke`, { reason });
+  }
+
+  // Admin: export CSV with active filters
+  exportCsv(filters: { status?: string; search?: string; date_from?: string; date_to?: string } = {}): Observable<Blob> {
+    let params = new HttpParams();
+    Object.entries(filters).forEach(([k, v]) => {
+      if (v !== undefined && v !== null && v !== '') params = params.set(k, String(v));
+    });
+    return this.http.get(`${this.api}/export`, { params, responseType: 'blob' });
   }
 
   // Admin: bulk approve or reject

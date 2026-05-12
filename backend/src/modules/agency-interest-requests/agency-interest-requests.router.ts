@@ -13,6 +13,9 @@ router.get('/pending-count', authorize('admin'), ctrl.pendingCount);
 // Recruiter: get own requests
 router.get('/me', authorize('recruiter'), ctrl.getMyRequests);
 
+// Admin: export CSV (before GET / to avoid param clash)
+router.get('/export', authorize('admin'), ctrl.exportCsv);
+
 // Admin: list all
 router.get('/', authorize('admin'), ctrl.list);
 

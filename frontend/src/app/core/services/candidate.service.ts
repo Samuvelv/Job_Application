@@ -5,6 +5,15 @@ import { Observable } from 'rxjs';
 import { environment } from '../../../environments/environment';
 import { Candidate, CandidateFilters } from '../models/candidate.model';
 
+export interface CandidateActivity {
+  id: string;
+  candidate_id: string;
+  type: string;
+  description: string;
+  metadata?: Record<string, any> | null;
+  created_at: string;
+}
+
 export interface PaginatedCandidates {
   data: Candidate[];
   pagination: { page: number; limit: number; total: number; pages: number };
@@ -45,6 +54,11 @@ export class CandidateService {
 
   getMyProfile(): Observable<{ candidate: Candidate }> {
     return this.http.get<{ candidate: Candidate }>(`${this.api}/me`);
+  }
+
+  // ── Activity / History ────────────────────────────────────────────────────
+  getActivity(id: string): Observable<{ activity: CandidateActivity[] }> {
+    return this.http.get<{ activity: CandidateActivity[] }>(`${this.api}/${id}/activity`);
   }
 
   // ── Create ────────────────────────────────────────────────────────────────

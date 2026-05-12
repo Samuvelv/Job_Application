@@ -152,6 +152,15 @@ import { CandidateService } from '../../../core/services/candidate.service';
             </div>
 
             <div class="col-md-6">
+              <label class="form-label fw-semibold">Industry / Sector <span class="rep-optional">optional</span></label>
+              <app-searchable-select
+                formControlName="sector"
+                [options]="industryOpts()"
+                placeholder="Select industry"
+                [allowClear]="true" />
+            </div>
+
+            <div class="col-md-6">
               <label class="form-label fw-semibold">Company Joined <span class="rep-optional">optional</span></label>
               <input formControlName="company_joined" class="form-control"
                 placeholder="e.g. NHS Trust, Tesco">
@@ -354,6 +363,10 @@ export class VolunteerCreateComponent implements OnInit {
     this.master.countries().map(c => ({ value: c.name, label: `${c.flag_emoji} ${c.name}` }))
   );
 
+  industryOpts = computed<SelectOption[]>(() =>
+    this.master.industries().map(i => ({ value: i.name, label: i.name }))
+  );
+
   constructor(
     private fb: FormBuilder,
     private volunteerSvc: VolunteerService,
@@ -375,11 +388,25 @@ export class VolunteerCreateComponent implements OnInit {
     if (fromCandidateId) {
       this.candidateSvc.getById(fromCandidateId).subscribe({
         next: ({ candidate: c }) => {
+          // Map candidate languages (array of {language, proficiency}) → string[]
+          const langNames = (c.languages ?? []).map((l: any) =>
+            typeof l === 'string' ? l : (l.language ?? '')
+          ).filter(Boolean);
+
+          // Best-guess country_placed: try latest placed referral's country,
+          // or fall back to candidate's current_country
+          const placedReferral = (c.referrals ?? []).find((r: any) => r.status === 'placed');
+          const countryPlaced  = placedReferral?.country ?? c.current_country ?? null;
+
           this.form.patchValue({
-            name:        [c.first_name, c.last_name].filter(Boolean).join(' '),
-            email:       c.email       ?? '',
-            phone:       c.phone       ?? '',
-            nationality: c.nationality ?? null,
+            name:           [c.first_name, c.last_name].filter(Boolean).join(' '),
+            email:          c.email         ?? '',
+            phone:          c.phone         ?? '',
+            nationality:    c.nationality   ?? null,
+            country_placed: countryPlaced,
+            role:           c.job_title     ?? '',
+            sector:         c.industry      ?? null,
+            languages:      langNames.length ? langNames : [],
           });
         },
         error: () => this.toast.error('Could not pre-fill candidate details'),
@@ -396,6 +423,7 @@ export class VolunteerCreateComponent implements OnInit {
             nationality:        v.nationality ?? null,
             country_placed:     v.country_placed ?? null,
             role:               v.role ?? '',
+            sector:             v.sector ?? null,
             company_joined:     v.company_joined ?? '',
             year_placed:        v.year_placed ? String(v.year_placed) : null,
             languages:          v.languages ?? [],
@@ -423,6 +451,7 @@ export class VolunteerCreateComponent implements OnInit {
       nationality:        [null, Validators.required],
       country_placed:     [null, Validators.required],
       role:               ['', Validators.required],
+      sector:             [null],
       company_joined:     [''],
       year_placed:        [null, Validators.required],
       languages:          [[]],
@@ -481,6 +510,7 @@ export class VolunteerCreateComponent implements OnInit {
       nationality:        v.nationality            || undefined,
       country_placed:     v.country_placed         || undefined,
       role:               v.role?.trim()           || undefined,
+      sector:             v.sector                 || undefined,
       company_joined:     v.company_joined?.trim() || undefined,
       year_placed:        v.year_placed            ? Number(v.year_placed) : undefined,
       languages:          v.languages?.length      ? v.languages : undefined,

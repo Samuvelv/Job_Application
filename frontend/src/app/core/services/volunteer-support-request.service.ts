@@ -1,6 +1,6 @@
 // src/app/core/services/volunteer-support-request.service.ts
 import { Injectable } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from '../../../environments/environment';
 import type {
@@ -16,6 +16,8 @@ export interface PaginatedSupportRequests {
 export interface SupportRequestFilters {
   status?: 'pending' | 'connected' | 'closed';
   search?: string;
+  date_from?: string;
+  date_to?: string;
   page?: number;
   limit?: number;
 }
@@ -41,12 +43,20 @@ export class VolunteerSupportRequestService {
 
   /** Admin: list all support requests */
   list(filters: SupportRequestFilters = {}): Observable<PaginatedSupportRequests> {
-    const params: Record<string, string> = {};
-    if (filters.status) params['status'] = filters.status;
-    if (filters.search) params['search'] = filters.search;
-    if (filters.page)   params['page']   = String(filters.page);
-    if (filters.limit)  params['limit']  = String(filters.limit);
+    let params = new HttpParams();
+    Object.entries(filters).forEach(([k, v]) => {
+      if (v !== undefined && v !== null && v !== '') params = params.set(k, String(v));
+    });
     return this.http.get<PaginatedSupportRequests>(this.base, { params });
+  }
+
+  /** Admin: export CSV with active filters */
+  exportCsv(filters: { status?: string; search?: string; date_from?: string; date_to?: string } = {}): Observable<Blob> {
+    let params = new HttpParams();
+    Object.entries(filters).forEach(([k, v]) => {
+      if (v !== undefined && v !== null && v !== '') params = params.set(k, String(v));
+    });
+    return this.http.get(`${this.base}/export`, { params, responseType: 'blob' });
   }
 
   /** Admin: mark connected or closed */

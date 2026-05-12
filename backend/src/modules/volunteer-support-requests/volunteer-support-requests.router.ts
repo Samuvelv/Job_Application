@@ -13,6 +13,9 @@ router.get('/counts', authorize('admin'), ctrl.getCounts);
 // Candidate: get own requests
 router.get('/me', authorize('candidate'), ctrl.getMine);
 
+// Admin: export CSV (before GET / to avoid param clash)
+router.get('/export', authorize('admin'), ctrl.exportCsv);
+
 // Admin: list all
 router.get('/', authorize('admin'), ctrl.list);
 

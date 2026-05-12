@@ -55,7 +55,7 @@ export async function createSupportRequest(
 // ── List (admin) ──────────────────────────────────────────────────────────────
 
 export async function listSupportRequests(filters: SupportRequestFilterDto) {
-  const { page, limit, status, search } = filters;
+  const { page, limit, status, search, date_from, date_to } = filters;
   const offset = (page - 1) * limit;
 
   let query = db('volunteer_support_requests as vsr')
@@ -88,6 +88,13 @@ export async function listSupportRequests(filters: SupportRequestFilterDto) {
     });
   }
 
+  if (date_from) query = query.where('vsr.created_at', '>=', new Date(date_from));
+  if (date_to) {
+    const to = new Date(date_to);
+    to.setHours(23, 59, 59, 999);
+    query = query.where('vsr.created_at', '<=', to);
+  }
+
   const countQuery = query.clone().clearSelect().count('vsr.id as count').first();
   const [countRow, rows] = await Promise.all([
     countQuery,
@@ -99,6 +106,85 @@ export async function listSupportRequests(filters: SupportRequestFilterDto) {
     data: rows,
     pagination: { page, limit, total, pages: Math.ceil(total / limit) },
   };
+}
+
+// ── Export CSV (admin) ────────────────────────────────────────────────────────
+
+export async function exportSupportRequests(
+  filters: Omit<SupportRequestFilterDto, 'page' | 'limit'>,
+): Promise<string> {
+  const { status, search, date_from, date_to } = filters;
+
+  let query = db('volunteer_support_requests as vsr')
+    .join('candidates as c',  'c.id',  'vsr.candidate_id')
+    .join('users as u',       'u.id',  'c.user_id')
+    .join('volunteers as v',  'v.id',  'vsr.volunteer_id')
+    .select(
+      'vsr.id',
+      'vsr.message',
+      'vsr.status',
+      'vsr.admin_note',
+      'vsr.created_at',
+      'vsr.updated_at',
+      'c.first_name as candidate_first_name',
+      'c.last_name as candidate_last_name',
+      'u.email as candidate_email',
+      'v.name as volunteer_name',
+      'v.role as volunteer_role',
+    );
+
+  if (status) query = query.where('vsr.status', status);
+
+  if (search) {
+    const term = `%${search.toLowerCase()}%`;
+    query = query.where(function () {
+      this.whereRaw(`LOWER(c.first_name || ' ' || c.last_name) LIKE ?`, [term])
+          .orWhereRaw(`LOWER(v.name) LIKE ?`, [term]);
+    });
+  }
+
+  if (date_from) query = query.where('vsr.created_at', '>=', new Date(date_from));
+  if (date_to) {
+    const to = new Date(date_to);
+    to.setHours(23, 59, 59, 999);
+    query = query.where('vsr.created_at', '<=', to);
+  }
+
+  const rows = await query.orderBy('vsr.created_at', 'desc');
+
+  const escape  = (v: unknown) => { const s = String(v ?? '').replace(/"/g, '""'); return `"${s}"`; };
+  const fmtDate = (v: unknown) => v ? new Date(String(v)).toISOString().split('T')[0] : '';
+
+  const headers = [
+    'Request ID',
+    'Candidate Name',
+    'Candidate Email',
+    'Volunteer Name',
+    'Volunteer Role',
+    'Message',
+    'Status',
+    'Admin Note',
+    'Date Submitted',
+    'Last Updated',
+  ];
+
+  const lines = [
+    headers.map(escape).join(','),
+    ...rows.map((r: any) => [
+      r.id,
+      `${r.candidate_first_name ?? ''} ${r.candidate_last_name ?? ''}`.trim(),
+      r.candidate_email  ?? '',
+      r.volunteer_name   ?? '',
+      r.volunteer_role   ?? '',
+      r.message          ?? '',
+      r.status           ?? '',
+      r.admin_note       ?? '',
+      fmtDate(r.created_at),
+      fmtDate(r.updated_at),
+    ].map(escape).join(',')),
+  ];
+
+  return lines.join('\n');
 }
 
 // ── Review (admin) ────────────────────────────────────────────────────────────

@@ -58,6 +58,42 @@ import { EmptyStateComponent } from '../../../shared/components/empty-state/empt
       border-color: var(--th-primary);
       background: var(--th-surface);
     }
+    .filter-bar__clear {
+      height: 38px;
+      padding: 0 14px;
+      border-radius: 8px;
+      border: 1px solid var(--th-border-strong);
+      background: transparent;
+      color: var(--th-muted);
+      font-size: 13px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      white-space: nowrap;
+      transition: all 0.15s;
+    }
+    .filter-bar__clear:hover {
+      border-color: var(--th-danger);
+      color: var(--th-danger);
+      background: var(--th-danger-soft);
+    }
+    .filter-bar__clear:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+    .filter-bar__active-badge {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      background: var(--th-primary);
+      color: #fff;
+      font-size: 10px;
+      font-weight: 700;
+    }
     .request-card {
       background: var(--th-surface);
       border: 1px solid var(--th-border);
@@ -147,13 +183,46 @@ import { EmptyStateComponent } from '../../../shared/components/empty-state/empt
         </div>
         <div class="filter-bar__group">
           <label class="filter-bar__label">Status</label>
-          <select class="filter-bar__select" [(ngModel)]="statusFilter" (ngModelChange)="load()">
+          <select class="filter-bar__select" [(ngModel)]="statusFilter" (ngModelChange)="onFilterChange()">
             <option value="">All</option>
             <option value="pending">Pending</option>
             <option value="approved">Approved</option>
             <option value="rejected">Rejected</option>
           </select>
         </div>
+
+        <!-- Date From -->
+        <div class="filter-bar__group">
+          <label class="filter-bar__label"><i class="bi bi-calendar me-1"></i>Date from</label>
+          <input class="filter-bar__input" type="date"
+            [(ngModel)]="dateFrom" (ngModelChange)="onFilterChange()" />
+        </div>
+
+        <!-- Date To -->
+        <div class="filter-bar__group">
+          <label class="filter-bar__label"><i class="bi bi-calendar-check me-1"></i>Date to</label>
+          <input class="filter-bar__input" type="date"
+            [(ngModel)]="dateTo" (ngModelChange)="onFilterChange()" />
+        </div>
+
+        <!-- Export CSV -->
+        <div style="display:flex;align-items:flex-end;gap:6px;margin-left:auto">
+          <button class="filter-bar__clear" style="border-color:var(--th-success);color:var(--th-success)"
+            [disabled]="exporting" (click)="exportCsv()">
+            @if (exporting) { <span class="spinner-border spinner-border-sm"></span> }
+            @else { <i class="bi bi-download"></i> }
+            Export CSV
+          </button>
+        </div>
+
+        <!-- Clear filters -->
+        @if (activeFilterCount > 0) {
+          <button class="filter-bar__clear" (click)="clearFilters()">
+            <i class="bi bi-x-lg"></i>
+            Clear
+            <span class="filter-bar__active-badge">{{ activeFilterCount }}</span>
+          </button>
+        }
       </div>
     </div>
 
@@ -256,6 +325,14 @@ export class InterestRequestsComponent implements OnInit, OnDestroy {
 
   searchTerm = '';
   statusFilter = '';
+  dateFrom = '';
+  dateTo = '';
+  exporting = false;
+
+  get activeFilterCount(): number {
+    return [this.searchTerm, this.statusFilter, this.dateFrom, this.dateTo]
+      .filter(v => !!v).length;
+  }
 
   reviewTarget: InterestRequest | null = null;
   reviewAction: 'approved' | 'rejected' = 'approved';
@@ -272,8 +349,7 @@ export class InterestRequestsComponent implements OnInit, OnDestroy {
 
   ngOnInit(): void {
     this.search$.pipe(debounceTime(350), distinctUntilChanged(), takeUntil(this.destroy$))
-      .subscribe(() => { this.page = 1; this.load(); });
-    this.load();
+      .subscribe(() => { this.page = 1; this.load(); });    this.load();
   }
 
   ngOnDestroy(): void {
@@ -283,22 +359,69 @@ export class InterestRequestsComponent implements OnInit, OnDestroy {
 
   onSearchChange(val: string): void {
     this.search$.next(val);
+  }  onFilterChange(): void {
+    this.page = 1;
+    this.load();
+  }
+
+  clearFilters(): void {
+    this.searchTerm   = '';
+    this.statusFilter = '';
+    this.dateFrom     = '';
+    this.dateTo       = '';
+    this.page         = 1;
+    this.load();
   }
 
   load(): void {
     this.loading = true;
-    this.svc.list({ status: this.statusFilter || undefined, search: this.searchTerm || undefined, page: this.page })
-      .subscribe({
-        next: (res) => {
-          this.requests   = res.data;
-          this.pagination = res.pagination;
-          this.loading    = false;
-        },
-        error: () => {
-          this.toast.error('Failed to load interest requests');
-          this.loading = false;
-        },
-      });
+    this.svc.list({
+      status:    this.statusFilter || undefined,
+      search:    this.searchTerm   || undefined,
+      date_from: this.dateFrom     || undefined,
+      date_to:   this.dateTo       || undefined,
+      page:      this.page,
+    }).subscribe({
+      next: (res) => {
+        this.requests   = res.data;
+        this.pagination = res.pagination;
+        this.loading    = false;
+      },
+      error: () => {
+        this.toast.error('Failed to load interest requests');
+        this.loading = false;
+      },
+    });
+  }
+
+  exportCsv(): void {
+    if (this.exporting) return;
+    this.exporting = true;
+    this.svc.exportCsv({
+      status:    this.statusFilter || undefined,
+      search:    this.searchTerm   || undefined,
+      date_from: this.dateFrom     || undefined,
+      date_to:   this.dateTo       || undefined,
+    }).subscribe({
+      next: (blob) => {
+        this.exporting = false;
+        if (blob.size < 10) {
+          this.toast.error('No agency interest requests available to export.');
+          return;
+        }
+        const url = URL.createObjectURL(blob);
+        const a   = document.createElement('a');
+        a.href     = url;
+        a.download = `agency-interest-requests-${new Date().toISOString().slice(0, 10)}.csv`;
+        a.click();
+        URL.revokeObjectURL(url);
+        this.toast.success('CSV exported successfully.');
+      },
+      error: () => {
+        this.exporting = false;
+        this.toast.error('Export failed. Please try again.');
+      },
+    });
   }
 
   goToPage(p: number): void {

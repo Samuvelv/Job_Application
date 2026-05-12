@@ -197,7 +197,7 @@ import { ContactSubmissionService } from '../../core/services/contact-submission
       </div>
 
       <!-- Floating mini stats -->
-      @if (!statsError()) {
+      <!-- @if (!statsError()) {
         <div class="lp-hero__mini-stats">
           @for (m of miniStats(); track m.label) {
             <div class="lp-hero__mini-stat">
@@ -213,7 +213,7 @@ import { ContactSubmissionService } from '../../core/services/contact-submission
             }
           }
         </div>
-      }
+      } -->
     </div>
 
   </div>
@@ -252,6 +252,45 @@ import { ContactSubmissionService } from '../../core/services/contact-submission
     </div>
   </section>
 } -->
+
+<!-- ══════════════════════════════════════════════
+     TRUST STATEMENTS
+══════════════════════════════════════════════ -->
+<section class="lp-trust">
+  <div class="lp-container">
+
+    <div class="lp-section-header">
+      <div class="lp-section-eyebrow">Our Commitment</div>
+      <h2 class="lp-section-title">Why Professionals Trust NTL Career Nexus</h2>
+      <p class="lp-section-sub">We focus on verified talent, trusted employers, and genuine international opportunities.</p>
+    </div>
+
+    <div class="lp-trust__grid">
+
+      <div class="lp-trust__card lp-trust__card--indigo">
+        <div class="lp-trust__icon-wrap lp-trust__icon-wrap--indigo">
+          <i class="bi bi-patch-check-fill"></i>
+        </div>
+        <h3 class="lp-trust__title">Every candidate personally verified by our team</h3>
+      </div>
+
+      <div class="lp-trust__card lp-trust__card--emerald">
+        <div class="lp-trust__icon-wrap lp-trust__icon-wrap--emerald">
+          <i class="bi bi-building-check"></i>
+        </div>
+        <h3 class="lp-trust__title">Only sponsor-licensed employers on our platform</h3>
+      </div>
+
+      <div class="lp-trust__card lp-trust__card--teal">
+        <div class="lp-trust__icon-wrap lp-trust__icon-wrap--teal">
+          <i class="bi bi-globe2"></i>
+        </div>
+        <h3 class="lp-trust__title">Candidates placed across Europe, UK, Canada &amp; Australia</h3>
+      </div>
+
+    </div>
+  </div>
+</section>
 
 <!-- ══════════════════════════════════════════════
      FEATURES

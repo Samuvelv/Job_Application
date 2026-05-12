@@ -5,6 +5,7 @@ export interface ContactRequest {
   candidate_id: string;
   status: 'pending' | 'approved' | 'rejected' | 'revoked';
   admin_note?: string | null;
+  request_reason?: string | null;
   created_at: string;
   reviewed_at?: string | null;
   reviewed_by_name?: string | null;

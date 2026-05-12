@@ -410,7 +410,6 @@ export class CandidateRegisterComponent implements OnInit, OnDestroy {
       visa_status_other:       [''],
 
       confirm_terms: [false],
-      confirm_fee:   [false],
       confirm_docs:  [false],
     }, {
       validators: [

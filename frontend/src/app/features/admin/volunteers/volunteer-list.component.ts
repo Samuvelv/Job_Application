@@ -1,7 +1,7 @@
 // src/app/features/admin/volunteers/volunteer-list.component.ts
 import { Component, OnInit, computed, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { ReactiveFormsModule, FormBuilder, FormControl, FormGroup, Validators } from '@angular/forms';
+import { ReactiveFormsModule, FormBuilder, FormControl, FormGroup, FormsModule, Validators } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { catchError, of } from 'rxjs';
 import { VolunteerService, VolunteerFilters } from '../../../core/services/volunteer.service';
@@ -11,11 +11,12 @@ import { ToastService } from '../../../core/services/toast.service';
 import { ConfirmDialogService } from '../../../core/services/confirm-dialog.service';
 import { PageHeaderComponent } from '../../../shared/components/page-header/page-header.component';
 import { EmptyStateComponent } from '../../../shared/components/empty-state/empty-state.component';
+import { SearchableSelectComponent, SelectOption } from '../../../shared/components/searchable-select/searchable-select.component';
 
 @Component({
   selector: 'app-volunteer-list',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, RouterLink, PageHeaderComponent, EmptyStateComponent],
+  imports: [CommonModule, ReactiveFormsModule, FormsModule, RouterLink, PageHeaderComponent, EmptyStateComponent, SearchableSelectComponent],
   template: `
     <app-page-header
       title="Volunteers"
@@ -92,31 +93,52 @@ import { EmptyStateComponent } from '../../../shared/components/empty-state/empt
 
             <div class="col-md-4">
               <label class="form-label fw-semibold small">Country Placed In</label>
-              <select formControlName="country_placed" class="form-select form-select-sm">
-                <option value="">All countries</option>
-                @for (c of countryNames(); track c) {
-                  <option [value]="c">{{ c }}</option>
-                }
-              </select>
+              <app-searchable-select
+                formControlName="country_placed"
+                [options]="countryOpts()"
+                placeholder="All countries"
+                [allowClear]="true">
+              </app-searchable-select>
+            </div>
+
+            <div class="col-md-4">
+              <label class="form-label fw-semibold small">Industry / Sector</label>
+              <app-searchable-select
+                formControlName="sector"
+                [options]="industryOpts()"
+                placeholder="All industries"
+                [allowClear]="true">
+              </app-searchable-select>
             </div>
 
             <div class="col-md-4">
               <label class="form-label fw-semibold small">Language Spoken</label>
-              <select formControlName="language" class="form-select form-select-sm">
-                <option value="">All languages</option>
-                @for (l of languageNames(); track l) {
-                  <option [value]="l">{{ l }}</option>
-                }
-              </select>
+              <app-searchable-select
+                formControlName="language"
+                [options]="languageOpts()"
+                placeholder="All languages"
+                [allowClear]="true">
+              </app-searchable-select>
+            </div>
+
+            <div class="col-md-4">
+              <label class="form-label fw-semibold small">Nationality</label>
+              <app-searchable-select
+                formControlName="nationality"
+                [options]="nationalityOpts()"
+                placeholder="All nationalities"
+                [allowClear]="true">
+              </app-searchable-select>
             </div>
 
             <div class="col-md-4">
               <label class="form-label fw-semibold small">Availability</label>
-              <select formControlName="availability" class="form-select form-select-sm">
-                <option value="">All</option>
-                <option value="Active">Active</option>
-                <option value="Temporarily Unavailable">Temporarily Unavailable</option>
-              </select>
+              <app-searchable-select
+                formControlName="availability"
+                [options]="availabilityOpts"
+                placeholder="All"
+                [allowClear]="true">
+              </app-searchable-select>
             </div>
 
           </div>
@@ -577,23 +599,36 @@ export class VolunteerListComponent implements OnInit {
     return map;
   });
 
-  readonly countryNames = computed<string[]>(() =>
-    this.master.countries().map(c => c.name).sort()
+  readonly countryOpts = computed<SelectOption[]>(() =>
+    this.master.countries().map(c => ({ value: c.name, label: c.name })).sort((a, b) => a.label.localeCompare(b.label))
   );
 
-  readonly languageNames = computed<string[]>(() =>
-    this.master.languages().map(l => l.name).sort()
+  readonly languageOpts = computed<SelectOption[]>(() =>
+    this.master.languages().map(l => ({ value: l.name, label: l.name })).sort((a, b) => a.label.localeCompare(b.label))
   );
+
+  readonly industryOpts = computed<SelectOption[]>(() =>
+    this.master.industries().map(i => ({ value: i.name, label: i.name })).sort((a, b) => a.label.localeCompare(b.label))
+  );
+
+  readonly nationalityOpts = computed<SelectOption[]>(() =>
+    this.master.countries().map(c => ({ value: c.name, label: c.name })).sort((a, b) => a.label.localeCompare(b.label))
+  );
+
+  readonly availabilityOpts: SelectOption[] = [
+    { value: 'Active', label: 'Active' },
+    { value: 'Temporarily Unavailable', label: 'Temporarily Unavailable' },
+  ];
 
   get hasAnyFilter(): boolean {
     const s = this.searchCtrl.value ?? '';
     const f = this.filterForm?.value ?? {};
-    return !!s || !!f['country_placed'] || !!f['language'] || !!f['availability'];
+    return !!s || !!f['country_placed'] || !!f['language'] || !!f['availability'] || !!f['sector'] || !!f['nationality'];
   }
 
   get activeAdvCount(): number {
     const f = this.filterForm?.value ?? {};
-    return [f['country_placed'], f['language'], f['availability']].filter(Boolean).length;
+    return [f['country_placed'], f['language'], f['availability'], f['sector'], f['nationality']].filter(Boolean).length;
   }
 
   constructor(
@@ -611,6 +646,8 @@ export class VolunteerListComponent implements OnInit {
       country_placed: [''],
       language:       [''],
       availability:   [''],
+      sector:         [''],
+      nationality:    [''],
     });
     this.load();
   }
@@ -622,6 +659,8 @@ export class VolunteerListComponent implements OnInit {
       country_placed: f['country_placed'] || undefined,
       language:      f['language']       || undefined,
       availability:  f['availability']   || undefined,
+      sector:        f['sector']         || undefined,
+      nationality:   f['nationality']    || undefined,
       sort:          this.sortCtrl.value  || undefined,
       page:          this.pagination.page,
       limit:         this.pagination.limit,
@@ -645,7 +684,7 @@ export class VolunteerListComponent implements OnInit {
   clearFilters(): void {
     this.searchCtrl.setValue('');
     this.sortCtrl.setValue('newest');
-    this.filterForm.reset({ country_placed: '', language: '', availability: '' });
+    this.filterForm.reset({ country_placed: '', language: '', availability: '', sector: '', nationality: '' });
     this.advOpen = false;
     this.pagination.page = 1;
     this.load();

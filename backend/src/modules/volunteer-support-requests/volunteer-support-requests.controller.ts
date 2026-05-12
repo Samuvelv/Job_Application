@@ -65,6 +65,19 @@ export async function getCounts(req: Request, res: Response, next: NextFunction)
   }
 }
 
+export async function exportCsv(req: Request, res: Response, next: NextFunction): Promise<void> {
+  try {
+    const { page: _p, limit: _l, ...filters } = SupportRequestFilterSchema.parse({ ...req.query, page: 1, limit: 20 });
+    const csv  = await svc.exportSupportRequests(filters);
+    const date = new Date().toISOString().split('T')[0];
+    res.setHeader('Content-Type', 'text/csv');
+    res.setHeader('Content-Disposition', `attachment; filename="volunteer-support-requests-${date}.csv"`);
+    res.send(csv);
+  } catch (err) {
+    next(err);
+  }
+}
+
 export async function getMine(req: Request, res: Response, next: NextFunction): Promise<void> {
   try {
     const rows = await svc.getMySupportRequests(req.user!.sub);

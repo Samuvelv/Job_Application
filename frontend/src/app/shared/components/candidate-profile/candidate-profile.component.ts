@@ -1,9 +1,10 @@
 // src/app/shared/components/candidate-profile/candidate-profile.component.ts
-import { Component, Input, signal } from '@angular/core';
+import { Component, Input, signal, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Candidate } from '../../../core/models/candidate.model';
+import { CandidateService, CandidateActivity } from '../../../core/services/candidate.service';
 
-type Tab = 'overview' | 'experience' | 'education' | 'documents';
+type Tab = 'overview' | 'experience' | 'education' | 'documents' | 'activity';
 
 @Component({
   selector: 'app-candidate-profile',
@@ -141,7 +142,7 @@ type Tab = 'overview' | 'experience' | 'education' | 'documents';
         @for (tab of tabs; track tab.id) {
           <button class="profile-tab-v2"
             [class.active]="activeTab() === tab.id"
-            (click)="activeTab.set(tab.id)">
+            (click)="setTab(tab.id)">
             <i [class]="'bi ' + tab.icon"></i>{{ tab.label }}
             @if (tab.id === 'experience' && candidate.experience?.length) {
               <span style="font-size:.65rem;padding:.1rem .45rem;border-radius:999px;
@@ -554,12 +555,31 @@ type Tab = 'overview' | 'experience' | 'education' | 'documents';
       <!-- ══ TAB: Education ════════════════════════════════════════════════ -->
       @if (activeTab() === 'education') {
         @if (!candidate.education?.length && !candidate.certificates?.length) {
-          <div class="empty-state">
-            <div class="empty-state__icon" style="background:var(--th-gradient-success)">
-              <i class="bi bi-mortarboard"></i>
+          <div class="profile-section-card mb-3">
+            <div class="profile-section-card__header">
+              <div class="profile-section-card__header-icon" style="background:var(--th-gradient-success)">
+                <i class="bi bi-mortarboard-fill"></i>
+              </div>
+              <h6>Education</h6>
             </div>
-            <div class="empty-state__title">No education records</div>
-            <div class="empty-state__description">Education and certifications will appear here once added.</div>
+            <div class="profile-section-card__body">
+              <p class="text-muted fst-italic mb-0" style="font-size:.875rem">
+                Experience-based profile — see work history
+              </p>
+            </div>
+          </div>
+          <div class="profile-section-card">
+            <div class="profile-section-card__header">
+              <div class="profile-section-card__header-icon" style="background:var(--th-gradient-warning)">
+                <i class="bi bi-patch-check-fill"></i>
+              </div>
+              <h6>Certificates</h6>
+            </div>
+            <div class="profile-section-card__body">
+              <p class="text-muted fst-italic mb-0" style="font-size:.875rem">
+                None currently — skills verified through work experience
+              </p>
+            </div>
           </div>
         } @else {
           @if (candidate.education?.length) {
@@ -597,6 +617,20 @@ type Tab = 'overview' | 'experience' | 'education' | 'documents';
                     </div>
                   }
                 </div>
+              </div>
+            </div>
+          } @else {
+            <div class="profile-section-card mb-3">
+              <div class="profile-section-card__header">
+                <div class="profile-section-card__header-icon" style="background:var(--th-gradient-success)">
+                  <i class="bi bi-mortarboard-fill"></i>
+                </div>
+                <h6>Education</h6>
+              </div>
+              <div class="profile-section-card__body">
+                <p class="text-muted fst-italic mb-0" style="font-size:.875rem">
+                  Experience-based profile — see work history
+                </p>
               </div>
             </div>
           }
@@ -664,6 +698,20 @@ type Tab = 'overview' | 'experience' | 'education' | 'documents';
                 </div>
               </div>
             </div>
+          } @else {
+            <div class="profile-section-card">
+              <div class="profile-section-card__header">
+                <div class="profile-section-card__header-icon" style="background:var(--th-gradient-warning)">
+                  <i class="bi bi-patch-check-fill"></i>
+                </div>
+                <h6>Certificates</h6>
+              </div>
+              <div class="profile-section-card__body">
+                <p class="text-muted fst-italic mb-0" style="font-size:.875rem">
+                  None currently — skills verified through work experience
+                </p>
+              </div>
+            </div>
           }
         }
       }
@@ -727,16 +775,111 @@ type Tab = 'overview' | 'experience' | 'education' | 'documents';
         }
       }
 
+      <!-- ══ TAB: Activity ═════════════════════════════════════════════════ -->
+      @if (activeTab() === 'activity') {
+        <div class="profile-section-card mb-3">
+          <div class="profile-section-card__header">
+            <div class="profile-section-card__header-icon"
+              style="background:var(--th-gradient-primary)">
+              <i class="bi bi-clock-history"></i>
+            </div>
+            <h6>Activity History</h6>
+          </div>
+          <div class="profile-section-card__body">
+
+            @if (activityLoading()) {
+              <div class="text-center py-4">
+                <div class="spinner-border spinner-border-sm" style="color:var(--th-primary)"></div>
+                <div class="mt-2 small text-muted">Loading activity…</div>
+              </div>
+            } @else if (activity().length === 0) {
+              <div class="text-center py-4">
+                <i class="bi bi-clock-history" style="font-size:2rem;color:var(--th-muted);opacity:.4;"></i>
+                <div class="mt-2 small text-muted">No activity recorded yet.</div>
+              </div>
+            } @else {
+              <div class="activity-timeline">
+                @for (item of activity(); track item.id) {
+                  <div class="activity-item">
+                    <div class="activity-item__dot">
+                      <i class="bi" [class]="'bi ' + getActivityIcon(item.type)"
+                        [style.color]="getActivityColor(item.type)"></i>
+                    </div>
+                    <div class="activity-item__body">
+                      <div class="activity-item__desc">{{ item.description }}</div>
+                      <div class="activity-item__date">
+                        {{ item.created_at | date:'dd MMM yyyy, HH:mm' }}
+                      </div>
+                    </div>
+                  </div>
+                }
+              </div>
+            }
+
+          </div>
+        </div>
+      }
+
     }
   `,
-  styles: [],
+  styles: [`
+    .activity-timeline {
+      display: flex;
+      flex-direction: column;
+      gap: 0;
+    }
+    .activity-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 14px;
+      padding: 12px 0;
+      border-bottom: 1px solid var(--th-border);
+    }
+    .activity-item:last-child {
+      border-bottom: none;
+    }
+    .activity-item__dot {
+      width: 34px;
+      height: 34px;
+      border-radius: 50%;
+      background: var(--th-surface-2);
+      border: 1px solid var(--th-border);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      font-size: 15px;
+    }
+    .activity-item__body {
+      flex: 1;
+      padding-top: 4px;
+    }
+    .activity-item__desc {
+      font-size: 14px;
+      font-weight: 500;
+      color: var(--th-text);
+      line-height: 1.4;
+    }
+    .activity-item__date {
+      font-size: 12px;
+      color: var(--th-muted);
+      margin-top: 3px;
+    }
+  `],
 })
 export class CandidateProfileComponent {
   @Input() candidate: Candidate | null = null;
   @Input() contactLocked = false;
   @Input() showAdminInfo = true;
 
+  private candidateSvc = inject(CandidateService);
+
   activeTab = signal<Tab>('overview');
+
+  // Activity tab state
+  activity         = signal<CandidateActivity[]>([]);
+  activityLoading  = signal(false);
+  activityLoaded   = false;
 
   readonly cvFormatLabels: Record<string, string> = {
     uk_format:         'UK Format',
@@ -753,5 +896,38 @@ export class CandidateProfileComponent {
     { id: 'experience',  label: 'Experience',  icon: 'bi-briefcase-fill'    },
     { id: 'education',   label: 'Education',   icon: 'bi-mortarboard-fill'  },
     { id: 'documents',   label: 'Documents',   icon: 'bi-folder2-open'      },
+    { id: 'activity',    label: 'Activity',    icon: 'bi-clock-history'     },
   ];
+
+  setTab(tab: Tab): void {
+    this.activeTab.set(tab);
+    if (tab === 'activity' && !this.activityLoaded && this.candidate?.id) {
+      this.activityLoading.set(true);
+      this.candidateSvc.getActivity(this.candidate.id).subscribe({
+        next: (res) => {
+          this.activity.set(res.activity);
+          this.activityLoading.set(false);
+          this.activityLoaded = true;
+        },
+        error: () => {
+          this.activityLoading.set(false);
+          this.activityLoaded = true;
+        },
+      });
+    }
+  }
+
+  getActivityIcon(type: string): string {
+    const map: Record<string, string> = {
+      agency_interest_approved: 'bi-building-check',
+    };
+    return map[type] ?? 'bi-circle-fill';
+  }
+
+  getActivityColor(type: string): string {
+    const map: Record<string, string> = {
+      agency_interest_approved: 'var(--th-emerald)',
+    };
+    return map[type] ?? 'var(--th-primary)';
+  }
 }

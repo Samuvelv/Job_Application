@@ -14,7 +14,18 @@ export async function listAuditLogs(filters: AuditLogFilterDto) {
     .select(
       'al.id',
       'al.user_id',
-      db.raw(`COALESCE(adm.first_name, c.first_name, r.contact_name) AS user_name`),
+      db.raw(`COALESCE(
+        adm.first_name || ' ' || COALESCE(adm.last_name, ''),
+        c.first_name   || ' ' || COALESCE(c.last_name,   ''),
+        r.contact_name
+      ) AS user_name`),
+      db.raw(`u.email AS user_email`),
+      db.raw(`CASE
+        WHEN adm.user_id IS NOT NULL THEN 'Admin'
+        WHEN c.user_id   IS NOT NULL THEN 'Candidate'
+        WHEN r.user_id   IS NOT NULL THEN 'Recruiter'
+        ELSE 'System'
+      END AS user_role`),
       'al.action',
       'al.resource',
       'al.resource_id',

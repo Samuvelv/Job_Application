@@ -12,7 +12,7 @@ import { ConfirmDialogService } from '../../../core/services/confirm-dialog.serv
     <div class="contact-request-card" [class.is-selected]="selected">
       <!-- Card Header -->
       <div class="card-header">
-        <div class="header-content">
+        <div class="header-top">
           <!-- Selection checkbox -->
           @if (selectable && request.status === 'pending') {
             <div class="card-checkbox-wrap" (click)="$event.stopPropagation()">
@@ -24,11 +24,21 @@ import { ConfirmDialogService } from '../../../core/services/confirm-dialog.serv
               />
             </div>
           }
+          <!-- Status badge inline in header -->
+          <span class="status-badge ms-auto" [class]="'status-' + request.status">
+            @if (request.status === 'pending') { <i class="bi bi-hourglass-split me-1"></i> }
+            @else if (request.status === 'approved') { <i class="bi bi-check-circle-fill me-1"></i> }
+            @else if (request.status === 'rejected') { <i class="bi bi-x-circle-fill me-1"></i> }
+            @else if (request.status === 'revoked') { <i class="bi bi-shield-x-fill me-1"></i> }
+            {{ request.status | uppercase }}
+          </span>
+        </div>
 
+        <div class="header-content">
           <!-- Recruiter Info -->
-          <div class="party-info recruiter-info">
-            <div class="party-label">Recruiter</div>
-            <div class="party-name">{{ request.recruiter_name }}</div>
+          <div class="party-block recruiter-block">
+            <div class="party-label"><i class="bi bi-briefcase-fill me-1"></i>Recruiter</div>
+            <div class="party-name">{{ request.recruiter_name ?? '—' }}</div>
             @if (request.recruiter_company) {
               <div class="party-company">{{ request.recruiter_company }}</div>
             }
@@ -41,13 +51,13 @@ import { ConfirmDialogService } from '../../../core/services/confirm-dialog.serv
           </div>
 
           <!-- Arrow Separator -->
-          <div class="party-separator">
-            <i class="bi bi-arrow-right"></i>
+          <div class="party-separator" aria-hidden="true">
+            <i class="bi bi-arrow-right-circle-fill"></i>
           </div>
 
           <!-- Candidate Info -->
-          <div class="party-info candidate-info">
-            <div class="party-label">Candidate</div>
+          <div class="party-block candidate-block">
+            <div class="party-label"><i class="bi bi-person-fill me-1"></i>Candidate</div>
             <div class="party-name">{{ request.candidate_first_name }} {{ request.candidate_last_name }}</div>
             @if (request.candidate_number) {
               <div class="candidate-number">
@@ -65,13 +75,6 @@ import { ConfirmDialogService } from '../../../core/services/confirm-dialog.serv
             }
           </div>
         </div>
-      </div>
-
-      <!-- Status Section -->
-      <div class="card-status-bar">
-        <span class="status-badge" [class]="'status-' + request.status">
-          {{ request.status | uppercase }}
-        </span>
       </div>
 
       <!-- Audit Trail -->
@@ -122,10 +125,18 @@ import { ConfirmDialogService } from '../../../core/services/confirm-dialog.serv
         </div>
       </div>
 
+      <!-- Request Reason (if provided) -->
+      @if (request.request_reason) {
+        <div class="request-reason-section">
+          <p class="request-reason-label"><i class="bi bi-chat-left-text-fill me-1"></i>Reason for Request</p>
+          <p class="request-reason-text">{{ request.request_reason }}</p>
+        </div>
+      }
+
       <!-- Admin Notes (if exists) -->
       @if (request.status !== 'pending' && request.admin_note) {
         <div class="admin-notes-section">
-          <p class="admin-note-label">Admin Note</p>
+          <p class="admin-note-label"><i class="bi bi-sticky-fill me-1"></i>Admin Note</p>
           <p class="admin-note-text">{{ request.admin_note }}</p>
         </div>
       }
@@ -147,7 +158,7 @@ import { ConfirmDialogService } from '../../../core/services/confirm-dialog.serv
       <!-- Revoke Button (for approved requests, admin only) -->
       @if (request.status === 'approved' && isAdmin && !isSubmitting) {
         <div class="card-actions">
-          <button class="btn btn-warning btn-action" (click)="onRevokeClick()" style="background:#f59e0b;border-color:#f59e0b;color:#fff">
+          <button class="btn btn-warning btn-action" (click)="onRevokeClick()">
             <i class="bi bi-shield-x"></i>
             Revoke Access
           </button>
@@ -156,8 +167,8 @@ import { ConfirmDialogService } from '../../../core/services/confirm-dialog.serv
 
       <!-- Revocation info (revoked rows) -->
       @if (request.status === 'revoked' && request.revocation_reason) {
-        <div class="admin-notes-section">
-          <p class="admin-note-label">Revocation Reason</p>
+        <div class="admin-notes-section admin-notes-section--revoked">
+          <p class="admin-note-label"><i class="bi bi-shield-exclamation me-1"></i>Revocation Reason</p>
           <p class="admin-note-text">{{ request.revocation_reason }}</p>
         </div>
       }
@@ -180,14 +191,14 @@ import { ConfirmDialogService } from '../../../core/services/confirm-dialog.serv
       height: 100%;
       background: var(--th-surface);
       border: 1px solid var(--th-border);
-      border-radius: var(--th-radius-lg, 8px);
-      box-shadow: var(--th-shadow-card, 0 1px 3px rgba(0, 0, 0, 0.1));
-      transition: box-shadow 0.2s ease, transform 0.2s ease;
+      border-radius: var(--th-radius-lg, 10px);
+      box-shadow: var(--th-shadow-card, 0 1px 3px rgba(0,0,0,.08));
+      transition: box-shadow .2s ease, transform .2s ease;
       overflow: hidden;
     }
 
     .contact-request-card:hover {
-      box-shadow: var(--th-shadow-card-hover, 0 4px 12px rgba(0, 0, 0, 0.15));
+      box-shadow: var(--th-shadow-card-hover, 0 4px 14px rgba(0,0,0,.13));
       transform: translateY(-2px);
     }
 
@@ -213,167 +224,161 @@ import { ConfirmDialogService } from '../../../core/services/confirm-dialog.serv
 
     /* ── Header ── */
     .card-header {
-      padding: 1rem;
+      padding: .875rem 1rem .75rem;
       border-bottom: 1px solid var(--th-border);
       background: var(--th-surface);
     }
 
-    .header-content {
+    /* Top row: checkbox (optional) + status badge */
+    .header-top {
       display: flex;
-      align-items: flex-start;
-      gap: 0.75rem;
+      align-items: center;
+      margin-bottom: .625rem;
+      min-height: 1.5rem;
     }
 
-    .party-info {
-      flex: 1;
+    /* Two-column party layout */
+    .header-content {
+      display: grid;
+      grid-template-columns: 1fr auto 1fr;
+      align-items: start;
+      gap: .5rem;
+    }
+
+    /* Individual party block */
+    .party-block {
+      padding: .625rem .75rem;
+      border-radius: var(--th-radius, 6px);
+      border: 1px solid var(--th-border);
+      font-size: .875rem;
       min-width: 0;
-      font-size: 0.9rem;
+    }
+
+    .recruiter-block {
+      background: color-mix(in srgb, var(--th-primary) 5%, var(--th-surface));
+      border-color: color-mix(in srgb, var(--th-primary) 15%, var(--th-border));
+    }
+
+    .candidate-block {
+      background: color-mix(in srgb, var(--th-success, #10b981) 5%, var(--th-surface));
+      border-color: color-mix(in srgb, var(--th-success, #10b981) 15%, var(--th-border));
     }
 
     .party-label {
-      font-size: 0.75rem;
+      font-size: .7rem;
       font-weight: 700;
       text-transform: uppercase;
       color: var(--th-muted);
-      letter-spacing: 0.5px;
-      margin-bottom: 0.25rem;
+      letter-spacing: .5px;
+      margin-bottom: .25rem;
+      display: flex;
+      align-items: center;
     }
 
     .party-name {
       font-weight: 600;
       color: var(--th-text);
-      margin-bottom: 0.25rem;
-      white-space: nowrap;
+      margin-bottom: .2rem;
       overflow: hidden;
       text-overflow: ellipsis;
-    }
-
-    .party-company {
-      font-size: 0.85rem;
-      color: var(--th-muted);
-      margin-bottom: 0.25rem;
       white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
     }
 
+    .party-company,
     .party-title {
-      font-size: 0.85rem;
+      font-size: .8rem;
       color: var(--th-muted);
-      margin-bottom: 0.25rem;
-      white-space: nowrap;
+      margin-bottom: .15rem;
       overflow: hidden;
       text-overflow: ellipsis;
+      white-space: nowrap;
     }
 
     .party-email {
-      font-size: 0.8rem;
+      font-size: .775rem;
       color: var(--th-text-secondary);
       display: flex;
       align-items: center;
-      gap: 0.375rem;
-      white-space: nowrap;
+      gap: .3rem;
       overflow: hidden;
       text-overflow: ellipsis;
+      white-space: nowrap;
+      margin-top: .2rem;
     }
 
-    .party-email i {
-      font-size: 0.7rem;
-      flex-shrink: 0;
-    }
+    .party-email i { font-size: .68rem; flex-shrink: 0; }
 
-    .candidate-number {
-      margin-top: 0.25rem;
-    }
-
+    .candidate-number { margin-top: .2rem; }
     .candidate-number .badge {
-      font-size: 0.7rem;
-      padding: 0.25rem 0.5rem;
+      font-size: .68rem;
+      padding: .2rem .45rem;
       background: var(--th-primary-soft);
       color: var(--th-primary);
+      border-radius: var(--th-radius-sm, 4px);
     }
 
+    /* Arrow separator */
     .party-separator {
       flex-shrink: 0;
       display: flex;
       align-items: center;
       justify-content: center;
       color: var(--th-border-strong);
-      font-size: 1.25rem;
-      padding: 0 0.5rem;
+      font-size: 1.1rem;
+      padding: 0 .25rem;
+      margin-top: 1.5rem;
     }
 
-    /* ── Status Bar ── */
-    .card-status-bar {
-      padding: 0.5rem 1rem;
-      background: var(--th-surface-2);
-      border-bottom: 1px solid var(--th-border);
-    }
-
+    /* ── Status badge (now inline in header-top) ── */
     .status-badge {
-      display: inline-block;
-      padding: 0.375rem 0.75rem;
-      border-radius: var(--th-radius, 4px);
-      font-size: 0.7rem;
+      display: inline-flex;
+      align-items: center;
+      padding: .25rem .65rem;
+      border-radius: 99px;
+      font-size: .68rem;
       font-weight: 700;
       text-transform: uppercase;
-      letter-spacing: 0.5px;
+      letter-spacing: .4px;
     }
 
-    .status-pending {
-      background-color: var(--th-warning-soft);
-      color: var(--th-warning);
-    }
-
-    .status-approved {
-      background-color: var(--th-success-soft);
-      color: var(--th-success);
-    }
-
-    .status-rejected {
-      background-color: var(--th-danger-soft);
-      color: var(--th-danger);
-    }
-
-    .status-revoked {
-      background-color: #f3f4f6;
-      color: #6b7280;
+    .status-pending  { background: var(--th-warning-soft);  color: var(--th-warning); }
+    .status-approved { background: var(--th-success-soft);  color: var(--th-success); }
+    .status-rejected { background: var(--th-danger-soft);   color: var(--th-danger);  }
+    .status-revoked  {
+      background: var(--th-surface-raised, #f3f4f6);
+      color: var(--th-muted, #6b7280);
+      border: 1px solid var(--th-border);
     }
 
     /* ── Audit Trail ── */
     .audit-trail {
       border-top: 1px solid var(--th-border);
       background: var(--th-surface-2);
-      padding: 0.625rem 1rem;
+      padding: .625rem 1rem;
+      border-left: 3px solid var(--th-border-strong);
     }
 
     .audit-trail__title {
       display: flex;
       align-items: center;
-      gap: 0.375rem;
-      font-size: 0.7rem;
+      gap: .375rem;
+      font-size: .68rem;
       font-weight: 700;
       text-transform: uppercase;
-      letter-spacing: 0.06em;
+      letter-spacing: .06em;
       color: var(--th-muted);
-      margin-bottom: 0.5rem;
+      margin-bottom: .4rem;
     }
 
-    .audit-trail__title i {
-      font-size: 0.75rem;
-    }
+    .audit-trail__title i { font-size: .72rem; }
 
-    .audit-trail__rows {
-      display: flex;
-      flex-direction: column;
-      gap: 0.3rem;
-    }
+    .audit-trail__rows { display: flex; flex-direction: column; gap: .25rem; }
 
     .audit-trail__row {
       display: flex;
       align-items: baseline;
-      gap: 0.5rem;
-      font-size: 0.78rem;
+      gap: .5rem;
+      font-size: .78rem;
     }
 
     .audit-trail__label {
@@ -387,157 +392,133 @@ import { ConfirmDialogService } from '../../../core/services/confirm-dialog.serv
       color: var(--th-text-secondary);
       display: flex;
       align-items: center;
-      gap: 0.3rem;
+      gap: .3rem;
       min-width: 0;
       overflow: hidden;
       text-overflow: ellipsis;
       white-space: nowrap;
     }
 
-    .audit-trail__value i {
-      font-size: 0.72rem;
-      color: var(--th-success);
-      flex-shrink: 0;
-    }
+    .audit-trail__value i { font-size: .72rem; color: var(--th-success); flex-shrink: 0; }
+    .audit-trail__unknown { color: var(--th-muted); }
 
-    .audit-trail__unknown {
-      color: var(--th-muted);
-    }
-    /* ── Admin Notes ── */
-    .admin-notes-section {
-      padding: 0.75rem 1rem;
+    /* ── Request Reason ── */
+    .request-reason-section {
+      padding: .625rem 1rem;
       background: var(--th-surface-2);
-      border-bottom: 1px solid var(--th-border);
+      border-top: 1px solid var(--th-border);
+      border-left: 3px solid var(--th-primary);
     }
 
-    .admin-note-label {
-      margin: 0;
-      font-size: 0.75rem;
+    .request-reason-label {
+      margin: 0 0 .3rem;
+      font-size: .7rem;
       font-weight: 700;
       text-transform: uppercase;
       color: var(--th-muted);
-      letter-spacing: 0.5px;
-      margin-bottom: 0.375rem;
+      letter-spacing: .5px;
+      display: flex;
+      align-items: center;
+    }
+
+    .request-reason-text {
+      margin: 0;
+      font-size: .85rem;
+      color: var(--th-text);
+      line-height: 1.45;
+      word-break: break-word;
+    }
+
+    /* ── Admin Notes ── */
+    .admin-notes-section {
+      padding: .625rem 1rem;
+      background: var(--th-surface-2);
+      border-top: 1px solid var(--th-border);
+      border-left: 3px solid var(--th-warning, #f59e0b);
+    }
+
+    .admin-notes-section--revoked {
+      border-left-color: var(--th-danger, #f43f5e);
+    }
+
+    .admin-note-label {
+      margin: 0 0 .3rem;
+      font-size: .7rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      color: var(--th-muted);
+      letter-spacing: .5px;
+      display: flex;
+      align-items: center;
     }
 
     .admin-note-text {
       margin: 0;
-      font-size: 0.85rem;
+      font-size: .85rem;
       color: var(--th-text);
-      line-height: 1.4;
-      word-wrap: break-word;
+      line-height: 1.45;
+      word-break: break-word;
     }
 
     /* ── Actions ── */
     .card-actions {
-      padding: 1rem;
+      padding: .75rem 1rem;
       display: flex;
-      gap: 0.5rem;
+      gap: .5rem;
       background: var(--th-surface);
+      border-top: 1px solid var(--th-border);
+      margin-top: auto;
     }
 
     .btn-action {
       flex: 1;
-      padding: 0.5rem 0.75rem;
-      font-size: 0.85rem;
+      padding: .5rem .75rem;
+      font-size: .85rem;
       font-weight: 500;
       border-radius: var(--th-radius, 4px);
       display: flex;
       align-items: center;
       justify-content: center;
-      gap: 0.375rem;
-      transition: all 0.2s ease;
+      gap: .375rem;
+      transition: all .2s ease;
       border: 1px solid transparent;
     }
 
-    .btn-action i {
-      font-size: 0.85rem;
-    }
+    .btn-action i { font-size: .85rem; }
 
-    .btn-success {
-      background-color: var(--th-success, #10b981);
-      color: white;
-      border-color: var(--th-success, #10b981);
-    }
+    .btn-success { background-color: var(--th-success, #10b981); color: #fff; border-color: var(--th-success, #10b981); }
+    .btn-success:hover:not(:disabled) { filter: brightness(.9); }
 
-    .btn-success:hover:not(:disabled) {
-      filter: brightness(0.9);
-    }
+    .btn-danger  { background-color: var(--th-danger, #f43f5e);  color: #fff; border-color: var(--th-danger, #f43f5e); }
+    .btn-danger:hover:not(:disabled)  { filter: brightness(.9); }
 
-    .btn-danger {
-      background-color: var(--th-danger, #f43f5e);
-      color: white;
-      border-color: var(--th-danger, #f43f5e);
-    }
+    .btn-warning { background-color: #f59e0b; color: #fff; border-color: #f59e0b; }
+    .btn-warning:hover:not(:disabled) { filter: brightness(.9); }
 
-    .btn-danger:hover:not(:disabled) {
-      filter: brightness(0.9);
-    }
+    .btn-secondary { background-color: var(--th-surface-2); color: var(--th-text-secondary); border-color: var(--th-border-strong); }
+    .btn-secondary:hover:not(:disabled) { background-color: var(--th-surface-raised); }
 
-    .btn-secondary {
-      background-color: var(--th-surface-2);
-      color: var(--th-text-secondary);
-      border-color: var(--th-border-strong);
-    }
+    .btn-action:disabled { opacity: .6; cursor: not-allowed; }
 
-    .btn-secondary:hover:not(:disabled) {
-      background-color: var(--th-surface-raised);
-    }
-
-    .btn-action:disabled {
-      opacity: 0.6;
-      cursor: not-allowed;
-    }
-
-    .spinner-border-sm {
-      width: 0.9rem;
-      height: 0.9rem;
-      border-width: 0.2em;
-    }
+    .spinner-border-sm { width: .9rem; height: .9rem; border-width: .2em; }
 
     /* ── Responsive ── */
     @media (max-width: 768px) {
       .header-content {
-        flex-direction: column;
-        gap: 0.5rem;
+        grid-template-columns: 1fr;
+        gap: .5rem;
       }
-
-      .party-separator {
-        display: none;
-      }
-
-      .card-meta {
-        flex-direction: column;
-        align-items: flex-start;
-      }
-
+      .party-separator { display: none; }
       .card-header,
-      .card-meta,
       .admin-notes-section,
-      .card-actions {
-        padding: 0.75rem;
-      }
-
-      .party-name,
-      .party-company,
-      .party-title {
-        white-space: normal;
-      }
+      .card-actions { padding-left: .75rem; padding-right: .75rem; }
+      .party-name, .party-company, .party-title { white-space: normal; }
     }
 
     @media (max-width: 576px) {
-      .party-info {
-        font-size: 0.85rem;
-      }
-
-      .party-label {
-        font-size: 0.7rem;
-      }
-
-      .btn-action {
-        padding: 0.5rem;
-        font-size: 0.8rem;
-      }
+      .party-block { font-size: .825rem; }
+      .party-label { font-size: .68rem; }
+      .btn-action  { padding: .45rem; font-size: .8rem; }
     }
   `],
 })

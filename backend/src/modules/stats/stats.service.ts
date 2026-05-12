@@ -5,18 +5,28 @@ const toCount = (row: any): number => Number(row?.count ?? 0);
 
 export async function getAdminStats() {
   const [
-    candidates, recruiters, pendingEdits, auditLogsToday,
-    registrationsToday, profilesForwardedToday,
+    candidates, activeCandidates, recruiters, pendingEdits, auditLogsToday,
+    registrationsToday, profilesForwardedToday, interviewsArrangedToday,
     totalVolunteers, activeVolunteers, candidatesHelpedThisMonth,
+    placementsMade, countriesActiveRow,
   ] = await Promise.all([
+    // Total candidates
     db('candidates').count('id as count').first(),
-    db('users').where({ role_id: db('roles').select('id').where({ name: 'recruiter' }) }).count('id as count').first(),
+    // Active candidates — profile_status column (not 'status')
+    db('candidates').where({ profile_status: 'active' }).count('id as count').first(),
+    // Recruiters — direct table count (simpler and correct)
+    db('recruiters').count('id as count').first(),
     db('profile_edit_requests').where({ status: 'pending' }).count('id as count').first(),
-    db('audit_logs').whereRaw('DATE(created_at) = CURRENT_DATE').count('id as count').first(),
-    db('candidates').whereRaw('DATE(created_at) = CURRENT_DATE').count('id as count').first(),
+    db('audit_logs').whereRaw("created_at >= date_trunc('day', now()) AND created_at < date_trunc('day', now()) + interval '1 day'").count('id as count').first(),
+    db('candidates').whereRaw("created_at >= date_trunc('day', now()) AND created_at < date_trunc('day', now()) + interval '1 day'").count('id as count').first(),
+    // Profiles forwarded = contact unlock requests approved today
     db('contact_unlock_requests')
       .where({ status: 'approved' })
-      .whereRaw('DATE(reviewed_at) = CURRENT_DATE')
+      .whereRaw("reviewed_at >= date_trunc('day', now()) AND reviewed_at < date_trunc('day', now()) + interval '1 day'")
+      .count('id as count').first(),
+    // Interviews arranged = contact unlock requests created today
+    db('contact_unlock_requests')
+      .whereRaw("created_at >= date_trunc('day', now()) AND created_at < date_trunc('day', now()) + interval '1 day'")
       .count('id as count').first(),
     // Volunteer stats
     db('volunteers').count('id as count').first(),
@@ -25,18 +35,29 @@ export async function getAdminStats() {
       .where({ status: 'connected' })
       .whereRaw("date_trunc('month', updated_at) = date_trunc('month', CURRENT_DATE)")
       .count('id as count').first(),
+    // Placements = total shortlists (candidates placed with recruiters)
+    db('shortlists').count('id as count').first(),
+    // Countries active = distinct non-null current_country values
+    db('candidates')
+      .countDistinct('current_country as count')
+      .whereNotNull('current_country')
+      .first(),
   ]);
 
   return {
     candidates:                 toCount(candidates),
+    activeCandidates:           toCount(activeCandidates),
     recruiters:                 toCount(recruiters),
     pendingEdits:               toCount(pendingEdits),
     auditLogsToday:             toCount(auditLogsToday),
     registrationsToday:         toCount(registrationsToday),
     profilesForwardedToday:     toCount(profilesForwardedToday),
+    interviewsArrangedToday:    toCount(interviewsArrangedToday),
     totalVolunteers:            toCount(totalVolunteers),
     activeVolunteers:           toCount(activeVolunteers),
     candidatesHelpedThisMonth:  toCount(candidatesHelpedThisMonth),
+    placementsMade:             toCount(placementsMade),
+    countriesActive:            toCount(countriesActiveRow),
   };
 }
 

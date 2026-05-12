@@ -3,7 +3,7 @@ import { Router, Request, Response, NextFunction } from 'express';
 import { authenticate } from '../../middleware/authenticate';
 import { authorize }    from '../../middleware/authorize';
 import * as svc from './contact-requests.service';
-import { ReviewContactRequestSchema, BulkReviewContactRequestSchema, ContactRequestFilterSchema, RevokeContactRequestSchema } from './contact-requests.dto';
+import { ReviewContactRequestSchema, BulkReviewContactRequestSchema, ContactRequestFilterSchema, RevokeContactRequestSchema, CreateContactRequestSchema } from './contact-requests.dto';
 import { getRecruiterByUserId } from '../recruiters/recruiters.service';
 
 const router = Router();
@@ -43,7 +43,8 @@ router.post('/:candidateId',
         res.status(403).json({ message: 'Recruitment agencies cannot use this endpoint. Please submit an Interest Request instead.' });
         return;
       }
-      const row = await svc.createContactRequest(recruiter.id, req.params['candidateId'] as string);
+      const dto = CreateContactRequestSchema.parse(req.body);
+      const row = await svc.createContactRequest(recruiter.id, req.params['candidateId'] as string, dto);
       res.status(201).json({ request: row });
     } catch (err) { next(err); }
   },
@@ -57,6 +58,21 @@ router.get('/me',
       const recruiter = await getRecruiterByUserId(req.user!.sub);
       const requests = await svc.getMyContactRequests(recruiter.id);
       res.json({ requests });
+    } catch (err) { next(err); }
+  },
+);
+
+// Admin: export CSV (must be before /:candidateId to avoid param clash)
+router.get('/export',
+  authorize('admin'),
+  async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const { page: _p, limit: _l, ...filters } = ContactRequestFilterSchema.parse({ ...req.query, page: 1, limit: 20 });
+      const csv  = await svc.exportContactRequests(filters);
+      const date = new Date().toISOString().split('T')[0];
+      res.setHeader('Content-Type', 'text/csv');
+      res.setHeader('Content-Disposition', `attachment; filename="contact-info-requests-${date}.csv"`);
+      res.send(csv);
     } catch (err) { next(err); }
   },
 );

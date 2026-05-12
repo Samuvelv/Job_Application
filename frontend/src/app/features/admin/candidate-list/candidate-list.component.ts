@@ -2,7 +2,7 @@
 import { Component, OnInit, ViewChild, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder } from '@angular/forms';
-import { RouterLink } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
 import { distinctUntilChanged, skip } from 'rxjs';
 import { CandidateService } from '../../../core/services/candidate.service';
 import { MasterDataService } from '../../../core/services/master-data.service';
@@ -277,8 +277,9 @@ import { SORT_OPTIONS } from '../../../core/constants/candidate-options';
                         <span class="badge rounded-pill"
                           [class.badge-status-active]="emp.profile_status === 'active'"
                           [class.badge-status-pending]="emp.profile_status === 'pending_edit'"
-                          [class.badge-status-inactive]="emp.profile_status === 'inactive'">
-                          {{ emp.profile_status | titlecase }}
+                          [class.badge-status-inactive]="emp.profile_status === 'inactive'"
+                          [class.badge-status-placed]="emp.profile_status === 'placed'">
+                          {{ emp.profile_status === 'pending_edit' ? 'Pending Edit' : emp.profile_status === 'placed' ? 'Placed' : (emp.profile_status | titlecase) }}
                         </span>
                       </td>
                       <td>
@@ -317,6 +318,27 @@ import { SORT_OPTIONS } from '../../../core/constants/candidate-options';
                             <i class="bi bi-pencil"></i>
                           </a>
                           <div class="tbl-actions__sep"></div>
+                          @if (emp.profile_status === 'placed') {
+                            @if (emp.is_volunteer || emp.volunteer_invite_status === 'converted') {
+                              <span class="tbl-actions__btn tbl-actions__btn--icon"
+                                style="color:var(--th-success,#22c55e);cursor:default" title="Already a volunteer">
+                                <i class="bi bi-person-check-fill"></i>
+                              </span>
+                            } @else {
+                              <button class="tbl-actions__btn tbl-actions__btn--icon tbl-actions__btn--vol"
+                                [disabled]="invitingId === emp.id"
+                                (click)="inviteAsVolunteer(emp)"
+                                [title]="emp.volunteer_invite_status === 'invited' ? 'Resend volunteer invitation' : 'Invite as volunteer'">
+                                @if (invitingId === emp.id) {
+                                  <span class="spinner-border spinner-border-sm"></span>
+                                } @else if (emp.volunteer_invite_status === 'invited') {
+                                  <i class="bi bi-envelope-check-fill"></i>
+                                } @else {
+                                  <i class="bi bi-person-plus-fill"></i>
+                                }
+                              </button>
+                            }
+                          }
                           <button class="tbl-actions__btn tbl-actions__btn--mail tbl-actions__btn--icon"
                             (click)="resendCreds(emp)" title="Resend credentials">
                             <i class="bi bi-envelope"></i>
@@ -358,8 +380,9 @@ import { SORT_OPTIONS } from '../../../core/constants/candidate-options';
                       <span class="badge rounded-pill"
                         [class.badge-status-active]="emp.profile_status === 'active'"
                         [class.badge-status-pending]="emp.profile_status === 'pending_edit'"
-                        [class.badge-status-inactive]="emp.profile_status === 'inactive'">
-                        {{ emp.profile_status | titlecase }}
+                        [class.badge-status-inactive]="emp.profile_status === 'inactive'"
+                        [class.badge-status-placed]="emp.profile_status === 'placed'">
+                        {{ emp.profile_status === 'pending_edit' ? 'Pending Edit' : emp.profile_status === 'placed' ? 'Placed' : (emp.profile_status | titlecase) }}
                       </span>
                       <span class="badge rounded-pill"
                         [class.badge-status-active]="emp.registration_fee_status === 'paid'"
@@ -400,6 +423,27 @@ import { SORT_OPTIONS } from '../../../core/constants/candidate-options';
                       <i class="bi bi-pencil"></i>
                     </a>
                     <div class="tbl-actions__sep"></div>
+                    @if (emp.profile_status === 'placed') {
+                      @if (emp.is_volunteer || emp.volunteer_invite_status === 'converted') {
+                        <span class="tbl-actions__btn tbl-actions__btn--icon"
+                          style="color:var(--th-success,#22c55e);cursor:default" title="Already a volunteer">
+                          <i class="bi bi-person-check-fill"></i>
+                        </span>
+                      } @else {
+                        <button class="tbl-actions__btn tbl-actions__btn--icon tbl-actions__btn--vol"
+                          [disabled]="invitingId === emp.id"
+                          (click)="inviteAsVolunteer(emp)"
+                          [title]="emp.volunteer_invite_status === 'invited' ? 'Resend volunteer invitation' : 'Invite as volunteer'">
+                          @if (invitingId === emp.id) {
+                            <span class="spinner-border spinner-border-sm"></span>
+                          } @else if (emp.volunteer_invite_status === 'invited') {
+                            <i class="bi bi-envelope-check-fill"></i>
+                          } @else {
+                            <i class="bi bi-person-plus-fill"></i>
+                          }
+                        </button>
+                      }
+                    }
                     <button class="tbl-actions__btn tbl-actions__btn--mail tbl-actions__btn--icon"
                       (click)="resendCreds(emp)" title="Resend credentials">
                       <i class="bi bi-envelope"></i>
@@ -508,12 +552,15 @@ export class CandidateListComponent implements OnInit {
   readonly SORT_OPTIONS: SelectOption[] = SORT_OPTIONS;
   private sidebarFilters: CandidateFilters = {};
 
+  invitingId: string | null = null;
+
   constructor(
     private empSvc: CandidateService,
     private fb: FormBuilder,
     private toast: ToastService,
     private confirm: ConfirmDialogService,
     private master: MasterDataService,
+    private router: Router,
   ) {}
 
   ngOnInit(): void {
@@ -772,6 +819,26 @@ export class CandidateListComponent implements OnInit {
         next:  () => { this.toast.show('Candidate deleted', 'success'); this.loadCandidates(); },
         error: (err) => this.toast.show(err?.error?.message ?? 'Delete failed', 'error'),
       });
+    });
+  }
+
+  inviteAsVolunteer(emp: Candidate): void {
+    if (this.invitingId) return;
+    this.invitingId = emp.id;
+    this.empSvc.inviteVolunteer(emp.id).subscribe({
+      next: (res) => {
+        this.invitingId = null;
+        this.toast.show(res.message ?? 'Invitation sent!', 'success');
+        // Update local row state so icon flips immediately
+        const idx = this.candidates.findIndex(c => c.id === emp.id);
+        if (idx !== -1) {
+          this.candidates[idx] = { ...this.candidates[idx], volunteer_invite_status: 'invited' };
+        }
+      },
+      error: (err) => {
+        this.invitingId = null;
+        this.toast.show(err?.error?.message ?? 'Failed to send invitation.', 'error');
+      },
     });
   }
 

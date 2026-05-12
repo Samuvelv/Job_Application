@@ -5,6 +5,7 @@ export interface Volunteer {
   email?: string | null;
   phone?: string | null;
   role?: string | null;
+  sector?: string | null;
   notes?: string | null;
   // Extended fields
   photo_url?: string | null;

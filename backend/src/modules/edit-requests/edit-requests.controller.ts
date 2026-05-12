@@ -17,9 +17,16 @@ export async function submit(req: Request, res: Response, next: NextFunction): P
   try {
     const dto     = SubmitEditRequestSchema.parse(req.body);
     const request = await svc.submitEditRequest(req.user!.sub, dto);
+    // Build field list from the requested changes (exclude 'reason')
+    const { reason: _r, ...changedFields } = dto as any;
+    const fields = Object.keys(changedFields);
     await logAudit({
       userId: req.user!.sub, action: 'SUBMIT_EDIT_REQUEST',
       resource: 'edit_request', resourceId: request.id, ipAddress: req.ip,
+      metadata: {
+        candidate_id: (request as any).candidate_id ?? null,
+        fields: fields.length ? fields : ['(unspecified)'],
+      },
     });
     res.status(201).json({ request });
   } catch (err) { next(err); }
@@ -64,6 +71,11 @@ export async function review(req: Request, res: Response, next: NextFunction): P
     await logAudit({
       userId: req.user!.sub, action: `EDIT_REQUEST_${dto.status.toUpperCase()}`,
       resource: 'edit_request', resourceId: id, ipAddress: req.ip,
+      metadata: {
+        status: dto.status,
+        request_id: id,
+        candidate_id: (request as any).candidate_id ?? null,
+      },
     });
     res.json({ request });
   } catch (err) { next(err); }
@@ -87,6 +99,7 @@ export async function bulkReview(req: Request, res: Response, next: NextFunction
     await logAudit({
       userId: req.user!.sub, action: `EDIT_REQUEST_BULK_${dto.status.toUpperCase()}`,
       resource: 'edit_request', resourceId: dto.ids.join(','), ipAddress: req.ip,
+      metadata: { count: dto.ids.length, status: dto.status },
     });
     res.json(result);
   } catch (err) { next(err); }
@@ -96,7 +109,7 @@ export async function bulkReview(req: Request, res: Response, next: NextFunction
 
 export async function exportCsv(req: Request, res: Response, next: NextFunction): Promise<void> {
   try {
-    const filters = EditRequestFilterSchema.parse({ ...req.query, page: 1, limit: 9999 });
+    const { page: _p, limit: _l, ...filters } = EditRequestFilterSchema.parse({ ...req.query, page: 1, limit: 20 });
     const csv = await svc.exportEditRequests(filters);
     const date = new Date().toISOString().split('T')[0];
     res.setHeader('Content-Type', 'text/csv');

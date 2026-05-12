@@ -1,5 +1,5 @@
 // src/app/features/recruiter/candidates/candidate-profile.component.ts
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, computed, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { FormsModule } from '@angular/forms';
@@ -8,16 +8,18 @@ import { CandidateService } from '../../../core/services/candidate.service';
 import { RecruiterService } from '../../../core/services/recruiter.service';
 import { ContactRequestService } from '../../../core/services/contact-request.service';
 import { InterestRequestService, InterestRequest } from '../../../core/services/interest-request.service';
+import { MasterDataService } from '../../../core/services/master-data.service';
 import { Candidate } from '../../../core/models/candidate.model';
 import { ContactRequest } from '../../../core/models/contact-request.model';
 import { ToastService } from '../../../core/services/toast.service';
 import { PageHeaderComponent } from '../../../shared/components/page-header/page-header.component';
 import { CandidateProfileComponent } from '../../../shared/components/candidate-profile/candidate-profile.component';
+import { SearchableSelectComponent, SelectOption } from '../../../shared/components/searchable-select/searchable-select.component';
 
 @Component({
   selector: 'app-recruiter-candidate-profile',
   standalone: true,
-  imports: [CommonModule, RouterLink, FormsModule, PageHeaderComponent, CandidateProfileComponent],
+  imports: [CommonModule, RouterLink, FormsModule, PageHeaderComponent, CandidateProfileComponent, SearchableSelectComponent],
   styles: [`
     .interest-panel {
       background: var(--th-surface);
@@ -47,6 +49,35 @@ import { CandidateProfileComponent } from '../../../shared/components/candidate-
     .interest-status-badge--pending  { background: #fef3c7; color: #d97706; }
     .interest-status-badge--approved { background: #d1fae5; color: #059669; }
     .interest-status-badge--rejected { background: #fee2e2; color: #dc2626; }
+    .reason-form {
+      background: var(--th-surface);
+      border: 1px solid var(--th-border-strong);
+      border-radius: 10px;
+      padding: 12px 14px;
+      min-width: 280px;
+      max-width: 420px;
+    }
+    .reason-form__label {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--th-text-secondary);
+      margin-bottom: 6px;
+    }
+    .reason-form__textarea {
+      width: 100%;
+      border-radius: 6px;
+      border: 1px solid var(--th-border-strong);
+      padding: 7px 10px;
+      font-size: 13px;
+      background: var(--th-surface-2);
+      color: var(--th-text);
+      resize: vertical;
+    }
+    .reason-form__textarea:focus {
+      outline: none;
+      border-color: var(--th-primary);
+      box-shadow: 0 0 0 3px color-mix(in srgb, var(--th-primary) 15%, transparent);
+    }
   `],
   template: `
     <!-- Back button + action bar -->
@@ -69,41 +100,119 @@ import { CandidateProfileComponent } from '../../../shared/components/candidate-
                 <i class="bi bi-hourglass-split"></i>Request Pending
               </span>
             } @else if (contactRequestStatus === 'rejected') {
-              <div class="d-flex align-items-center gap-2">
+              <div class="d-flex align-items-center gap-2 flex-wrap">
                 <span class="contact-status-badge contact-status-badge--rejected">
                   <i class="bi bi-x-circle-fill"></i>Request Rejected
                 </span>
-                <button class="btn btn-sm btn-outline-primary" (click)="requestContactInfo()" [disabled]="requesting">
-                  @if (requesting) {
-                    <span class="spinner-border spinner-border-sm me-1"></span>
-                  } @else {
-                    <i class="bi bi-arrow-repeat me-1"></i>
-                  }
-                  Re-request
-                </button>
+                @if (!showReasonForm) {
+                  <button class="btn btn-sm btn-outline-primary" (click)="showReasonForm = true; requestReason = ''; reasonTouched = false">
+                    <i class="bi bi-arrow-repeat me-1"></i>Re-request
+                  </button>
+                }
               </div>
+              @if (showReasonForm) {
+                <div class="reason-form" (click)="$event.stopPropagation()">
+                  <div class="reason-form__label">
+                    <i class="bi bi-chat-left-text me-1"></i>Reason for Request <span style="color:var(--th-danger,#f43f5e)">*</span>
+                  </div>
+                  <textarea class="reason-form__textarea" rows="3" maxlength="1000"
+                    [(ngModel)]="requestReason"
+                    [class.is-invalid]="reasonTouched && !requestReason.trim()"
+                    (blur)="reasonTouched = true"
+                    placeholder="Briefly describe why you need this candidate's contact information…"></textarea>
+                  @if (reasonTouched && !requestReason.trim()) {
+                    <div style="font-size:.75rem;color:var(--th-danger,#f43f5e);margin-top:.25rem;">
+                      <i class="bi bi-exclamation-circle me-1"></i>Please provide a reason before submitting.
+                    </div>
+                  }
+                  <div class="d-flex gap-2 mt-2">
+                    <button class="btn btn-sm btn-primary" (click)="requestContactInfo()" [disabled]="requesting || !requestReason.trim()">
+                      @if (requesting) {
+                        <span class="spinner-border spinner-border-sm me-1"></span>Submitting…
+                      } @else {
+                        <i class="bi bi-send me-1"></i>Submit Request
+                      }
+                    </button>
+                    <button class="btn btn-sm btn-outline-secondary" (click)="showReasonForm = false; reasonTouched = false" [disabled]="requesting">
+                      Cancel
+                    </button>
+                  </div>
+                </div>
+              }
             } @else if (contactRequestStatus === 'revoked') {
-              <div class="d-flex align-items-center gap-2">
+              <div class="d-flex align-items-center gap-2 flex-wrap">
                 <span class="contact-status-badge contact-status-badge--revoked">
                   <i class="bi bi-shield-x-fill"></i>Access Revoked
                 </span>
-                <button class="btn btn-sm btn-outline-primary" (click)="requestContactInfo()" [disabled]="requesting">
-                  @if (requesting) {
-                    <span class="spinner-border spinner-border-sm me-1"></span>
-                  } @else {
-                    <i class="bi bi-arrow-repeat me-1"></i>
-                  }
-                  Request Again
-                </button>
-              </div>
-            } @else {
-              <button class="btn btn-sm btn-primary" (click)="requestContactInfo()" [disabled]="requesting">
-                @if (requesting) {
-                  <span class="spinner-border spinner-border-sm me-1"></span>Requesting…
-                } @else {
-                  <i class="bi bi-person-lines-fill me-1"></i>Request Contact Info
+                @if (!showReasonForm) {
+                  <button class="btn btn-sm btn-outline-primary" (click)="showReasonForm = true; requestReason = ''; reasonTouched = false">
+                    <i class="bi bi-arrow-repeat me-1"></i>Request Again
+                  </button>
                 }
-              </button>
+              </div>
+              @if (showReasonForm) {
+                <div class="reason-form" (click)="$event.stopPropagation()">
+                  <div class="reason-form__label">
+                    <i class="bi bi-chat-left-text me-1"></i>Reason for Request <span style="color:var(--th-danger,#f43f5e)">*</span>
+                  </div>
+                  <textarea class="reason-form__textarea" rows="3" maxlength="1000"
+                    [(ngModel)]="requestReason"
+                    [class.is-invalid]="reasonTouched && !requestReason.trim()"
+                    (blur)="reasonTouched = true"
+                    placeholder="Briefly describe why you need this candidate's contact information…"></textarea>
+                  @if (reasonTouched && !requestReason.trim()) {
+                    <div style="font-size:.75rem;color:var(--th-danger,#f43f5e);margin-top:.25rem;">
+                      <i class="bi bi-exclamation-circle me-1"></i>Please provide a reason before submitting.
+                    </div>
+                  }
+                  <div class="d-flex gap-2 mt-2">
+                    <button class="btn btn-sm btn-primary" (click)="requestContactInfo()" [disabled]="requesting || !requestReason.trim()">
+                      @if (requesting) {
+                        <span class="spinner-border spinner-border-sm me-1"></span>Submitting…
+                      } @else {
+                        <i class="bi bi-send me-1"></i>Submit Request
+                      }
+                    </button>
+                    <button class="btn btn-sm btn-outline-secondary" (click)="showReasonForm = false; reasonTouched = false" [disabled]="requesting">
+                      Cancel
+                    </button>
+                  </div>
+                </div>
+              }
+            } @else {
+              @if (showReasonForm) {
+                <div class="reason-form" (click)="$event.stopPropagation()">
+                  <div class="reason-form__label">
+                    <i class="bi bi-chat-left-text me-1"></i>Reason for Request <span style="color:var(--th-danger,#f43f5e)">*</span>
+                  </div>
+                  <textarea class="reason-form__textarea" rows="3" maxlength="1000"
+                    [(ngModel)]="requestReason"
+                    [class.is-invalid]="reasonTouched && !requestReason.trim()"
+                    (blur)="reasonTouched = true"
+                    placeholder="Briefly describe why you need this candidate's contact information…"></textarea>
+                  @if (reasonTouched && !requestReason.trim()) {
+                    <div style="font-size:.75rem;color:var(--th-danger,#f43f5e);margin-top:.25rem;">
+                      <i class="bi bi-exclamation-circle me-1"></i>Please provide a reason before submitting.
+                    </div>
+                  }
+                  <div class="d-flex gap-2 mt-2">
+                    <button class="btn btn-sm btn-primary" (click)="requestContactInfo()" [disabled]="requesting || !requestReason.trim()">
+                      @if (requesting) {
+                        <span class="spinner-border spinner-border-sm me-1"></span>Submitting…
+                      } @else {
+                        <i class="bi bi-send me-1"></i>Submit Request
+                      }
+                    </button>
+                    <button class="btn btn-sm btn-outline-secondary" (click)="showReasonForm = false; reasonTouched = false" [disabled]="requesting">
+                      Cancel
+                    </button>
+                  </div>
+                </div>
+              } @else {
+                <button class="btn btn-sm btn-primary" (click)="showReasonForm = true">
+                  <i class="bi bi-person-lines-fill me-1"></i>Request Contact Info
+                </button>
+              }
             }
           }
 
@@ -182,13 +291,23 @@ import { CandidateProfileComponent } from '../../../shared/components/candidate-
           <div class="row g-3">
             <div class="col-md-6">
               <div class="interest-panel__label">Sector *</div>
-              <input class="interest-panel__input" type="text" [(ngModel)]="interestForm.sector"
-                placeholder="e.g. Healthcare, Engineering" maxlength="150" />
+              <app-searchable-select
+                [ngModel]="interestForm.sector"
+                (ngModelChange)="interestForm.sector = $event"
+                [options]="industryOptions()"
+                placeholder="Select sector…"
+                [allowClear]="true">
+              </app-searchable-select>
             </div>
             <div class="col-md-6">
               <div class="interest-panel__label">Target Country *</div>
-              <input class="interest-panel__input" type="text" [(ngModel)]="interestForm.country"
-                placeholder="e.g. United Kingdom" maxlength="100" />
+              <app-searchable-select
+                [ngModel]="interestForm.country"
+                (ngModelChange)="interestForm.country = $event"
+                [options]="countryOptions()"
+                placeholder="Select country…"
+                [allowClear]="true">
+              </app-searchable-select>
             </div>
             <div class="col-12">
               <div class="interest-panel__label">Message to Admin *</div>
@@ -239,12 +358,29 @@ export class RecruiterCandidateProfileComponent implements OnInit {
   contactRequest: ContactRequest | null = null;
   contactRequestStatus: 'none' | 'pending' | 'approved' | 'rejected' | 'revoked' = 'none';
 
+  showReasonForm = false;
+  requestReason = '';
+  reasonTouched = false;
   isAgency = false;
   interestRequest: InterestRequest | null = null;
   interestForm = { sector: '', country: '', message: '' };
   submittingInterest = false;
 
   private candidateId = '';
+
+  // ── Master data (inject before computed fields so this.master is available) ─
+  private master = inject(MasterDataService);
+
+  industryOptions = computed<SelectOption[]>(() =>
+    this.master.industries().map((i: { name: string }) => ({ value: i.name, label: i.name }))
+  );
+
+  countryOptions = computed<SelectOption[]>(() =>
+    this.master.countries().map((c: { name: string; flag_emoji: string }) => ({
+      value: c.name,
+      label: (c.flag_emoji ? c.flag_emoji + ' ' : '') + c.name,
+    }))
+  );
 
   constructor(
     private route: ActivatedRoute,
@@ -256,6 +392,7 @@ export class RecruiterCandidateProfileComponent implements OnInit {
   ) {}
 
   ngOnInit(): void {
+    this.master.loadAll();
     this.candidateId = this.route.snapshot.paramMap.get('id')!;
 
     forkJoin({
@@ -298,10 +435,15 @@ export class RecruiterCandidateProfileComponent implements OnInit {
   }
 
   requestContactInfo(): void {
+    this.reasonTouched = true;
+    if (!this.requestReason.trim()) return;
     this.requesting = true;
-    this.contactRequestService.create(this.candidateId).subscribe({
+    this.contactRequestService.create(this.candidateId, this.requestReason.trim()).subscribe({
       next: (res) => {
         this.requesting           = false;
+        this.showReasonForm       = false;
+        this.requestReason        = '';
+        this.reasonTouched        = false;
         this.contactRequest       = res.request;
         this.contactRequestStatus = 'pending';
         this.toast.success('Contact info request submitted. Awaiting admin approval.');

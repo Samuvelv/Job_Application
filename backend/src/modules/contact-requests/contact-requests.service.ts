@@ -2,11 +2,11 @@
 import { db } from '../../config/db';
 import { AppError } from '../../middleware/errorHandler';
 import { sendContactRequestApprovedNotification, sendContactRequestRejectedNotification, sendContactRevokedNotification } from '../../services/email.service';
-import type { ReviewContactRequestDto, BulkReviewContactRequestDto, ContactRequestFilterDto, RevokeContactRequestDto } from './contact-requests.dto';
+import type { ReviewContactRequestDto, BulkReviewContactRequestDto, ContactRequestFilterDto, RevokeContactRequestDto, CreateContactRequestDto } from './contact-requests.dto';
 
 // ── Create a request (recruiter → admin) ────────────────────────────────────
 
-export async function createContactRequest(recruiterId: string, candidateId: string) {
+export async function createContactRequest(recruiterId: string, candidateId: string, dto: CreateContactRequestDto) {
   // Verify candidate exists
   const candidate = await db('candidates').where({ id: candidateId }).first();
   if (!candidate) throw new AppError(404, 'Candidate not found');
@@ -23,7 +23,7 @@ export async function createContactRequest(recruiterId: string, candidateId: str
   }
 
   const [row] = await db('contact_unlock_requests')
-    .insert({ recruiter_id: recruiterId, candidate_id: candidateId })
+    .insert({ recruiter_id: recruiterId, candidate_id: candidateId, request_reason: dto.request_reason ?? null })
     .returning('*');
   return row;
 }
@@ -47,6 +47,7 @@ export async function listContactRequests(filters: ContactRequestFilterDto) {
       'cr.candidate_id',
       'cr.status',
       'cr.admin_note',
+      'cr.request_reason',
       'cr.created_at',
       'cr.reviewed_at',
       'cr.revoked_at',
@@ -153,7 +154,7 @@ export async function reviewContactRequest(id: string, dto: ReviewContactRequest
 export async function getMyContactRequests(recruiterId: string) {
   return db('contact_unlock_requests as cr')
     .where('cr.recruiter_id', recruiterId)
-    .select('cr.id', 'cr.candidate_id', 'cr.status', 'cr.admin_note', 'cr.created_at', 'cr.reviewed_at');
+    .select('cr.id', 'cr.candidate_id', 'cr.status', 'cr.admin_note', 'cr.request_reason', 'cr.created_at', 'cr.reviewed_at');
 }
 
 // ── Check if a recruiter has approved access for a candidate ─────────────────
@@ -224,6 +225,109 @@ export async function revokeContactRequest(id: string, dto: RevokeContactRequest
   }
 
   return updated;
+}
+
+// ── Export CSV (admin) ───────────────────────────────────────────────────────
+
+export async function exportContactRequests(
+  filters: Omit<ContactRequestFilterDto, 'page' | 'limit'>,
+): Promise<string> {
+  const { status, search, date_from, date_to } = filters;
+
+  let query = db('contact_unlock_requests as cr')
+    .join('recruiters as r',   'r.id',  'cr.recruiter_id')
+    .join('users as ru',       'ru.id', 'r.user_id')
+    .join('candidates as c',   'c.id',  'cr.candidate_id')
+    .join('users as cu',       'cu.id', 'c.user_id')
+    .leftJoin('admins as a',   'a.user_id', 'cr.reviewed_by_id')
+    .leftJoin('admins as ra',  'ra.user_id', 'cr.revoked_by_id')
+    .select(
+      'cr.id',
+      'cr.status',
+      'cr.request_reason',
+      'cr.admin_note',
+      'cr.created_at',
+      'cr.reviewed_at',
+      'cr.revoked_at',
+      'cr.revocation_reason',
+      'r.contact_name as recruiter_name',
+      'r.company_name as recruiter_company',
+      'ru.email as recruiter_email',
+      'c.first_name as candidate_first_name',
+      'c.last_name as candidate_last_name',
+      'c.candidate_number',
+      'c.job_title as candidate_job_title',
+      'cu.email as candidate_email',
+      db.raw(`TRIM(a.first_name || ' ' || COALESCE(a.last_name, '')) as reviewed_by_name`),
+      db.raw(`TRIM(ra.first_name || ' ' || COALESCE(ra.last_name, '')) as revoked_by_name`),
+    );
+
+  if (status) query = query.where('cr.status', status);
+
+  if (search) {
+    const term = `%${search.toLowerCase()}%`;
+    query = query.where(function () {
+      this.whereRaw(`LOWER(r.contact_name) LIKE ?`, [term])
+          .orWhereRaw(`LOWER(c.first_name || ' ' || c.last_name) LIKE ?`, [term]);
+    });
+  }
+
+  if (date_from) query = query.where('cr.created_at', '>=', new Date(date_from));
+  if (date_to) {
+    const to = new Date(date_to);
+    to.setHours(23, 59, 59, 999);
+    query = query.where('cr.created_at', '<=', to);
+  }
+
+  const rows = await query.orderBy('cr.created_at', 'desc');
+
+  const escape  = (v: unknown) => { const s = String(v ?? '').replace(/"/g, '""'); return `"${s}"`; };
+  const fmtDate = (v: unknown) => v ? new Date(String(v)).toISOString().split('T')[0] : '';
+
+  const headers = [
+    'Request ID',
+    'Recruiter Name',
+    'Company',
+    'Recruiter Email',
+    'Candidate Name',
+    'Candidate Number',
+    'Candidate Job Title',
+    'Candidate Email',
+    'Reason for Request',
+    'Status',
+    'Admin Note',
+    'Date Submitted',
+    'Reviewed At',
+    'Reviewed By',
+    'Revoked At',
+    'Revoked By',
+    'Revocation Reason',
+  ];
+
+  const lines = [
+    headers.map(escape).join(','),
+    ...rows.map((r: any) => [
+      r.id,
+      r.recruiter_name          ?? '',
+      r.recruiter_company       ?? '',
+      r.recruiter_email         ?? '',
+      `${r.candidate_first_name ?? ''} ${r.candidate_last_name ?? ''}`.trim(),
+      r.candidate_number        ?? '',
+      r.candidate_job_title     ?? '',
+      r.candidate_email         ?? '',
+      r.request_reason          ?? '',
+      r.status                  ?? '',
+      r.admin_note              ?? '',
+      fmtDate(r.created_at),
+      fmtDate(r.reviewed_at),
+      r.reviewed_by_name        ?? '',
+      fmtDate(r.revoked_at),
+      r.revoked_by_name         ?? '',
+      r.revocation_reason       ?? '',
+    ].map(escape).join(',')),
+  ];
+
+  return lines.join('\n');
 }
 
 // ── Bulk review (admin) ───────────────────────────────────────────────────────

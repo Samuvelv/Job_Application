@@ -353,7 +353,17 @@ export async function getCandidateById(id: string) {
     : null;
   const is_volunteer = !!volunteerMatch;
 
-  return { ...candidate, ...relations, is_volunteer };
+  // Auto-sync volunteer_invite_status → 'converted' when a matching volunteer record exists
+  let volunteer_invite_status = candidate.volunteer_invite_status ?? null;
+  if (is_volunteer && volunteer_invite_status !== 'converted') {
+    volunteer_invite_status = 'converted';
+    await db('candidates').where({ id }).update({
+      volunteer_invite_status: 'converted',
+      updated_at: new Date(),
+    }).catch(() => { /* non-fatal */ });
+  }
+
+  return { ...candidate, ...relations, is_volunteer, volunteer_invite_status };
 }
 
 // ── Get by user_id (for candidate self-view) ───────────────────────────────────
@@ -584,15 +594,26 @@ export async function resendCredentials(candidateId: string): Promise<void> {
 export async function inviteAsVolunteer(id: string): Promise<{ message: string }> {
   const candidate = await db('candidates as e')
     .join('users as u', 'u.id', 'e.user_id')
-    .select('e.first_name', 'e.last_name', 'e.profile_status', 'u.email')
+    .select('e.id', 'e.first_name', 'e.last_name', 'e.profile_status', 'e.volunteer_invite_status', 'u.email')
     .where('e.id', id)
     .first();
 
   if (!candidate) throw new AppError(404, 'Candidate not found');
   if (!candidate.email) throw new AppError(400, 'Candidate has no email address on file');
 
+  // If already converted to a volunteer, block re-invitation
+  if (candidate.volunteer_invite_status === 'converted') {
+    throw new AppError(400, 'This candidate is already a volunteer.');
+  }
+
   const fullName = `${candidate.first_name} ${candidate.last_name}`;
   await sendVolunteerInvitation(candidate.email, fullName);
+
+  // Persist the invited state (idempotent — safe to call multiple times)
+  await db('candidates').where({ id }).update({
+    volunteer_invite_status: 'invited',
+    updated_at: new Date(),
+  });
 
   return { message: `Volunteer invitation sent to ${candidate.email}` };
 }

@@ -92,6 +92,7 @@ export interface Candidate {
   plain_password?: string;
   contact_locked?: boolean;
   is_volunteer?: boolean;
+  volunteer_invite_status?: 'invited' | 'converted' | null;
 
   // Relations
   skills?: Skill[];

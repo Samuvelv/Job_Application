@@ -35,6 +35,7 @@ export async function update(req: Request, res: Response, next: NextFunction): P
   try {
     const id = p(req.params['referralId']);
     const dto = UpdateAgencyReferralSchema.parse(req.body);
+    const before = await svc.getReferralById(id);
     const referral = await svc.updateReferral(id, dto);
     await logAudit({
       userId: req.user!.sub,
@@ -42,6 +43,11 @@ export async function update(req: Request, res: Response, next: NextFunction): P
       resource: 'agency_referral',
       resourceId: id,
       ipAddress: req.ip,
+      metadata: {
+        agency_name:    before.agency_name,
+        candidate_id:   before.candidate_id,
+        updated_fields: Object.keys(dto),
+      },
     });
     res.json({ referral });
   } catch (err) { next(err); }
@@ -50,6 +56,7 @@ export async function update(req: Request, res: Response, next: NextFunction): P
 export async function remove(req: Request, res: Response, next: NextFunction): Promise<void> {
   try {
     const id = p(req.params['referralId']);
+    const before = await svc.getReferralById(id);
     await svc.deleteReferral(id);
     await logAudit({
       userId: req.user!.sub,
@@ -57,6 +64,10 @@ export async function remove(req: Request, res: Response, next: NextFunction): P
       resource: 'agency_referral',
       resourceId: id,
       ipAddress: req.ip,
+      metadata: {
+        agency_name:  before.agency_name,
+        candidate_id: before.candidate_id,
+      },
     });
     res.json({ message: 'Referral deleted' });
   } catch (err) { next(err); }

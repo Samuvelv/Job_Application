@@ -251,6 +251,9 @@
               </div>
             </div>
           }
+          <div class="form-text text-muted mt-2">
+            <i class="bi bi-info-circle me-1"></i>Please upload a clear, professional photo. Face should be clearly visible. Plain background preferred.
+          </div>
         </div>
       </div>
     }
@@ -1160,30 +1163,7 @@
           }
         </label>
 
-        <!-- Row 2: Fee -->
-        <label for="confirmFee" style="display:flex;align-items:flex-start;gap:.875rem;
-          padding:.875rem 1rem;border-radius:var(--th-radius);cursor:pointer;
-          border:1px solid;transition:all .15s ease;"
-          [style.borderColor]="ctrl('confirm_fee').value ? 'var(--th-success,#10b981)' : 'var(--th-border)'"
-          [style.background]="ctrl('confirm_fee').value ? 'rgba(16,185,129,.06)' : 'var(--th-surface-raised)'">
-          <input class="form-check-input flex-shrink-0" type="checkbox"
-            formControlName="confirm_fee" id="confirmFee" style="margin-top:.15rem">
-          <div style="display:flex;align-items:flex-start;gap:.625rem;flex:1">
-            <i class="bi bi-receipt flex-shrink-0" style="font-size:1rem;margin-top:.1rem"
-              [style.color]="ctrl('confirm_fee').value ? 'var(--th-success,#10b981)' : 'var(--th-muted)'"></i>
-            <span style="font-size:.875rem;line-height:1.5"
-              [style.fontWeight]="ctrl('confirm_fee').value ? '600' : '400'"
-              [style.color]="ctrl('confirm_fee').value ? 'var(--th-success,#10b981)' : 'var(--th-text)'">
-              I confirm registration fee has been received / is pending
-            </span>
-          </div>
-          @if (ctrl('confirm_fee').value) {
-            <i class="bi bi-check-circle-fill flex-shrink-0"
-              style="font-size:1rem;color:var(--th-success,#10b981);margin-top:.1rem"></i>
-          }
-        </label>
-
-        <!-- Row 3: Documents -->
+        <!-- Row 2: Documents -->
         <label for="confirmDocs" style="display:flex;align-items:flex-start;gap:.875rem;
           padding:.875rem 1rem;border-radius:var(--th-radius);cursor:pointer;
           border:1px solid;transition:all .15s ease;"
@@ -1209,12 +1189,12 @@
       </div>
 
       <!-- Incomplete warning — disappears once all three are ticked -->
-      @if (!ctrl('confirm_terms').value || !ctrl('confirm_fee').value || !ctrl('confirm_docs').value) {
+      @if (!ctrl('confirm_terms').value || !ctrl('confirm_docs').value) {
         <div style="padding:.625rem 1.25rem;border-top:1px solid var(--th-border);
           display:flex;align-items:center;gap:.5rem;background:rgba(245,158,11,.06)">
           <i class="bi bi-exclamation-triangle-fill" style="font-size:.8rem;color:#f59e0b"></i>
           <span style="font-size:.75rem;color:#b45309;font-weight:500">
-            All three confirmations are required before you can submit.
+            Both confirmations are required before you can submit.
           </span>
         </div>
       }
@@ -1236,7 +1216,7 @@
       </button>
     } @else {
       <button type="submit" class="btn btn-success px-4"
-        [disabled]="loading || !ctrl('confirm_terms').value || !ctrl('confirm_fee').value || !ctrl('confirm_docs').value || form.get('bio')?.invalid || ctrl('email').invalid || ctrl('password').invalid">
+        [disabled]="loading || !ctrl('confirm_terms').value || !ctrl('confirm_docs').value || form.get('bio')?.invalid || ctrl('email').invalid || ctrl('password').invalid">
         @if (loading) {
           <span class="spinner-border spinner-border-sm me-2"></span> Registering…
         } @else {

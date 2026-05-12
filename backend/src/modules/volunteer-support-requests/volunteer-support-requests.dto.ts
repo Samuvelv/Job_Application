@@ -11,10 +11,12 @@ export const ReviewSupportRequestSchema = z.object({
 });
 
 export const SupportRequestFilterSchema = z.object({
-  status: z.enum(['pending', 'connected', 'closed']).optional(),
-  search: z.string().trim().optional(),
-  page:   z.coerce.number().int().positive().default(1),
-  limit:  z.coerce.number().int().positive().max(100).default(20),
+  status:    z.enum(['pending', 'connected', 'closed']).optional(),
+  search:    z.string().trim().optional(),
+  date_from: z.string().optional(),
+  date_to:   z.string().optional(),
+  page:      z.coerce.number().int().positive().default(1),
+  limit:     z.coerce.number().int().positive().max(100).default(20),
 });
 
 export type CreateSupportRequestDto   = z.infer<typeof CreateSupportRequestSchema>;

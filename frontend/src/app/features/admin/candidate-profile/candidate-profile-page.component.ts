@@ -8,6 +8,7 @@ import { NgbModal, NgbModalRef } from '@ng-bootstrap/ng-bootstrap';
 import { CandidateService } from '../../../core/services/candidate.service';
 import { AgencyReferralService, ReferralPayload } from '../../../core/services/agency-referral.service';
 import { MasterDataService } from '../../../core/services/master-data.service';
+import { ToastService } from '../../../core/services/toast.service';
 
 import { Candidate } from '../../../core/models/candidate.model';
 import { AgencyReferral, ReferralStatus } from '../../../core/models/agency-referral.model';
@@ -33,12 +34,55 @@ const STATUS_CONFIG: Record<ReferralStatus, { label: string; badgeClass: string 
         <i class="bi bi-arrow-left"></i>Back to Candidates
       </a>
       @if (candidate) {
-        <div class="d-flex gap-2">
-          @if (candidate.profile_status === 'placed' && !candidate.is_volunteer) {
-            <button class="btn btn-success btn-sm" (click)="makeVolunteer()">
-              <i class="bi bi-person-check-fill me-1"></i>Make as Volunteer
-            </button>
+        <div class="d-flex gap-2 align-items-center flex-wrap">
+
+          <!-- ── Volunteer action area (only for placed candidates) ── -->
+          @if (candidate.profile_status === 'placed') {
+
+            @if (candidate.is_volunteer || candidate.volunteer_invite_status === 'converted') {
+              <!-- Already a volunteer -->
+              <span class="vol-status-chip vol-status-chip--converted">
+                <i class="bi bi-person-check-fill me-1"></i>Volunteer
+              </span>
+              <a [routerLink]="['/admin/volunteers']" class="btn btn-outline-success btn-sm">
+                <i class="bi bi-people-fill me-1"></i>View Volunteers
+              </a>
+            } @else if (candidate.volunteer_invite_status === 'invited') {
+              <!-- Invitation already sent -->
+              <span class="vol-status-chip vol-status-chip--invited">
+                <i class="bi bi-envelope-check-fill me-1"></i>Invitation Sent
+              </span>
+              <button class="btn btn-outline-success btn-sm"
+                [disabled]="inviting()"
+                (click)="inviteAsVolunteer()"
+                title="Resend invitation email">
+                @if (inviting()) {
+                  <span class="spinner-border spinner-border-sm me-1"></span>
+                } @else {
+                  <i class="bi bi-arrow-repeat me-1"></i>
+                }
+                Resend Invite
+              </button>
+              <button class="btn btn-success btn-sm" (click)="convertToVolunteer()">
+                <i class="bi bi-person-plus-fill me-1"></i>Convert to Volunteer
+              </button>
+            } @else {
+              <!-- Not yet invited -->
+              <button class="btn btn-outline-success btn-sm"
+                [disabled]="inviting()"
+                (click)="inviteAsVolunteer()">
+                @if (inviting()) {
+                  <span class="spinner-border spinner-border-sm me-1"></span>Sending…
+                } @else {
+                  <i class="bi bi-envelope-plus me-1"></i>Invite as Volunteer
+                }
+              </button>
+              <button class="btn btn-success btn-sm" (click)="convertToVolunteer()">
+                <i class="bi bi-person-plus-fill me-1"></i>Convert to Volunteer
+              </button>
+            }
           }
+
           <a [routerLink]="['/admin/candidates', candidate.id, 'edit']"
             class="btn btn-primary btn-sm">
             <i class="bi bi-pencil me-1"></i>Edit Candidate
@@ -195,19 +239,42 @@ const STATUS_CONFIG: Record<ReferralStatus, { label: string; badgeClass: string 
         </button>
       </div>
     </ng-template>
+
+    <style>
+      .vol-status-chip {
+        display: inline-flex;
+        align-items: center;
+        font-size: .8rem;
+        font-weight: 600;
+        padding: .3rem .75rem;
+        border-radius: 999px;
+        white-space: nowrap;
+      }
+      .vol-status-chip--invited {
+        background: #fef3c7;
+        color: #92400e;
+        border: 1px solid #fde68a;
+      }
+      .vol-status-chip--converted {
+        background: #dcfce7;
+        color: #15803d;
+        border: 1px solid #bbf7d0;
+      }
+    </style>
   `,
 })
 export class CandidateProfilePageComponent implements OnInit {
   candidate: Candidate | null = null;
 
   // Signals
-  loadError     = signal('');
-  referrals     = signal<AgencyReferral[]>([]);
+  loadError        = signal('');
+  inviting         = signal(false);
+  referrals        = signal<AgencyReferral[]>([]);
   referralsLoading = signal(false);
-  referralError = signal('');
-  editingId     = signal<string | null>(null);
-  formSaving    = signal(false);
-  formError     = signal('');
+  referralError    = signal('');
+  editingId        = signal<string | null>(null);
+  formSaving       = signal(false);
+  formError        = signal('');
 
   countryOptions = computed<SelectOption[]>(() =>
     this.masterData.countries().map((c) => ({ value: c.name, label: c.name }))
@@ -223,6 +290,7 @@ export class CandidateProfilePageComponent implements OnInit {
     private masterData: MasterDataService,
     private modalService: NgbModal,
     private fb: FormBuilder,
+    private toast: ToastService,
   ) {}
 
   ngOnInit(): void {
@@ -255,7 +323,26 @@ export class CandidateProfilePageComponent implements OnInit {
     });
   }
 
-  makeVolunteer(): void {
+  inviteAsVolunteer(): void {
+    if (!this.candidate || this.inviting()) return;
+    this.inviting.set(true);
+    this.candidateService.inviteVolunteer(this.candidate.id).subscribe({
+      next: (res) => {
+        this.inviting.set(false);
+        this.toast.success(res.message ?? 'Invitation sent!');
+        // Update local state so button switches to "Invitation Sent" immediately
+        if (this.candidate) {
+          this.candidate = { ...this.candidate, volunteer_invite_status: 'invited' };
+        }
+      },
+      error: (err) => {
+        this.inviting.set(false);
+        this.toast.error(err?.error?.message ?? 'Failed to send invitation.');
+      },
+    });
+  }
+
+  convertToVolunteer(): void {
     if (!this.candidate) return;
     this.router.navigate(['/admin/volunteers/create'], {
       queryParams: { fromCandidate: this.candidate.id },

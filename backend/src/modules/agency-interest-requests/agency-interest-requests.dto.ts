@@ -16,6 +16,8 @@ export const ReviewInterestRequestSchema = z.object({
 export const InterestRequestFilterSchema = z.object({
   status:    z.enum(['pending', 'approved', 'rejected']).optional(),
   search:    z.string().trim().optional(),
+  date_from: z.string().optional(),
+  date_to:   z.string().optional(),
   page:      z.coerce.number().int().positive().default(1),
   limit:     z.coerce.number().int().positive().max(100).default(20),
 });

@@ -35,6 +35,10 @@ export async function create(req: Request, res: Response, next: NextFunction): P
     await logAudit({
       userId: req.user!.sub, action: 'CREATE_RECRUITER',
       resource: 'recruiter', resourceId: result.recruiter.id, ipAddress: req.ip,
+      metadata: {
+        company_name: (result.recruiter as any).company_name ?? null,
+        contact_name: (result.recruiter as any).contact_name ?? null,
+      },
     });
     res.status(201).json(result);
   } catch (err) { next(err); }
@@ -64,6 +68,11 @@ export async function update(req: Request, res: Response, next: NextFunction): P
     await logAudit({
       userId: req.user!.sub, action: 'UPDATE_RECRUITER',
       resource: 'recruiter', resourceId: id, ipAddress: req.ip,
+      metadata: {
+        company_name:   (recruiter as any).company_name ?? null,
+        contact_name:   (recruiter as any).contact_name ?? null,
+        updated_fields: Object.keys(dto),
+      },
     });
     res.json({ recruiter });
   } catch (err) { next(err); }
@@ -72,10 +81,15 @@ export async function update(req: Request, res: Response, next: NextFunction): P
 export async function remove(req: Request, res: Response, next: NextFunction): Promise<void> {
   try {
     const id = p(req.params['id']);
+    // Fetch name before deleting for the audit trail
+    const existing = await svc.getRecruiterById(id).catch(() => null);
     await svc.deleteRecruiter(id);
     await logAudit({
       userId: req.user!.sub, action: 'DELETE_RECRUITER',
       resource: 'recruiter', resourceId: id, ipAddress: req.ip,
+      metadata: existing
+        ? { company_name: (existing as any).company_name ?? null, contact_name: (existing as any).contact_name ?? null }
+        : undefined,
     });
     res.json({ message: 'Recruiter deleted' });
   } catch (err) { next(err); }
@@ -84,7 +98,6 @@ export async function remove(req: Request, res: Response, next: NextFunction): P
 // ── Admin: Export CSV ─────────────────────────────────────────────────────────
 
 export async function exportCsv(req: Request, res: Response, next: NextFunction): Promise<void> {
-  debugger
   try {
     const filters = RecruiterFilterSchema.parse(req.query);
     const rows = await svc.exportRecruiters(filters);
@@ -122,7 +135,6 @@ export async function exportCsv(req: Request, res: Response, next: NextFunction)
 // ── Admin: Bulk operations ────────────────────────────────────────────────────
 
 export async function bulkStatus(req: Request, res: Response, next: NextFunction): Promise<void> {
-  debugger
   try {
     const { ids, is_active } = BulkStatusSchema.parse(req.body);
     const result = await svc.bulkUpdateStatus(ids, is_active);
@@ -130,6 +142,7 @@ export async function bulkStatus(req: Request, res: Response, next: NextFunction
       userId: req.user!.sub,
       action: is_active ? 'BULK_ACTIVATE_RECRUITERS' : 'BULK_DEACTIVATE_RECRUITERS',
       resource: 'recruiter', resourceId: ids.join(','), ipAddress: req.ip,
+      metadata: { count: ids.length },
     });
     res.json(result);
   } catch (err) { next(err); }
@@ -174,10 +187,14 @@ export async function exportSelected(req: Request, res: Response, next: NextFunc
 export async function resendCreds(req: Request, res: Response, next: NextFunction): Promise<void> {
   try {
     const id = p(req.params['id']);
+    const existing = await svc.getRecruiterById(id).catch(() => null);
     await svc.resendCredentials(id);
     await logAudit({
       userId: req.user!.sub, action: 'RESEND_RECRUITER_CREDENTIALS',
       resource: 'recruiter', resourceId: id, ipAddress: req.ip,
+      metadata: existing
+        ? { company_name: (existing as any).company_name ?? null, contact_name: (existing as any).contact_name ?? null }
+        : { recruiter_id: id },
     });
     res.json({ message: 'Credentials resent' });
   } catch (err) { next(err); }

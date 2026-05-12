@@ -516,3 +516,85 @@ export async function sendVolunteerInvitation(
     `,
   });
 }
+
+// ── Agency Interest Approval: notify candidate ───────────────────────────────
+
+export async function sendCandidateInterestApprovalEmail(
+  email: string,
+  candidateName: string,
+  agencyName: string,
+): Promise<void> {
+  await sendMail({
+    to: email,
+    subject: 'An agency has expressed interest in your profile — NTL Career Nexus',
+    html: `
+      <div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;">
+        <div style="background:linear-gradient(135deg,#0ea5e9,#0284c7);padding:32px 24px;border-radius:12px 12px 0 0;text-align:center;">
+          <h1 style="color:#fff;margin:0;font-size:24px;">Great News, ${candidateName}!</h1>
+          <p style="color:rgba(255,255,255,0.85);margin:8px 0 0;font-size:15px;">An agency is interested in your profile</p>
+        </div>
+        <div style="background:#fff;padding:32px 24px;border:1px solid #e5e7eb;border-top:none;border-radius:0 0 12px 12px;">
+          <p style="font-size:16px;color:#111827;">Dear <strong>${candidateName}</strong>,</p>
+          <p style="font-size:15px;color:#374151;line-height:1.7;">
+            We are pleased to inform you that <strong>${agencyName}</strong> has expressed interest in your profile and their request has been <strong>approved</strong>.
+          </p>
+          <div style="background:#f0f9ff;border:1px solid #bae6fd;border-radius:10px;padding:20px;margin:24px 0;">
+            <p style="margin:0;font-size:15px;color:#0369a1;font-weight:600;">What happens next?</p>
+            <p style="margin:10px 0 0;font-size:14px;color:#374151;line-height:1.7;">
+              Our team will be in touch to facilitate the introduction between you and <strong>${agencyName}</strong>. Please ensure your profile and contact details are up to date.
+            </p>
+          </div>
+          <p style="font-size:14px;color:#6b7280;line-height:1.7;">
+            If you have any questions, please do not hesitate to contact us.
+          </p>
+          <p style="color:#888;font-size:12px;margin-top:24px;border-top:1px solid #f3f4f6;padding-top:16px;">
+            This notification was sent by the NTL Career Nexus admin team.
+          </p>
+        </div>
+      </div>
+    `,
+  });
+}
+
+// ── Agency Interest Approval: admin follow-up reminder ───────────────────────
+
+export async function sendAdminInterestApprovalReminder(
+  candidateName: string,
+  agencyName: string,
+  recruiterName: string,
+  recruiterEmail: string,
+): Promise<void> {
+  const adminEmail = process.env['ADMIN_EMAIL'];
+  if (!adminEmail) return;
+  await sendMail({
+    to: adminEmail,
+    subject: `Follow-up needed: Agency interest approved — ${candidateName}`,
+    html: `
+      <div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;">
+        <div style="background:linear-gradient(135deg,#f59e0b,#d97706);padding:28px 24px;border-radius:12px 12px 0 0;text-align:center;">
+          <h1 style="color:#fff;margin:0;font-size:22px;">Follow-Up Action Required</h1>
+          <p style="color:rgba(255,255,255,0.85);margin:6px 0 0;font-size:14px;">Agency interest request has been approved</p>
+        </div>
+        <div style="background:#fff;padding:32px 24px;border:1px solid #e5e7eb;border-top:none;border-radius:0 0 12px 12px;">
+          <p style="font-size:15px;color:#374151;line-height:1.7;">
+            An agency interest request has been approved. Please follow up with both parties to facilitate the introduction.
+          </p>
+          <div style="background:#fffbeb;border:1px solid #fde68a;border-radius:10px;padding:20px;margin:20px 0;">
+            <table style="width:100%;font-size:14px;color:#374151;border-collapse:collapse;">
+              <tr><td style="padding:6px 0;font-weight:600;width:140px;">Candidate:</td><td>${candidateName}</td></tr>
+              <tr><td style="padding:6px 0;font-weight:600;">Agency:</td><td>${agencyName}</td></tr>
+              <tr><td style="padding:6px 0;font-weight:600;">Recruiter:</td><td>${recruiterName}</td></tr>
+              <tr><td style="padding:6px 0;font-weight:600;">Recruiter Email:</td><td><a href="mailto:${recruiterEmail}" style="color:#0284c7;">${recruiterEmail}</a></td></tr>
+            </table>
+          </div>
+          <p style="font-size:14px;color:#6b7280;line-height:1.7;">
+            Next step: Contact both the candidate and the agency to coordinate the introduction.
+          </p>
+          <p style="color:#888;font-size:12px;margin-top:24px;border-top:1px solid #f3f4f6;padding-top:16px;">
+            This reminder was generated automatically by the NTL Career Nexus platform.
+          </p>
+        </div>
+      </div>
+    `,
+  });
+}

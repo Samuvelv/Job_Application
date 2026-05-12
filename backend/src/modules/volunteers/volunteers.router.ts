@@ -64,8 +64,10 @@ router.get('/',
       const country_placed = (req.query['country_placed'] as string) || undefined;
       const availability   = (req.query['availability']   as string) || undefined;
       const language       = (req.query['language']       as string) || undefined;
+      const sector         = (req.query['sector']         as string) || undefined;
+      const nationality    = (req.query['nationality']    as string) || undefined;
       const sort           = (req.query['sort']           as string) || undefined;
-      const result = await svc.listVolunteers({ search, country_placed, availability, language, sort, page, limit });
+      const result = await svc.listVolunteers({ search, country_placed, availability, language, sector, nationality, sort, page, limit });
       res.json(result);
     } catch (err) { next(err); }
   },
@@ -80,8 +82,10 @@ router.get('/export',
       const country_placed = (req.query['country_placed'] as string) || undefined;
       const availability   = (req.query['availability']   as string) || undefined;
       const language       = (req.query['language']       as string) || undefined;
+      const sector         = (req.query['sector']         as string) || undefined;
+      const nationality    = (req.query['nationality']    as string) || undefined;
       const sort           = (req.query['sort']           as string) || undefined;
-      const csv = await svc.exportVolunteers({ search, country_placed, availability, language, sort });
+      const csv = await svc.exportVolunteers({ search, country_placed, availability, language, sector, nationality, sort });
       const date = new Date().toISOString().split('T')[0];
       res.setHeader('Content-Type', 'text/csv');
       res.setHeader('Content-Disposition', `attachment; filename="volunteers-${date}.csv"`);

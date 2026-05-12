@@ -46,12 +46,21 @@ export class InterestRequestService {
   }
 
   // Admin: list all with optional filters
-  list(filters: { status?: string; search?: string; page?: number; limit?: number } = {}): Observable<PaginatedInterestRequests> {
+  list(filters: { status?: string; search?: string; date_from?: string; date_to?: string; page?: number; limit?: number } = {}): Observable<PaginatedInterestRequests> {
     let params = new HttpParams();
     Object.entries(filters).forEach(([k, v]) => {
       if (v !== undefined && v !== null && v !== '') params = params.set(k, String(v));
     });
     return this.http.get<PaginatedInterestRequests>(this.api, { params });
+  }
+
+  // Admin: export CSV with active filters
+  exportCsv(filters: { status?: string; search?: string; date_from?: string; date_to?: string } = {}): Observable<Blob> {
+    let params = new HttpParams();
+    Object.entries(filters).forEach(([k, v]) => {
+      if (v !== undefined && v !== null && v !== '') params = params.set(k, String(v));
+    });
+    return this.http.get(`${this.api}/export`, { params, responseType: 'blob' });
   }
 
   // Admin: approve or reject

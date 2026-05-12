@@ -295,6 +295,9 @@ function makePostalCodeGroupValidator(countryCtrl: string, postalCtrl: string): 
                   [disabled]="existingRequest?.status === 'pending'"
                   (change)="stageFile('profiles', $event)">
               </label>
+              <div class="form-text text-muted mt-2">
+                <i class="bi bi-info-circle me-1"></i>Please upload a clear, professional photo. Face should be clearly visible. Plain background preferred.
+              </div>
             </div>
           </div>
 

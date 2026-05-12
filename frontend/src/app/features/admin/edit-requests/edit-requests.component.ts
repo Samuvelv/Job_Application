@@ -17,11 +17,12 @@ import { PageHeaderComponent } from '../../../shared/components/page-header/page
 import { EmptyStateComponent } from '../../../shared/components/empty-state/empty-state.component';
 import { EditRequestCardComponent } from '../../../shared/components/edit-request-card/edit-request-card.component';
 import { ContactRequestCardComponent } from '../../../shared/components/contact-request-card/contact-request-card.component';
+import { SearchableSelectComponent, SelectOption } from '../../../shared/components/searchable-select/searchable-select.component';
 
 @Component({
   selector: 'app-edit-requests',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, FormsModule, PageHeaderComponent, EmptyStateComponent, EditRequestCardComponent, ContactRequestCardComponent],
+  imports: [CommonModule, ReactiveFormsModule, FormsModule, PageHeaderComponent, EmptyStateComponent, EditRequestCardComponent, ContactRequestCardComponent, SearchableSelectComponent],
   styles: [`
     .filter-bar {
       background: var(--th-surface);
@@ -289,16 +290,13 @@ import { ContactRequestCardComponent } from '../../../shared/components/contact-
           <!-- Request Type -->
           <div class="filter-bar__group">
             <span class="filter-bar__label"><i class="bi bi-tag me-1"></i>Request type</span>
-            <select class="filter-bar__select" [(ngModel)]="editRequestType" (ngModelChange)="onEditFilterChange()">
-              <option value="">All types</option>
-              <option value="personal">Personal Info</option>
-              <option value="professional">Professional</option>
-              <option value="location">Location</option>
-              <option value="skills">Skills</option>
-              <option value="languages">Languages</option>
-              <option value="experience">Experience</option>
-              <option value="education">Education</option>
-            </select>
+            <app-searchable-select
+              [ngModel]="editRequestType"
+              (ngModelChange)="editRequestType = $event; onEditFilterChange()"
+              [options]="editRequestTypeOptions"
+              placeholder="All types"
+              [allowClear]="false">
+            </app-searchable-select>
           </div>
 
           <!-- Date From -->
@@ -326,10 +324,13 @@ import { ContactRequestCardComponent } from '../../../shared/components/contact-
           <!-- Sort -->
           <div class="filter-bar__group" style="flex:0 1 140px;min-width:120px">
             <span class="filter-bar__label"><i class="bi bi-sort-down me-1"></i>Sort</span>
-            <select class="filter-bar__select" [(ngModel)]="editSort" (ngModelChange)="onEditFilterChange()">
-              <option value="newest">Newest</option>
-              <option value="oldest">Oldest</option>
-            </select>
+            <app-searchable-select
+              [ngModel]="editSort"
+              (ngModelChange)="editSort = $event; onEditFilterChange()"
+              [options]="sortOptions"
+              placeholder="Sort"
+              [allowClear]="false">
+            </app-searchable-select>
           </div>
 
           <!-- View toggle + Export -->
@@ -359,7 +360,7 @@ import { ContactRequestCardComponent } from '../../../shared/components/contact-
 
       <!-- Status filter tabs -->
       <div class="nav-pills-custom mb-4">
-        @for (tab of statusTabs; track tab.value) {
+        @for (tab of editStatusTabs; track tab.value) {
           <button class="nav-pill"
             [class.active]="editStatus === tab.value"
             (click)="setEditStatus(tab.value)">
@@ -560,10 +561,13 @@ import { ContactRequestCardComponent } from '../../../shared/components/contact-
           <!-- Sort -->
           <div class="filter-bar__group" style="flex:0 1 140px;min-width:120px">
             <span class="filter-bar__label"><i class="bi bi-sort-down me-1"></i>Sort</span>
-            <select class="filter-bar__select" [(ngModel)]="contactSort" (ngModelChange)="onContactFilterChange()">
-              <option value="newest">Newest</option>
-              <option value="oldest">Oldest</option>
-            </select>
+            <app-searchable-select
+              [ngModel]="contactSort"
+              (ngModelChange)="contactSort = $event; onContactFilterChange()"
+              [options]="sortOptions"
+              placeholder="Sort"
+              [allowClear]="false">
+            </app-searchable-select>
           </div>
 
           <!-- View toggle + Export -->
@@ -593,7 +597,7 @@ import { ContactRequestCardComponent } from '../../../shared/components/contact-
 
       <!-- Status filter tabs -->
       <div class="nav-pills-custom mb-4">
-        @for (tab of statusTabs; track tab.value) {
+        @for (tab of contactStatusTabs; track tab.value) {
           <button class="nav-pill"
             [class.active]="contactStatus === tab.value"
             (click)="setContactStatus(tab.value)">
@@ -708,13 +712,15 @@ import { ContactRequestCardComponent } from '../../../shared/components/contact-
                      </td>
                      <td class="small text-muted">{{ req.created_at | date:'dd MMM yyyy' }}</td>
                      <td class="small text-muted">{{ req.revoked_by_name || req.reviewed_by_name || '—' }}</td>
-                    <td class="text-end">
+                     <td class="text-end">
                        @if (req.status === 'pending') {
                          <div class="d-flex justify-content-end gap-1">
-                           <button class="btn btn-xs btn-success" (click)="onContactApproved({ id: req.id })">
+                           <button class="btn btn-xs btn-success" title="Approve"
+                             (click)="onContactApproveFromList(req.id)">
                              <i class="bi bi-check"></i>
                            </button>
-                           <button class="btn btn-xs btn-danger" (click)="onContactRejected({ id: req.id })">
+                           <button class="btn btn-xs btn-danger" title="Reject"
+                             (click)="onContactRejectFromList(req.id)">
                              <i class="bi bi-x"></i>
                            </button>
                          </div>
@@ -774,18 +780,53 @@ import { ContactRequestCardComponent } from '../../../shared/components/contact-
           <!-- Sort -->
           <div class="filter-bar__group" style="flex:0 1 140px;min-width:120px">
             <span class="filter-bar__label"><i class="bi bi-sort-down me-1"></i>Sort</span>
-            <select class="filter-bar__select" [(ngModel)]="supportSort" (ngModelChange)="onSupportFilterChange()">
-              <option value="newest">Newest</option>
-              <option value="oldest">Oldest</option>
-            </select>
+            <app-searchable-select
+              [ngModel]="supportSort"
+              (ngModelChange)="supportSort = $event; onSupportFilterChange()"
+              [options]="sortOptions"
+              placeholder="Sort"
+              [allowClear]="false">
+            </app-searchable-select>
+          </div>
+
+          <!-- Date From -->
+          <div class="filter-bar__group">
+            <span class="filter-bar__label"><i class="bi bi-calendar me-1"></i>Date from</span>
+            <input
+              class="filter-bar__input"
+              type="date"
+              [(ngModel)]="supportDateFrom"
+              (ngModelChange)="onSupportFilterChange()"
+            />
+          </div>
+
+          <!-- Date To -->
+          <div class="filter-bar__group">
+            <span class="filter-bar__label"><i class="bi bi-calendar-check me-1"></i>Date to</span>
+            <input
+              class="filter-bar__input"
+              type="date"
+              [(ngModel)]="supportDateTo"
+              (ngModelChange)="onSupportFilterChange()"
+            />
+          </div>
+
+          <!-- Export CSV -->
+          <div style="display:flex;align-items:flex-end;gap:6px;margin-left:auto">
+            <button class="filter-bar__clear" style="border-color:var(--th-success);color:var(--th-success)"
+              [disabled]="supportExporting" (click)="exportSupportCsv()">
+              @if (supportExporting) { <span class="spinner-border spinner-border-sm"></span> }
+              @else { <i class="bi bi-download"></i> }
+              Export CSV
+            </button>
           </div>
 
           <!-- Clear filters -->
-          @if (supportSearch) {
+          @if (supportActiveFilterCount > 0) {
             <button class="filter-bar__clear" (click)="clearSupportFilters()">
               <i class="bi bi-x-lg"></i>
               Clear
-              <span class="filter-bar__active-badge">1</span>
+              <span class="filter-bar__active-badge">{{ supportActiveFilterCount }}</span>
             </button>
           }
         </div>
@@ -812,7 +853,7 @@ import { ContactRequestCardComponent } from '../../../shared/components/contact-
         <app-empty-state
           icon="bi-hand-thumbs-up"
           [title]="supportEmptyTitle"
-          [subtitle]="supportSearch ? 'No results match your current filters. Try adjusting your search.' : 'Volunteer support requests from candidates will appear here.'"
+          [subtitle]="supportActiveFilterCount > 0 ? 'No results match your current filters. Try adjusting your search.' : 'Volunteer support requests from candidates will appear here.'"
         />
       } @else {
         <!-- List (table) view -->
@@ -927,7 +968,7 @@ export class EditRequestsComponent implements OnInit, OnDestroy {
   editRequestType: EditRequestType | '' = '';
   editSort: 'newest' | 'oldest' = 'newest';
   editViewMode: 'card' | 'list' = 'card';
-  editExporting = false;
+  editExporting     = false;
 
   // Edit bulk selection
   editSelectedIds = new Set<string>();
@@ -968,6 +1009,9 @@ export class EditRequestsComponent implements OnInit, OnDestroy {
   // Support filter state
   supportSearch = '';
   supportSort: 'newest' | 'oldest' = 'newest';
+  supportDateFrom = '';
+  supportDateTo = '';
+  supportExporting = false;
 
   // Support counts
   supportCounts: VolunteerSupportRequestCounts = { pending: 0, connected: 0, closed: 0, total: 0 };
@@ -984,12 +1028,36 @@ export class EditRequestsComponent implements OnInit, OnDestroy {
   reviewSubmitting = false;
   bulkSubmitting = false;
 
-  statusTabs = [
+  editStatusTabs = [
+    { label: 'Pending',  value: 'pending'  },
+    { label: 'Approved', value: 'approved' },
+    { label: 'Rejected', value: 'rejected' },
+    { label: 'All',      value: ''         },
+  ];
+
+  contactStatusTabs = [
     { label: 'Pending',  value: 'pending'  },
     { label: 'Approved', value: 'approved' },
     { label: 'Rejected', value: 'rejected' },
     { label: 'Revoked',  value: 'revoked'  },
     { label: 'All',      value: ''         },
+  ];
+
+  // ── Dropdown option arrays ──────────────────────────────────────────────────
+  editRequestTypeOptions: SelectOption[] = [
+    { value: '',             label: 'All types'    },
+    { value: 'personal',     label: 'Personal Info' },
+    { value: 'professional', label: 'Professional'  },
+    { value: 'location',     label: 'Location'      },
+    { value: 'skills',       label: 'Skills'        },
+    { value: 'languages',    label: 'Languages'     },
+    { value: 'experience',   label: 'Experience'    },
+    { value: 'education',    label: 'Education'     },
+  ];
+
+  sortOptions: SelectOption[] = [
+    { value: 'newest', label: 'Newest' },
+    { value: 'oldest', label: 'Oldest' },
   ];
 
   // Debounce subjects
@@ -1515,6 +1583,40 @@ export class EditRequestsComponent implements OnInit, OnDestroy {
     this.reviewSubmitting = false;
   }
 
+  onContactApproveFromList(id: string): void {
+    this.confirmDialog.confirm({
+      title: 'Approve Contact Request?',
+      message: 'Recruiter will be able to see the candidate\'s contact details. This action cannot be undone.',
+      confirmLabel: 'Approve',
+      cancelLabel: 'Cancel',
+      confirmClass: 'btn-success',
+      showNoteField: true,
+      noteLabel: 'Admin Notes (Optional)',
+      notePlaceholder: 'Add any comments about this approval...',
+    }).then(result => {
+      if (result.confirmed) {
+        this.onContactApproved({ id, adminNote: result.notes });
+      }
+    });
+  }
+
+  onContactRejectFromList(id: string): void {
+    this.confirmDialog.confirm({
+      title: 'Reject Contact Request?',
+      message: 'Recruiter will be notified that the request was not approved. This action cannot be undone.',
+      confirmLabel: 'Reject',
+      cancelLabel: 'Cancel',
+      confirmClass: 'btn-danger',
+      showNoteField: true,
+      noteLabel: 'Reason for Rejection (Optional)',
+      notePlaceholder: 'Explain why you are rejecting this request...',
+    }).then(result => {
+      if (result.confirmed) {
+        this.onContactRejected({ id, adminNote: result.notes });
+      }
+    });
+  }
+
   onContactRevoked(event: { id: string; reason?: string }): void {
     this.confirmDialog.confirm({
       title:        'Revoke Contact Access?',
@@ -1569,6 +1671,11 @@ export class EditRequestsComponent implements OnInit, OnDestroy {
     return 'No volunteer support requests found';
   }
 
+  get supportActiveFilterCount(): number {
+    return [this.supportSearch, this.supportDateFrom, this.supportDateTo]
+      .filter(v => !!v).length;
+  }
+
   onSupportSearchChange(value: string): void {
     this.supportSearch$.next(value);
   }
@@ -1579,8 +1686,10 @@ export class EditRequestsComponent implements OnInit, OnDestroy {
   }
 
   clearSupportFilters(): void {
-    this.supportSearch = '';
-    this.supportSort   = 'newest';
+    this.supportSearch   = '';
+    this.supportSort     = 'newest';
+    this.supportDateFrom = '';
+    this.supportDateTo   = '';
     this.supportPagination.page = 1;
     this.loadSupportRequests();
   }
@@ -1594,10 +1703,12 @@ export class EditRequestsComponent implements OnInit, OnDestroy {
   loadSupportRequests(): void {
     this.supportLoading = true;
     this.supportRequestService.list({
-      status: (this.supportStatus as any) || undefined,
-      search: this.supportSearch || undefined,
-      page:   this.supportPagination.page,
-      limit:  this.supportPagination.limit,
+      status:    (this.supportStatus as any) || undefined,
+      search:    this.supportSearch    || undefined,
+      date_from: this.supportDateFrom  || undefined,
+      date_to:   this.supportDateTo    || undefined,
+      page:      this.supportPagination.page,
+      limit:     this.supportPagination.limit,
     }).subscribe({
       next: (res) => {
         this.supportLoading    = false;
@@ -1605,6 +1716,33 @@ export class EditRequestsComponent implements OnInit, OnDestroy {
         this.supportPagination = res.pagination;
       },
       error: () => (this.supportLoading = false),
+    });
+  }
+
+  exportSupportCsv(): void {
+    if (this.supportExporting) return;
+    this.supportExporting = true;
+    this.supportRequestService.exportCsv({
+      status:    (this.supportStatus as any) || undefined,
+      search:    this.supportSearch    || undefined,
+      date_from: this.supportDateFrom  || undefined,
+      date_to:   this.supportDateTo    || undefined,
+    }).subscribe({
+      next: (blob) => {
+        this.supportExporting = false;
+        if (blob.size < 10) {
+          this.toast.error('No volunteer support requests available to export.');
+          return;
+        }
+        const url = URL.createObjectURL(blob);
+        const a   = document.createElement('a');
+        a.href     = url;
+        a.download = `volunteer-support-requests-${new Date().toISOString().slice(0, 10)}.csv`;
+        a.click();
+        URL.revokeObjectURL(url);
+        this.toast.success('CSV exported successfully.');
+      },
+      error: () => { this.supportExporting = false; this.toast.error('Export failed. Please try again.'); },
     });
   }
 
@@ -1639,25 +1777,28 @@ export class EditRequestsComponent implements OnInit, OnDestroy {
   exportEditCsv(): void {
     if (this.editExporting) return;
     this.editExporting = true;
-    this.editRequestService.list({
+    this.editRequestService.exportCsv({
       status:       (this.editStatus as any) || undefined,
       search:       this.editSearch       || undefined,
       date_from:    this.editDateFrom     || undefined,
       date_to:      this.editDateTo       || undefined,
       request_type: (this.editRequestType as EditRequestType) || undefined,
       sort:         this.editSort,
-      page:         1,
-      limit:        10000,
     }).subscribe({
-      next: (res) => {
+      next: (blob) => {
         this.editExporting = false;
-        const rows = res.data as EditRequest[];
-        const header = 'ID,Candidate,Email,Type,Status,Submitted,Reviewed By';
-        const lines  = rows.map(r =>
-          [r.id, `${r.first_name} ${r.last_name}`, r.email, r.reason ?? '', r.status,
-           r.created_at, r.reviewed_by_name ?? ''].map(v => `"${String(v ?? '').replace(/"/g, '""')}"`).join(',')
-        );
-        this._downloadCsv([header, ...lines].join('\n'), 'edit-requests.csv');
+        // Guard: if blob is effectively empty (only headers ~1 line), warn and abort
+        if (blob.size < 10) {
+          this.toast.error('No edit requests available to export.');
+          return;
+        }
+        const url = URL.createObjectURL(blob);
+        const a   = document.createElement('a');
+        a.href     = url;
+        a.download = `candidate-edit-requests-${new Date().toISOString().slice(0,10)}.csv`;
+        a.click();
+        URL.revokeObjectURL(url);
+        this.toast.success('CSV exported successfully.');
       },
       error: () => { this.editExporting = false; this.toast.error('Export failed'); },
     });
@@ -1666,38 +1807,28 @@ export class EditRequestsComponent implements OnInit, OnDestroy {
   exportContactCsv(): void {
     if (this.contactExporting) return;
     this.contactExporting = true;
-    this.contactRequestService.list({
-      status:    this.contactStatus || undefined,
-      search:    this.contactSearch    || undefined,
-      date_from: this.contactDateFrom  || undefined,
-      date_to:   this.contactDateTo    || undefined,
-      page:      1,
-      limit:     10000,
+    this.contactRequestService.exportCsv({
+      status:    this.contactStatus   || undefined,
+      search:    this.contactSearch   || undefined,
+      date_from: this.contactDateFrom || undefined,
+      date_to:   this.contactDateTo   || undefined,
     }).subscribe({
-      next: (res) => {
+      next: (blob) => {
         this.contactExporting = false;
-        const rows = res.data as ContactRequest[];
-        const header = 'ID,Candidate/Recruiter,Status,Submitted,Reviewed By';
-        const lines  = rows.map(r =>
-          [r.id,
-           r.candidate_first_name ? `${r.candidate_first_name} ${r.candidate_last_name}` : (r.recruiter_name ?? ''),
-           r.status, r.created_at, r.reviewed_by_name ?? '']
-          .map(v => `"${String(v ?? '').replace(/"/g, '""')}"`).join(',')
-        );
-        this._downloadCsv([header, ...lines].join('\n'), 'contact-requests.csv');
+        if (blob.size < 10) {
+          this.toast.error('No contact info requests available to export.');
+          return;
+        }
+        const url = URL.createObjectURL(blob);
+        const a   = document.createElement('a');
+        a.href     = url;
+        a.download = `contact-info-requests-${new Date().toISOString().slice(0, 10)}.csv`;
+        a.click();
+        URL.revokeObjectURL(url);
+        this.toast.success('CSV exported successfully.');
       },
-      error: () => { this.contactExporting = false; this.toast.error('Export failed'); },
+      error: () => { this.contactExporting = false; this.toast.error('Export failed. Please try again.'); },
     });
-  }
-
-  private _downloadCsv(content: string, filename: string): void {
-    const blob = new Blob([content], { type: 'text/csv' });
-    const url  = URL.createObjectURL(blob);
-    const a    = document.createElement('a');
-    a.href     = url;
-    a.download = filename;
-    a.click();
-    URL.revokeObjectURL(url);
   }
 
   cancelReview(): void {

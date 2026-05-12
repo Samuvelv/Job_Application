@@ -57,6 +57,11 @@ router.get('/me',
 );
 
 // ── Shared: admin, recruiter, candidate (own) ──────────────────────────────────
+router.get('/:id/activity',
+  authorize('admin'),
+  ctrl.getActivity,
+);
+
 router.get('/:id',
   authorize('admin', 'recruiter', 'candidate'),
   ctrl.getOne,

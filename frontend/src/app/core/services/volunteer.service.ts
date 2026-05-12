@@ -15,6 +15,8 @@ export interface VolunteerFilters {
   country_placed?: string;
   availability?: string;
   language?: string;
+  sector?: string;
+  nationality?: string;
   sort?: string;
   page?: number;
   limit?: number;

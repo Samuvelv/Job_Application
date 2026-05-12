@@ -10,6 +10,7 @@ export const CreateVolunteerSchema = z.object({
   email:              z.string().email().max(200).optional().or(z.literal('').transform(() => undefined)),
   phone:              z.string().max(50).optional(),
   role:               z.string().max(200).optional(),
+  sector:             z.string().max(200).optional(),
   notes:              z.string().max(2000).optional(),
   // Extended fields
   photo_url:          z.string().max(500).optional(),

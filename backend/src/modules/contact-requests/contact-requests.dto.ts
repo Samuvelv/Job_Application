@@ -1,6 +1,10 @@
 // src/modules/contact-requests/contact-requests.dto.ts
 import { z } from 'zod';
 
+export const CreateContactRequestSchema = z.object({
+  request_reason: z.string().trim().min(1, 'Reason for request is required').max(1000),
+});
+
 export const ReviewContactRequestSchema = z.object({
   status:     z.enum(['approved', 'rejected']),
   admin_note: z.string().max(500).optional(),
@@ -25,6 +29,7 @@ export const BulkReviewContactRequestSchema = z.object({
   admin_note: z.string().max(500).optional(),
 });
 
+export type CreateContactRequestDto      = z.infer<typeof CreateContactRequestSchema>;
 export type ReviewContactRequestDto      = z.infer<typeof ReviewContactRequestSchema>;
 export type RevokeContactRequestDto      = z.infer<typeof RevokeContactRequestSchema>;
 export type BulkReviewContactRequestDto  = z.infer<typeof BulkReviewContactRequestSchema>;

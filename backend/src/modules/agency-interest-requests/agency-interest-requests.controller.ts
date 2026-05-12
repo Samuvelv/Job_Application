@@ -61,3 +61,16 @@ export async function pendingCount(req: Request, res: Response, next: NextFuncti
     res.json({ count });
   } catch (err) { next(err); }
 }
+
+// ── Admin: export CSV ────────────────────────────────────────────────────────
+
+export async function exportCsv(req: Request, res: Response, next: NextFunction): Promise<void> {
+  try {
+    const { page: _p, limit: _l, ...filters } = InterestRequestFilterSchema.parse({ ...req.query, page: 1, limit: 20 });
+    const csv  = await svc.exportInterestRequests(filters);
+    const date = new Date().toISOString().split('T')[0];
+    res.setHeader('Content-Type', 'text/csv');
+    res.setHeader('Content-Disposition', `attachment; filename="agency-interest-requests-${date}.csv"`);
+    res.send(csv);
+  } catch (err) { next(err); }
+}
