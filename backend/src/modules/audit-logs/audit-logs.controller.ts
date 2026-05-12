@@ -41,6 +41,12 @@ function describeAction(action: string): string {
     UPDATE_AGENCY_REFERRAL:          'Updated an agency referral record',
     DELETE_AGENCY_REFERRAL:          'Deleted an agency referral record',
     INTEREST_REQUEST_REVOKED:        'Agency interest request was revoked',
+    NEW_IP_LOGIN_DETECTED:           'New IP address detected on admin login',
+    OTP_GENERATED:                   'One-time passcode generated for admin login',
+    OTP_VERIFIED:                    'Admin two-factor authentication verified',
+    OTP_FAILED:                      'Incorrect OTP entered during admin login',
+    OTP_RESENT:                      'One-time passcode resent to admin',
+    OTP_LOCKED:                      'Admin OTP verification locked after too many attempts',
   };
   if (map[action]) return map[action];
   return action

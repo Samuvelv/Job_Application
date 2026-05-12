@@ -4,7 +4,7 @@ import { HttpClient } from '@angular/common/http';
 import { Router } from '@angular/router';
 import { Observable, tap, catchError, throwError } from 'rxjs';
 import { environment } from '../../../environments/environment';
-import { AuthResponse, LoginPayload, User, UserRole } from '../models/user.model';
+import { AuthResponse, LoginPayload, LoginResponse, OtpChallengeResponse, User, UserRole } from '../models/user.model';
 
 const TOKEN_KEY = 'th_access_token';
 const USER_KEY  = 'th_user';
@@ -19,14 +19,34 @@ export class AuthService {
   constructor(private http: HttpClient, private router: Router) {}
 
   // ── Login ────────────────────────────────────────────────────────────────────
-  login(payload: LoginPayload): Observable<AuthResponse> {
-    return this.http.post<AuthResponse>(`${this.apiUrl}/auth/login`, payload).pipe(
+  login(payload: LoginPayload): Observable<LoginResponse> {
+    return this.http.post<LoginResponse>(`${this.apiUrl}/auth/login`, payload).pipe(
       tap((res) => {
-        localStorage.setItem(TOKEN_KEY, res.accessToken);
-        localStorage.setItem(USER_KEY, JSON.stringify(res.user));
-        this.currentUser.set(res.user);
+        if (!('requiresOtp' in res)) {
+          localStorage.setItem(TOKEN_KEY, res.accessToken);
+          localStorage.setItem(USER_KEY, JSON.stringify(res.user));
+          this.currentUser.set(res.user);
+        }
       }),
     );
+  }
+
+  // ── Verify OTP (step 2 of admin login) ───────────────────────────────────────
+  verifyOtp(otpToken: string, otp: string): Observable<AuthResponse> {
+    return this.http
+      .post<AuthResponse>(`${this.apiUrl}/auth/verify-otp`, { otpToken, otp }, { withCredentials: true })
+      .pipe(
+        tap((res) => {
+          localStorage.setItem(TOKEN_KEY, res.accessToken);
+          localStorage.setItem(USER_KEY, JSON.stringify(res.user));
+          this.currentUser.set(res.user);
+        }),
+      );
+  }
+
+  // ── Resend OTP ────────────────────────────────────────────────────────────────
+  resendOtp(otpToken: string): Observable<OtpChallengeResponse> {
+    return this.http.post<OtpChallengeResponse>(`${this.apiUrl}/auth/resend-otp`, { otpToken });
   }
 
   // ── Logout ───────────────────────────────────────────────────────────────────

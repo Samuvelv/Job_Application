@@ -666,6 +666,24 @@
         }
       </div>
 
+      <!-- Experience Based Profile checkbox -->
+      <div class="glass-card p-3 mt-4 mb-3">
+        <div class="form-check d-flex align-items-start gap-2">
+          <input class="form-check-input mt-1 flex-shrink-0" type="checkbox" id="reg-experience-based"
+            [checked]="isExperienceBased"
+            (change)="toggleExperienceBased($any($event.target).checked)">
+          <div>
+            <label class="form-check-label fw-semibold" for="reg-experience-based">
+              Experience Based Profile
+            </label>
+            <div class="text-muted small mt-1">
+              <i class="bi bi-info-circle me-1"></i>Tick this if the candidate has no formal education — qualified through work experience only
+            </div>
+          </div>
+        </div>
+      </div>
+
+      @if (!isExperienceBased) {
       <!-- Education -->
       <div class="card-section-header mt-4 mb-3">
         <i class="bi bi-mortarboard-fill"></i>Education
@@ -835,6 +853,7 @@
           </div>
         }
       </div>
+      } <!-- end @if (!isExperienceBased) -->
     }
 
     <!-- ══════════════════ STEP 4: Location ══════════════════ -->
@@ -877,14 +896,12 @@
 
         <!-- Postal Code -->
         <div class="col-md-6">
-          <label class="form-label fw-semibold">Postal Code <span class="text-danger">*</span></label>
+          <label class="form-label fw-semibold">Postal Code</label>
           <input type="text" class="form-control" formControlName="postal_code"
             placeholder="e.g. 400001"
             [class.is-invalid]="ctrl('postal_code').invalid && ctrl('postal_code').touched">
           @if (ctrl('postal_code').touched) {
-            @if (ctrl('postal_code').errors?.['required']) {
-              <div class="invalid-feedback">Postal code is required.</div>
-            } @else if (ctrl('postal_code').errors?.['postalCodeInvalid']) {
+            @if (ctrl('postal_code').errors?.['postalCodeInvalid']) {
               <div class="invalid-feedback">Invalid format — {{ ctrl('postal_code').errors?.['postalCodeInvalid'] }}</div>
             } @else if (ctrl('postal_code').errors?.['maxlength']) {
               <div class="invalid-feedback">Postal code is too long.</div>

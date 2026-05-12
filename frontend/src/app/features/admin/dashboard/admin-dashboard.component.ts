@@ -72,9 +72,6 @@ import { ContactSubmission } from '../../../core/models/contact-submission.model
             @else { {{ stats()?.registrationsToday ?? 0 }} }
           </div>
           <div class="kpi-hcard__title">New Registrations Today</div>
-          <div class="kpi-hcard__badge kpi-hcard__badge--indigo">
-            <i class="bi bi-calendar-day"></i> Today
-          </div>
         </div>
       </div>
 
@@ -90,9 +87,6 @@ import { ContactSubmission } from '../../../core/models/contact-submission.model
             @else { {{ stats()?.profilesForwardedToday ?? 0 }} }
           </div>
           <div class="kpi-hcard__title">Profiles Forwarded Today</div>
-          <div class="kpi-hcard__badge kpi-hcard__badge--emerald">
-            <i class="bi bi-arrow-up-right"></i> Today
-          </div>
         </div>
       </div>
 
@@ -108,9 +102,6 @@ import { ContactSubmission } from '../../../core/models/contact-submission.model
             @else { {{ stats()?.interviewsArrangedToday ?? 0 }} }
           </div>
           <div class="kpi-hcard__title">Interviews Arranged Today</div>
-          <div class="kpi-hcard__badge kpi-hcard__badge--cyan">
-            <i class="bi bi-calendar-check-fill"></i> Today
-          </div>
         </div>
       </div>
 

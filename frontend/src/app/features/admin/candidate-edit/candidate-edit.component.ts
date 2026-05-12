@@ -204,6 +204,8 @@ export class CandidateEditComponent implements OnInit {
   successMsg = '';
   errorMsg = '';
 
+  isExperienceBased = false;
+
   // Volunteer invitation prompt
   showPlacedPrompt = false;
   inviteSending    = false;
@@ -484,6 +486,13 @@ export class CandidateEditComponent implements OnInit {
       location:       ['', Validators.required],
     }, { validators: eduEndYearGroupValidator }));
   }
+
+  toggleExperienceBased(checked: boolean): void {
+    this.isExperienceBased = checked;
+    if (checked) {
+      while (this.education.length) this.education.removeAt(0);
+    }
+  }
   removeEducation(i: number): void { this.education.removeAt(i); }
 
   // ── Preview handlers ───────────────────────────────────────────────────────
@@ -658,6 +667,9 @@ export class CandidateEditComponent implements OnInit {
 
   // ── Build form prefilled with candidate data ───────────────────────────────
   private buildForm(emp: Candidate): void {
+    // Set experience-based flag from loaded candidate
+    this.isExperienceBased = emp.is_experience_based ?? false;
+
     const { dialCode, number: phoneNumber } = this.splitPhone(emp.phone ?? '');
     const { dialCode: waDial, number: waNumber } = this.splitPhone(emp.whatsapp_number ?? '');
 
@@ -707,7 +719,7 @@ export class CandidateEditComponent implements OnInit {
       current_city:     [emp.current_city ?? '',    Validators.required],
       nationality:      [emp.nationality ?? ''],
       has_passport:     [emp.has_passport ?? false],
-      postal_code:      [emp.postal_code ?? '', [Validators.required, Validators.maxLength(20)]],
+      postal_code:      [emp.postal_code ?? '', Validators.maxLength(20)],
       target_locations: [Array.isArray(emp.target_locations) ? emp.target_locations : []],
       hobbies:          [Array.isArray(emp.hobbies) ? emp.hobbies : []],
 
@@ -744,13 +756,15 @@ export class CandidateEditComponent implements OnInit {
           : [this.fb.group({ company_name: ['', Validators.required], job_title: ['', Validators.required], start_date: ['', Validators.required], end_date: [''], description: [''], location: ['', Validators.required], reason_for_leaving_select: [''], reason_for_leaving_other: [''], currently_working: [false] })]
       ),
       education: this.fb.array(
-        emp.education?.length
-          ? emp.education.map(e => { const yr = new Date().getFullYear(); return this.fb.group({
-              institution: [e.institution ?? '', Validators.required], degree: [e.degree ?? '', Validators.required],
-              field_of_study: [e.field_of_study ?? '', Validators.required], start_year: [e.start_year ?? null, eduYearValidator(1950, yr)],
-              end_year: [e.end_year ?? null, eduYearValidator(1950, yr + 6)], location: [e.location ?? '', Validators.required],
-            }, { validators: eduEndYearGroupValidator }); })
-          : [(() => { const yr = new Date().getFullYear(); return this.fb.group({ institution: ['', Validators.required], degree: ['', Validators.required], field_of_study: ['', Validators.required], start_year: [null as number | null, eduYearValidator(1950, yr)], end_year: [null as number | null, eduYearValidator(1950, yr + 6)], location: ['', Validators.required] }, { validators: eduEndYearGroupValidator }); })()]
+        this.isExperienceBased
+          ? []
+          : emp.education?.length
+            ? emp.education.map(e => { const yr = new Date().getFullYear(); return this.fb.group({
+                institution: [e.institution ?? '', Validators.required], degree: [e.degree ?? '', Validators.required],
+                field_of_study: [e.field_of_study ?? '', Validators.required], start_year: [e.start_year ?? null, eduYearValidator(1950, yr)],
+                end_year: [e.end_year ?? null, eduYearValidator(1950, yr + 6)], location: [e.location ?? '', Validators.required],
+              }, { validators: eduEndYearGroupValidator }); })
+            : [(() => { const yr = new Date().getFullYear(); return this.fb.group({ institution: ['', Validators.required], degree: ['', Validators.required], field_of_study: ['', Validators.required], start_year: [null as number | null, eduYearValidator(1950, yr)], end_year: [null as number | null, eduYearValidator(1950, yr + 6)], location: ['', Validators.required] }, { validators: eduEndYearGroupValidator }); })()]
       ),
 
       // Credentials (optional)
@@ -775,6 +789,7 @@ export class CandidateEditComponent implements OnInit {
     const raw = this.form.getRawValue();
     const phone = raw.phone ? `${raw.dial_code || ''}${raw.phone}`.trim() : undefined;
     const whatsapp = raw.whatsapp_number ? `${raw.whatsapp_dial_code || ''}${raw.whatsapp_number}`.trim() : undefined;
+    const education = this.isExperienceBased ? [] : raw.education.filter((e: any) => e.institution?.trim() || e.degree?.trim());
 
     const payload = {
       first_name:    raw.first_name,
@@ -820,7 +835,8 @@ export class CandidateEditComponent implements OnInit {
               : (sel || undefined),
           };
         }),
-      education:  raw.education.filter((e: any) => e.institution?.trim() || e.degree?.trim()),
+      education,
+      is_experience_based: this.isExperienceBased,
     };
 
     this.empSvc.update(this.candidateId, payload as any).subscribe({

@@ -266,6 +266,8 @@ export class CandidateRegisterComponent implements OnInit, OnDestroy {
   form!: FormGroup;
   private draftSub?: Subscription;
 
+  isExperienceBased = false;
+
   readonly STEPS = [
     { num: 1, label: 'Personal Details' },
     { num: 2, label: 'Professional'     },
@@ -393,7 +395,7 @@ export class CandidateRegisterComponent implements OnInit, OnDestroy {
       current_country:  ['', Validators.required],
       current_city:     ['', Validators.required],
       nationality:      [''],
-      postal_code:      ['', [Validators.required, Validators.maxLength(20)]],
+      postal_code:      ['', Validators.maxLength(20)],
       has_passport:     [false],
       target_locations: [[]],
 
@@ -561,6 +563,15 @@ export class CandidateRegisterComponent implements OnInit, OnDestroy {
       location:       ['', Validators.required],
     }, { validators: eduEndYearGroupValidator }));
   }
+
+  toggleExperienceBased(checked: boolean): void {
+    this.isExperienceBased = checked;
+    if (checked) {
+      // Clear education entries and certificates — not needed for experience-based profiles
+      while (this.education.length) this.education.removeAt(0);
+      this.pendingCerts = [];
+    }
+  }
   removeEducation(i: number): void { this.education.removeAt(i); }
 
   ctrl(name: string): AbstractControl { return this.form.get(name)!; }
@@ -638,7 +649,6 @@ export class CandidateRegisterComponent implements OnInit, OnDestroy {
       case 4:
         mark(this.ctrl('current_country'));
         mark(this.ctrl('current_city'));
-        mark(this.ctrl('postal_code'));
         if (this.ctrl('has_passport').value) mark(this.ctrl('nationality'));
         this.form.updateValueAndValidity();
         break;
@@ -647,10 +657,12 @@ export class CandidateRegisterComponent implements OnInit, OnDestroy {
           ['company_name','job_title','start_date','location'].forEach(f => mark(g.get(f)!));
           g.updateValueAndValidity();
         });
-        this.education.controls.forEach(g => {
-          ['institution','degree','field_of_study','location','start_year','end_year'].forEach(f => mark(g.get(f)!));
-          g.updateValueAndValidity();
-        });
+        if (!this.isExperienceBased) {
+          this.education.controls.forEach(g => {
+            ['institution','degree','field_of_study','location','start_year','end_year'].forEach(f => mark(g.get(f)!));
+            g.updateValueAndValidity();
+          });
+        }
         break;
     }
   }
@@ -688,14 +700,13 @@ export class CandidateRegisterComponent implements OnInit, OnDestroy {
       case 4:
         return this.ctrl('current_country').valid
           && this.ctrl('current_city').valid
-          && this.ctrl('postal_code').valid
           && (this.ctrl('has_passport').value ? this.ctrl('nationality').valid : true);
       case 3: {
         const yrsExp = Number(this.ctrl('years_experience').value) || 0;
         const expRows = this.experience.controls;
         if (yrsExp > 0 && expRows.length === 0) return false;
         const expOk = expRows.every(g => g.valid);
-        const eduOk = this.education.controls.every(g => g.valid);
+        const eduOk = this.isExperienceBased || this.education.controls.every(g => g.valid);
         return expOk && eduOk;
       }
       default: return true;
@@ -869,6 +880,7 @@ export class CandidateRegisterComponent implements OnInit, OnDestroy {
         ? (raw.visa_status_other?.trim() ? `Other: ${raw.visa_status_other.trim()}` : 'Other — specify')
         : (raw.visa_status_select || undefined),
       skills, languages, experience, education,
+      is_experience_based: this.isExperienceBased,
     };
 
     this.loading = true;

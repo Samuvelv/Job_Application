@@ -726,14 +726,12 @@ function makePostalCodeGroupValidator(countryCtrl: string, postalCtrl: string): 
             </div>
 
             <div class="col-md-4">
-              <label class="form-label small fw-semibold">Postal / ZIP Code <span class="text-danger">*</span></label>
+              <label class="form-label small fw-semibold">Postal / ZIP Code</label>
               <input formControlName="postal_code" class="form-control form-control-sm"
                 [class.is-invalid]="form!.get('postal_code')?.invalid && form!.get('postal_code')?.touched"
                 placeholder="Postal code">
               @if (form!.get('postal_code')?.touched) {
-                @if (form!.get('postal_code')?.errors?.['required']) {
-                  <div class="invalid-feedback d-block">Postal code is required.</div>
-                } @else if (form!.get('postal_code')?.errors?.['postalCodeInvalid']) {
+                @if (form!.get('postal_code')?.errors?.['postalCodeInvalid']) {
                   <div class="invalid-feedback d-block">{{ form!.get('postal_code')?.errors?.['postalCodeInvalid'] }}</div>
                 }
               }
@@ -1372,7 +1370,7 @@ export class EditRequestComponent implements OnInit {
       // Location
       current_country:  [emp.current_country ?? '', Validators.required],
       current_city:     [emp.current_city    ?? '', Validators.required],
-      postal_code:      [emp.postal_code     ?? '', [Validators.required, Validators.maxLength(20)]],
+      postal_code:      [emp.postal_code     ?? '', Validators.maxLength(20)],
       has_passport:     [emp.has_passport    ?? false],
       nationality:      [emp.nationality     ?? ''],
       target_locations: [Array.isArray(emp.target_locations) ? emp.target_locations : []],

@@ -630,3 +630,68 @@ export async function sendAdminInterestApprovalReminder(
     `,
   });
 }
+
+// ── Security Alert: new IP address detected on admin login ───────────────────
+
+export async function sendNewIpLoginAlert(opts: {
+  adminName: string;
+  adminEmail: string;
+  ipAddress: string;
+  location: string;
+  browser: string;
+  os: string;
+  time: string;
+}): Promise<void> {
+  const formattedTime = new Date(opts.time).toLocaleString('en-GB', {
+    timeZone: 'UTC',
+    day: '2-digit',
+    month: 'short',
+    year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+    second: '2-digit',
+  }) + ' UTC';
+
+  await sendMail({
+    to: opts.adminEmail,
+    subject: '⚠️ New Login Location Detected — NTL Career Nexus',
+    html: `
+      <div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;">
+        <div style="background:linear-gradient(135deg,#dc2626,#b91c1c);padding:28px 24px;border-radius:12px 12px 0 0;text-align:center;">
+          <h1 style="color:#fff;margin:0;font-size:22px;">⚠️ Security Alert</h1>
+          <p style="color:rgba(255,255,255,0.85);margin:6px 0 0;font-size:14px;">New login location detected on your admin account</p>
+        </div>
+        <div style="background:#fff;padding:32px 24px;border:1px solid #e5e7eb;border-top:none;border-radius:0 0 12px 12px;">
+          <p style="font-size:15px;color:#374151;line-height:1.7;">
+            Hi ${opts.adminName},
+          </p>
+          <p style="font-size:15px;color:#374151;line-height:1.7;">
+            We detected a login to your NTL Career Nexus admin account from a <strong>new IP address</strong> that has not been seen before.
+          </p>
+          <div style="background:#fef2f2;border:1px solid #fecaca;border-radius:10px;padding:20px;margin:20px 0;">
+            <table style="width:100%;font-size:14px;color:#374151;border-collapse:collapse;">
+              <tr><td style="padding:8px 0;font-weight:600;width:140px;color:#991b1b;">IP Address:</td><td style="font-family:monospace;font-size:14px;">${opts.ipAddress}</td></tr>
+              <tr><td style="padding:8px 0;font-weight:600;color:#991b1b;">Location:</td><td>${opts.location}</td></tr>
+              <tr><td style="padding:8px 0;font-weight:600;color:#991b1b;">Browser:</td><td>${opts.browser}</td></tr>
+              <tr><td style="padding:8px 0;font-weight:600;color:#991b1b;">Operating System:</td><td>${opts.os}</td></tr>
+              <tr><td style="padding:8px 0;font-weight:600;color:#991b1b;">Time:</td><td>${formattedTime}</td></tr>
+            </table>
+          </div>
+          <div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:8px;padding:14px 16px;margin:20px 0;">
+            <p style="margin:0;font-size:14px;color:#166534;">
+              <strong>If this was you</strong> — no action is needed. This alert is sent whenever a new IP address is used to log in.
+            </p>
+          </div>
+          <div style="background:#fff7ed;border:1px solid #fed7aa;border-radius:8px;padding:14px 16px;margin:20px 0;">
+            <p style="margin:0;font-size:14px;color:#9a3412;">
+              <strong>If this was NOT you</strong> — your account may be compromised. Please contact the system administrator immediately and change your password.
+            </p>
+          </div>
+          <p style="color:#888;font-size:12px;margin-top:24px;border-top:1px solid #f3f4f6;padding-top:16px;">
+            This security alert was sent automatically by the NTL Career Nexus platform. Do not reply to this email.
+          </p>
+        </div>
+      </div>
+    `,
+  });
+}

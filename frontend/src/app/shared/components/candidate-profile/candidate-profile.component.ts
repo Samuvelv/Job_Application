@@ -150,7 +150,12 @@ type Tab = 'overview' | 'experience' | 'education' | 'documents' | 'activity';
                 {{ candidate.experience!.length }}
               </span>
             }
-            @if (tab.id === 'education' && (candidate.education?.length || candidate.certificates?.length)) {
+            @if (tab.id === 'education' && candidate.is_experience_based) {
+              <span style="font-size:.65rem;padding:.1rem .45rem;border-radius:999px;
+                background:#f3e8ff;color:#7c3aed;font-weight:700;margin-left:.2rem">
+                💼
+              </span>
+            } @else if (tab.id === 'education' && (candidate.education?.length || candidate.certificates?.length)) {
               <span style="font-size:.65rem;padding:.1rem .45rem;border-radius:999px;
                 background:var(--th-emerald-soft);color:var(--th-emerald);font-weight:700;margin-left:.2rem">
                 {{ (candidate.education?.length ?? 0) + (candidate.certificates?.length ?? 0) }}
@@ -554,7 +559,32 @@ type Tab = 'overview' | 'experience' | 'education' | 'documents' | 'activity';
 
       <!-- ══ TAB: Education ════════════════════════════════════════════════ -->
       @if (activeTab() === 'education') {
-        @if (!candidate.education?.length && !candidate.certificates?.length) {
+        @if (candidate.is_experience_based) {
+          <!-- Experience Based Profile badge -->
+          <div class="profile-section-card mb-3">
+            <div class="profile-section-card__header">
+              <div class="profile-section-card__header-icon" style="background:linear-gradient(135deg,#7c3aed,#a855f7)">
+                <i class="bi bi-briefcase-fill"></i>
+              </div>
+              <h6>Experience Based Profile</h6>
+            </div>
+            <div class="profile-section-card__body">
+              <div class="d-flex align-items-start gap-3 py-1">
+                <div class="flex-shrink-0 mt-1">
+                  <span style="display:inline-flex;align-items:center;justify-content:center;width:36px;height:36px;border-radius:50%;background:#f3e8ff;">
+                    <i class="bi bi-briefcase-fill" style="color:#7c3aed;font-size:1rem;"></i>
+                  </span>
+                </div>
+                <div>
+                  <div class="fw-semibold" style="font-size:.95rem;color:var(--th-text-primary)">Professionally Qualified Through Work Experience</div>
+                  <p class="text-muted mb-0 mt-1" style="font-size:.85rem;line-height:1.6">
+                    This candidate does not hold formal academic qualifications. Their expertise has been developed through hands-on industry experience. Please refer to the Experience tab for a full overview of their professional background.
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+        } @else if (!candidate.education?.length && !candidate.certificates?.length) {
           <div class="profile-section-card mb-3">
             <div class="profile-section-card__header">
               <div class="profile-section-card__header-icon" style="background:var(--th-gradient-success)">
@@ -564,7 +594,7 @@ type Tab = 'overview' | 'experience' | 'education' | 'documents' | 'activity';
             </div>
             <div class="profile-section-card__body">
               <p class="text-muted fst-italic mb-0" style="font-size:.875rem">
-                Experience-based profile — see work history
+                No education details recorded.
               </p>
             </div>
           </div>
@@ -577,7 +607,7 @@ type Tab = 'overview' | 'experience' | 'education' | 'documents' | 'activity';
             </div>
             <div class="profile-section-card__body">
               <p class="text-muted fst-italic mb-0" style="font-size:.875rem">
-                None currently — skills verified through work experience
+                No certificates recorded.
               </p>
             </div>
           </div>

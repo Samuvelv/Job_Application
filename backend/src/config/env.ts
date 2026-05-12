@@ -19,6 +19,12 @@ const envSchema = z.object({
   JWT_REFRESH_EXPIRES_IN: z.string().default('7d'),
   JWT_REFRESH_SECRET: z.string().min(32),
 
+  // 2FA / OTP
+  OTP_TOKEN_SECRET: z.string().min(32).default('otp-dev-secret-please-change-in-production!!'),
+  OTP_TOKEN_EXPIRES_IN: z.string().default('10m'),
+  OTP_EXPIRES_MINUTES: z.string().default('5'),
+  OTP_MAX_ATTEMPTS: z.string().default('5'),
+
   CORS_ORIGIN: z.string().default('http://localhost:4200'),
 
   SMTP_HOST: z.string().optional(),

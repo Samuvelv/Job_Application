@@ -73,6 +73,7 @@
   }
 
   <!-- ══ Section: Media ══════════════════════════════════════════════════════ -->
+  @if (!isExperienceBased) {
   <div class="form-card mb-4">
     <h5 class="card-section-header card-section-header--warning mb-4">
       <i class="bi bi-images"></i> Media &amp; Documents
@@ -315,6 +316,7 @@
 
     </div>
   </div>
+  } <!-- end @if (!isExperienceBased) for Media & Documents -->
 
   <!-- ── File Preview Overlay ────────────────────────────────────────────────── -->
   @if (previewOpen) {
@@ -799,14 +801,12 @@
 
         <!-- Postal Code -->
         <div class="col-md-6">
-          <label class="form-label fw-semibold">Postal Code <span class="text-danger">*</span></label>
+          <label class="form-label fw-semibold">Postal Code</label>
           <input type="text" class="form-control" formControlName="postal_code"
             placeholder="e.g. 400001"
             [class.is-invalid]="invalid('postal_code')">
           @if (form.get('postal_code')!.touched) {
-            @if (form.get('postal_code')!.errors?.['required']) {
-              <div class="invalid-feedback">Postal code is required.</div>
-            } @else if (form.get('postal_code')!.errors?.['postalCodeInvalid']) {
+            @if (form.get('postal_code')!.errors?.['postalCodeInvalid']) {
               <div class="invalid-feedback">Invalid format — {{ form.get('postal_code')!.errors?.['postalCodeInvalid'] }}</div>
             } @else if (form.get('postal_code')!.errors?.['maxlength']) {
               <div class="invalid-feedback">Postal code is too long.</div>
@@ -956,6 +956,24 @@
       </div>
     </div>
 
+    <!-- ── Experience Based Profile checkbox ── -->
+    <div class="form-card mb-4">
+      <div class="form-check d-flex align-items-start gap-2">
+        <input class="form-check-input mt-1 flex-shrink-0" type="checkbox" id="edit-experience-based"
+          [checked]="isExperienceBased"
+          (change)="toggleExperienceBased($any($event.target).checked)">
+        <div>
+          <label class="form-check-label fw-semibold" for="edit-experience-based">
+            Experience Based Profile
+          </label>
+          <div class="text-muted small mt-1">
+            <i class="bi bi-info-circle me-1"></i>Tick this if the candidate has no formal education — qualified through work experience only
+          </div>
+        </div>
+      </div>
+    </div>
+
+    @if (!isExperienceBased) {
     <!-- ── Section: Education ── -->
     <div class="form-card mb-4">
       <div class="d-flex justify-content-between align-items-center mb-3">
@@ -1053,6 +1071,7 @@
         }
       </div>
     </div>
+    } <!-- end @if (!isExperienceBased) -->
 
     <!-- ── Credentials ── -->
     <div class="form-card mb-4">

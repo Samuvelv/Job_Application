@@ -15,6 +15,15 @@ export interface AuthResponse {
   user: User;
 }
 
+export interface OtpChallengeResponse {
+  requiresOtp: true;
+  otpToken: string;
+  devOtp?: string;
+  expiresInSeconds: number;
+}
+
+export type LoginResponse = AuthResponse | OtpChallengeResponse;
+
 export interface LoginPayload {
   email: string;
   password: string;

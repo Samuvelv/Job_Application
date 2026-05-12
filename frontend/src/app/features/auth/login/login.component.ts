@@ -1,5 +1,5 @@
 // src/app/features/auth/login/login.component.ts
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import {
   ReactiveFormsModule,
@@ -55,7 +55,7 @@ import { AuthService } from '../../../core/services/auth.service';
                 <stop offset="0%" stop-color="#f59e0b"/>
                 <stop offset="100%" stop-color="#fcd34d"/>
               </linearGradient>
-              <linearGradient id="grad-ring" x1="0%" y1="0%" x2="100%" y2="100%">
+              <linearGradient id="grad-ring" x1="0%" y1="100%" x2="100%" y2="0%">
                 <stop offset="0%" stop-color="#6366f1"/>
                 <stop offset="100%" stop-color="#a78bfa"/>
               </linearGradient>
@@ -70,274 +70,279 @@ import { AuthService } from '../../../core/services/auth.service';
                 <feDropShadow dx="0" dy="4" stdDeviation="8" flood-color="#6366f1" flood-opacity="0.35"/>
               </filter>
             </defs>
-
-            <!-- Background ambient glow -->
-            <ellipse cx="260" cy="210" rx="200" ry="160" fill="url(#glow-center)"/>
-
-            <!-- ── Main dashboard card ────────────────────────────────────── -->
-            <g transform="rotate(-3, 260, 210)" filter="url(#card-shadow)">
-              <!-- Card body -->
-              <rect x="60" y="60" width="380" height="280" rx="20" fill="rgba(30,27,75,0.72)" stroke="rgba(165,180,252,0.18)" stroke-width="1.5"/>
-              <!-- Top sheen -->
-              <rect x="60" y="60" width="380" height="40"  rx="20" fill="rgba(255,255,255,0.04)"/>
-              <rect x="60" y="80" width="380" height="20"  fill="rgba(255,255,255,0.02)"/>
-
-              <!-- Window dots + title bar -->
-              <circle cx="86"  cy="82" r="5" fill="rgba(248,113,113,0.6)"/>
-              <circle cx="102" cy="82" r="5" fill="rgba(251,191,36,0.6)"/>
-              <circle cx="118" cy="82" r="5" fill="rgba(52,211,153,0.6)"/>
-              <rect x="188" y="76" width="124" height="12" rx="6" fill="rgba(165,180,252,0.15)"/>
-
-              <!-- Section label -->
-              <text x="80" y="122" font-size="9" fill="rgba(165,180,252,0.55)" font-family="sans-serif" font-weight="600" letter-spacing="1.5">PLATFORM ACTIVITY</text>
-
-              <!-- Stat rows — neutral, meaningful for both sides -->
-
-              <!-- Jobs Available -->
-              <text x="80" y="148" font-size="8.5" fill="rgba(165,180,252,0.7)" font-family="sans-serif">Jobs Available</text>
-              <rect x="80" y="153" width="230" height="7" rx="3.5" fill="rgba(255,255,255,0.06)"/>
-              <rect x="80" y="153" width="198" height="7" rx="3.5" fill="url(#grad-bar-indigo)"/>
-              <text x="322" y="161" font-size="8" fill="#a5b4fc" font-family="sans-serif" font-weight="700">1,240</text>
-
-              <!-- Applications Sent -->
-              <text x="80" y="179" font-size="8.5" fill="rgba(165,180,252,0.7)" font-family="sans-serif">Applications Sent</text>
-              <rect x="80" y="184" width="230" height="7" rx="3.5" fill="rgba(255,255,255,0.06)"/>
-              <rect x="80" y="184" width="170" height="7" rx="3.5" fill="url(#grad-bar-cyan)"/>
-              <text x="322" y="192" font-size="8" fill="#67e8f9" font-family="sans-serif" font-weight="700">856</text>
-
-              <!-- Matches Made -->
-              <text x="80" y="210" font-size="8.5" fill="rgba(165,180,252,0.7)" font-family="sans-serif">Matches Made</text>
-              <rect x="80" y="215" width="230" height="7" rx="3.5" fill="rgba(255,255,255,0.06)"/>
-              <rect x="80" y="215" width="120" height="7" rx="3.5" fill="url(#grad-bar-amber)"/>
-              <text x="322" y="223" font-size="8" fill="#fcd34d" font-family="sans-serif" font-weight="700">342</text>
-
-              <!-- Interviews Scheduled -->
-              <text x="80" y="241" font-size="8.5" fill="rgba(165,180,252,0.7)" font-family="sans-serif">Interviews Scheduled</text>
-              <rect x="80" y="246" width="230" height="7" rx="3.5" fill="rgba(255,255,255,0.06)"/>
-              <rect x="80" y="246" width="72" height="7" rx="3.5" fill="url(#grad-bar-emerald)"/>
-              <text x="322" y="254" font-size="8" fill="#34d399" font-family="sans-serif" font-weight="700">89</text>
-
-              <!-- Divider -->
-              <line x1="80" y1="272" x2="420" y2="272" stroke="rgba(165,180,252,0.10)" stroke-width="1"/>
-
-              <!-- Bottom: active users row -->
-              <text x="80" y="291" font-size="8" fill="rgba(165,180,252,0.45)" font-family="sans-serif" font-weight="600" letter-spacing="1">ACTIVE TODAY</text>
-
-              <!-- Avatar stack -->
-              <circle cx="92"  cy="316" r="12" fill="rgba(99,102,241,0.45)"  stroke="rgba(165,180,252,0.35)" stroke-width="1.5"/>
-              <circle cx="92"  cy="313" r="5"  fill="#c7d2fe"/>
-              <path   d="M82 323 Q92 317 102 323" stroke="#a5b4fc" stroke-width="1.5" fill="none"/>
-
-              <circle cx="122" cy="316" r="12" fill="rgba(16,185,129,0.35)"   stroke="rgba(52,211,153,0.35)"  stroke-width="1.5"/>
-              <circle cx="122" cy="313" r="5"  fill="#a7f3d0"/>
-              <path   d="M112 323 Q122 317 132 323" stroke="#6ee7b7" stroke-width="1.5" fill="none"/>
-
-              <circle cx="152" cy="316" r="12" fill="rgba(251,191,36,0.3)"    stroke="rgba(251,191,36,0.35)"  stroke-width="1.5"/>
-              <circle cx="152" cy="313" r="5"  fill="#fde68a"/>
-              <path   d="M142 323 Q152 317 162 323" stroke="#fcd34d" stroke-width="1.5" fill="none"/>
-
-              <circle cx="182" cy="316" r="12" fill="rgba(6,182,212,0.3)"     stroke="rgba(6,182,212,0.35)"   stroke-width="1.5"/>
-              <circle cx="182" cy="313" r="5"  fill="#a5f3fc"/>
-              <path   d="M172 323 Q182 317 192 323" stroke="#67e8f9" stroke-width="1.5" fill="none"/>
-
-              <circle cx="212" cy="316" r="12" fill="rgba(255,255,255,0.06)"  stroke="rgba(165,180,252,0.2)"  stroke-width="1.5"/>
-              <text x="212" y="320" text-anchor="middle" font-size="8" fill="rgba(165,180,252,0.7)" font-family="sans-serif" font-weight="700">+94</text>
-
-              <!-- Status chips -->
-              <rect x="250" y="308" width="66" height="18" rx="9" fill="rgba(16,185,129,0.2)"  stroke="rgba(52,211,153,0.4)"    stroke-width="1"/>
-              <text x="283" y="320" text-anchor="middle" font-size="7.5" fill="#34d399" font-family="sans-serif" font-weight="700">Recruiters</text>
-              <rect x="324" y="308" width="60" height="18" rx="9" fill="rgba(99,102,241,0.2)"  stroke="rgba(165,180,252,0.35)"  stroke-width="1"/>
-              <text x="354" y="320" text-anchor="middle" font-size="7.5" fill="#a5b4fc" font-family="sans-serif" font-weight="700">Seekers</text>
-            </g>
-
-            <!-- ── Match score donut (top-right) ─────────────────────────── -->
-            <g class="auth-svg-float" transform="translate(392, 48)">
-              <circle cx="44" cy="44" r="36" fill="none" stroke="rgba(99,102,241,0.12)" stroke-width="8"/>
-              <circle cx="44" cy="44" r="36" fill="none" stroke="url(#grad-ring)" stroke-width="8"
-                stroke-dasharray="192 227" stroke-dashoffset="57" stroke-linecap="round"/>
-              <circle cx="44" cy="44" r="26" fill="rgba(15,12,41,0.55)"/>
-              <text x="44" y="41" text-anchor="middle" font-size="12" fill="#a5b4fc" font-family="sans-serif" font-weight="800">94%</text>
-              <text x="44" y="53" text-anchor="middle" font-size="7"  fill="rgba(165,180,252,0.5)" font-family="sans-serif">match</text>
-            </g>
-
-            <!-- ── Floating badge: Great Match (both sides relate) ──────── -->
-            <g class="auth-svg-float-slow" filter="url(#badge-glow)">
-              <rect x="330" y="196" width="148" height="52" rx="14" fill="rgba(15,12,41,0.72)" stroke="rgba(52,211,153,0.45)" stroke-width="1.5"/>
-              <rect x="330" y="209" width="3"   height="26" rx="1.5" fill="url(#grad-bar-emerald)"/>
-              <circle cx="355" cy="222" r="11" fill="rgba(16,185,129,0.25)"/>
-              <text x="355" y="226" text-anchor="middle" font-size="11" fill="#34d399" font-family="sans-serif">✓</text>
-              <text x="372" y="217" font-size="8.5" fill="#34d399"              font-family="sans-serif" font-weight="700">Great Match!</text>
-              <text x="372" y="231" font-size="7.5" fill="rgba(167,243,208,0.7)" font-family="sans-serif">Frontend Role · Remote</text>
-              <text x="452" y="242" text-anchor="end" font-size="6.5" fill="rgba(165,180,252,0.35)" font-family="sans-serif">just now</text>
-            </g>
-
-            <!-- ── Floating badge: Interview Scheduled (both sides) ──────── -->
-            <g class="auth-svg-float">
-              <rect x="16" y="155" width="136" height="52" rx="14" fill="rgba(15,12,41,0.72)" stroke="rgba(251,191,36,0.4)" stroke-width="1.5"/>
-              <rect x="16" y="168" width="3"   height="26" rx="1.5" fill="url(#grad-bar-amber)"/>
-              <circle cx="42" cy="181" r="11" fill="rgba(251,191,36,0.22)"/>
-              <text x="42" y="186" text-anchor="middle" font-size="13" fill="#fbbf24" font-family="sans-serif">⏰</text>
-              <text x="60" y="176" font-size="8.5" fill="#fbbf24"              font-family="sans-serif" font-weight="700">Interview Set</text>
-              <text x="60" y="190" font-size="7.5" fill="rgba(252,211,77,0.7)" font-family="sans-serif">Tomorrow · 10:00 AM</text>
-            </g>
-
-            <!-- ── Floating badge: Profile Viewed (job-seeker + recruiter) ── -->
-            <g class="auth-svg-float-slow">
-              <rect x="22" y="295" width="126" height="48" rx="14" fill="rgba(15,12,41,0.72)" stroke="rgba(6,182,212,0.38)" stroke-width="1.5"/>
-              <rect x="22" y="307" width="3"   height="24" rx="1.5" fill="url(#grad-bar-cyan)"/>
-              <circle cx="46" cy="319" r="11" fill="rgba(6,182,212,0.2)"/>
-              <text x="46" y="323" text-anchor="middle" font-size="9" fill="#67e8f9" font-family="sans-serif" font-weight="800">48</text>
-              <text x="63" y="314" font-size="8.5" fill="#67e8f9"              font-family="sans-serif" font-weight="700">Profile Views</text>
-              <text x="63" y="327" font-size="7.5" fill="rgba(103,232,249,0.6)" font-family="sans-serif">↑ 12 this week</text>
-            </g>
-
           </svg>
-
         </div>
 
-        <!-- Login card -->
-        <div class="auth-card auth-card--solo">
+        <!-- ══════════════════════════════════════════════════════════════════ -->
+        <!-- CREDENTIALS VIEW                                                   -->
+        <!-- ══════════════════════════════════════════════════════════════════ -->
+        @if (view === 'credentials') {
+          <div class="auth-card auth-card--solo">
 
-          <!-- Logo -->
-          <div class="auth-card-logo">
-            <div class="auth-card-logo__icon">
-              <i class="bi bi-briefcase-fill"></i>
-            </div>
-            <div class="auth-card-logo__name">NTL Career<span>Nexus</span></div>
-          </div>
-
-          <!-- Heading -->
-          <div class="auth-card-heading">
-            <div class="auth-card-title">Welcome to NTL Career Nexus</div>
-            <div class="auth-card-sub">Sign in to your account</div>
-          </div>
-
-          <!-- Error alert -->
-          @if (errorMsg) {
-            <div class="auth-alert mb-3" role="alert">
-              <i class="bi bi-exclamation-circle-fill" style="color:#f87171;flex-shrink:0"></i>
-              <span class="flex-grow-1">{{ errorMsg }}</span>
-              <button type="button" class="btn-close btn-sm" (click)="errorMsg = ''"></button>
-            </div>
-          }
-
-          <!-- Form -->
-          <form [formGroup]="form" (ngSubmit)="onSubmit()" novalidate>
-
-            <!-- Email -->
-            <div class="auth-field">
-              <label for="email" class="form-label">Email address</label>
-              <div style="position:relative">
-                <i class="bi bi-envelope auth-field-icon"></i>
-                <input
-                  id="email"
-                  type="email"
-                  class="auth-underline-field"
-                  [class.is-invalid]="submitted && f['email'].errors"
-                  formControlName="email"
-                  placeholder="you@example.com"
-                  autocomplete="email"
-                />
-                <span class="auth-field-underline"></span>
+            <!-- Logo -->
+            <div class="auth-card-logo">
+              <div class="auth-card-logo__icon">
+                <i class="bi bi-briefcase-fill"></i>
               </div>
-              @if (submitted && f['email'].errors) {
-                <div class="invalid-feedback">
-                  @if (f['email'].errors['required']) { Email is required. }
-                  @if (f['email'].errors['email']) { Enter a valid email address. }
-                </div>
-              }
+              <div class="auth-card-logo__name">NTL Career<span>Nexus</span></div>
             </div>
 
-            <!-- Password -->
-            <div class="auth-field">
-              <label for="password" class="form-label">Password</label>
-              <div style="position:relative">
-                <i class="bi bi-lock auth-field-icon"></i>
-                <input
-                  id="password"
-                  [type]="showPassword ? 'text' : 'password'"
-                  class="auth-underline-field"
-                  [class.is-invalid]="submitted && f['password'].errors"
-                  formControlName="password"
-                  placeholder="••••••••"
-                  autocomplete="current-password"
-                />
-                <span class="auth-field-underline"></span>
-                <button
-                  type="button"
-                  class="auth-toggle-btn"
-                  (click)="showPassword = !showPassword"
-                  tabindex="-1"
-                  [title]="showPassword ? 'Hide password' : 'Show password'"
+            <!-- Heading -->
+            <div class="auth-card-heading">
+              <div class="auth-card-title">Welcome to NTL Career Nexus</div>
+              <div class="auth-card-sub">Sign in to your account</div>
+            </div>
+
+            <!-- Error alert -->
+            @if (errorMsg) {
+              <div class="auth-alert mb-3" role="alert">
+                <i class="bi bi-exclamation-circle-fill" style="color:#f87171;flex-shrink:0"></i>
+                <span class="flex-grow-1">{{ errorMsg }}</span>
+                <button type="button" class="btn-close btn-sm" (click)="errorMsg = ''"></button>
+              </div>
+            }
+
+            <!-- Form -->
+            <form [formGroup]="form" (ngSubmit)="onSubmit()" novalidate>
+
+              <!-- Email -->
+              <div class="auth-field">
+                <label for="email" class="form-label">Email address</label>
+                <div style="position:relative">
+                  <i class="bi bi-envelope auth-field-icon"></i>
+                  <input
+                    id="email"
+                    type="email"
+                    class="auth-underline-field"
+                    [class.is-invalid]="submitted && f['email'].errors"
+                    formControlName="email"
+                    placeholder="you@example.com"
+                    autocomplete="email"
+                  />
+                  <span class="auth-field-underline"></span>
+                </div>
+                @if (submitted && f['email'].errors) {
+                  <div class="invalid-feedback">
+                    @if (f['email'].errors['required']) { Email is required. }
+                    @if (f['email'].errors['email']) { Enter a valid email address. }
+                  </div>
+                }
+              </div>
+
+              <!-- Password -->
+              <div class="auth-field">
+                <label for="password" class="form-label">Password</label>
+                <div style="position:relative">
+                  <i class="bi bi-lock auth-field-icon"></i>
+                  <input
+                    id="password"
+                    [type]="showPassword ? 'text' : 'password'"
+                    class="auth-underline-field"
+                    [class.is-invalid]="submitted && f['password'].errors"
+                    formControlName="password"
+                    placeholder="••••••••"
+                    autocomplete="current-password"
+                  />
+                  <span class="auth-field-underline"></span>
+                  <button
+                    type="button"
+                    class="auth-toggle-btn"
+                    (click)="showPassword = !showPassword"
+                    tabindex="-1"
+                    [title]="showPassword ? 'Hide password' : 'Show password'"
+                  >
+                    <i [class]="showPassword ? 'bi bi-eye-slash' : 'bi bi-eye'"></i>
+                  </button>
+                </div>
+                @if (submitted && f['password'].errors) {
+                  <div class="invalid-feedback">
+                    @if (f['password'].errors['required']) { Password is required. }
+                    @if (f['password'].errors['minlength']) { Minimum 6 characters. }
+                  </div>
+                }
+              </div>
+
+              <!-- Forgot password -->
+              <div class="auth-forgot">
+                <a href="#" class="auth-forgot__link" (click)="showForgotPopup = true; $event.preventDefault()">Forgot password?</a>
+              </div>
+
+              <!-- Sign In button -->
+              <button
+                type="submit"
+                class="btn btn-primary-gradient w-100 mt-3"
+                [disabled]="loading"
+              >
+                @if (loading) {
+                  <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                  Signing in&hellip;
+                } @else {
+                  <i class="bi bi-box-arrow-in-right me-2"></i>Sign In
+                }
+              </button>
+
+            </form>
+
+            <!-- Divider -->
+            <div class="auth-divider">
+              <span></span>
+              <p>Not registered yet?</p>
+              <span></span>
+            </div>
+
+            <!-- Not registered section -->
+            <div class="auth-register-note">
+              <p class="auth-register-note__text">
+                Registration is managed by our team. Contact us via WhatsApp or the form below to apply.
+              </p>
+              <div class="auth-register-note__btns">
+                <a
+                  class="auth-register-note__btn auth-register-note__btn--whatsapp"
+                  href="https://wa.me/919360454326?text=Hi%2C%20I%20would%20like%20to%20register%20on%20NTL%20Career%20Nexus.%20I%20am%20a%20%5BCandidate%2FRecruiter%5D%20from%20%5BCountry%5D%20looking%20for%20opportunities%20in%20%5BTarget%20Country%5D."
+                  target="_blank"
+                  rel="noopener noreferrer"
                 >
-                  <i [class]="showPassword ? 'bi bi-eye-slash' : 'bi bi-eye'"></i>
-                </button>
+                  <i class="bi bi-whatsapp"></i> WhatsApp
+                </a>
+                <a
+                  class="auth-register-note__btn auth-register-note__btn--contact"
+                  href="#contact"
+                >
+                  <i class="bi bi-envelope-fill"></i> Contact Us
+                </a>
               </div>
-              @if (submitted && f['password'].errors) {
-                <div class="invalid-feedback">
-                  @if (f['password'].errors['required']) { Password is required. }
-                  @if (f['password'].errors['minlength']) { Minimum 6 characters. }
-                </div>
-              }
             </div>
 
-            <!-- Forgot password -->
-            <div class="auth-forgot">
-              <a href="#" class="auth-forgot__link" (click)="showForgotPopup = true; $event.preventDefault()">Forgot password?</a>
+            <!-- Footer -->
+            <p class="auth-footer-note mt-3 mb-0">
+              <i class="bi bi-shield-lock-fill me-1"></i>Access is managed by your administrator.
+            </p>
+
+          </div><!-- /auth-card credentials -->
+        }
+
+        <!-- ══════════════════════════════════════════════════════════════════ -->
+        <!-- OTP VIEW                                                            -->
+        <!-- ══════════════════════════════════════════════════════════════════ -->
+        @if (view === 'otp') {
+          <div class="auth-card auth-card--solo">
+
+            <!-- Logo -->
+            <div class="auth-card-logo">
+              <div class="auth-card-logo__icon">
+                <i class="bi bi-briefcase-fill"></i>
+              </div>
+              <div class="auth-card-logo__name">NTL Career<span>Nexus</span></div>
             </div>
 
-            <!-- Sign In button -->
+            <!-- Heading -->
+            <div class="auth-card-heading">
+              <div class="auth-card-title">Two-Factor Verification</div>
+              <div class="auth-card-sub">Enter the 6-digit code to complete sign-in</div>
+            </div>
+
+            <!-- Dev-mode banner -->
+            @if (devOtp) {
+              <div class="auth-alert mb-3" style="background:rgba(251,191,36,0.12);border-color:rgba(251,191,36,0.4)" role="alert">
+                <i class="bi bi-bug-fill" style="color:#fbbf24;flex-shrink:0"></i>
+                <span class="flex-grow-1"><strong style="color:#fbbf24">DEV MODE</strong> &mdash; OTP: <strong style="letter-spacing:2px">{{ devOtp }}</strong></span>
+              </div>
+            }
+
+            <!-- Error alert -->
+            @if (otpError) {
+              <div class="auth-alert mb-3" role="alert">
+                <i class="bi bi-exclamation-circle-fill" style="color:#f87171;flex-shrink:0"></i>
+                <span class="flex-grow-1">{{ otpError }}</span>
+                <button type="button" class="btn-close btn-sm" (click)="otpError = ''"></button>
+              </div>
+            }
+
+            <!-- OTP input -->
+            <div class="auth-field">
+              <label for="otpInput" class="form-label">Verification Code</label>
+              <div style="position:relative">
+                <i class="bi bi-shield-lock auth-field-icon"></i>
+                <input
+                  id="otpInput"
+                  type="text"
+                  inputmode="numeric"
+                  maxlength="6"
+                  class="auth-underline-field"
+                  style="letter-spacing:0.35em;font-size:1.25rem;text-align:center"
+                  [class.is-invalid]="otpError && otpValue.length > 0"
+                  [value]="otpValue"
+                  (input)="otpValue = $any($event.target).value"
+                  placeholder="000000"
+                  autocomplete="one-time-code"
+                  (keyup.enter)="onVerifyOtp()"
+                />
+                <span class="auth-field-underline"></span>
+              </div>
+            </div>
+
+            <!-- Expiry countdown -->
+            @if (otpSecondsLeft > 0) {
+              <p class="text-center mb-2" style="font-size:0.8rem;color:rgba(165,180,252,0.55)">
+                <i class="bi bi-clock me-1"></i>Code expires in
+                <strong style="color:{{ otpSecondsLeft <= 60 ? '#f87171' : 'rgba(165,180,252,0.8)' }}">
+                  {{ formatCountdown(otpSecondsLeft) }}
+                </strong>
+              </p>
+            } @else {
+              <p class="text-center mb-2" style="font-size:0.8rem;color:#f87171">
+                <i class="bi bi-exclamation-circle me-1"></i>Code expired. Please resend or go back.
+              </p>
+            }
+
+            <!-- Verify button -->
             <button
-              type="submit"
-              class="btn btn-primary-gradient w-100 mt-3"
-              [disabled]="loading"
+              type="button"
+              class="btn btn-primary-gradient w-100 mt-1"
+              [disabled]="otpLoading || otpValue.length !== 6"
+              (click)="onVerifyOtp()"
             >
-              @if (loading) {
+              @if (otpLoading) {
                 <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
-                Signing in&hellip;
+                Verifying&hellip;
               } @else {
-                <i class="bi bi-box-arrow-in-right me-2"></i>Sign In
+                <i class="bi bi-shield-check me-2"></i>Verify Code
               }
             </button>
 
-          </form>
-
-          <!-- Divider -->
-          <div class="auth-divider">
-            <span></span>
-            <p>Not registered yet?</p>
-            <span></span>
-          </div>
-
-          <!-- Not registered section -->
-          <div class="auth-register-note">
-            <p class="auth-register-note__text">
-              Registration is managed by our team. Contact us via WhatsApp or the form below to apply.
-            </p>
-            <div class="auth-register-note__btns">
-              <a
-                class="auth-register-note__btn auth-register-note__btn--whatsapp"
-                href="https://wa.me/919360454326?text=Hi%2C%20I%20would%20like%20to%20register%20on%20NTL%20Career%20Nexus.%20I%20am%20a%20%5BCandidate%2FRecruiter%5D%20from%20%5BCountry%5D%20looking%20for%20opportunities%20in%20%5BTarget%20Country%5D."
-                target="_blank"
-                rel="noopener noreferrer"
+            <!-- Resend + back row -->
+            <div class="d-flex justify-content-between align-items-center mt-3" style="font-size:0.85rem">
+              <button
+                type="button"
+                class="btn btn-link p-0"
+                style="color:rgba(165,180,252,0.7);text-decoration:none"
+                [disabled]="resendCooldown > 0 || otpLoading"
+                (click)="onResendOtp()"
               >
-                <i class="bi bi-whatsapp"></i> WhatsApp
-              </a>
-              <a
-                class="auth-register-note__btn auth-register-note__btn--contact"
-                href="#contact"
+                @if (resendCooldown > 0) {
+                  <i class="bi bi-arrow-clockwise me-1"></i>Resend in {{ resendCooldown }}s
+                } @else {
+                  <i class="bi bi-arrow-clockwise me-1"></i>Resend code
+                }
+              </button>
+              <button
+                type="button"
+                class="btn btn-link p-0"
+                style="color:rgba(165,180,252,0.5);text-decoration:none"
+                (click)="backToCredentials()"
               >
-                <i class="bi bi-envelope-fill"></i> Contact Us
-              </a>
+                <i class="bi bi-arrow-left me-1"></i>Back
+              </button>
             </div>
-          </div>
 
-          <!-- Footer -->
-          <p class="auth-footer-note mt-3 mb-0">
-            <i class="bi bi-shield-lock-fill me-1"></i>Access is managed by your administrator.
-          </p>
+            <!-- Footer -->
+            <p class="auth-footer-note mt-4 mb-0">
+              <i class="bi bi-shield-lock-fill me-1"></i>Admin accounts require two-factor authentication.
+            </p>
 
-        </div><!-- /auth-card -->
+          </div><!-- /auth-card otp -->
+        }
+
       </div><!-- /auth-split -->
 
       <!-- Forgot password popup -->
@@ -362,13 +367,27 @@ import { AuthService } from '../../../core/services/auth.service';
     </div>
   `,
 })
-export class LoginComponent implements OnInit {
+export class LoginComponent implements OnInit, OnDestroy {
+  // ── Credentials view state ──────────────────────────────────────────────────
   form!: FormGroup;
-  loading      = false;
-  submitted    = false;
-  errorMsg     = '';
-  showPassword = false;
+  loading         = false;
+  submitted       = false;
+  errorMsg        = '';
+  showPassword    = false;
   showForgotPopup = false;
+
+  // ── OTP view state ──────────────────────────────────────────────────────────
+  view: 'credentials' | 'otp' = 'credentials';
+  otpToken        = '';
+  devOtp          = '';
+  otpValue        = '';
+  otpError        = '';
+  otpLoading      = false;
+  otpSecondsLeft  = 0;
+  resendCooldown  = 0;
+
+  private expiryInterval: ReturnType<typeof setInterval> | null = null;
+  private resendInterval: ReturnType<typeof setInterval> | null = null;
 
   onForgotOk(): void {
     this.showForgotPopup = false;
@@ -393,45 +412,13 @@ export class LoginComponent implements OnInit {
     });
   }
 
+  ngOnDestroy(): void {
+    this.clearIntervals();
+  }
+
   get f() { return this.form.controls; }
 
-  // onSubmit(): void {
-  //   this.submitted = true;
-  //   this.errorMsg  = '';
-
-  //   if (this.form.invalid) return;
-
-  //   // ── Mock login (no API required) ──────────────────────────────────────
-  //   // Detect role from the email field:
-  //   //   • contains "recruiter" → recruiter
-  //   //   • contains "candidate" or "emp" → candidate
-  //   //   • anything else → admin
-  //   const email: string = (this.form.value.email ?? '').toLowerCase().trim();
-  //   let role: 'admin' | 'candidate' | 'recruiter' = 'admin';
-  //   if (email.includes('recruiter')) {
-  //     role = 'recruiter';
-  //   } else if (email.includes('candidate') || email.includes('emp')) {
-  //     role = 'candidate';
-  //   }
-
-  //   const mockUser = {
-  //     id: 'mock-' + role + '-001',
-  //     email: email || role + '@talenthub.com',
-  //     role,
-  //     is_active: true,
-  //     created_at: new Date().toISOString(),
-  //   };
-
-  //   // Write to localStorage so isLoggedIn() returns true and the shell renders
-  //   localStorage.setItem('th_access_token', 'mock-token-' + role + '-' + Date.now());
-  //   localStorage.setItem('th_user', JSON.stringify(mockUser));
-
-  //   // Update the AuthService signal so getRole() / currentUser() reflect the mock user
-  //   this.auth.currentUser.set(mockUser);
-
-  //   this.router.navigate([this.auth.getDashboardRoute()]);
-  // }
-
+  // ── Step 1: Credentials submit ───────────────────────────────────────────────
   onSubmit(): void {
     this.submitted = true;
     this.errorMsg  = '';
@@ -440,14 +427,121 @@ export class LoginComponent implements OnInit {
 
     this.loading = true;
     this.auth.login(this.form.getRawValue()).subscribe({
-      next: () => {
+      next: (res) => {
         this.loading = false;
-        this.router.navigate([this.auth.getDashboardRoute()]);
+        if ('requiresOtp' in res) {
+          // Admin — transition to OTP view
+          this.otpToken = res.otpToken;
+          this.devOtp   = res.devOtp ?? '';
+          this.startExpiryCountdown(res.expiresInSeconds);
+          this.startResendCooldown(30);
+          this.view = 'otp';
+        } else {
+          // Non-admin — go directly to dashboard
+          this.router.navigate([this.auth.getDashboardRoute()]);
+        }
       },
       error: (err) => {
         this.loading  = false;
         this.errorMsg = err?.error?.message ?? 'Login failed. Please try again.';
       },
     });
+  }
+
+  // ── Step 2: OTP verify ───────────────────────────────────────────────────────
+  onVerifyOtp(): void {
+    this.otpError = '';
+    if (this.otpValue.length !== 6) return;
+
+    this.otpLoading = true;
+    this.auth.verifyOtp(this.otpToken, this.otpValue).subscribe({
+      next: () => {
+        this.otpLoading = false;
+        this.clearIntervals();
+        this.router.navigate([this.auth.getDashboardRoute()]);
+      },
+      error: (err) => {
+        this.otpLoading = false;
+        if (err?.status === 429) {
+          // Locked — force back to credentials
+          this.clearIntervals();
+          this.view     = 'credentials';
+          this.errorMsg = err?.error?.message ?? 'Too many incorrect attempts. Please log in again.';
+        } else {
+          this.otpError = err?.error?.message ?? 'Verification failed. Please try again.';
+          this.otpValue = '';
+        }
+      },
+    });
+  }
+
+  // ── Resend OTP ───────────────────────────────────────────────────────────────
+  onResendOtp(): void {
+    if (this.resendCooldown > 0) return;
+
+    this.otpError = '';
+    this.auth.resendOtp(this.otpToken).subscribe({
+      next: (res) => {
+        this.otpToken = res.otpToken;
+        this.devOtp   = res.devOtp ?? '';
+        this.otpValue = '';
+        this.clearExpiryInterval();
+        this.startExpiryCountdown(res.expiresInSeconds);
+        this.startResendCooldown(30);
+      },
+      error: (err) => {
+        this.otpError = err?.error?.message ?? 'Failed to resend code. Please try again.';
+      },
+    });
+  }
+
+  // ── Back to credentials ──────────────────────────────────────────────────────
+  backToCredentials(): void {
+    this.clearIntervals();
+    this.otpToken      = '';
+    this.devOtp        = '';
+    this.otpValue      = '';
+    this.otpError      = '';
+    this.otpSecondsLeft = 0;
+    this.resendCooldown = 0;
+    this.view           = 'credentials';
+  }
+
+  // ── Countdown helpers ────────────────────────────────────────────────────────
+  formatCountdown(seconds: number): string {
+    const m = Math.floor(seconds / 60);
+    const s = seconds % 60;
+    return m > 0 ? `${m}m ${s}s` : `${s}s`;
+  }
+
+  private startExpiryCountdown(seconds: number): void {
+    this.clearExpiryInterval();
+    this.otpSecondsLeft = seconds;
+    this.expiryInterval = setInterval(() => {
+      this.otpSecondsLeft = Math.max(0, this.otpSecondsLeft - 1);
+      if (this.otpSecondsLeft === 0) this.clearExpiryInterval();
+    }, 1000);
+  }
+
+  private startResendCooldown(seconds: number): void {
+    this.clearResendInterval();
+    this.resendCooldown = seconds;
+    this.resendInterval = setInterval(() => {
+      this.resendCooldown = Math.max(0, this.resendCooldown - 1);
+      if (this.resendCooldown === 0) this.clearResendInterval();
+    }, 1000);
+  }
+
+  private clearExpiryInterval(): void {
+    if (this.expiryInterval) { clearInterval(this.expiryInterval); this.expiryInterval = null; }
+  }
+
+  private clearResendInterval(): void {
+    if (this.resendInterval) { clearInterval(this.resendInterval); this.resendInterval = null; }
+  }
+
+  private clearIntervals(): void {
+    this.clearExpiryInterval();
+    this.clearResendInterval();
   }
 }

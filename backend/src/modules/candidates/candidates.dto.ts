@@ -81,7 +81,8 @@ export const CreateCandidateSchema = z.object({
   postal_code:      z.string().max(20).optional(),
   target_locations: z.array(z.string()).optional(),
   hobbies:          z.array(z.string()).optional(),
-  has_passport:     z.boolean().optional(),
+  has_passport:          z.boolean().optional(),
+  is_experience_based:   z.boolean().optional(),
 
   // Availability
   notice_period_id: z.coerce.number().int().positive().optional().nullable(),

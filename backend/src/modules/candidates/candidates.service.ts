@@ -85,6 +85,7 @@ export async function createCandidate(dto: CreateCandidateDto, createdByAdminId:
       cv_format:               dto.cv_format               ?? 'not_yet_created',
       source:                  dto.source                  ?? 'Other',
       plain_password:          dto.password,
+      is_experience_based:     dto.is_experience_based     ?? false,
     });
 
     // 3. Insert related arrays

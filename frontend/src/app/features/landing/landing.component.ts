@@ -577,7 +577,7 @@ import { ContactSubmissionService } from '../../core/services/contact-submission
     <div class="lp-footer__brand">
       <div class="lp-footer__logo">
         <span class="lp-footer__logo-icon"><i class="bi bi-briefcase-fill"></i></span>
-        <span>NTL<span>CareerNexus</span></span>
+        <span>NTL Career<span>Nexus</span></span>
       </div>
       <p class="lp-footer__tagline">
         Connecting Global Talent to Sponsored Opportunities
