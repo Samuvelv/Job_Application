@@ -6,7 +6,10 @@ export async function up(knex: Knex): Promise<void> {
     t.uuid('recruiter_id').notNullable().references('id').inTable('recruiters').onDelete('CASCADE');
     t.uuid('candidate_id').notNullable().references('id').inTable('candidates').onDelete('CASCADE');
     t.timestamp('created_at', { useTz: true }).defaultTo(knex.fn.now());
-    t.unique(['recruiter_id', 'candidate_id', 'created_at']);
+    // Unique on (recruiter_id, candidate_id) — one view record per pair.
+    // created_at is excluded because it changes per-insert and would make
+    // the constraint non-functional.
+    t.unique(['recruiter_id', 'candidate_id']);
   });
 }
 

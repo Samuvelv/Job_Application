@@ -2,13 +2,19 @@
 import type { Knex } from 'knex';
 
 export async function up(knex: Knex): Promise<void> {
-  await knex.schema.alterTable('contact_unlock_requests', (table) => {
-    table.text('request_reason').nullable().defaultTo(null);
-  });
+  const hasColumn = await knex.schema.hasColumn('contact_unlock_requests', 'request_reason');
+  if (!hasColumn) {
+    await knex.schema.alterTable('contact_unlock_requests', (table) => {
+      table.text('request_reason').nullable().defaultTo(null);
+    });
+  }
 }
 
 export async function down(knex: Knex): Promise<void> {
-  await knex.schema.alterTable('contact_unlock_requests', (table) => {
-    table.dropColumn('request_reason');
-  });
+  const hasColumn = await knex.schema.hasColumn('contact_unlock_requests', 'request_reason');
+  if (hasColumn) {
+    await knex.schema.alterTable('contact_unlock_requests', (table) => {
+      table.dropColumn('request_reason');
+    });
+  }
 }

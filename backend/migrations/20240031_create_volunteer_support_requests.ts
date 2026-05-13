@@ -8,8 +8,8 @@ export async function up(knex: Knex): Promise<void> {
     t.text('message').nullable();
     t.string('status', 20).notNullable().defaultTo('pending'); // pending | connected | closed
     t.text('admin_note').nullable();
-    t.timestamp('created_at').notNullable().defaultTo(knex.fn.now());
-    t.timestamp('updated_at').notNullable().defaultTo(knex.fn.now());
+    t.timestamp('created_at', { useTz: true }).notNullable().defaultTo(knex.fn.now());
+    t.timestamp('updated_at', { useTz: true }).notNullable().defaultTo(knex.fn.now());
   });
 }
 

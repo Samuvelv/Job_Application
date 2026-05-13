@@ -12,7 +12,8 @@ export async function up(knex: Knex): Promise<void> {
     t.string('status', 30).notNullable().defaultTo('pending');
     t.text('notes').nullable();
     t.uuid('created_by_id').nullable().references('id').inTable('users').onDelete('SET NULL');
-    t.timestamps(true, true);
+    t.timestamp('created_at', { useTz: true }).notNullable().defaultTo(knex.fn.now());
+    t.timestamp('updated_at', { useTz: true }).notNullable().defaultTo(knex.fn.now());
   });
 
   await knex.schema.alterTable('candidate_agency_referrals', (t) => {

@@ -2,17 +2,23 @@
 import { Knex } from 'knex';
 
 export async function up(knex: Knex): Promise<void> {
-  await knex.schema.alterTable('candidates', (t) => {
-    t.integer('notice_period_id')
-      .nullable()
-      .references('id')
-      .inTable('master_notice_periods')
-      .onDelete('SET NULL');
-  });
+  const hasColumn = await knex.schema.hasColumn('candidates', 'notice_period_id');
+  if (!hasColumn) {
+    await knex.schema.alterTable('candidates', (t) => {
+      t.integer('notice_period_id')
+        .nullable()
+        .references('id')
+        .inTable('master_notice_periods')
+        .onDelete('SET NULL');
+    });
+  }
 }
 
 export async function down(knex: Knex): Promise<void> {
-  await knex.schema.alterTable('candidates', (t) => {
-    t.dropColumn('notice_period_id');
-  });
+  const hasColumn = await knex.schema.hasColumn('candidates', 'notice_period_id');
+  if (hasColumn) {
+    await knex.schema.alterTable('candidates', (t) => {
+      t.dropColumn('notice_period_id');
+    });
+  }
 }

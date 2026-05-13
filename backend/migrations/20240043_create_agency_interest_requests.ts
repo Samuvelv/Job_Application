@@ -11,8 +11,9 @@ export async function up(knex: Knex): Promise<void> {
     t.string('status', 20).notNullable().defaultTo('pending'); // pending | approved | rejected
     t.text('admin_note').nullable();
     t.uuid('reviewed_by').nullable().references('id').inTable('users').onDelete('SET NULL');
-    t.timestamp('reviewed_at').nullable();
-    t.timestamps(true, true);
+    t.timestamp('reviewed_at', { useTz: true }).nullable();
+    t.timestamp('created_at', { useTz: true }).notNullable().defaultTo(knex.fn.now());
+    t.timestamp('updated_at', { useTz: true }).notNullable().defaultTo(knex.fn.now());
     t.unique(['recruiter_id', 'candidate_id']);
   });
 }

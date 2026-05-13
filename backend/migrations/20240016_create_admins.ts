@@ -1,5 +1,7 @@
-// Creates dedicated admins table linked to users via user_id FK.
-// Does NOT alter the users table.
+// migrations/20240016_create_admins.ts
+// Creates the dedicated admins table linked to users via user_id FK.
+// Note: previously misnamed 20240016_add_name_to_users.ts — this file does NOT
+// alter the users table. It creates a separate admins profile table.
 import { Knex } from 'knex';
 
 export async function up(knex: Knex): Promise<void> {

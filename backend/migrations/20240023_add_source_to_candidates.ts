@@ -2,13 +2,19 @@
 import { Knex } from 'knex';
 
 export async function up(knex: Knex): Promise<void> {
-  await knex.schema.alterTable('candidates', (t) => {
-    t.string('source', 50).nullable();
-  });
+  const hasColumn = await knex.schema.hasColumn('candidates', 'source');
+  if (!hasColumn) {
+    await knex.schema.alterTable('candidates', (t) => {
+      t.string('source', 50).nullable();
+    });
+  }
 }
 
 export async function down(knex: Knex): Promise<void> {
-  await knex.schema.alterTable('candidates', (t) => {
-    t.dropColumn('source');
-  });
+  const hasColumn = await knex.schema.hasColumn('candidates', 'source');
+  if (hasColumn) {
+    await knex.schema.alterTable('candidates', (t) => {
+      t.dropColumn('source');
+    });
+  }
 }
