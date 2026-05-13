@@ -1,0 +1,9 @@
+// volunteer-create.component.scss
+// All major layout classes (form-card, phone-input-group, file-drop-zone,
+// card-section-header, back-btn, rep-optional, reg-success-banner) are
+// defined globally in styles.scss.
+// Only component-specific overrides live here.
+
+:host {
+  display: block;
+}

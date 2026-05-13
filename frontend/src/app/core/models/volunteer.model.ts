@@ -4,6 +4,7 @@ export interface Volunteer {
   name: string;
   email?: string | null;
   phone?: string | null;
+  whatsapp_number?: string | null;
   role?: string | null;
   sector?: string | null;
   notes?: string | null;

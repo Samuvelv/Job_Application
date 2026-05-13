@@ -84,7 +84,7 @@ export async function exportVolunteers(filters: {
 
   const rows = await q.orderBy(orderCol, orderDir);
 
-  const headers = ['Name', 'Email', 'Phone', 'Role', 'Sector', 'Nationality', 'Country Placed', 'Year Placed', 'Languages', 'Availability', 'Candidates Helped', 'Created At'];
+  const headers = ['Name', 'Email', 'Phone', 'WhatsApp', 'Role', 'Sector', 'Nationality', 'Country Placed', 'Year Placed', 'Languages', 'Availability', 'Candidates Helped', 'Created At'];
   const escape = (v: unknown) => {
     const s = String(v ?? '').replace(/"/g, '""');
     return `"${s}"`;
@@ -92,7 +92,7 @@ export async function exportVolunteers(filters: {
   const lines = [
     headers.map(escape).join(','),
     ...rows.map((r: any) => [
-      r.name, r.email ?? '', r.phone ?? '', r.role ?? '', r.sector ?? '',
+      r.name, r.email ?? '', r.phone ?? '', r.whatsapp_number ?? '', r.role ?? '', r.sector ?? '',
       r.nationality ?? '', r.country_placed ?? '',
       r.year_placed ?? '',
       Array.isArray(r.languages) ? r.languages.join('; ') : (r.languages ? JSON.parse(r.languages).join('; ') : ''),
@@ -109,6 +109,7 @@ export async function createVolunteer(dto: CreateVolunteerDto, createdBy: string
       name:               dto.name,
       email:              dto.email              ?? null,
       phone:              dto.phone              ?? null,
+      whatsapp_number:    dto.whatsapp_number    ?? null,
       role:               dto.role               ?? null,
       sector:             dto.sector             ?? null,
       notes:              dto.notes              ?? null,
@@ -148,6 +149,7 @@ export async function updateVolunteer(id: string, dto: UpdateVolunteerDto) {
   if (dto.name               !== undefined) patch['name']               = dto.name;
   if (dto.email              !== undefined) patch['email']              = dto.email              ?? null;
   if (dto.phone              !== undefined) patch['phone']              = dto.phone              ?? null;
+  if (dto.whatsapp_number    !== undefined) patch['whatsapp_number']    = dto.whatsapp_number    ?? null;
   if (dto.role               !== undefined) patch['role']               = dto.role               ?? null;
   if (dto.sector             !== undefined) patch['sector']             = dto.sector             ?? null;
   if (dto.notes              !== undefined) patch['notes']              = dto.notes              ?? null;

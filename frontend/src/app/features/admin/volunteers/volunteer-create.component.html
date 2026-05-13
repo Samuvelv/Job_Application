@@ -1,0 +1,331 @@
+<!-- volunteer-create.component.html -->
+<div class="mb-3">
+  <a [routerLink]="cancelRoute" class="back-btn">
+    <i class="bi bi-arrow-left"></i>Back to Volunteers
+  </a>
+</div>
+
+<app-page-header
+  [title]="editId ? 'Edit Volunteer' : 'Add Volunteer'"
+  icon="bi-person-heart"
+  [subtitle]="editId ? 'Update volunteer profile' : 'Create a detailed volunteer profile'" />
+
+@if (error) {
+  <div class="alert alert-danger d-flex align-items-center gap-2 mb-4">
+    <i class="bi bi-exclamation-triangle-fill"></i>
+    <span>{{ error }}</span>
+  </div>
+}
+
+<form [formGroup]="form" (ngSubmit)="submit()">
+
+  <!-- ══════════════════════════════════════════════════════════════════════
+       SECTION 1 — Profile
+  ═══════════════════════════════════════════════════════════════════════ -->
+  <div class="form-card mb-4">
+    <h5 class="card-section-header">
+      <i class="bi bi-person-circle"></i> Profile
+    </h5>
+    <div class="row g-3">
+
+      <!-- Profile Photo -->
+      <div class="col-md-6">
+        <label class="form-label">Profile Photo</label>
+        @if (!photoPreview()) {
+          <label class="file-drop-zone d-block" style="cursor:pointer">
+            <input type="file" class="d-none" accept="image/jpeg,image/png,image/webp"
+              (change)="onPhotoSelected($event)">
+            <div class="drop-icon mb-2"><i class="bi bi-person-bounding-box"></i></div>
+            <div class="fw-semibold small">Click to upload photo</div>
+            <div class="text-muted" style="font-size:.75rem">JPG, PNG, WEBP — max 5 MB</div>
+          </label>
+        } @else {
+          <div class="file-drop-zone has-file d-flex align-items-center gap-3">
+            <img [src]="photoPreview()!" alt="Preview"
+              style="width:56px;height:56px;object-fit:cover;border-radius:50%;border:2px solid var(--th-success);flex-shrink:0">
+            <div class="file-info flex-grow-1">
+              <span class="file-info__name">Photo selected</span>
+            </div>
+            <div class="file-actions">
+              <button type="button" class="btn btn-sm btn-outline-danger" (click)="clearPhoto()">
+                <i class="bi bi-x-lg"></i>
+              </button>
+              <label class="btn btn-sm btn-outline-secondary" style="cursor:pointer;margin-bottom:0">
+                <i class="bi bi-arrow-repeat"></i>
+                <input type="file" accept="image/jpeg,image/png,image/webp"
+                  class="d-none" (change)="onPhotoSelected($event)">
+              </label>
+            </div>
+          </div>
+        }
+        @if (photoError) {
+          <div class="text-danger small mt-1">{{ photoError }}</div>
+        }
+      </div>
+
+      <!-- Full Name -->
+      <div class="col-md-6">
+        <label class="form-label">Full Name <span class="text-danger">*</span></label>
+        <input formControlName="name" class="form-control"
+          [class.is-invalid]="invalid('name')"
+          placeholder="e.g. Arun Kumar">
+        @if (invalid('name')) {
+          <div class="invalid-feedback">Name is required.</div>
+        }
+      </div>
+
+      <!-- Email -->
+      <div class="col-md-6">
+        <label class="form-label">Email <span class="rep-optional">optional</span></label>
+        <input formControlName="email" type="email" class="form-control"
+          [class.is-invalid]="invalid('email')"
+          placeholder="volunteer@example.com">
+        @if (invalid('email')) {
+          <div class="invalid-feedback">Enter a valid email address.</div>
+        }
+      </div>
+
+      <!-- Phone -->
+      <div class="col-md-6">
+        <label class="form-label">Phone <span class="rep-optional">optional</span></label>
+        <div class="phone-input-group">
+          <app-searchable-select
+            formControlName="dial_code"
+            [options]="dialCodeOptions()"
+            placeholder="🌐"
+            class="dial-select">
+          </app-searchable-select>
+          <input type="tel" class="form-control phone-number-input"
+            formControlName="phone"
+            placeholder="e.g. 9876543210"
+            [class.is-invalid]="invalid('phone')">
+        </div>
+        @if (invalid('phone') && form.get('phone')?.errors?.['phoneInvalid']) {
+          <div class="text-danger small mt-1">
+            {{ form.get('phone')?.errors?.['phoneInvalid'] }}
+          </div>
+        }
+      </div>
+
+      <!-- WhatsApp -->
+      <div class="col-md-6">
+        <label class="form-label">WhatsApp <span class="rep-optional">optional</span></label>
+        <div class="phone-input-group">
+          <app-searchable-select
+            formControlName="whatsapp_dial_code"
+            [options]="dialCodeOptions()"
+            placeholder="🌐"
+            class="dial-select"
+            [class.bg-light]="form.get('whatsapp_same_as_phone')?.value"
+            [disabled]="form.get('whatsapp_same_as_phone')?.value">
+          </app-searchable-select>
+          <input type="tel" class="form-control phone-number-input"
+            formControlName="whatsapp_number"
+            placeholder="e.g. 9876543210"
+            [class.bg-light]="form.get('whatsapp_same_as_phone')?.value"
+            [class.is-invalid]="invalid('whatsapp_number')"
+            [attr.readonly]="form.get('whatsapp_same_as_phone')?.value ? true : null">
+        </div>
+        <div class="form-check mt-1">
+          <input class="form-check-input" type="checkbox"
+            formControlName="whatsapp_same_as_phone" id="wa_same_vol">
+          <label class="form-check-label small text-muted" for="wa_same_vol">
+            Same as phone number
+          </label>
+        </div>
+        @if (invalid('whatsapp_number') && form.get('whatsapp_number')?.errors?.['phoneInvalid']) {
+          <div class="text-danger small mt-1">
+            {{ form.get('whatsapp_number')?.errors?.['phoneInvalid'] }}
+          </div>
+        }
+      </div>
+
+      <!-- Nationality -->
+      <div class="col-md-6">
+        <label class="form-label">Nationality <span class="text-danger">*</span></label>
+        <app-searchable-select
+          formControlName="nationality"
+          [options]="countryOpts()"
+          [invalid]="invalid('nationality')"
+          placeholder="Select nationality" />
+        @if (invalid('nationality')) {
+          <div class="text-danger small mt-1">Nationality is required.</div>
+        }
+      </div>
+
+      <!-- Country Placed -->
+      <div class="col-md-6">
+        <label class="form-label">Country Placed In <span class="text-danger">*</span></label>
+        <app-searchable-select
+          formControlName="country_placed"
+          [options]="countryOpts()"
+          [invalid]="invalid('country_placed')"
+          placeholder="Select country" />
+        @if (invalid('country_placed')) {
+          <div class="text-danger small mt-1">Country placed is required.</div>
+        }
+      </div>
+
+      <!-- Job Role -->
+      <div class="col-md-6">
+        <label class="form-label">Job Role / Title <span class="text-danger">*</span></label>
+        <input formControlName="role" class="form-control"
+          [class.is-invalid]="invalid('role')"
+          placeholder="e.g. Registered Nurse, IT Support">
+        @if (invalid('role')) {
+          <div class="invalid-feedback">Job role is required.</div>
+        }
+      </div>
+
+      <!-- Industry / Sector -->
+      <div class="col-md-6">
+        <label class="form-label">Industry / Sector <span class="rep-optional">optional</span></label>
+        <app-searchable-select
+          formControlName="sector"
+          [options]="industryOpts()"
+          placeholder="Select industry"
+          [allowClear]="true" />
+      </div>
+
+      <!-- Company Joined -->
+      <div class="col-md-6">
+        <label class="form-label">Company Joined <span class="rep-optional">optional</span></label>
+        <input formControlName="company_joined" class="form-control"
+          placeholder="e.g. NHS Trust, Tesco">
+      </div>
+
+      <!-- Year Placed -->
+      <div class="col-md-6">
+        <label class="form-label">Year Placed <span class="text-danger">*</span></label>
+        <app-searchable-select
+          formControlName="year_placed"
+          [options]="yearOpts"
+          [invalid]="invalid('year_placed')"
+          placeholder="Select year" />
+        @if (invalid('year_placed')) {
+          <div class="text-danger small mt-1">Year placed is required.</div>
+        }
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════════════════════════════════
+       SECTION 2 — Languages Spoken
+  ═══════════════════════════════════════════════════════════════════════ -->
+  <div class="form-card mb-4">
+    <h5 class="card-section-header">
+      <i class="bi bi-translate"></i> Languages Spoken
+    </h5>
+    <app-chip-multi-select
+      formControlName="languages"
+      [options]="languageOptions()"
+      placeholder="Select languages spoken" />
+  </div>
+
+  <!-- ══════════════════════════════════════════════════════════════════════
+       SECTION 3 — Story & Support
+  ═══════════════════════════════════════════════════════════════════════ -->
+  <div class="form-card mb-4">
+    <h5 class="card-section-header">
+      <i class="bi bi-chat-heart"></i> Story &amp; Support
+    </h5>
+    <div class="row g-3">
+
+      <!-- Success Story -->
+      <div class="col-12">
+        <label class="form-label">Short Success Story <span class="rep-optional">optional</span></label>
+        <textarea formControlName="success_story" class="form-control" rows="3"
+          placeholder="2–3 sentences about their journey — how they secured a job abroad through NTL Career Nexus…"
+          maxlength="1000"></textarea>
+        <div class="form-text text-end">
+          {{ form.get('success_story')?.value?.length || 0 }} / 1000
+        </div>
+      </div>
+
+      <!-- How They Want to Help -->
+      <div class="col-md-6">
+        <label class="form-label">How They Want to Help <span class="text-danger">*</span></label>
+        <app-searchable-select
+          formControlName="support_method"
+          [options]="supportMethodOpts"
+          [invalid]="invalid('support_method')"
+          placeholder="Select support method" />
+        @if (invalid('support_method')) {
+          <div class="text-danger small mt-1">Please select a support method.</div>
+        }
+      </div>
+
+      <!-- Contact Preference -->
+      <div class="col-md-6">
+        <label class="form-label">Contact Preference <span class="text-danger">*</span></label>
+        <app-searchable-select
+          formControlName="contact_preference"
+          [options]="contactPrefOpts"
+          [invalid]="invalid('contact_preference')"
+          placeholder="Select preference" />
+        @if (invalid('contact_preference')) {
+          <div class="text-danger small mt-1">Please select a contact preference.</div>
+        }
+      </div>
+
+      <!-- Availability -->
+      <div class="col-md-6">
+        <label class="form-label">Availability <span class="text-danger">*</span></label>
+        <app-searchable-select
+          formControlName="availability"
+          [options]="availabilityOpts"
+          [invalid]="invalid('availability')"
+          placeholder="Select availability" />
+        @if (invalid('availability')) {
+          <div class="text-danger small mt-1">Please select availability.</div>
+        }
+      </div>
+
+      <!-- Admin Notes -->
+      <div class="col-md-6">
+        <label class="form-label">Admin Notes <span class="rep-optional">optional</span></label>
+        <input formControlName="notes" class="form-control"
+          placeholder="Internal notes — not visible to candidates">
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════════════════════════════════
+       SECTION 4 — Consent
+  ═══════════════════════════════════════════════════════════════════════ -->
+  <div class="form-card mb-4">
+    <h5 class="card-section-header">
+      <i class="bi bi-shield-check"></i> Consent
+    </h5>
+    <div class="form-check">
+      <input class="form-check-input" type="checkbox" formControlName="consent"
+        id="consentCheck" [class.is-invalid]="invalid('consent')">
+      <label class="form-check-label fw-semibold" for="consentCheck">
+        This volunteer has agreed to appear on the platform
+        <span class="text-danger">*</span>
+      </label>
+      @if (invalid('consent')) {
+        <div class="invalid-feedback d-block">Consent is required before saving.</div>
+      }
+    </div>
+  </div>
+
+  <!-- ── Action bar ──────────────────────────────────────────────────────── -->
+  <div class="d-flex justify-content-end gap-3 mt-2 mb-5">
+    <a [routerLink]="cancelRoute" class="btn btn-outline-secondary">
+      <i class="bi bi-x-lg me-1"></i>Cancel
+    </a>
+    <button type="submit" class="btn btn-primary" [disabled]="submitting">
+      @if (submitting) {
+        <span class="spinner-border spinner-border-sm me-2"></span>Saving…
+      } @else if (editId) {
+        <i class="bi bi-floppy me-1"></i>Update Volunteer
+      } @else {
+        <i class="bi bi-person-heart me-1"></i>Save Volunteer
+      }
+    </button>
+  </div>
+
+</form>
