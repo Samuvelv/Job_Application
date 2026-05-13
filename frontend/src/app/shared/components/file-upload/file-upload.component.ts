@@ -31,7 +31,7 @@ import { CommonModule } from '@angular/common';
     >
       @if (currentFile()) {
         <i class="bi bi-paperclip text-primary fs-4"></i>
-        <span class="mt-1 small fw-semibold text-truncate" style="max-width:200px">{{ currentFile()!.name }}</span>
+        <span class="mt-1 small fw-semibold text-truncate" style="max-width:min(200px,55vw)">{{ currentFile()!.name }}</span>
         <button type="button" class="btn btn-link btn-sm text-danger p-0 mt-1"
                 (click)="clear($event)">
           <i class="bi bi-trash"></i> Remove

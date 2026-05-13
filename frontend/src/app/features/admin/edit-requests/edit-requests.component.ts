@@ -90,6 +90,10 @@ import { SearchableSelectComponent, SelectOption } from '../../../shared/compone
       background: var(--th-surface);
       color: var(--th-text);
     }
+    .er-sort-group {
+      flex: 0 1 140px;
+      min-width: 120px;
+    }
     .filter-bar__clear {
       height: 38px;
       padding: 0 14px;
@@ -322,7 +326,7 @@ import { SearchableSelectComponent, SelectOption } from '../../../shared/compone
           </div>
 
           <!-- Sort -->
-          <div class="filter-bar__group" style="flex:0 1 140px;min-width:120px">
+          <div class="filter-bar__group er-sort-group">
             <span class="filter-bar__label"><i class="bi bi-sort-down me-1"></i>Sort</span>
             <app-searchable-select
               [ngModel]="editSort"
@@ -559,7 +563,7 @@ import { SearchableSelectComponent, SelectOption } from '../../../shared/compone
           </div>
 
           <!-- Sort -->
-          <div class="filter-bar__group" style="flex:0 1 140px;min-width:120px">
+          <div class="filter-bar__group er-sort-group">
             <span class="filter-bar__label"><i class="bi bi-sort-down me-1"></i>Sort</span>
             <app-searchable-select
               [ngModel]="contactSort"
@@ -778,7 +782,7 @@ import { SearchableSelectComponent, SelectOption } from '../../../shared/compone
           </div>
 
           <!-- Sort -->
-          <div class="filter-bar__group" style="flex:0 1 140px;min-width:120px">
+          <div class="filter-bar__group er-sort-group">
             <span class="filter-bar__label"><i class="bi bi-sort-down me-1"></i>Sort</span>
             <app-searchable-select
               [ngModel]="supportSort"

@@ -30,6 +30,10 @@ interface CompletionSection {
       position: relative;
       overflow: hidden;
     }
+    @media (max-width: 575px) {
+      .cd-hero { padding: 18px 16px 16px; }
+      .cd-hero__name { font-size: 1.35rem; }
+    }
     .cd-hero::before {
       content: '';
       position: absolute;

@@ -1142,12 +1142,10 @@
 
   <!-- ── Compliance Confirmation Panel — visible only on Step 5 ── -->
   @if (currentStep === totalSteps) {
-    <div class="mt-4" style="background:var(--th-surface);border:1px solid var(--th-border);
-      border-radius:var(--th-radius-lg);overflow:hidden;box-shadow:var(--th-shadow-sm)">
+    <div class="cr-compliance-panel">
 
       <!-- Panel header -->
-      <div style="padding:.75rem 1.25rem;background:var(--th-surface-raised);
-        border-bottom:1px solid var(--th-border);display:flex;align-items:center;gap:.5rem">
+      <div class="cr-compliance-header">
         <i class="bi bi-shield-check" style="font-size:1rem;color:var(--th-primary)"></i>
         <span style="font-size:.8125rem;font-weight:700;text-transform:uppercase;
           letter-spacing:.5px;color:var(--th-text-secondary)">Compliance Confirmations</span>
@@ -1155,17 +1153,15 @@
       </div>
 
       <!-- Confirmation rows -->
-      <div style="padding:.75rem 1.25rem;display:flex;flex-direction:column;gap:.5rem">
+      <div class="cr-compliance-body">
 
         <!-- Row 1: Terms -->
-        <label for="confirmTerms" style="display:flex;align-items:flex-start;gap:.875rem;
-          padding:.875rem 1rem;border-radius:var(--th-radius);cursor:pointer;
-          border:1px solid;transition:all .15s ease;"
+        <label for="confirmTerms" class="cr-compliance-row"
           [style.borderColor]="ctrl('confirm_terms').value ? 'var(--th-success,#10b981)' : 'var(--th-border)'"
           [style.background]="ctrl('confirm_terms').value ? 'rgba(16,185,129,.06)' : 'var(--th-surface-raised)'">
           <input class="form-check-input flex-shrink-0" type="checkbox"
             formControlName="confirm_terms" id="confirmTerms" style="margin-top:.15rem">
-          <div style="display:flex;align-items:flex-start;gap:.625rem;flex:1">
+          <div class="cr-compliance-row__inner">
             <i class="bi bi-file-earmark-check flex-shrink-0" style="font-size:1rem;margin-top:.1rem"
               [style.color]="ctrl('confirm_terms').value ? 'var(--th-success,#10b981)' : 'var(--th-muted)'"></i>
             <span style="font-size:.875rem;line-height:1.5"
@@ -1181,14 +1177,12 @@
         </label>
 
         <!-- Row 2: Documents -->
-        <label for="confirmDocs" style="display:flex;align-items:flex-start;gap:.875rem;
-          padding:.875rem 1rem;border-radius:var(--th-radius);cursor:pointer;
-          border:1px solid;transition:all .15s ease;"
+        <label for="confirmDocs" class="cr-compliance-row"
           [style.borderColor]="ctrl('confirm_docs').value ? 'var(--th-success,#10b981)' : 'var(--th-border)'"
           [style.background]="ctrl('confirm_docs').value ? 'rgba(16,185,129,.06)' : 'var(--th-surface-raised)'">
           <input class="form-check-input flex-shrink-0" type="checkbox"
             formControlName="confirm_docs" id="confirmDocs" style="margin-top:.15rem">
-          <div style="display:flex;align-items:flex-start;gap:.625rem;flex:1">
+          <div class="cr-compliance-row__inner">
             <i class="bi bi-patch-check flex-shrink-0" style="font-size:1rem;margin-top:.1rem"
               [style.color]="ctrl('confirm_docs').value ? 'var(--th-success,#10b981)' : 'var(--th-muted)'"></i>
             <span style="font-size:.875rem;line-height:1.5"
@@ -1207,8 +1201,7 @@
 
       <!-- Incomplete warning — disappears once all three are ticked -->
       @if (!ctrl('confirm_terms').value || !ctrl('confirm_docs').value) {
-        <div style="padding:.625rem 1.25rem;border-top:1px solid var(--th-border);
-          display:flex;align-items:center;gap:.5rem;background:rgba(245,158,11,.06)">
+        <div class="cr-compliance-footer">
           <i class="bi bi-exclamation-triangle-fill" style="font-size:.8rem;color:#f59e0b"></i>
           <span style="font-size:.75rem;color:#b45309;font-weight:500">
             Both confirmations are required before you can submit.

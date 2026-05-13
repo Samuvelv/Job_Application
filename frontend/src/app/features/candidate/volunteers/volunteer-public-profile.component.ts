@@ -301,7 +301,10 @@ import { VolunteerSupportRequest }        from '../../../core/models/volunteer-s
     }
 
     /* Support card */
-    .vpp-support-card { position: sticky; top: 80px; }
+    .vpp-support-card { position: static; }
+    @media (min-width: 992px) {
+      .vpp-support-card { position: sticky; top: 80px; }
+    }
 
     /* Stat */
     .vpp-stat-number {

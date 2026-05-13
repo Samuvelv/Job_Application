@@ -202,7 +202,7 @@ import { SORT_OPTIONS } from '../../../core/constants/candidate-options';
           <div class="section-card">
             <!-- Desktop table -->
             <div class="table-responsive d-none d-md-block">
-              <table class="table table-hover align-middle mb-0">
+              <table class="table table-hover align-middle mb-0" style="min-width: 1000px">
                 <thead class="table-light">
                   <tr>
                     <th style="width:44px">

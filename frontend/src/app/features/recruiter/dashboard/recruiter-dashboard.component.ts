@@ -23,6 +23,10 @@ import { Recruiter } from '../../../core/models/recruiter.model';
       position: relative;
       overflow: hidden;
     }
+    @media (max-width: 575px) {
+      .rd-hero { padding: 18px 16px 16px; }
+      .rd-hero__name { font-size: 1.35rem; }
+    }
     .rd-hero::before {
       content: '';
       position: absolute;

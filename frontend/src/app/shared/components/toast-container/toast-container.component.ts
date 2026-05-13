@@ -8,7 +8,7 @@ import { ToastService } from '../../../core/services/toast.service';
   standalone: true,
   imports: [CommonModule],
   template: `
-    <div class="position-fixed top-0 end-0 p-3" style="z-index:2000;min-width:300px">
+    <div class="position-fixed top-0 end-0 p-3" style="z-index:2000;min-width:min(300px,90vw)">
       @for (toast of toastSvc.toasts(); track toast.id) {
         <div class="toast show align-items-center mb-2 toast-custom"
           [class.toast-custom--success]="toast.type === 'success'"

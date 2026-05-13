@@ -40,7 +40,7 @@ import { SearchableSelectComponent, SelectOption } from '../../../shared/compone
       </div>
 
       <!-- Sort -->
-      <select class="form-select form-select-sm" style="width:180px" [formControl]="sortCtrl" (change)="onSortChange()">
+      <select class="form-select form-select-sm vl-sort-select" [formControl]="sortCtrl" (change)="onSortChange()">
         <option value="newest">Newest First</option>
         <option value="oldest">Oldest First</option>
         <option value="most_helpful">Most Helpful</option>
