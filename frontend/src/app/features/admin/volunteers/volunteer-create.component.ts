@@ -96,6 +96,7 @@ export class VolunteerCreateComponent implements OnInit, OnDestroy {
   photoFile: File | null = null;
   photoPreview = signal<string | null>(null);
   photoError = '';
+  prefillPhotoUrl: string | null = null;
 
   private _subs: Subscription[] = [];
   private _objectUrls: string[] = [];
@@ -190,6 +191,17 @@ export class VolunteerCreateComponent implements OnInit, OnDestroy {
             sector:             c.industry      ?? null,
             languages:          langNames.length ? langNames : [],
           });
+
+          // Pre-fill profile photo from candidate
+          if (c.profile_photo_url) {
+            this.photoPreview.set(c.profile_photo_url);
+            this.prefillPhotoUrl = c.profile_photo_url;
+          }
+
+          // Auto-tick "Same as phone" if both numbers match
+          if (pNum && pNum === wNum && pDial === wDial) {
+            this.form.get('whatsapp_same_as_phone')!.setValue(true);
+          }
         },
         error: () => this.toast.error('Could not pre-fill candidate details'),
       });
@@ -353,6 +365,7 @@ export class VolunteerCreateComponent implements OnInit, OnDestroy {
       if (idx !== -1) { URL.revokeObjectURL(this.photoPreview()!); this._objectUrls.splice(idx, 1); }
     }
     this.photoFile = null;
+    this.prefillPhotoUrl = null;
     this.photoPreview.set(null);
     this.photoError = '';
   }
@@ -387,6 +400,8 @@ export class VolunteerCreateComponent implements OnInit, OnDestroy {
       availability:       raw.availability           || undefined,
       notes:              raw.notes?.trim()          || undefined,
       consent:            raw.consent,
+      // Use pre-filled candidate photo URL only when no new file has been chosen
+      photo_url:          !this.photoFile ? (this.prefillPhotoUrl ?? undefined) : undefined,
     };
 
     if (this.editId) {

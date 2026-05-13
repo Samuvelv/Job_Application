@@ -10,6 +10,7 @@ import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 import { CandidateService } from '../../../core/services/candidate.service';
 import { ToastService } from '../../../core/services/toast.service';
 import { MasterDataService } from '../../../core/services/master-data.service';
+import { VolunteerService } from '../../../core/services/volunteer.service';
 import { SearchableSelectComponent, SelectOption } from '../../../shared/components/searchable-select/searchable-select.component';
 import { ChipMultiSelectComponent, ChipOption } from '../../../shared/components/chip-multi-select/chip-multi-select.component';
 import { Candidate, Certificate } from '../../../core/models/candidate.model';
@@ -336,6 +337,7 @@ export class CandidateEditComponent implements OnInit {
     private toast: ToastService,
     public master: MasterDataService,
     private sanitizer: DomSanitizer,
+    private volunteerSvc: VolunteerService,
   ) {}
 
   ngOnInit(): void {
@@ -868,11 +870,37 @@ export class CandidateEditComponent implements OnInit {
     this.inviteError   = '';
     this.empSvc.inviteVolunteer(this.candidateId).subscribe({
       next: () => {
-        this.inviteSending    = false;
-        this.showPlacedPrompt = false;
-        this.toast.success('Invitation sent successfully!');
-        this.router.navigate(['/admin/volunteers/create'], {
-          queryParams: { fromCandidate: this.candidateId },
+        const c = this.candidate!;
+        const langNames = (c.languages ?? []).map((l: any) => l.language).filter(Boolean);
+        const placedReferral = (c.referrals ?? []).find((r: any) => r.status === 'placed');
+        const countryPlaced  = placedReferral?.country ?? c.current_country ?? null;
+
+        const payload = {
+          name:             `${c.first_name} ${c.last_name}`.trim(),
+          email:            c.email            ?? undefined,
+          phone:            c.phone            ?? undefined,
+          whatsapp_number:  c.whatsapp_number  ?? undefined,
+          nationality:      c.nationality      ?? undefined,
+          country_placed:   countryPlaced      ?? undefined,
+          role:             c.job_title        ?? undefined,
+          sector:           c.industry         ?? undefined,
+          languages:        langNames.length ? langNames : undefined,
+          photo_url:        c.profile_photo_url ?? undefined,
+          availability:     'Active' as const,
+          consent:          false,
+        };
+
+        this.volunteerSvc.create(payload).subscribe({
+          next: (res) => {
+            this.inviteSending    = false;
+            this.showPlacedPrompt = false;
+            this.toast.success('Volunteer created! Please complete their profile.');
+            this.router.navigate(['/admin/volunteers', res.volunteer.id]);
+          },
+          error: (err) => {
+            this.inviteSending = false;
+            this.inviteError   = err?.error?.message ?? 'Failed to create volunteer.';
+          },
         });
       },
       error: (err) => {

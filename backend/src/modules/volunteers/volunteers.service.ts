@@ -17,21 +17,27 @@ export async function listVolunteers(filters: {
   const { search, country_placed, availability, language, sector, nationality, sort, page, limit } = filters;
   const offset = (page - 1) * limit;
 
-  let query = db('volunteers').select('*');
-  let countQuery = db('volunteers');
+  let query = db('volunteers as v')
+    .leftJoin('users as u', db.raw('LOWER(u.email) = LOWER(v.email)'))
+    .leftJoin('candidates as c', 'c.user_id', 'u.id')
+    .select(
+      'v.*',
+      db.raw(`COALESCE(v.photo_url, c.profile_photo_url) AS photo_url`),
+    );
+  let countQuery = db('volunteers as v');
 
   function applyFilters(q: any) {
     if (search) {
       const term = `%${search}%`;
       q = q.where((b: any) =>
-        b.whereILike('name', term).orWhereILike('role', term).orWhereILike('email', term),
+        b.whereILike('v.name', term).orWhereILike('v.role', term).orWhereILike('v.email', term),
       );
     }
-    if (country_placed) q = q.whereILike('country_placed', `%${country_placed}%`);
-    if (availability)   q = q.where('availability', availability);
-    if (language)       q = q.whereRaw(`languages::jsonb @> ?::jsonb`, [JSON.stringify([language])]);
-    if (sector)         q = q.whereILike('sector', `%${sector}%`);
-    if (nationality)    q = q.whereILike('nationality', `%${nationality}%`);
+    if (country_placed) q = q.whereILike('v.country_placed', `%${country_placed}%`);
+    if (availability)   q = q.where('v.availability', availability);
+    if (language)       q = q.whereRaw(`v.languages::jsonb @> ?::jsonb`, [JSON.stringify([language])]);
+    if (sector)         q = q.whereILike('v.sector', `%${sector}%`);
+    if (nationality)    q = q.whereILike('v.nationality', `%${nationality}%`);
     return q;
   }
 
@@ -39,13 +45,13 @@ export async function listVolunteers(filters: {
   countQuery = applyFilters(countQuery);
 
   // Sort
-  let orderCol = 'created_at';
+  let orderCol = 'v.created_at';
   let orderDir: 'asc' | 'desc' = 'desc';
-  if (sort === 'oldest')     { orderCol = 'created_at';      orderDir = 'asc'; }
-  if (sort === 'name_asc')   { orderCol = 'name';            orderDir = 'asc'; }
-  if (sort === 'most_helpful') { orderCol = 'candidates_helped'; orderDir = 'desc'; }
+  if (sort === 'oldest')     { orderCol = 'v.created_at';      orderDir = 'asc'; }
+  if (sort === 'name_asc')   { orderCol = 'v.name';            orderDir = 'asc'; }
+  if (sort === 'most_helpful') { orderCol = 'v.candidates_helped'; orderDir = 'desc'; }
 
-  const [{ count }] = await countQuery.count('id as count');
+  const [{ count }] = await countQuery.count('v.id as count');
   const data        = await query.orderBy(orderCol, orderDir).limit(limit).offset(offset);
   const total       = Number(count);
 
@@ -166,12 +172,20 @@ export async function updateVolunteer(id: string, dto: UpdateVolunteerDto) {
   if (dto.consent            !== undefined) patch['consent']            = dto.consent            ?? false;
   if (dto.candidates_helped  !== undefined) patch['candidates_helped']  = dto.candidates_helped;
 
-  const [row] = await db('volunteers').where({ id }).update(patch).returning('*');
-  return row;
+  await db('volunteers').where({ id }).update(patch);
+  return getVolunteerById(id);
 }
 
 export async function getVolunteerById(id: string) {
-  const row = await db('volunteers').where({ id }).first();
+  const row = await db('volunteers as v')
+    .leftJoin('users as u', db.raw('LOWER(u.email) = LOWER(v.email)'))
+    .leftJoin('candidates as c', 'c.user_id', 'u.id')
+    .select(
+      'v.*',
+      db.raw(`COALESCE(v.photo_url, c.profile_photo_url) AS photo_url`),
+    )
+    .where('v.id', id)
+    .first();
   if (!row) throw new AppError(404, 'Volunteer not found');
   return row;
 }
@@ -179,11 +193,10 @@ export async function getVolunteerById(id: string) {
 export async function updateVolunteerPhoto(id: string, photoUrl: string) {
   const existing = await db('volunteers').where({ id }).first();
   if (!existing) throw new AppError(404, 'Volunteer not found');
-  const [row] = await db('volunteers')
+  await db('volunteers')
     .where({ id })
-    .update({ photo_url: photoUrl, updated_at: new Date() })
-    .returning('*');
-  return row;
+    .update({ photo_url: photoUrl, updated_at: new Date() });
+  return getVolunteerById(id);
 }
 
 export async function deleteVolunteer(id: string) {
