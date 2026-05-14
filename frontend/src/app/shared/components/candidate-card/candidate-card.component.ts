@@ -215,6 +215,7 @@ export class CandidateCardComponent {
     const map: Record<string, string> = {
       uk_format: 'UK', european_format: 'EU', canadian_format: 'CA',
       australian_format: 'AU', gulf_format: 'Gulf', asian_format: 'Asia',
+      others: 'Others',
     };
     const fmt = this.candidate.cv_format;
     return fmt && fmt !== 'not_yet_created' ? (map[fmt] ?? fmt) : '';

@@ -84,7 +84,7 @@ import { AuthService } from '../../../core/services/auth.service';
               <div class="auth-card-logo__icon">
                 <i class="bi bi-briefcase-fill"></i>
               </div>
-              <div class="auth-card-logo__name">NTL Career<span>Nexus</span></div>
+              <div class="auth-card-logo__name">NTL Career <span>Nexus</span></div>
             </div>
 
             <!-- Heading -->
@@ -232,7 +232,7 @@ import { AuthService } from '../../../core/services/auth.service';
               <div class="auth-card-logo__icon">
                 <i class="bi bi-briefcase-fill"></i>
               </div>
-              <div class="auth-card-logo__name">NTL Career<span>Nexus</span></div>
+              <div class="auth-card-logo__name">NTL Career <span>Nexus</span></div>
             </div>
 
             <!-- Heading -->

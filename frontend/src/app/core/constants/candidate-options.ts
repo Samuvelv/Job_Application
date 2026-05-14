@@ -23,6 +23,7 @@ export const CV_FORMAT_OPTIONS: SelectOption[] = [
   { value: 'australian_format', label: 'Australian Format' },
   { value: 'gulf_format',       label: 'Gulf Format'       },
   { value: 'asian_format',      label: 'Asian Format'      },
+  { value: 'others',            label: 'CV Format - Others' },
   { value: 'not_yet_created',   label: 'Not Yet Created'   },
 ];
 

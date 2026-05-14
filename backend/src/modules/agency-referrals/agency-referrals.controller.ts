@@ -25,7 +25,7 @@ export async function create(req: Request, res: Response, next: NextFunction): P
       resource: 'agency_referral',
       resourceId: referral.id,
       ipAddress: req.ip,
-      metadata: { candidateId },
+      metadata: { agency_name: referral.agency_name, candidate_id: candidateId },
     });
     res.status(201).json({ referral });
   } catch (err) { next(err); }

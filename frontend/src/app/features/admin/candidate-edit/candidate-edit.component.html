@@ -1040,28 +1040,42 @@
                 }
               </div>
               <div class="col-12">
-                <label class="form-label form-label-sm">Duration (years)</label>
+                <label class="form-label form-label-sm">Duration</label>
                 <div class="d-flex align-items-start gap-2">
                   <div class="flex-grow-1">
-                    <input type="number" class="form-control form-control-sm" formControlName="start_year"
-                      placeholder="Start year" min="1950" [max]="currentYear"
-                      [class.is-invalid]="education.at($index).get('start_year')!.invalid && education.at($index).get('start_year')!.touched">
-                    <div class="form-text" style="font-size:.7rem">Start year</div>
+                    <div class="d-flex gap-1">
+                      <select class="form-select form-select-sm" formControlName="start_month" style="width:90px">
+                        @for (m of MONTHS; track m.value) {
+                          <option [ngValue]="m.value">{{ m.label }}</option>
+                        }
+                      </select>
+                      <input type="number" class="form-control form-control-sm" formControlName="start_year"
+                        placeholder="YYYY" min="1950" [max]="currentYear"
+                        [class.is-invalid]="education.at($index).get('start_year')!.invalid && education.at($index).get('start_year')!.touched">
+                    </div>
+                    <div class="form-text" style="font-size:.7rem">Start</div>
                     @if (education.at($index).get('start_year')!.errors?.['eduYearInvalid'] && education.at($index).get('start_year')!.touched) {
                       <div class="invalid-feedback d-block">{{ education.at($index).get('start_year')!.errors?.['eduYearInvalid'] }}</div>
                     }
                   </div>
                   <span class="text-muted fw-bold mt-1">–</span>
                   <div class="flex-grow-1">
-                    <input type="number" class="form-control form-control-sm" formControlName="end_year"
-                      placeholder="End year" min="1950" [max]="currentYear + 6"
-                      [class.is-invalid]="education.at($index).get('end_year')!.invalid && education.at($index).get('end_year')!.touched">
-                    <div class="form-text" style="font-size:.7rem">End / expected year</div>
+                    <div class="d-flex gap-1">
+                      <select class="form-select form-select-sm" formControlName="end_month" style="width:90px">
+                        @for (m of MONTHS; track m.value) {
+                          <option [ngValue]="m.value">{{ m.label }}</option>
+                        }
+                      </select>
+                      <input type="number" class="form-control form-control-sm" formControlName="end_year"
+                        placeholder="YYYY" min="1950" [max]="currentYear + 6"
+                        [class.is-invalid]="education.at($index).get('end_year')!.invalid && education.at($index).get('end_year')!.touched">
+                    </div>
+                    <div class="form-text" style="font-size:.7rem">End / expected</div>
                     @if (education.at($index).get('end_year')!.errors?.['eduYearInvalid'] && education.at($index).get('end_year')!.touched) {
                       <div class="invalid-feedback d-block">{{ education.at($index).get('end_year')!.errors?.['eduYearInvalid'] }}</div>
                     }
                     @if (education.at($index).get('end_year')!.errors?.['endBeforeStart'] && education.at($index).get('end_year')!.touched) {
-                      <div class="invalid-feedback d-block">End year cannot be before start year.</div>
+                      <div class="invalid-feedback d-block">End date cannot be before start date.</div>
                     }
                   </div>
                 </div>

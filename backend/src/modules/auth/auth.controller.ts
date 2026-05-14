@@ -66,14 +66,9 @@ function parseUserAgent(ua: string | undefined): { browser: string; os: string }
 }
 
 // ── Session duration formatter ────────────────────────────────────────────────
-function formatSessionDuration(iatSeconds: number | undefined): string {
-  if (!iatSeconds) return 'Unknown';
-  const minutes = Math.round((Date.now() / 1000 - iatSeconds) / 60);
-  if (minutes < 1)   return 'Less than 1 minute';
-  if (minutes < 60)  return `${minutes} minute${minutes === 1 ? '' : 's'}`;
-  const hours = Math.floor(minutes / 60);
-  const rem   = minutes % 60;
-  return rem > 0 ? `${hours}h ${rem}m` : `${hours} hour${hours === 1 ? '' : 's'}`;
+function formatSessionDuration(iatSeconds: number | undefined): number | null {
+  if (!iatSeconds) return null;
+  return Math.max(1, Math.round((Date.now() / 1000 - iatSeconds) / 60));
 }
 
 // ── Helper: run new-IP detection for admin accounts (fire-and-forget) ────────
@@ -310,7 +305,7 @@ export async function logout(req: Request, res: Response, next: NextFunction): P
       action:    'LOGOUT',
       resource:  'auth',
       ipAddress: req.ip,
-      metadata:  { session_duration: sessionDuration },
+      metadata:  { session_duration_minutes: sessionDuration },
     });
 
     res.json({ message: 'Logged out successfully' });

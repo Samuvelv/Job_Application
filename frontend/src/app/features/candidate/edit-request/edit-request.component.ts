@@ -113,8 +113,10 @@ function eduYearValidator(minYear: number, maxYear: number): ValidatorFn {
 }
 
 function eduEndYearGroupValidator(g: AbstractControl): ValidationErrors | null {
-  const start = Number(g.get('start_year')?.value);
-  const end   = Number(g.get('end_year')?.value);
+  const start      = Number(g.get('start_year')?.value);
+  const end        = Number(g.get('end_year')?.value);
+  const startMonth = Number(g.get('start_month')?.value);
+  const endMonth   = Number(g.get('end_month')?.value);
   const endCtrl = g.get('end_year');
   if (!endCtrl) return null;
   if (!g.get('start_year')?.value || !g.get('end_year')?.value) {
@@ -122,7 +124,7 @@ function eduEndYearGroupValidator(g: AbstractControl): ValidationErrors | null {
     if (cur?.['endBeforeStart']) { const { endBeforeStart: _, ...rest } = cur; endCtrl.setErrors(Object.keys(rest).length ? rest : null); }
     return null;
   }
-  if (end < start) {
+  if (end < start || (end === start && endMonth < startMonth)) {
     endCtrl.setErrors({ ...(endCtrl.errors || {}), endBeforeStart: true });
     return { endBeforeStart: true };
   }
@@ -1009,22 +1011,36 @@ function makePostalCodeGroupValidator(countryCtrl: string, postalCtrl: string): 
                   }
                 </div>
                 <div class="col-md-3">
-                  <label class="form-label form-label-sm">Start Year</label>
-                  <input formControlName="start_year" type="number" class="form-control form-control-sm" placeholder="YYYY"
-                    [class.is-invalid]="asGroup(ctrl).get('start_year')!.invalid && asGroup(ctrl).get('start_year')!.touched">
+                  <label class="form-label form-label-sm">Start</label>
+                  <div class="d-flex gap-1">
+                    <select class="form-select form-select-sm" formControlName="start_month" style="width:80px">
+                      @for (m of MONTHS; track m.value) {
+                        <option [ngValue]="m.value">{{ m.label }}</option>
+                      }
+                    </select>
+                    <input formControlName="start_year" type="number" class="form-control form-control-sm" placeholder="YYYY"
+                      [class.is-invalid]="asGroup(ctrl).get('start_year')!.invalid && asGroup(ctrl).get('start_year')!.touched">
+                  </div>
                   @if (asGroup(ctrl).get('start_year')!.errors?.['eduYearInvalid'] && asGroup(ctrl).get('start_year')!.touched) {
                     <div class="invalid-feedback d-block">{{ asGroup(ctrl).get('start_year')!.errors?.['eduYearInvalid'] }}</div>
                   }
                 </div>
                 <div class="col-md-3">
-                  <label class="form-label form-label-sm">End Year</label>
-                  <input formControlName="end_year" type="number" class="form-control form-control-sm" placeholder="YYYY"
-                    [class.is-invalid]="asGroup(ctrl).get('end_year')!.invalid && asGroup(ctrl).get('end_year')!.touched">
+                  <label class="form-label form-label-sm">End / Expected</label>
+                  <div class="d-flex gap-1">
+                    <select class="form-select form-select-sm" formControlName="end_month" style="width:80px">
+                      @for (m of MONTHS; track m.value) {
+                        <option [ngValue]="m.value">{{ m.label }}</option>
+                      }
+                    </select>
+                    <input formControlName="end_year" type="number" class="form-control form-control-sm" placeholder="YYYY"
+                      [class.is-invalid]="asGroup(ctrl).get('end_year')!.invalid && asGroup(ctrl).get('end_year')!.touched">
+                  </div>
                   @if (asGroup(ctrl).get('end_year')!.errors?.['eduYearInvalid'] && asGroup(ctrl).get('end_year')!.touched) {
                     <div class="invalid-feedback d-block">{{ asGroup(ctrl).get('end_year')!.errors?.['eduYearInvalid'] }}</div>
                   }
                   @if (asGroup(ctrl).get('end_year')!.errors?.['endBeforeStart'] && asGroup(ctrl).get('end_year')!.touched) {
-                    <div class="invalid-feedback d-block">End year cannot be before start year.</div>
+                    <div class="invalid-feedback d-block">End date cannot be before start date.</div>
                   }
                 </div>
                 <div class="col-md-6">
@@ -1252,6 +1268,12 @@ export class EditRequestComponent implements OnInit {
   readonly reasonForLeavingOptions = REASON_FOR_LEAVING_OPTIONS;
 
   readonly currentYear = new Date().getFullYear();
+  readonly MONTHS = [
+    { value: 1, label: 'Jan' }, { value: 2, label: 'Feb' }, { value: 3, label: 'Mar' },
+    { value: 4, label: 'Apr' }, { value: 5, label: 'May' }, { value: 6, label: 'Jun' },
+    { value: 7, label: 'Jul' }, { value: 8, label: 'Aug' }, { value: 9, label: 'Sep' },
+    { value: 10, label: 'Oct' }, { value: 11, label: 'Nov' }, { value: 12, label: 'Dec' },
+  ];
   readonly BIO_WORD_LIMIT = 2000;
 
   get bioWordCount(): number {
@@ -1413,8 +1435,10 @@ export class EditRequestComponent implements OnInit {
           institution:    [e.institution    ?? '', Validators.required],
           degree:         [e.degree         ?? '', Validators.required],
           field_of_study: [e.field_of_study ?? '', Validators.required],
-          start_year:     [e.start_year     ?? null, eduYearValidator(1950, yr)],
-          end_year:       [e.end_year       ?? null, eduYearValidator(1950, yr + 6)],
+          start_year:  [e.start_year  ?? null, eduYearValidator(1950, yr)],
+          start_month: [e.start_month ?? 1],
+          end_year:    [e.end_year    ?? null, eduYearValidator(1950, yr + 6)],
+          end_month:   [e.end_month   ?? 1],
           location:       [e.location       ?? '', Validators.required],
         }, { validators: eduEndYearGroupValidator });
       })),
@@ -1517,8 +1541,10 @@ export class EditRequestComponent implements OnInit {
     this.educationArray.push(this.fb.group({
       institution: ['', Validators.required], degree: ['', Validators.required],
       field_of_study: ['', Validators.required],
-      start_year: [null, eduYearValidator(1950, yr)],
-      end_year:   [null, eduYearValidator(1950, yr + 6)],
+      start_year:  [null, eduYearValidator(1950, yr)],
+      start_month: [1],
+      end_year:    [null, eduYearValidator(1950, yr + 6)],
+      end_month:   [1],
       location: ['', Validators.required],
     }, { validators: eduEndYearGroupValidator }));
   }

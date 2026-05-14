@@ -24,7 +24,7 @@ import { ContactSubmissionService } from '../../core/services/contact-submission
     <!-- Logo -->
     <a class="lp-nav__logo" href="#">
       <span class="lp-nav__logo-icon"><i class="bi bi-briefcase-fill"></i></span>
-      <span class="lp-nav__logo-text">NTL Career<span>Nexus</span></span>
+      <span class="lp-nav__logo-text">NTL Career <span>Nexus</span></span>
     </a>
 
     <!-- Desktop links -->
@@ -577,7 +577,7 @@ import { ContactSubmissionService } from '../../core/services/contact-submission
     <div class="lp-footer__brand">
       <div class="lp-footer__logo">
         <span class="lp-footer__logo-icon"><i class="bi bi-briefcase-fill"></i></span>
-        <span>NTL Career<span>Nexus</span></span>
+        <span>NTL Career <span>Nexus</span></span>
       </div>
       <p class="lp-footer__tagline">
         Connecting Global Talent to Sponsored Opportunities

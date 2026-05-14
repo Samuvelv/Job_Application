@@ -32,7 +32,9 @@ export const EducationSchema = z.object({
   degree:         z.string().max(100).optional(),
   field_of_study: z.string().max(150).optional(),
   start_year:     z.number().int().min(1900).max(2100).optional(),
+  start_month:    z.number().int().min(1).max(12).optional(),
   end_year:       z.number().int().min(1900).max(2100).optional(),
+  end_month:      z.number().int().min(1).max(12).optional(),
   location:       z.string().max(150).optional(),
 });
 
@@ -94,7 +96,7 @@ export const CreateCandidateSchema = z.object({
   registration_fee_status: z.enum(['paid', 'pending_payment', 'waived']).optional(),
   cv_format: z.enum([
     'uk_format', 'european_format', 'canadian_format', 'australian_format',
-    'gulf_format', 'asian_format', 'not_yet_created',
+    'gulf_format', 'asian_format', 'not_yet_created', 'others',
   ]).optional(),
 
   // Relations (arrays)
@@ -155,7 +157,7 @@ export const CandidateFilterSchema = z.object({
   registrationFeeStatus:   z.enum(['paid', 'pending_payment', 'waived']).optional(),
   cvFormat:                z.enum([
     'uk_format', 'european_format', 'canadian_format', 'australian_format',
-    'gulf_format', 'asian_format', 'not_yet_created',
+    'gulf_format', 'asian_format', 'not_yet_created', 'others',
   ]).optional(),
   // Legacy compat
   yearsExperience: z.coerce.number().optional(),

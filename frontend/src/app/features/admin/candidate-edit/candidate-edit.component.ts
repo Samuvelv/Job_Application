@@ -120,8 +120,10 @@ function eduYearValidator(minYear: number, maxYear: number): ValidatorFn {
 }
 
 function eduEndYearGroupValidator(g: AbstractControl): ValidationErrors | null {
-  const start = Number(g.get('start_year')?.value);
-  const end   = Number(g.get('end_year')?.value);
+  const start      = Number(g.get('start_year')?.value);
+  const end        = Number(g.get('end_year')?.value);
+  const startMonth = Number(g.get('start_month')?.value);
+  const endMonth   = Number(g.get('end_month')?.value);
   const endCtrl = g.get('end_year');
   if (!endCtrl) return null;
   if (!g.get('start_year')?.value || !g.get('end_year')?.value) {
@@ -129,7 +131,7 @@ function eduEndYearGroupValidator(g: AbstractControl): ValidationErrors | null {
     if (cur?.['endBeforeStart']) { const { endBeforeStart: _, ...rest } = cur; endCtrl.setErrors(Object.keys(rest).length ? rest : null); }
     return null;
   }
-  if (end < start) {
+  if (end < start || (end === start && endMonth < startMonth)) {
     endCtrl.setErrors({ ...(endCtrl.errors || {}), endBeforeStart: true });
     return { endBeforeStart: true };
   }
@@ -247,6 +249,12 @@ export class CandidateEditComponent implements OnInit {
     { value: 'placed',       label: 'Placed'       },
   ];
   readonly currentYear = new Date().getFullYear();
+  readonly MONTHS = [
+    { value: 1, label: 'Jan' }, { value: 2, label: 'Feb' }, { value: 3, label: 'Mar' },
+    { value: 4, label: 'Apr' }, { value: 5, label: 'May' }, { value: 6, label: 'Jun' },
+    { value: 7, label: 'Jul' }, { value: 8, label: 'Aug' }, { value: 9, label: 'Sep' },
+    { value: 10, label: 'Oct' }, { value: 11, label: 'Nov' }, { value: 12, label: 'Dec' },
+  ];
 
   readonly genderOptions: SelectOption[] = [
     { value: 'male',              label: 'Male'              },
@@ -483,8 +491,10 @@ export class CandidateEditComponent implements OnInit {
       institution:    ['', Validators.required],
       degree:         ['', Validators.required],
       field_of_study: ['', Validators.required],
-      start_year: [null as number | null, eduYearValidator(1950, yr)],
-      end_year:   [null as number | null, eduYearValidator(1950, yr + 6)],
+      start_year:  [null as number | null, eduYearValidator(1950, yr)],
+      start_month: [1 as number | null],
+      end_year:    [null as number | null, eduYearValidator(1950, yr + 6)],
+      end_month:   [1 as number | null],
       location:       ['', Validators.required],
     }, { validators: eduEndYearGroupValidator }));
   }
@@ -764,9 +774,10 @@ export class CandidateEditComponent implements OnInit {
             ? emp.education.map(e => { const yr = new Date().getFullYear(); return this.fb.group({
                 institution: [e.institution ?? '', Validators.required], degree: [e.degree ?? '', Validators.required],
                 field_of_study: [e.field_of_study ?? '', Validators.required], start_year: [e.start_year ?? null, eduYearValidator(1950, yr)],
-                end_year: [e.end_year ?? null, eduYearValidator(1950, yr + 6)], location: [e.location ?? '', Validators.required],
+                start_month: [e.start_month ?? 1], end_year: [e.end_year ?? null, eduYearValidator(1950, yr + 6)],
+                end_month: [e.end_month ?? 1], location: [e.location ?? '', Validators.required],
               }, { validators: eduEndYearGroupValidator }); })
-            : [(() => { const yr = new Date().getFullYear(); return this.fb.group({ institution: ['', Validators.required], degree: ['', Validators.required], field_of_study: ['', Validators.required], start_year: [null as number | null, eduYearValidator(1950, yr)], end_year: [null as number | null, eduYearValidator(1950, yr + 6)], location: ['', Validators.required] }, { validators: eduEndYearGroupValidator }); })()]
+            : [(() => { const yr = new Date().getFullYear(); return this.fb.group({ institution: ['', Validators.required], degree: ['', Validators.required], field_of_study: ['', Validators.required], start_year: [null as number | null, eduYearValidator(1950, yr)], start_month: [1 as number | null], end_year: [null as number | null, eduYearValidator(1950, yr + 6)], end_month: [1 as number | null], location: ['', Validators.required] }, { validators: eduEndYearGroupValidator }); })()]
       ),
 
       // Credentials (optional)

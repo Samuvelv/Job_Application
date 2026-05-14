@@ -641,7 +641,7 @@ type Tab = 'overview' | 'experience' | 'education' | 'documents' | 'activity';
                         <div class="exp-timeline__period"
                           style="background:var(--th-emerald-soft);border-color:rgba(16,185,129,.2)">
                           <i class="bi bi-calendar3"></i>
-                          {{ edu.start_year }} — {{ edu.end_year || 'Present' }}
+                          {{ formatEduDate(edu.start_month, edu.start_year) }} — {{ edu.end_year ? formatEduDate(edu.end_month, edu.end_year) : 'Present' }}
                         </div>
                       }
                     </div>
@@ -919,6 +919,7 @@ export class CandidateProfileComponent {
     gulf_format:       'Gulf Format',
     asian_format:      'Asian Format',
     not_yet_created:   'Not Yet Created',
+    others:            'CV Format - Others',
   };
 
   tabs: { id: Tab; label: string; icon: string }[] = [
@@ -959,5 +960,11 @@ export class CandidateProfileComponent {
       agency_interest_approved: 'var(--th-emerald)',
     };
     return map[type] ?? 'var(--th-primary)';
+  }
+
+  formatEduDate(month?: number, year?: number): string {
+    if (!year) return '';
+    const monthNames = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+    return month ? `${monthNames[month - 1]} ${year}` : `${year}`;
   }
 }

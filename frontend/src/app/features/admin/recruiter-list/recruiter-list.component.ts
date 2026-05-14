@@ -724,7 +724,7 @@ function websiteValidator(): ValidatorFn {
                           <div class="text-danger mt-1" style="font-size:.875em">Licence number must be 100 characters or fewer.</div>
                         }
                       }
-                      <div class="form-text">Verifiable at gov.uk</div>
+                      <div class="form-text">Verifiable via official government registry</div>
                     </div>
 
                     <div class="col-12">
@@ -768,7 +768,7 @@ function websiteValidator(): ValidatorFn {
                           <i class="bi bi-patch-check-fill text-success"></i>
                         }
                       </div>
-                      <div class="form-text">Admin confirms after gov.uk verification.</div>
+                      <div class="form-text">Admin confirms after official government verification.</div>
                     </div>
                   }
 

@@ -121,7 +121,9 @@ export async function createCandidate(dto: CreateCandidateDto, createdByAdminId:
           degree:       e.degree       || null,
           field_of_study: e.field_of_study || null,
           start_year:   e.start_year   || null,
+          start_month:  e.start_month  || null,
           end_year:     e.end_year     || null,
+          end_month:    e.end_month    || null,
           location:     e.location     || null,
         })),
       );
@@ -453,7 +455,9 @@ export async function updateCandidate(id: string, dto: UpdateCandidateDto) {
             degree:         e.degree         || null,
             field_of_study: e.field_of_study || null,
             start_year:     e.start_year     || null,
+            start_month:    e.start_month    || null,
             end_year:       e.end_year       || null,
+            end_month:      e.end_month      || null,
             location:       e.location       || null,
           })),
         );

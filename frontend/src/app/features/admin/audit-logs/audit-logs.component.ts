@@ -526,7 +526,68 @@ export class AuditLogsComponent implements OnInit {
       const dur = meta['session_duration_minutes'];
       return dur != null ? `Session: ${dur} min` : '';
     }
+    // OTP / auth events — show browser + OS
+    if (a.startsWith('OTP_') || a === 'NEW_IP_LOGIN_DETECTED') {
+      const browser   = meta['browser'] ?? '';
+      const os        = meta['os'] ?? '';
+      const location  = meta['location'] ?? '';
+      return [browser, os, location].filter(Boolean).join(' / ');
+    }
+    // File uploads
+    if (a === 'UPLOAD_FILE') {
+      const filename = meta['filename'] ?? meta['name'] ?? '';
+      const type     = meta['type'] ?? '';
+      return [filename, type ? `(${type})` : ''].filter(Boolean).join(' ');
+    }
+    // File deletions
+    if (a === 'DELETE_FILE') {
+      const type   = meta['type'] ?? '';
+      const certId = meta['certId'] ?? '';
+      return certId ? `${type} — cert ${certId}` : String(type);
+    }
+    // Certificate metadata update
+    if (a === 'UPDATE_CERT_METADATA') {
+      const certId = meta['certId'] ?? '';
+      return certId ? `Cert: ${certId}` : 'Certificate updated';
+    }
+    // Volunteer actions
+    if (a === 'ADD_VOLUNTEER') {
+      const name = meta['name'] ?? '';
+      const avail = meta['availability'] ?? '';
+      return [name, avail ? `(${avail})` : ''].filter(Boolean).join(' ');
+    }
+    if (a === 'UPDATE_VOLUNTEER') {
+      // backend stores updatedFields (camelCase array)
+      const fields = meta['updatedFields'] ?? meta['updated_fields'];
+      if (Array.isArray(fields) && fields.length) return fields.join(', ');
+      return '';
+    }
+    if (a === 'DEACTIVATE_VOLUNTEER') {
+      const avail = meta['availability'] ?? '';
+      return avail ? `availability: ${avail}` : 'Deactivated';
+    }
+    // Volunteer support requests
+    if (a === 'VOLUNTEER_SUPPORT_REQUEST') {
+      const vid     = meta['volunteerId'] ?? '';
+      const message = meta['message'] ?? '';
+      const msgSnip = message ? String(message).slice(0, 60) + (String(message).length > 60 ? '…' : '') : '';
+      return [vid ? `Volunteer ${vid}` : '', msgSnip].filter(Boolean).join(': ');
+    }
+    if (a === 'VOLUNTEER_SUPPORT_REVIEWED') {
+      const status    = meta['status'] ?? '';
+      const adminNote = meta['adminNote'] ?? '';
+      const noteSnip  = adminNote ? String(adminNote).slice(0, 60) + (String(adminNote).length > 60 ? '…' : '') : '';
+      return [status, noteSnip].filter(Boolean).join(': ');
+    }
+    // Interest request revoked
+    if (a === 'INTEREST_REQUEST_REVOKED') {
+      const agency = meta['agency_name'] ?? '';
+      const reason = meta['revocation_reason'] ?? '';
+      return [agency, reason].filter(Boolean).join(': ');
+    }
     if (a.includes('CREATE') && meta['candidate_name']) return String(meta['candidate_name']);
+    if (a.includes('CREATE') && meta['company_name'])   return String(meta['company_name']);
+    if (a.includes('CREATE') && meta['agency_name'])    return String(meta['agency_name']);
     if (a.includes('DELETE')) {
       return String(meta['candidate_name'] ?? meta['company_name'] ?? meta['agency_name'] ?? '');
     }
@@ -559,7 +620,7 @@ export class AuditLogsComponent implements OnInit {
       return name ? String(name) : '';
     }
     if (a.includes('RESEND') || a.includes('INVITE')) {
-      return String(meta['candidate_name'] ?? meta['candidate_id'] ?? meta['recruiter_id'] ?? '');
+      return String(meta['candidate_name'] ?? meta['company_name'] ?? meta['candidate_id'] ?? meta['recruiter_id'] ?? '');
     }
     const keys = Object.keys(meta);
     if (keys.length) return `${keys[0]}: ${meta[keys[0]]}`;
@@ -578,6 +639,7 @@ export class AuditLogsComponent implements OnInit {
       contact_name:             'Contact',
       agency_name:              'Agency',
       updated_fields:           'Changed Fields',
+      updatedFields:            'Changed Fields',
       fields:                   'Fields',
       count:                    'Record Count',
       status:                   'Status',
@@ -586,8 +648,22 @@ export class AuditLogsComponent implements OnInit {
       browser:                  'Browser',
       os:                       'Operating System',
       session_duration_minutes: 'Session Duration',
+      session_duration:         'Session Duration',
       recruiter_id:             'Recruiter ID',
       candidate_id_ref:         'Candidate Ref',
+      filename:                 'File Name',
+      url:                      'File URL',
+      type:                     'File Type',
+      certId:                   'Certificate ID',
+      location:                 'Location',
+      via:                      'Login Method',
+      attemptsRemaining:        'Attempts Remaining',
+      availability:             'Availability',
+      name:                     'Name',
+      message:                  'Message',
+      adminNote:                'Admin Note',
+      volunteerId:              'Volunteer ID',
+      revocation_reason:        'Revocation Reason',
     };
 
     return Object.entries(meta)

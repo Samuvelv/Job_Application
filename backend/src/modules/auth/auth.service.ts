@@ -69,10 +69,11 @@ export async function logout(rawRefreshToken: string): Promise<void> {
 export async function getMe(userId: string): Promise<Record<string, unknown>> {
   const user = await db('users as u')
     .join('roles as r', 'r.id', 'u.role_id')
+    .leftJoin('admins as a', 'a.user_id', 'u.id')
     .where('u.id', userId)
-    .select('u.id', 'u.email', 'u.is_active', 'r.name as role', 'u.created_at')
+    .select('u.id', 'u.email', 'u.is_active', 'r.name as role', 'u.created_at', 'a.first_name')
     .first();
 
   if (!user) throw new AppError(404, 'User not found');
-  return user;
+  return { ...user, name: user.first_name ?? null };
 }

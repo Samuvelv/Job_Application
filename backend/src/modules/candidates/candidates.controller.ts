@@ -188,6 +188,7 @@ const CV_FORMAT_LABELS: Record<string, string> = {
   gulf_format:       'Gulf Format',
   asian_format:      'Asian Format',
   not_yet_created:   'Not Yet Created',
+  others:            'CV Format - Others',
 };
 
 function csvEscape(val: unknown): string {

@@ -145,8 +145,10 @@ function eduYearValidator(minYear: number, maxYear: number): ValidatorFn {
 }
 
 function eduEndYearGroupValidator(g: AbstractControl): ValidationErrors | null {
-  const start = Number(g.get('start_year')?.value);
-  const end   = Number(g.get('end_year')?.value);
+  const start      = Number(g.get('start_year')?.value);
+  const end        = Number(g.get('end_year')?.value);
+  const startMonth = Number(g.get('start_month')?.value);
+  const endMonth   = Number(g.get('end_month')?.value);
   const endCtrl = g.get('end_year');
   if (!endCtrl) return null;
   if (!g.get('start_year')?.value || !g.get('end_year')?.value) {
@@ -154,7 +156,7 @@ function eduEndYearGroupValidator(g: AbstractControl): ValidationErrors | null {
     if (cur?.['endBeforeStart']) { const { endBeforeStart: _, ...rest } = cur; endCtrl.setErrors(Object.keys(rest).length ? rest : null); }
     return null;
   }
-  if (end < start) {
+  if (end < start || (end === start && endMonth < startMonth)) {
     endCtrl.setErrors({ ...(endCtrl.errors || {}), endBeforeStart: true });
     return { endBeforeStart: true };
   }
@@ -280,6 +282,12 @@ export class CandidateRegisterComponent implements OnInit, OnDestroy {
   readonly PROFICIENCY_SKILL = ['beginner', 'intermediate', 'expert'];
   readonly PROFICIENCY_LANG  = ['A1', 'A2', 'B1', 'B2', 'C1', 'C2', 'native'];
   readonly currentYear = new Date().getFullYear();
+  readonly MONTHS = [
+    { value: 1, label: 'Jan' }, { value: 2, label: 'Feb' }, { value: 3, label: 'Mar' },
+    { value: 4, label: 'Apr' }, { value: 5, label: 'May' }, { value: 6, label: 'Jun' },
+    { value: 7, label: 'Jul' }, { value: 8, label: 'Aug' }, { value: 9, label: 'Sep' },
+    { value: 10, label: 'Oct' }, { value: 11, label: 'Nov' }, { value: 12, label: 'Dec' },
+  ];
 
   readonly genderOptions: SelectOption[] = [
     { value: 'male',            label: 'Male'            },
@@ -558,8 +566,10 @@ export class CandidateRegisterComponent implements OnInit, OnDestroy {
       institution:    ['', Validators.required],
       degree:         ['', Validators.required],
       field_of_study: ['', Validators.required],
-      start_year: [null, eduYearValidator(1950, this.currentYear)],
-      end_year:   [null, eduYearValidator(1950, this.currentYear + 6)],
+      start_year:     [null, eduYearValidator(1950, this.currentYear)],
+      start_month:    [1],
+      end_year:       [null, eduYearValidator(1950, this.currentYear + 6)],
+      end_month:      [1],
       location:       ['', Validators.required],
     }, { validators: eduEndYearGroupValidator }));
   }

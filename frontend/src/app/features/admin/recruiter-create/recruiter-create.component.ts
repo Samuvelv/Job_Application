@@ -382,7 +382,7 @@ function emailValidator(): ValidatorFn {
                     <div class="text-danger mt-1" style="font-size:.875em">Licence number must be 100 characters or fewer.</div>
                   }
                 }
-                <div class="form-text">Verifiable at gov.uk</div>
+                <div class="form-text">Verifiable via official government registry</div>
               </div>
 
               <div class="col-12">
@@ -428,7 +428,7 @@ function emailValidator(): ValidatorFn {
                     <i class="bi bi-patch-check-fill text-success"></i>
                   }
                 </div>
-                <div class="form-text">Admin confirms after gov.uk verification.</div>
+                <div class="form-text">Admin confirms after official government verification.</div>
               </div>
             }
 
@@ -611,7 +611,7 @@ function emailValidator(): ValidatorFn {
                 <i class="bi bi-patch-check fs-5"
                   [style.color]="form.get('verify_de_licence')?.value ? 'var(--bs-success)' : 'var(--th-muted)'"></i>
                 <span class="flex-grow-1" style="font-size:.9rem">
-                  <strong>Sponsor Licence checked on gov.uk</strong> — A-Rating confirmed
+                  <strong>Sponsor Licence verified on official registry</strong> — A-Rating confirmed
                 </span>
                 @if (form.get('verify_de_licence')?.value) {
                   <i class="bi bi-check-circle-fill text-success fs-5"></i>

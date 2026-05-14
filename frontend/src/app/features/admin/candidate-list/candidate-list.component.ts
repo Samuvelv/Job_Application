@@ -851,6 +851,7 @@ export class CandidateListComponent implements OnInit {
     gulf_format:       'Gulf',
     asian_format:      'Asia',
     not_yet_created:   '—',
+    others:            'Others',
   };
 
   cvFormatLabel(val?: string): string {

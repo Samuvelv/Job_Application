@@ -30,7 +30,9 @@ export interface Education {
   degree?: string;
   field_of_study?: string;
   start_year?: number;
+  start_month?: number;
   end_year?: number;
+  end_month?: number;
   location?: string;
 }
 
