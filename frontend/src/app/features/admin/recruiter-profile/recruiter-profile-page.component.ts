@@ -668,7 +668,7 @@ export class RecruiterProfilePageComponent implements OnInit {
       confirmLabel: 'Send',
       confirmClass: 'btn-primary',
     });
-    if (!ok) return;
+    if (!ok.confirmed) return;
     this.recruiterSvc.resendCredentials(this.recruiterId).subscribe({
       next: () => this.toast.success('Credentials sent to ' + this.recruiter!.email),
       error: (err) => this.toast.error(err?.error?.message ?? 'Failed to resend credentials'),
@@ -684,7 +684,7 @@ export class RecruiterProfilePageComponent implements OnInit {
       confirmLabel: 'Delete',
       confirmClass: 'btn-danger',
     });
-    if (!ok) return;
+    if (!ok.confirmed) return;
     this.recruiterSvc.delete(this.recruiterId).subscribe({
       next: () => {
         this.toast.success('Recruiter deleted');

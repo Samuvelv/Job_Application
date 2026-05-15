@@ -624,7 +624,7 @@ export class VolunteerProfilePageComponent implements OnInit {
       confirmLabel: 'Delete',
       confirmClass: 'btn-danger',
     });
-    if (!ok) return;
+    if (!ok.confirmed) return;
     this.volunteerSvc.delete(this.volunteer.id).subscribe({
       next: () => {
         this.toast.success('Volunteer removed');

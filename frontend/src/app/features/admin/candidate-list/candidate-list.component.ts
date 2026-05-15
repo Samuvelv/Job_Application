@@ -614,7 +614,7 @@ export class CandidateListComponent implements OnInit {
       confirmLabel: 'Mark Paid',
       confirmClass: 'btn-success',
     }).then(ok => {
-      if (!ok) return;
+      if (!ok.confirmed) return;
       this.bulkProcessing = true;
       this.empSvc.bulkAction(ids, 'mark_fee_paid').subscribe({
         next: (res) => {
@@ -641,7 +641,7 @@ export class CandidateListComponent implements OnInit {
       confirmLabel: 'Apply',
       confirmClass: 'btn-primary',
     }).then(ok => {
-      if (!ok) return;
+      if (!ok.confirmed) return;
       this.bulkProcessing = true;
       this.empSvc.bulkAction(ids, 'change_status', { profile_status: status }).subscribe({
         next: (res) => {
@@ -799,7 +799,7 @@ export class CandidateListComponent implements OnInit {
       confirmLabel: 'Send',
       confirmClass: 'btn-primary',
     }).then(ok => {
-      if (!ok) return;
+      if (!ok.confirmed) return;
       this.empSvc.resendCredentials(emp.id).subscribe({
         next:  () => this.toast.show('Credentials sent!', 'success'),
         error: (err) => this.toast.show(err?.error?.message ?? 'Failed to send', 'error'),
@@ -814,7 +814,7 @@ export class CandidateListComponent implements OnInit {
       confirmLabel: 'Delete',
       confirmClass: 'btn-danger',
     }).then(ok => {
-      if (!ok) return;
+      if (!ok.confirmed) return;
       this.empSvc.delete(emp.id).subscribe({
         next:  () => { this.toast.show('Candidate deleted', 'success'); this.loadCandidates(); },
         error: (err) => this.toast.show(err?.error?.message ?? 'Delete failed', 'error'),

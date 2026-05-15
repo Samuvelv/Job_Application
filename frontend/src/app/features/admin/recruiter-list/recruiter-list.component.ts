@@ -1315,7 +1315,7 @@ export class RecruiterListComponent implements OnInit {
       message: `Activate ${ids.length} recruiter${ids.length === 1 ? '' : 's'}?`,
       confirmLabel: 'Activate', confirmClass: 'btn-success',
     });
-    if (!ok) return;
+    if (!ok.confirmed) return;
     this.bulkProcessing = true;
     this.recruiterService.bulkStatus(ids, true).subscribe({
       next: (res) => {
@@ -1336,7 +1336,7 @@ export class RecruiterListComponent implements OnInit {
       message: `Deactivate ${ids.length} recruiter${ids.length === 1 ? '' : 's'}?`,
       confirmLabel: 'Deactivate', confirmClass: 'btn-warning',
     });
-    if (!ok) return;
+    if (!ok.confirmed) return;
     this.bulkProcessing = true;
     this.recruiterService.bulkStatus(ids, false).subscribe({
       next: (res) => {
@@ -1605,7 +1605,7 @@ export class RecruiterListComponent implements OnInit {
       message: `Resend login credentials to ${rec.email}?`,
       confirmLabel: 'Send', confirmClass: 'btn-primary',
     });
-    if (!ok) return;
+    if (!ok.confirmed) return;
     this.recruiterService.resendCredentials(rec.id).subscribe({
       next: () => this.toast.success(`Credentials sent to ${rec.email}`),
       error: (err) => this.toast.error(err?.error?.message ?? 'Failed to resend credentials'),
@@ -1618,7 +1618,7 @@ export class RecruiterListComponent implements OnInit {
       message: `Delete ${rec.contact_name}? This action is irreversible.`,
       confirmLabel: 'Delete', confirmClass: 'btn-danger',
     });
-    if (!ok) return;
+    if (!ok.confirmed) return;
     this.recruiterService.delete(rec.id).subscribe({
       next: () => { this.toast.success('Recruiter deleted'); this.load(); },
       error: (err) => this.toast.error(err?.error?.message ?? 'Failed to delete'),
@@ -1633,7 +1633,7 @@ export class RecruiterListComponent implements OnInit {
       confirmLabel: activate ? 'Activate' : 'Deactivate',
       confirmClass: activate ? 'btn-success' : 'btn-warning',
     });
-    if (!ok) return;
+    if (!ok.confirmed) return;
     this.recruiterService.update(rec.id, { is_active: activate }).subscribe({
       next: () => { this.toast.success(`Recruiter ${activate ? 'activated' : 'deactivated'}`); this.load(); },
       error: (err) => this.toast.error(err?.error?.message ?? 'Failed to update status'),
