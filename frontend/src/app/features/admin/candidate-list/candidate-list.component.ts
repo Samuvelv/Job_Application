@@ -28,7 +28,7 @@ import { SORT_OPTIONS } from '../../../core/constants/candidate-options';
   template: `
     <app-page-header title="Candidates" icon="bi-people-fill"
                      [subtitle]="pagination.total + ' total candidates'">
-      <a routerLink="/admin/candidates/register" class="btn btn-primary btn-sm">
+      <a routerLink="/admin/candidates/register" class="btn btn-primary">
         <i class="bi bi-plus-lg me-1"></i> Register Candidate
       </a>
     </app-page-header>

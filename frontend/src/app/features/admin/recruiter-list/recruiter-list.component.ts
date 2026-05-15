@@ -105,7 +105,7 @@ function websiteValidator(): ValidatorFn {
       [subtitle]="pagination.total + ' total recruiters'"
       icon="bi-people"
     >
-      <a routerLink="/admin/recruiters/create" class="btn btn-primary btn-sm">
+      <a routerLink="/admin/recruiters/create" class="btn btn-primary">
         <i class="bi bi-person-plus me-1"></i>Add Recruiter
       </a>
     </app-page-header>

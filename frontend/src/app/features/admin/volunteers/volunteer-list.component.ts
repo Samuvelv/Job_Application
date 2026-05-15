@@ -22,7 +22,7 @@ import { SearchableSelectComponent, SelectOption } from '../../../shared/compone
       title="Volunteers"
       [subtitle]="pagination.total + ' volunteer' + (pagination.total !== 1 ? 's' : '')"
       icon="bi-people-fill">
-      <button class="btn btn-primary btn-sm" routerLink="/admin/volunteers/create">
+      <button class="btn btn-primary" routerLink="/admin/volunteers/create">
         <i class="bi bi-person-plus me-1"></i>Add Volunteer
       </button>
     </app-page-header>
