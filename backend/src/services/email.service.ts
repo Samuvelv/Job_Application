@@ -110,12 +110,90 @@ export async function sendCandidateWelcomeEmail(
               Log In to Your Profile
             </a>
           </p>
-          <div style="background:#fef9c3;border:1px solid #fde68a;border-radius:8px;padding:14px 16px;margin-top:24px;">
-            <p style="margin:0;font-size:13px;color:#92400e;">
-              <strong>Security tip:</strong> Please change your password after your first login.
-              If you did not expect this email, contact our support team immediately.
-            </p>
-          </div>
+          <p style="color:#9ca3af;font-size:12px;margin-top:24px;border-top:1px solid #f3f4f6;padding-top:16px;">
+            This email was sent by the NTL Career Nexus admin team. Please do not reply to this email.
+          </p>
+        </div>
+      </div>
+    `,
+  });
+}
+
+export async function sendCandidateCredentialsResent(
+  email: string,
+  password: string,
+  name: string,
+): Promise<void> {
+  await sendMail({
+    to: email,
+    subject: 'Your NTL Career Nexus Login Credentials',
+    html: `
+      <div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;">
+        <div style="background:linear-gradient(135deg,#4f46e5,#6366f1);padding:32px 24px;border-radius:12px 12px 0 0;text-align:center;">
+          <h1 style="color:#fff;margin:0;font-size:24px;">Your Login Credentials</h1>
+        </div>
+        <div style="background:#fff;padding:32px 24px;border:1px solid #e5e7eb;border-top:none;border-radius:0 0 12px 12px;">
+          <p style="font-size:16px;line-height:1.7;color:#111827;">
+            Hi <strong>${name}</strong>, your login credentials have been resent by the NTL Career Nexus admin team.
+            Use the details below to access your account.
+          </p>
+          <table style="border-collapse:collapse;margin:16px 0;width:100%;max-width:400px;">
+            <tr style="background:#f9fafb;">
+              <td style="padding:10px 14px;font-weight:600;color:#374151;border:1px solid #e5e7eb;">Email</td>
+              <td style="padding:10px 14px;color:#111827;border:1px solid #e5e7eb;">${email}</td>
+            </tr>
+            <tr>
+              <td style="padding:10px 14px;font-weight:600;color:#374151;border:1px solid #e5e7eb;">Password</td>
+              <td style="padding:10px 14px;color:#111827;border:1px solid #e5e7eb;">${password}</td>
+            </tr>
+          </table>
+          <p style="margin-top:24px;">
+            <a href="${env.FRONTEND_URL}/login" style="background:#4f46e5;color:#fff;padding:12px 24px;border-radius:6px;text-decoration:none;display:inline-block;font-size:15px;">
+              Log In to Your Profile
+            </a>
+          </p>
+          <p style="color:#9ca3af;font-size:12px;margin-top:24px;border-top:1px solid #f3f4f6;padding-top:16px;">
+            This email was sent by the NTL Career Nexus admin team. Please do not reply to this email.
+          </p>
+        </div>
+      </div>
+    `,
+  });
+}
+
+export async function sendRecruiterCredentialsResent(
+  email: string,
+  contactName: string,
+  password: string,
+): Promise<void> {
+  await sendMail({
+    to: email,
+    subject: 'Your NTL Career Nexus Recruiter Login Credentials',
+    html: `
+      <div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;">
+        <div style="background:linear-gradient(135deg,#4f46e5,#6366f1);padding:32px 24px;border-radius:12px 12px 0 0;text-align:center;">
+          <h1 style="color:#fff;margin:0;font-size:24px;">Your Recruiter Login Credentials</h1>
+        </div>
+        <div style="background:#fff;padding:32px 24px;border:1px solid #e5e7eb;border-top:none;border-radius:0 0 12px 12px;">
+          <p style="font-size:16px;line-height:1.7;color:#111827;">
+            Hi <strong>${contactName}</strong>, your recruiter account credentials have been resent by the NTL Career Nexus admin team.
+            Use the details below to access your account.
+          </p>
+          <table style="border-collapse:collapse;margin:16px 0;width:100%;max-width:400px;">
+            <tr style="background:#f9fafb;">
+              <td style="padding:10px 14px;font-weight:600;color:#374151;border:1px solid #e5e7eb;">Email</td>
+              <td style="padding:10px 14px;color:#111827;border:1px solid #e5e7eb;">${email}</td>
+            </tr>
+            <tr>
+              <td style="padding:10px 14px;font-weight:600;color:#374151;border:1px solid #e5e7eb;">Password</td>
+              <td style="padding:10px 14px;color:#111827;border:1px solid #e5e7eb;">${password}</td>
+            </tr>
+          </table>
+          <p style="margin-top:24px;">
+            <a href="${env.FRONTEND_URL}/login" style="background:#4f46e5;color:#fff;padding:12px 24px;border-radius:6px;text-decoration:none;display:inline-block;font-size:15px;">
+              Log In to Your Account
+            </a>
+          </p>
           <p style="color:#9ca3af;font-size:12px;margin-top:24px;border-top:1px solid #f3f4f6;padding-top:16px;">
             This email was sent by the NTL Career Nexus admin team. Please do not reply to this email.
           </p>
@@ -174,7 +252,6 @@ export async function sendRecruiterCredentials(
         <tr><td style="padding:8px;font-weight:bold;">Password:</td><td style="padding:8px;">${password}</td></tr>
       </table>
       <p>Please log in at <a href="${env.FRONTEND_URL}/login">${env.FRONTEND_URL}/login</a></p>
-      <p style="color:#888;font-size:12px;">For security, please change your password after your first login.</p>
     `,
   });
 }

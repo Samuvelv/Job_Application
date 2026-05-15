@@ -3,7 +3,7 @@ import bcrypt from 'bcryptjs';
 import { v4 as uuidv4 } from 'uuid';
 import { db } from '../../config/db';
 import { AppError } from '../../middleware/errorHandler';
-import { sendCandidateWelcomeEmail, sendCandidateCredentials, sendAdminNewCandidateNotification, sendVolunteerInvitation } from '../../services/email.service';
+import { sendCandidateWelcomeEmail, sendCandidateCredentials, sendCandidateCredentialsResent, sendAdminNewCandidateNotification, sendVolunteerInvitation } from '../../services/email.service';
 import { sendWhatsAppMessage } from '../../services/whatsapp.service';
 import type { CreateCandidateDto, UpdateCandidateDto, CandidateFilterDto } from './candidates.dto';
 
@@ -587,7 +587,7 @@ export async function resendCredentials(candidateId: string): Promise<void> {
   if (!candidate) throw new AppError(404, 'Candidate not found');
   if (!candidate.plain_password) throw new AppError(400, 'No stored password for this candidate. Please set a new password via the edit form first.');
 
-  await sendCandidateWelcomeEmail(
+  await sendCandidateCredentialsResent(
     candidate.email,
     candidate.plain_password,
     `${candidate.first_name} ${candidate.last_name}`,

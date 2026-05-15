@@ -4,7 +4,7 @@ import { v4 as uuidv4 } from 'uuid';
 import { db } from '../../config/db';
 import { AppError } from '../../middleware/errorHandler';
 import { revokeRecruiterToken } from '../../services/token.service';
-import { sendRecruiterCredentials } from '../../services/email.service';
+import { sendRecruiterCredentials, sendRecruiterCredentialsResent } from '../../services/email.service';
 import { sendWhatsAppMessage } from '../../services/whatsapp.service';
 import type { CreateRecruiterDto, UpdateRecruiterDto, RecruiterFilterDto } from './recruiters.dto';
 
@@ -448,7 +448,7 @@ export async function resendCredentials(recruiterId: string): Promise<void> {
   if (!recruiter) throw new AppError(404, 'Recruiter not found');
   if (!recruiter.plain_password) throw new AppError(400, 'No stored password for this recruiter. Please set a new password via the edit panel first.');
 
-  sendRecruiterCredentials(recruiter.email, recruiter.contact_name, recruiter.plain_password)
+  sendRecruiterCredentialsResent(recruiter.email, recruiter.contact_name, recruiter.plain_password)
     .catch((err) => console.error('[EMAIL] Failed to resend recruiter credentials:', err));
 }
 
