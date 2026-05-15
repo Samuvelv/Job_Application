@@ -1,6 +1,6 @@
 // src/app/features/landing/landing.component.ts
 import {
-  Component, HostListener, signal, inject, OnInit, OnDestroy
+  Component, HostListener, signal, inject, OnInit, OnDestroy, ViewChild, ElementRef
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
@@ -272,6 +272,7 @@ import { ContactSubmissionService } from '../../core/services/contact-submission
           <i class="bi bi-patch-check-fill"></i>
         </div>
         <h3 class="lp-trust__title">Every candidate personally verified by our team</h3>
+        <p class="lp-trust__desc">No fake profiles. Each candidate is reviewed, documents checked, and identity confirmed before being listed.</p>
       </div>
 
       <div class="lp-trust__card lp-trust__card--emerald">
@@ -279,6 +280,7 @@ import { ContactSubmissionService } from '../../core/services/contact-submission
           <i class="bi bi-building-check"></i>
         </div>
         <h3 class="lp-trust__title">Only sponsor-licensed employers on our platform</h3>
+        <p class="lp-trust__desc">Every recruiter holds a valid sponsor licence. We verify this before granting access — zero exceptions.</p>
       </div>
 
       <div class="lp-trust__card lp-trust__card--teal">
@@ -286,6 +288,7 @@ import { ContactSubmissionService } from '../../core/services/contact-submission
           <i class="bi bi-globe2"></i>
         </div>
         <h3 class="lp-trust__title">Candidates placed across Europe, UK, Canada &amp; Australia</h3>
+        <p class="lp-trust__desc">Our team has a track record of successful international placements with visa sponsorship — real results, real people.</p>
       </div>
 
     </div>
@@ -412,27 +415,60 @@ import { ContactSubmissionService } from '../../core/services/contact-submission
       <h2 class="lp-section-title">What our community says</h2>
     </div>
 
-    <div class="lp-testimonials__grid">
-      @for (t of testimonials; track t.name) {
-        <div class="lp-testimonial-card">
-          <div class="lp-testimonial-card__stars">
-            <i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i>
-            <i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i>
-            <i class="bi bi-star-fill"></i>
-          </div>
-          <p class="lp-testimonial-card__quote">"{{ t.quote }}"</p>
-          <div class="lp-testimonial-card__author">
-            <div class="lp-testimonial-card__avatar" [style.background]="t.color">
-              {{ t.initials }}
+    <div class="lp-tc__wrapper">
+
+      <!-- Prev arrow -->
+      <button class="lp-tc__arrow lp-tc__arrow--prev"
+              (click)="prevTestimonial()"
+              [disabled]="tcIndex() === 0"
+              aria-label="Previous testimonial">
+        <i class="bi bi-chevron-left"></i>
+      </button>
+
+      <!-- Scrollable track -->
+      <div class="lp-tc__track" #tcTrack (scroll)="onTrackScroll($event)">
+        @for (t of testimonials; track t.name) {
+          <div class="lp-testimonial-card">
+            <div class="lp-testimonial-card__stars">
+              <i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i>
+              <i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i>
+              <i class="bi bi-star-fill"></i>
             </div>
-            <div>
-              <div class="lp-testimonial-card__name">{{ t.name }}</div>
-              <div class="lp-testimonial-card__role">{{ t.role }}</div>
+            <p class="lp-testimonial-card__quote">"{{ t.quote }}"</p>
+            <div class="lp-testimonial-card__author">
+              <div class="lp-testimonial-card__avatar" [style.background]="t.color">
+                {{ t.initials }}
+              </div>
+              <div>
+                <div class="lp-testimonial-card__name">{{ t.name }}</div>
+                <div class="lp-testimonial-card__role">{{ t.role }}</div>
+              </div>
             </div>
           </div>
-        </div>
+        }
+      </div>
+
+      <!-- Next arrow -->
+      <button class="lp-tc__arrow lp-tc__arrow--next"
+              (click)="nextTestimonial()"
+              [disabled]="tcIndex() === maxTcIndex"
+              aria-label="Next testimonial">
+        <i class="bi bi-chevron-right"></i>
+      </button>
+
+    </div>
+
+    <!-- Dot indicators -->
+    <div class="lp-tc__dots">
+      @for (d of tcDots; track $index) {
+        <button class="lp-tc__dot"
+                [class.active]="tcIndex() === $index"
+                (click)="goToTestimonial($index)"
+                [attr.aria-label]="'Go to slide ' + ($index + 1)">
+        </button>
       }
     </div>
+
   </div>
 </section>
 
@@ -575,13 +611,18 @@ import { ContactSubmissionService } from '../../core/services/contact-submission
 
     <!-- Brand -->
     <div class="lp-footer__brand">
-      <div class="lp-footer__logo">
-        <span class="lp-footer__logo-icon"><i class="bi bi-briefcase-fill"></i></span>
-        <span>NTL Career <span>Nexus</span></span>
-      </div>
+      <a class="lp-nav__logo" href="#" style="margin-bottom:1rem">
+        <span class="lp-nav__logo-icon"><i class="bi bi-briefcase-fill"></i></span>
+        <span class="lp-nav__logo-text">NTL Career <span>Nexus</span></span>
+      </a>
       <p class="lp-footer__tagline">
         Connecting Global Talent to Sponsored Opportunities
       </p>
+      <!-- <div class="lp-footer__social">
+        <a class="lp-footer__social-btn" href="https://wa.me/919360454326" target="_blank" title="WhatsApp"><i class="bi bi-whatsapp"></i></a>
+        <a class="lp-footer__social-btn" href="https://www.youtube.com/@namakal2london" target="_blank" title="YouTube"><i class="bi bi-youtube"></i></a>
+        <a class="lp-footer__social-btn" href="mailto:hello@ntlcareernexus.com" title="Email"><i class="bi bi-envelope-fill"></i></a>
+      </div> -->
       <p class="lp-footer__copy">© {{ year }} NTL Career Nexus. All rights reserved.</p>
     </div>
 
@@ -643,6 +684,57 @@ export class LandingComponent implements OnInit, OnDestroy {
   activeTab     = signal<'candidate' | 'recruiter'>('candidate');
   contactSending = false;
   year = new Date().getFullYear();
+
+  // ── Testimonial carousel ───────────────────────────────────────────────────
+  tcIndex = signal(0);
+  @ViewChild('tcTrack') tcTrackRef!: ElementRef<HTMLDivElement>;
+
+  private get cardsVisible(): number {
+    return window.innerWidth <= 768 ? 1 : 3;
+  }
+  get maxTcIndex(): number {
+    return Math.max(0, this.testimonials.length - this.cardsVisible);
+  }
+  get tcDots(): number[] {
+    return Array.from({ length: this.maxTcIndex + 1 }, (_, i) => i);
+  }
+  private scrollToIndex(index: number): void {
+    const track = this.tcTrackRef?.nativeElement;
+    if (!track) return;
+    const card = track.querySelector('.lp-testimonial-card') as HTMLElement;
+    if (!card) return;
+    const gap = parseFloat(getComputedStyle(track).gap) || 20;
+    track.scrollTo({ left: index * (card.offsetWidth + gap), behavior: 'smooth' });
+  }
+  nextTestimonial(): void {
+    const next = Math.min(this.tcIndex() + 1, this.maxTcIndex);
+    this.tcIndex.set(next);
+    this.scrollToIndex(next);
+  }
+  prevTestimonial(): void {
+    const prev = Math.max(this.tcIndex() - 1, 0);
+    this.tcIndex.set(prev);
+    this.scrollToIndex(prev);
+  }
+  goToTestimonial(index: number): void {
+    this.tcIndex.set(index);
+    this.scrollToIndex(index);
+  }
+  onTrackScroll(event: Event): void {
+    const track = event.target as HTMLDivElement;
+    const card = track.querySelector('.lp-testimonial-card') as HTMLElement;
+    if (!card) return;
+    const gap = parseFloat(getComputedStyle(track).gap) || 20;
+    const index = Math.round(track.scrollLeft / (card.offsetWidth + gap));
+    this.tcIndex.set(Math.min(index, this.maxTcIndex));
+  }
+
+  @HostListener('window:resize')
+  onResize(): void {
+    const clamped = Math.min(this.tcIndex(), this.maxTcIndex);
+    this.tcIndex.set(clamped);
+    this.scrollToIndex(clamped);
+  }
 
   readonly statsLoading = signal(true);
   readonly statsError   = signal(false);
