@@ -581,10 +581,13 @@ body {
   padding: 1.5rem 1rem;
   min-height: calc(100vh - var(--th-topbar-height));
   max-width: 100%;
-  transition: margin-left .25s cubic-bezier(.4,0,.2,1);
+  overflow-x: hidden;
+  transition: margin-left .25s cubic-bezier(.4,0,.2,1), width .25s cubic-bezier(.4,0,.2,1);
 
   @media (min-width: 992px) {
     margin-left: var(--th-sidebar-width);
+    width: calc(100% - var(--th-sidebar-width));
+    max-width: calc(100% - var(--th-sidebar-width));
     padding: 2rem 2.5rem;
   }
 
@@ -661,6 +664,8 @@ body {
   // Shift main content when sidebar is collapsed
   .main-content.sidebar-collapsed {
     margin-left: var(--th-sidebar-collapsed-width);
+    width: calc(100% - var(--th-sidebar-collapsed-width));
+    max-width: calc(100% - var(--th-sidebar-collapsed-width));
   }
 }
 
