@@ -144,7 +144,11 @@ import { ContactSubmissionService } from '../../core/services/contact-submission
           <span class="lp-countries__dot"></span>
         </div>
         <div class="lp-countries__track-wrap">
-          <div class="lp-countries__row">
+          <button class="lp-countries__arrow lp-countries__arrow--left"
+                  (click)="scrollCountries('left')" aria-label="Scroll left">
+            <i class="bi bi-chevron-left"></i>
+          </button>
+          <div class="lp-countries__row" #countriesTrack>
             <div class="lp-countries__item">
               <div class="lp-countries__flag-wrap"><img src="https://flagcdn.com/w40/de.png" alt="Germany"></div>
               <span class="lp-countries__name">Germany</span>
@@ -221,7 +225,7 @@ import { ContactSubmissionService } from '../../core/services/contact-submission
   <!-- Wave divider -->
   <div class="lp-hero__wave">
     <svg viewBox="0 0 1440 80" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
-      <path d="M0,40 C360,80 1080,0 1440,40 L1440,80 L0,80 Z" fill="var(--lp-section-bg)"/>
+      <path d="M0,40 C360,80 1080,0 1440,40 L1440,80 L0,80 Z" fill="var(--lp-section-alt)"/>
     </svg>
   </div>
 </section>
@@ -442,8 +446,12 @@ import { ContactSubmissionService } from '../../core/services/contact-submission
               <div>
                 <div class="lp-testimonial-card__name">{{ t.name }}</div>
                 <div class="lp-testimonial-card__role">{{ t.role }}</div>
-              </div>
-            </div>
+          </div>
+          <button class="lp-countries__arrow lp-countries__arrow--right"
+                  (click)="scrollCountries('right')" aria-label="Scroll right">
+            <i class="bi bi-chevron-right"></i>
+          </button>
+        </div>
           </div>
         }
       </div>
@@ -568,15 +576,21 @@ import { ContactSubmissionService } from '../../core/services/contact-submission
             </div>
           </div>
 
-          <div class="lp-contact__form-group">
-            <label>Subject</label>
-            <select formControlName="subject">
-              <option value="">Select a subject…</option>
-              <option value="general">General Enquiry</option>
-              <option value="job">Looking for a Job</option>
-              <option value="hire">Looking to Hire</option>
-              <option value="other">Other</option>
-            </select>
+          <div class="lp-contact__form-row">
+            <div class="lp-contact__form-group">
+              <label>Phone <span style="font-weight:400;color:var(--th-muted)">(Optional)</span></label>
+              <input formControlName="phone" type="tel" placeholder="+91 98765 43210">
+            </div>
+            <div class="lp-contact__form-group">
+              <label>Subject</label>
+              <select formControlName="subject">
+                <option value="">Select a subject…</option>
+                <option value="general">General Enquiry</option>
+                <option value="job">Looking for a Job</option>
+                <option value="hire">Looking to Hire</option>
+                <option value="other">Other</option>
+              </select>
+            </div>
           </div>
 
           <div class="lp-contact__form-group">
@@ -688,6 +702,14 @@ export class LandingComponent implements OnInit, OnDestroy {
   // ── Testimonial carousel ───────────────────────────────────────────────────
   tcIndex = signal(0);
   @ViewChild('tcTrack') tcTrackRef!: ElementRef<HTMLDivElement>;
+  @ViewChild('countriesTrack') countriesTrackRef!: ElementRef<HTMLDivElement>;
+
+  scrollCountries(dir: 'left' | 'right'): void {
+    const row = this.countriesTrackRef?.nativeElement;
+    if (!row) return;
+    const amount = 220;
+    row.scrollBy({ left: dir === 'left' ? -amount : amount, behavior: 'smooth' });
+  }
 
   private get cardsVisible(): number {
     return window.innerWidth <= 768 ? 1 : 3;
@@ -881,6 +903,7 @@ export class LandingComponent implements OnInit, OnDestroy {
     this.contactForm = this.fb.group({
       name:    ['', Validators.required],
       email:   ['', [Validators.required, Validators.email]],
+      phone:   [''],
       subject: [''],
       message: ['', Validators.required],
     });
@@ -927,8 +950,8 @@ export class LandingComponent implements OnInit, OnDestroy {
   submitContact(): void {
     if (this.contactForm.invalid) { this.contactForm.markAllAsTouched(); return; }
     this.contactSending = true;
-    const { name, email, subject, message } = this.contactForm.value;
-    this.contactSvc.submit({ name, email, subject, message }).subscribe({
+    const { name, email, phone, subject, message } = this.contactForm.value;
+    this.contactSvc.submit({ name, email, phone: phone || null, subject, message }).subscribe({
       next: () => {
         this.contactSending = false;
         this.contactForm.reset();

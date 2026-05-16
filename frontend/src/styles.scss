@@ -8546,7 +8546,7 @@ html { scroll-behavior: smooth; }
   white-space: nowrap;
   &:hover { background: rgba(255,255,255,.12); border-color: rgba(255,255,255,.7); transform: translateY(-2px); }
 }
-.lp-btn--lg  { padding: .8rem 1.9rem; font-size: 1rem; }
+.lp-btn--lg  { padding: .6rem 1.35rem; font-size: .9rem; }
 .lp-btn--sm  { padding: .42rem 1.1rem; font-size: .82rem; }
 .lp-btn--full { width: 100%; }
 
@@ -8819,12 +8819,12 @@ html { scroll-behavior: smooth; }
   flex-direction: column;
   align-items: center;
   text-align: center;
-  padding-top: 5rem;
+  padding-top: 2.5rem;
   padding-bottom: 6rem;
   position: relative;
   z-index: 1;
   @media (max-width: 600px) {
-    padding-top: 3rem;
+    padding-top: 2rem;
     padding-bottom: 4rem;
     padding-inline: 1.25rem;
   }
@@ -9001,7 +9001,47 @@ html { scroll-behavior: smooth; }
 }
 .lp-countries__track-wrap {
   position: relative;
+  padding-inline: 2.5rem;
+  // Fade edges
+  &::before,
+  &::after {
+    content: '';
+    position: absolute;
+    top: 0; bottom: 0;
+    width: 2.5rem;
+    pointer-events: none;
+    z-index: 2;
+  }
+  &::before {
+    left: 0;
+    background: linear-gradient(90deg, rgba(15,12,41,.65) 0%, transparent 100%);
+  }
+  &::after {
+    right: 0;
+    background: linear-gradient(270deg, rgba(15,12,41,.65) 0%, transparent 100%);
+  }
 }
+// Arrow buttons on flag strip
+.lp-countries__arrow {
+  position: absolute;
+  top: 50%; transform: translateY(-50%);
+  z-index: 3;
+  width: 32px; height: 32px;
+  border-radius: 50%;
+  border: 1.5px solid rgba(255,255,255,.25);
+  background: rgba(255,255,255,.1);
+  color: #fff;
+  font-size: .85rem;
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity .2s ease, background .2s ease, border-color .2s ease, transform .2s ease;
+  backdrop-filter: blur(8px);
+  &--left  { left: .25rem; }
+  &--right { right: .25rem; }
+  &:hover  { background: rgba(255,255,255,.25); border-color: rgba(255,255,255,.5); transform: translateY(-50%) scale(1.08); }
+}
+.lp-countries:hover .lp-countries__arrow { opacity: 1; }
 .lp-countries__row {
   display: flex;
   flex-wrap: nowrap;
@@ -9316,6 +9356,10 @@ html { scroll-behavior: smooth; }
   margin-top: 2.5rem;
   @media (max-width: 860px) { grid-template-columns: 1fr; max-width: 480px; margin-inline: auto; margin-top: 2rem; }
 }
+@keyframes lp-trust-shimmer {
+  0%   { background-position: -200% center; }
+  100% { background-position: 200% center; }
+}
 .lp-trust__card {
   position: relative;
   display: flex;
@@ -9325,12 +9369,23 @@ html { scroll-behavior: smooth; }
   gap: 1.1rem;
   padding: 2.75rem 2rem 2.5rem;
   border-radius: var(--th-radius-xl);
-  background: var(--th-surface);
   border: 1px solid var(--th-border);
   border-top: 4px solid transparent;
   box-shadow: 0 2px 16px rgba(0,0,0,.06);
   transition: transform .28s cubic-bezier(.34,1.56,.64,1), box-shadow .28s ease;
   overflow: hidden;
+  // Shimmer overlay on hover
+  &::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(110deg, transparent 30%, rgba(255,255,255,.18) 50%, transparent 70%);
+    background-size: 200% 100%;
+    opacity: 0;
+    transition: opacity 200ms ease;
+    pointer-events: none;
+    border-radius: inherit;
+  }
   &::before {
     content: '';
     position: absolute;
@@ -9344,21 +9399,31 @@ html { scroll-behavior: smooth; }
     transform: translateY(-8px);
     box-shadow: 0 24px 56px rgba(0,0,0,.14);
     &::before { opacity: 1; }
+    &::after  { opacity: 1; animation: lp-trust-shimmer .7s linear; }
   }
   &--indigo {
+    background: linear-gradient(160deg, #eef2ff 0%, var(--th-surface) 55%);
     border-top-color: #4f46e5;
-    &::before { background: linear-gradient(180deg, rgba(79,70,229,.05) 0%, transparent 60%); }
-    &:hover { box-shadow: 0 24px 56px rgba(79,70,229,.15); }
+    &::before { background: linear-gradient(180deg, rgba(79,70,229,.07) 0%, transparent 60%); }
+    &:hover { box-shadow: 0 24px 56px rgba(79,70,229,.18); }
   }
   &--emerald {
+    background: linear-gradient(160deg, #d1fae5 0%, var(--th-surface) 55%);
     border-top-color: #059669;
-    &::before { background: linear-gradient(180deg, rgba(5,150,105,.05) 0%, transparent 60%); }
-    &:hover { box-shadow: 0 24px 56px rgba(5,150,105,.15); }
+    &::before { background: linear-gradient(180deg, rgba(5,150,105,.07) 0%, transparent 60%); }
+    &:hover { box-shadow: 0 24px 56px rgba(5,150,105,.18); }
   }
   &--teal {
+    background: linear-gradient(160deg, #ccfbf1 0%, var(--th-surface) 55%);
     border-top-color: #0891b2;
-    &::before { background: linear-gradient(180deg, rgba(8,145,178,.05) 0%, transparent 60%); }
-    &:hover { box-shadow: 0 24px 56px rgba(8,145,178,.15); }
+    &::before { background: linear-gradient(180deg, rgba(8,145,178,.07) 0%, transparent 60%); }
+    &:hover { box-shadow: 0 24px 56px rgba(8,145,178,.18); }
+  }
+  // Dark mode: flatten gradients to solid surface
+  [data-theme='dark'] &--indigo,
+  [data-theme='dark'] &--emerald,
+  [data-theme='dark'] &--teal {
+    background: var(--th-surface);
   }
 }
 .lp-trust__icon-wrap {
@@ -9844,7 +9909,7 @@ html { scroll-behavior: smooth; }
   display: grid;
   grid-template-columns: 1fr 1.6fr;
   gap: 2.5rem;
-  align-items: start;
+  align-items: stretch;
   @media (max-width: 900px) { grid-template-columns: 1fr; }
 }
 .lp-contact__info-card {
@@ -9915,6 +9980,7 @@ html { scroll-behavior: smooth; }
   padding: 2.25rem;
   box-shadow: var(--th-shadow-card);
   border: 1px solid var(--th-border);
+  height: 100%;
 }
 .lp-contact__form { display: flex; flex-direction: column; gap: 1.25rem; }
 .lp-contact__form-row {
