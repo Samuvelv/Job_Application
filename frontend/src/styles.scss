@@ -9366,11 +9366,15 @@ html { scroll-behavior: smooth; }
     &::before { background: linear-gradient(180deg, rgba(8,145,178,.07) 0%, transparent 60%); }
     &:hover { box-shadow: 0 24px 56px rgba(8,145,178,.18); }
   }
-  // Dark mode: flatten gradients to solid surface
-  [data-theme='dark'] &--indigo,
-  [data-theme='dark'] &--emerald,
+  // Dark mode: replace light gradients with subtle dark-tinted versions
+  [data-theme='dark'] &--indigo {
+    background: linear-gradient(160deg, rgba(79,70,229,.18) 0%, var(--th-surface) 55%);
+  }
+  [data-theme='dark'] &--emerald {
+    background: linear-gradient(160deg, rgba(5,150,105,.18) 0%, var(--th-surface) 55%);
+  }
   [data-theme='dark'] &--teal {
-    background: var(--th-surface);
+    background: linear-gradient(160deg, rgba(8,145,178,.18) 0%, var(--th-surface) 55%);
   }
 }
 .lp-trust__icon-wrap {
