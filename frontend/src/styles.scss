@@ -7206,9 +7206,9 @@ body {
 // Solo card logo
 .auth-card-logo {
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
   align-items: center;
-  gap: .35rem;
+  gap: .65rem;
   margin-bottom: 1rem;
 }
 .auth-card-logo__icon {
