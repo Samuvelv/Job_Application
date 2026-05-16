@@ -9959,6 +9959,53 @@ html { scroll-behavior: smooth; }
   }
   textarea { resize: vertical; min-height: 130px; }
   select { cursor: pointer; }
+
+  // app-searchable-select (subject) — match input look
+  app-searchable-select .ss-trigger {
+    border-radius: var(--th-radius-lg);
+    border: 1.5px solid var(--th-border);
+    padding: .7rem 1rem;
+    min-height: unset;
+    font-size: .9rem;
+    background: var(--th-surface-2);
+  }
+  app-searchable-select .ss-wrap.ss-open .ss-trigger {
+    border-color: var(--th-primary);
+    box-shadow: 0 0 0 4px rgba(80,70,229,.12);
+  }
+
+  // phone-input-group inside lp form — match input height/radius
+  .phone-input-group {
+    .dial-select .ss-trigger {
+      border-radius: var(--th-radius-lg) 0 0 var(--th-radius-lg);
+      border: 1.5px solid var(--th-border);
+      border-right: none;
+      padding: .7rem .45rem .7rem .7rem;
+      min-height: unset;
+      font-size: .85rem;
+      background: var(--th-surface-2);
+    }
+    .dial-select .ss-wrap.ss-open .ss-trigger {
+      border-color: var(--th-primary);
+      box-shadow: -3px 0 0 0 rgba(80,70,229,.12),
+                   0  3px 0 0 rgba(80,70,229,.12),
+                   0 -3px 0 0 rgba(80,70,229,.12);
+      z-index: 2; position: relative;
+    }
+    .phone-number-input {
+      padding: .7rem .85rem;
+      border-radius: 0 var(--th-radius-lg) var(--th-radius-lg) 0;
+      border: 1.5px solid var(--th-border);
+      border-left: none;
+      height: auto;
+      font-size: .9rem;
+      &:focus {
+        box-shadow: 3px 0 0 0 rgba(80,70,229,.12),
+                    0  3px 0 0 rgba(80,70,229,.12),
+                    0 -3px 0 0 rgba(80,70,229,.12);
+      }
+    }
+  }
 }
 .lp-contact__form-error {
   font-size: .75rem; color: var(--th-danger); font-weight: 600;
