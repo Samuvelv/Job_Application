@@ -660,12 +660,10 @@ function makeOptionalPhoneValidator(dialCtrl: string, numCtrl: string): Validato
             <textarea formControlName="message" rows="5" placeholder="Tell us how we can help…"
               maxlength="1000"
               [class.is-invalid]="contactInvalid('message')"></textarea>
-            <div class="lp-contact__form-footer">
-              @if (contactInvalid('message')) {
-                <span class="lp-contact__form-error">Message is required.</span>
-              } @else {
-                <span></span>
-              }
+            @if (contactInvalid('message')) {
+              <span class="lp-contact__form-error">Message is required.</span>
+            }
+            <div class="lp-contact__char-count-row">
               <span class="lp-contact__char-count"
                 [class.lp-contact__char-count--warn]="(contactForm.get('message')?.value?.length || 0) >= 800"
                 [class.lp-contact__char-count--limit]="(contactForm.get('message')?.value?.length || 0) >= 950">
