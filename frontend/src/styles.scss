@@ -9334,18 +9334,6 @@ html { scroll-behavior: smooth; }
   box-shadow: 0 2px 16px rgba(0,0,0,.06);
   transition: transform .28s cubic-bezier(.34,1.56,.64,1), box-shadow .28s ease;
   overflow: hidden;
-  // Shimmer overlay on hover
-  &::after {
-    content: '';
-    position: absolute;
-    inset: 0;
-    background: linear-gradient(110deg, transparent 30%, rgba(255,255,255,.18) 50%, transparent 70%);
-    background-size: 200% 100%;
-    opacity: 0;
-    transition: opacity 200ms ease;
-    pointer-events: none;
-    border-radius: inherit;
-  }
   &::before {
     content: '';
     position: absolute;
@@ -9359,7 +9347,6 @@ html { scroll-behavior: smooth; }
     transform: translateY(-8px);
     box-shadow: 0 24px 56px rgba(0,0,0,.14);
     &::before { opacity: 1; }
-    &::after  { opacity: 1; animation: lp-trust-shimmer .7s linear; }
   }
   &--indigo {
     background: linear-gradient(160deg, #eef2ff 0%, var(--th-surface) 55%);
