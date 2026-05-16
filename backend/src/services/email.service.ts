@@ -394,26 +394,75 @@ export async function sendAdminVolunteerSupportNotification(
 }
 
 export async function sendAdminContactNotification(
-  recruiterName: string,
-  recruiterEmail: string,
+  name: string,
+  email: string,
+  phone: string | null,
+  subject: string | null,
+  message: string,
 ): Promise<void> {
   if (!env.ADMIN_EMAIL) {
     console.warn('⚠️  ADMIN_EMAIL not configured, skipping admin notification');
     return;
   }
 
+  const subjectLabel  = subject  ? subject.charAt(0).toUpperCase() + subject.slice(1) : null;
+  const submittedAt   = new Date().toLocaleString('en-GB', { dateStyle: 'full', timeStyle: 'short', timeZone: 'UTC' }) + ' UTC';
+
+  const phoneRow  = phone   ? `<tr style="background:#f9fafb;"><td style="padding:10px 14px;font-weight:600;color:#374151;border:1px solid #e5e7eb;white-space:nowrap;">📞 Phone</td><td style="padding:10px 14px;color:#111827;border:1px solid #e5e7eb;">${phone}</td></tr>` : '';
+  const subjectRow = subjectLabel ? `<tr><td style="padding:10px 14px;font-weight:600;color:#374151;border:1px solid #e5e7eb;white-space:nowrap;">📌 Subject</td><td style="padding:10px 14px;color:#111827;border:1px solid #e5e7eb;">${subjectLabel}</td></tr>` : '';
+
   await sendMail({
     to: env.ADMIN_EMAIL,
-    subject: '💬 New Contact Request Received',
+    subject: `💬 New Contact Message from ${name}`,
     html: `
-      <h2>New Contact Request</h2>
-      <p>A recruiter has submitted a new contact request.</p>
-      <table style="border-collapse:collapse;margin:16px 0;">
-        <tr><td style="padding:8px;font-weight:bold;">Recruiter:</td><td style="padding:8px;">${recruiterName}</td></tr>
-        <tr><td style="padding:8px;font-weight:bold;">Email:</td><td style="padding:8px;">${recruiterEmail}</td></tr>
-        <tr><td style="padding:8px;font-weight:bold;">Time:</td><td style="padding:8px;">${new Date().toUTCString()}</td></tr>
-      </table>
-      <p><a href="${env.FRONTEND_URL}/admin/contact-submissions" style="background:#4f46e5;color:#fff;padding:12px 24px;border-radius:6px;text-decoration:none;">Review Submissions</a></p>
+      <div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;">
+
+        <!-- Header -->
+        <div style="background:linear-gradient(135deg,#4f46e5,#7c3aed);padding:32px 24px;border-radius:12px 12px 0 0;text-align:center;">
+          <div style="font-size:40px;margin-bottom:12px;">✉️</div>
+          <h1 style="color:#fff;margin:0 0 6px;font-size:22px;font-weight:700;">New Contact Message</h1>
+          <p style="color:rgba(255,255,255,0.8);margin:0;font-size:14px;">from <strong style="color:#fff;">${name}</strong></p>
+        </div>
+
+        <!-- Body card -->
+        <div style="background:#fff;padding:32px 24px;border:1px solid #e5e7eb;border-top:none;border-radius:0 0 12px 12px;">
+
+          <!-- Detail table -->
+          <table style="border-collapse:collapse;width:100%;margin-bottom:24px;">
+            <tr style="background:#f9fafb;">
+              <td style="padding:10px 14px;font-weight:600;color:#374151;border:1px solid #e5e7eb;white-space:nowrap;">👤 Name</td>
+              <td style="padding:10px 14px;color:#111827;border:1px solid #e5e7eb;">${name}</td>
+            </tr>
+            <tr>
+              <td style="padding:10px 14px;font-weight:600;color:#374151;border:1px solid #e5e7eb;white-space:nowrap;">📧 Email</td>
+              <td style="padding:10px 14px;border:1px solid #e5e7eb;"><a href="mailto:${email}" style="color:#4f46e5;text-decoration:none;">${email}</a></td>
+            </tr>
+            ${phoneRow}
+            ${subjectRow}
+            <tr style="background:#f9fafb;">
+              <td style="padding:10px 14px;font-weight:600;color:#374151;border:1px solid #e5e7eb;white-space:nowrap;">🕒 Submitted</td>
+              <td style="padding:10px 14px;color:#6b7280;border:1px solid #e5e7eb;font-size:13px;">${submittedAt}</td>
+            </tr>
+          </table>
+
+          <!-- Message block -->
+          <p style="font-size:13px;font-weight:700;color:#374151;text-transform:uppercase;letter-spacing:0.06em;margin:0 0 8px;">Message</p>
+          <div style="background:#f5f3ff;border-left:4px solid #6366f1;border-radius:0 8px 8px 0;padding:16px 18px;font-size:15px;color:#111827;line-height:1.7;white-space:pre-wrap;">${message}</div>
+
+          <!-- CTA -->
+          <p style="margin-top:28px;text-align:center;">
+            <a href="${env.FRONTEND_URL}/admin/contact-submissions"
+               style="background:#4f46e5;color:#fff;padding:12px 28px;border-radius:8px;text-decoration:none;display:inline-block;font-size:15px;font-weight:600;">
+              View in Admin Panel
+            </a>
+          </p>
+
+          <!-- Footer -->
+          <p style="color:#9ca3af;font-size:12px;margin-top:24px;border-top:1px solid #f3f4f6;padding-top:16px;text-align:center;">
+            This is an automated notification from NTL Career Nexus. Do not reply to this email.
+          </p>
+        </div>
+      </div>
     `,
   });
 }
