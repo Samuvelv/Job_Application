@@ -10010,6 +10010,23 @@ html { scroll-behavior: smooth; }
 .lp-contact__form-error {
   font-size: .75rem; color: var(--th-danger); font-weight: 600;
 }
+.lp-contact__form-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: .5rem;
+  min-height: 1.1rem;
+}
+.lp-contact__char-count {
+  font-size: .72rem;
+  color: var(--th-muted);
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+  transition: color .2s ease;
+  margin-left: auto;
+  &--warn  { color: var(--th-amber,  #f59e0b); }
+  &--limit { color: var(--th-danger, #f43f5e); font-weight: 700; }
+}
 
 // ══════════════════════════════════════════════
 //  FOOTER
