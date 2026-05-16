@@ -9943,7 +9943,7 @@ html { scroll-behavior: smooth; }
   label {
     font-size: .82rem; font-weight: 700; color: var(--th-text);
   }
-  input, select, textarea {
+  input:not(.ss-search):not(.phone-number-input), select, textarea {
     padding: .7rem 1rem;
     border: 1.5px solid var(--th-border);
     border-radius: var(--th-radius-lg);
