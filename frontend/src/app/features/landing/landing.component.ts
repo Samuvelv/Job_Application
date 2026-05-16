@@ -144,10 +144,6 @@ import { ContactSubmissionService } from '../../core/services/contact-submission
           <span class="lp-countries__dot"></span>
         </div>
         <div class="lp-countries__track-wrap">
-          <button class="lp-countries__arrow lp-countries__arrow--left"
-                  (click)="scrollCountries('left')" aria-label="Scroll left">
-            <i class="bi bi-chevron-left"></i>
-          </button>
           <div class="lp-countries__row" #countriesTrack>
             <div class="lp-countries__item">
               <div class="lp-countries__flag-wrap"><img src="https://flagcdn.com/w40/de.png" alt="Germany"></div>
@@ -447,10 +443,6 @@ import { ContactSubmissionService } from '../../core/services/contact-submission
                 <div class="lp-testimonial-card__name">{{ t.name }}</div>
                 <div class="lp-testimonial-card__role">{{ t.role }}</div>
           </div>
-          <button class="lp-countries__arrow lp-countries__arrow--right"
-                  (click)="scrollCountries('right')" aria-label="Scroll right">
-            <i class="bi bi-chevron-right"></i>
-          </button>
         </div>
           </div>
         }
@@ -702,14 +694,6 @@ export class LandingComponent implements OnInit, OnDestroy {
   // ── Testimonial carousel ───────────────────────────────────────────────────
   tcIndex = signal(0);
   @ViewChild('tcTrack') tcTrackRef!: ElementRef<HTMLDivElement>;
-  @ViewChild('countriesTrack') countriesTrackRef!: ElementRef<HTMLDivElement>;
-
-  scrollCountries(dir: 'left' | 'right'): void {
-    const row = this.countriesTrackRef?.nativeElement;
-    if (!row) return;
-    const amount = 220;
-    row.scrollBy({ left: dir === 'left' ? -amount : amount, behavior: 'smooth' });
-  }
 
   private get cardsVisible(): number {
     return window.innerWidth <= 768 ? 1 : 3;

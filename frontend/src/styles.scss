@@ -9001,47 +9001,7 @@ html { scroll-behavior: smooth; }
 }
 .lp-countries__track-wrap {
   position: relative;
-  padding-inline: 2.5rem;
-  // Fade edges
-  &::before,
-  &::after {
-    content: '';
-    position: absolute;
-    top: 0; bottom: 0;
-    width: 2.5rem;
-    pointer-events: none;
-    z-index: 2;
-  }
-  &::before {
-    left: 0;
-    background: linear-gradient(90deg, rgba(15,12,41,.65) 0%, transparent 100%);
-  }
-  &::after {
-    right: 0;
-    background: linear-gradient(270deg, rgba(15,12,41,.65) 0%, transparent 100%);
-  }
 }
-// Arrow buttons on flag strip
-.lp-countries__arrow {
-  position: absolute;
-  top: 50%; transform: translateY(-50%);
-  z-index: 3;
-  width: 32px; height: 32px;
-  border-radius: 50%;
-  border: 1.5px solid rgba(255,255,255,.25);
-  background: rgba(255,255,255,.1);
-  color: #fff;
-  font-size: .85rem;
-  display: flex; align-items: center; justify-content: center;
-  cursor: pointer;
-  opacity: 0;
-  transition: opacity .2s ease, background .2s ease, border-color .2s ease, transform .2s ease;
-  backdrop-filter: blur(8px);
-  &--left  { left: .25rem; }
-  &--right { right: .25rem; }
-  &:hover  { background: rgba(255,255,255,.25); border-color: rgba(255,255,255,.5); transform: translateY(-50%) scale(1.08); }
-}
-.lp-countries:hover .lp-countries__arrow { opacity: 1; }
 .lp-countries__row {
   display: flex;
   flex-wrap: nowrap;
