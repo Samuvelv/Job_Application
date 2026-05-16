@@ -7236,6 +7236,51 @@ body {
   margin-bottom: 1.25rem;
 }
 
+// Role pills
+.auth-role-pills {
+  display: flex;
+  justify-content: center;
+  gap: .65rem;
+  margin-bottom: 1.5rem;
+  flex-wrap: wrap;
+}
+.auth-role-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: .4rem;
+  padding: .38rem .9rem;
+  border-radius: 99px;
+  font-size: .78rem;
+  font-weight: 700;
+  letter-spacing: .02em;
+  border: 1.5px solid transparent;
+  cursor: default;
+  transition: transform .2s ease, box-shadow .2s ease;
+  &:hover { transform: translateY(-2px); }
+
+  &--candidate {
+    background: rgba(99,102,241,.15);
+    border-color: rgba(99,102,241,.4);
+    color: #a5b4fc;
+    i { color: #818cf8; }
+    &:hover { box-shadow: 0 4px 14px rgba(99,102,241,.25); }
+  }
+  &--recruiter {
+    background: rgba(249,115,22,.12);
+    border-color: rgba(249,115,22,.35);
+    color: #fdba74;
+    i { color: #fb923c; }
+    &:hover { box-shadow: 0 4px 14px rgba(249,115,22,.2); }
+  }
+  &--volunteer {
+    background: rgba(16,185,129,.12);
+    border-color: rgba(16,185,129,.35);
+    color: #6ee7b7;
+    i { color: #34d399; }
+    &:hover { box-shadow: 0 4px 14px rgba(16,185,129,.2); }
+  }
+}
+
 // Divider
 .auth-divider {
   display: flex;

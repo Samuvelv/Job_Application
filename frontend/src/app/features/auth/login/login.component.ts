@@ -93,7 +93,21 @@ import { AuthService } from '../../../core/services/auth.service';
               <div class="auth-card-sub">Sign in to your account</div>
             </div>
 
-            <!-- Error alert -->
+            <!-- Role pills -->
+            <div class="auth-role-pills">
+              <div class="auth-role-pill auth-role-pill--candidate">
+                <i class="bi bi-person-fill"></i>
+                <span>Candidate</span>
+              </div>
+              <div class="auth-role-pill auth-role-pill--recruiter">
+                <i class="bi bi-building"></i>
+                <span>Recruiter</span>
+              </div>
+              <div class="auth-role-pill auth-role-pill--volunteer">
+                <i class="bi bi-people-fill"></i>
+                <span>Volunteer</span>
+              </div>
+            </div>
             @if (errorMsg) {
               <div class="auth-alert mb-3" role="alert">
                 <i class="bi bi-exclamation-circle-fill" style="color:#f87171;flex-shrink:0"></i>
