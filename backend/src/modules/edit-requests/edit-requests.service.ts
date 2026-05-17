@@ -2,7 +2,7 @@
 import { v4 as uuidv4 } from 'uuid';
 import { db } from '../../config/db';
 import { AppError } from '../../middleware/errorHandler';
-import { updateCandidate } from '../candidates/candidates.service';
+import { updateCandidate, syncVolunteerAvailability } from '../candidates/candidates.service';
 import { sendEditRequestStatus, sendAdminEditRequestNotification } from '../../services/email.service';
 import type {
   SubmitEditRequestDto,
@@ -282,17 +282,30 @@ export async function reviewEditRequest(
       ...(cleanCerts !== undefined ? { certificates: cleanCerts } : {}),
     };
 
+    delete dataToApply.profile_status;
     await updateCandidate(request.candidate_id, dataToApply);
 
     // Reset status to active
     await db('candidates')
       .where({ id: request.candidate_id })
       .update({ profile_status: 'active', updated_at: new Date() });
+
+    try {
+      await syncVolunteerAvailability(request.candidate_id, 'active');
+    } catch (syncErr) {
+      console.error('[syncVolunteerAvailability] Failed after approved edit request review:', syncErr);
+    }
   } else {
     // Rejected — reset status back to active
     await db('candidates')
       .where({ id: request.candidate_id })
       .update({ profile_status: 'active', updated_at: new Date() });
+
+    try {
+      await syncVolunteerAvailability(request.candidate_id, 'active');
+    } catch (syncErr) {
+      console.error('[syncVolunteerAvailability] Failed after rejected edit request review:', syncErr);
+    }
   }
 
   // Send email notification (non-fatal)
