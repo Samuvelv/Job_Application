@@ -1761,7 +1761,11 @@ export class EditRequestsComponent implements OnInit, OnDestroy {
       },
       error: (err) => {
         this.supportReviewingId = null;
-        this.toast.error(err?.error?.message ?? 'Action failed');
+        const fieldErrors: Record<string, string[]> | undefined = err?.error?.errors;
+        const detail = fieldErrors
+          ? Object.values(fieldErrors).flat().join('; ')
+          : null;
+        this.toast.error(detail ?? err?.error?.message ?? 'Action failed');
       },
     });
   }

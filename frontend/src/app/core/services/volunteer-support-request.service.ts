@@ -63,7 +63,7 @@ export class VolunteerSupportRequestService {
   review(id: string, status: 'connected' | 'closed', adminNote?: string): Observable<{ supportRequest: VolunteerSupportRequest }> {
     return this.http.put<{ supportRequest: VolunteerSupportRequest }>(
       `${this.base}/${id}/review`,
-      { status, admin_note: adminNote ?? null },
+      { status, ...(adminNote != null ? { admin_note: adminNote } : {}) },
     );
   }
 

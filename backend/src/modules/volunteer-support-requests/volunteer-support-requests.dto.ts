@@ -7,7 +7,7 @@ export const CreateSupportRequestSchema = z.object({
 
 export const ReviewSupportRequestSchema = z.object({
   status:     z.enum(['connected', 'closed']),
-  admin_note: z.string().trim().max(500).optional(),
+  admin_note: z.string().trim().max(500).nullish(),
 });
 
 export const SupportRequestFilterSchema = z.object({
