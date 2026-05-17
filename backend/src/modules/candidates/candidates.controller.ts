@@ -167,6 +167,47 @@ export async function inviteVolunteer(req: Request, res: Response, next: NextFun
   } catch (err) { next(err); }
 }
 
+export async function reactivateVolunteer(req: Request, res: Response, next: NextFunction): Promise<void> {
+  try {
+    const id = p(req.params['id']);
+
+    // Resolve candidate email
+    const row = await db('candidates as c')
+      .join('users as u', 'u.id', 'c.user_id')
+      .select('u.email', 'c.first_name', 'c.last_name')
+      .where('c.id', id)
+      .first();
+
+    if (!row) { res.status(404).json({ message: 'Candidate not found' }); return; }
+    if (!row.email) { res.status(400).json({ message: 'Candidate has no email on file' }); return; }
+
+    // Find matching volunteer
+    const volunteer = await db('volunteers')
+      .whereRaw('LOWER(email) = LOWER(?)', [row.email])
+      .select('id', 'availability')
+      .first();
+
+    if (!volunteer) { res.status(404).json({ message: 'No volunteer record found for this candidate' }); return; }
+    if (volunteer.availability !== 'Inactive') {
+      res.status(400).json({ message: 'Volunteer is not in Inactive state' });
+      return;
+    }
+
+    await db('volunteers')
+      .where({ id: volunteer.id })
+      .update({ availability: 'Active', updated_at: new Date() });
+
+    await logAudit({
+      userId: req.user!.sub, action: 'REACTIVATE_VOLUNTEER',
+      resource: 'candidate', resourceId: id, ipAddress: req.ip,
+      metadata: { candidate_name: `${row.first_name} ${row.last_name}`, volunteer_id: volunteer.id },
+    });
+
+    const updated = await db('volunteers').where({ id: volunteer.id }).first();
+    res.json({ volunteer: updated });
+  } catch (err) { next(err); }
+}
+
 export async function bulkActionHandler(req: Request, res: Response, next: NextFunction): Promise<void> {
   try {
     const dto = BulkActionSchema.parse(req.body);
