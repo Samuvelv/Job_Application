@@ -23,8 +23,9 @@ export async function listVolunteers(filters: {
     .select(
       'v.*',
       db.raw(`COALESCE(v.photo_url, c.profile_photo_url) AS photo_url`),
-    );
-  let countQuery = db('volunteers as v');
+    )
+    .where('v.availability', '!=', 'Inactive');
+  let countQuery = db('volunteers as v').where('v.availability', '!=', 'Inactive');
 
   function applyFilters(q: any) {
     if (search) {
@@ -187,6 +188,7 @@ export async function getVolunteerById(id: string) {
     .where('v.id', id)
     .first();
   if (!row) throw new AppError(404, 'Volunteer not found');
+  if (row.availability === 'Inactive') throw new AppError(404, 'Volunteer not found');
   return row;
 }
 
