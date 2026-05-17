@@ -681,6 +681,10 @@ export async function syncVolunteerAvailability(
     await db('volunteers')
       .where({ id: volunteer.id })
       .update({ availability: 'Inactive', updated_at: new Date() });
+    // Hard-delete all support requests linked to this volunteer
+    await db('volunteer_support_requests')
+      .where({ volunteer_id: volunteer.id })
+      .delete();
   } else if (newStatus === 'placed' && volunteer.availability === 'Inactive') {
     // Re-place: restore to Active only if system-deactivated
     await db('volunteers')
