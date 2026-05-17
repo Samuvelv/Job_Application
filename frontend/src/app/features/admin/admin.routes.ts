@@ -82,4 +82,15 @@ export const adminRoutes: Routes = [
     loadComponent: () =>
       import('./interest-requests/interest-requests.component').then((m) => m.InterestRequestsComponent),
   },
+  // ── Master Data Management ─────────────────────────────────────────────────
+  {
+    path: 'master',
+    redirectTo: 'master/countries',
+    pathMatch: 'full',
+  },
+  {
+    path: 'master/:tableKey',
+    loadComponent: () =>
+      import('./master/master-management.component').then((m) => m.MasterManagementComponent),
+  },
 ];

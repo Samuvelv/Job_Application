@@ -5,7 +5,7 @@ import { db } from '../../config/db';
 // ── Countries ─────────────────────────────────────────────────────────────────
 export async function getCountries(_req: Request, res: Response, next: NextFunction) {
   try {
-    const rows = await db('master_countries').select('id', 'name', 'iso2', 'dial_code', 'flag_emoji').orderBy('name');
+    const rows = await db('master_countries').whereNull('deleted_at').select('id', 'name', 'iso2', 'dial_code', 'flag_emoji').orderBy('name');
     res.json(rows);
   } catch (err) { next(err); }
 }
@@ -17,6 +17,7 @@ export async function getCities(req: Request, res: Response, next: NextFunction)
     if (!countryId) { res.json([]); return; }
     const rows = await db('master_cities')
       .where({ country_id: Number(countryId) })
+      .whereNull('deleted_at')
       .select('id', 'name')
       .orderBy('name');
     res.json(rows);
@@ -28,6 +29,7 @@ export async function getJobTitles(_req: Request, res: Response, next: NextFunct
   try {
     const rows = await db('master_job_titles as jt')
       .join('master_occupations as o', 'o.id', 'jt.occupation_id')
+      .whereNull('jt.deleted_at')
       .select('jt.id', 'jt.title', 'jt.occupation_id', 'o.name as occupation_name')
       .orderBy('jt.title');
     res.json(rows);
@@ -37,7 +39,7 @@ export async function getJobTitles(_req: Request, res: Response, next: NextFunct
 // ── Occupations ────────────────────────────────────────────────────────────────
 export async function getOccupations(_req: Request, res: Response, next: NextFunction) {
   try {
-    const rows = await db('master_occupations').select('id', 'name').orderBy('name');
+    const rows = await db('master_occupations').whereNull('deleted_at').select('id', 'name').orderBy('name');
     res.json(rows);
   } catch (err) { next(err); }
 }
@@ -45,7 +47,7 @@ export async function getOccupations(_req: Request, res: Response, next: NextFun
 // ── Industries ────────────────────────────────────────────────────────────────
 export async function getIndustries(_req: Request, res: Response, next: NextFunction) {
   try {
-    const rows = await db('master_industries').select('id', 'name').orderBy('name');
+    const rows = await db('master_industries').whereNull('deleted_at').select('id', 'name').orderBy('name');
     res.json(rows);
   } catch (err) { next(err); }
 }
@@ -53,7 +55,7 @@ export async function getIndustries(_req: Request, res: Response, next: NextFunc
 // ── Languages ─────────────────────────────────────────────────────────────────
 export async function getLanguages(_req: Request, res: Response, next: NextFunction) {
   try {
-    const rows = await db('master_languages').select('id', 'name').orderBy('name');
+    const rows = await db('master_languages').whereNull('deleted_at').select('id', 'name').orderBy('name');
     res.json(rows);
   } catch (err) { next(err); }
 }
@@ -61,7 +63,7 @@ export async function getLanguages(_req: Request, res: Response, next: NextFunct
 // ── Degrees ───────────────────────────────────────────────────────────────────
 export async function getDegrees(_req: Request, res: Response, next: NextFunction) {
   try {
-    const rows = await db('master_degrees').select('id', 'name').orderBy('id');
+    const rows = await db('master_degrees').whereNull('deleted_at').select('id', 'name').orderBy('id');
     res.json(rows);
   } catch (err) { next(err); }
 }
@@ -69,7 +71,7 @@ export async function getDegrees(_req: Request, res: Response, next: NextFunctio
 // ── Fields of Study ───────────────────────────────────────────────────────────
 export async function getFieldsOfStudy(_req: Request, res: Response, next: NextFunction) {
   try {
-    const rows = await db('master_fields_of_study').select('id', 'name').orderBy('name');
+    const rows = await db('master_fields_of_study').whereNull('deleted_at').select('id', 'name').orderBy('name');
     res.json(rows);
   } catch (err) { next(err); }
 }
@@ -85,7 +87,7 @@ export async function getCurrencies(_req: Request, res: Response, next: NextFunc
 // ── Notice Periods ────────────────────────────────────────────────────────────
 export async function getNoticePeriods(_req: Request, res: Response, next: NextFunction) {
   try {
-    const rows = await db('master_notice_periods').select('id', 'label', 'days').orderBy('days');
+    const rows = await db('master_notice_periods').whereNull('deleted_at').select('id', 'label', 'days').orderBy('days');
     res.json(rows);
   } catch (err) { next(err); }
 }
@@ -93,7 +95,7 @@ export async function getNoticePeriods(_req: Request, res: Response, next: NextF
 // ── Hobbies ───────────────────────────────────────────────────────────────────
 export async function getHobbies(_req: Request, res: Response, next: NextFunction) {
   try {
-    const rows = await db('master_hobbies').select('id', 'name').orderBy('name');
+    const rows = await db('master_hobbies').whereNull('deleted_at').select('id', 'name').orderBy('name');
     res.json(rows);
   } catch (err) { next(err); }
 }
