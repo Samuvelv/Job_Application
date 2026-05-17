@@ -28,6 +28,34 @@
     </div>
   }
 
+  <!-- ── Volunteer Impact Confirmation (status change away from Placed) ─── -->
+  @if (showVolunteerImpactConfirm) {
+    <div class="placed-prompt-overlay">
+      <div class="placed-prompt">
+        <div class="placed-prompt__icon">
+          <i class="bi bi-exclamation-triangle-fill text-warning"></i>
+        </div>
+        <h4 class="placed-prompt__title">Volunteer Profile Impact</h4>
+        <p class="placed-prompt__msg">
+          This candidate is currently an active volunteer. Changing the profile
+          status from <strong>'Placed'</strong> will deactivate the volunteer
+          profile and remove related volunteer visibility/data from the platform.
+          Are you sure you want to continue?
+        </p>
+        <div class="placed-prompt__actions">
+          <button class="placed-prompt__btn placed-prompt__btn--yes"
+            (click)="confirmVolunteerImpact()">
+            <i class="bi bi-check2-circle me-2"></i>Confirm Change
+          </button>
+          <button class="placed-prompt__btn placed-prompt__btn--no"
+            (click)="cancelVolunteerImpact()">
+            <i class="bi bi-x-circle me-1"></i>Cancel
+          </button>
+        </div>
+      </div>
+    </div>
+  }
+
   <!-- ── Volunteer Invitation Prompt (shown when status set to Placed) ──── -->
   @if (showPlacedPrompt) {
     <div class="placed-prompt-overlay">

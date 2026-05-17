@@ -219,6 +219,9 @@ export class CandidateEditComponent implements OnInit {
   reactivateError = '';
   reactivating = false;
 
+  // Volunteer impact confirmation (status change away from placed)
+  showVolunteerImpactConfirm = false;
+
   form!: FormGroup;
 
   mediaLoading: Record<string, boolean> = {};
@@ -790,6 +793,35 @@ export class CandidateEditComponent implements OnInit {
 
   // ── Submit ────────────────────────────────────────────────────────────────
   onSubmit(): void {
+    if (this.form.invalid) { this.form.markAllAsTouched(); return; }
+
+    // Guard: if moving a placed volunteer away from placed, confirm first
+    const newStatus = this.form.getRawValue().profile_status;
+    const currentStatus = this.candidate?.profile_status;
+    const isVolunteer = this.candidate?.is_volunteer;
+
+    if (
+      currentStatus === 'placed' &&
+      isVolunteer &&
+      newStatus !== 'placed'
+    ) {
+      this.showVolunteerImpactConfirm = true;
+      return;
+    }
+
+    this._doSubmit();
+  }
+
+  confirmVolunteerImpact(): void {
+    this.showVolunteerImpactConfirm = false;
+    this._doSubmit();
+  }
+
+  cancelVolunteerImpact(): void {
+    this.showVolunteerImpactConfirm = false;
+  }
+
+  private _doSubmit(): void {
     if (this.form.invalid) { this.form.markAllAsTouched(); return; }
     this.saving   = true;
     this.errorMsg = '';
