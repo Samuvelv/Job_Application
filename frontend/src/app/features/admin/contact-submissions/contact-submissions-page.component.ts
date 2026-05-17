@@ -4,6 +4,7 @@ import { CommonModule } from '@angular/common';
 import { ContactSubmissionService } from '../../../core/services/contact-submission.service';
 import { ContactSubmission } from '../../../core/models/contact-submission.model';
 import { PageHeaderComponent } from '../../../shared/components/page-header/page-header.component';
+import { NotificationService } from '../../../core/services/notification.service';
 
 @Component({
   selector: 'app-contact-submissions-page',
@@ -139,7 +140,10 @@ export class ContactSubmissionsPageComponent implements OnInit {
   expandedId = signal<string | null>(null);
   pagination = signal({ page: 1, limit: 20, total: 0, pages: 1 });
 
-  constructor(private svc: ContactSubmissionService) {}
+  constructor(
+    private svc: ContactSubmissionService,
+    private notifications: NotificationService,
+  ) {}
 
   ngOnInit(): void { this.load(); }
 
@@ -162,9 +166,12 @@ export class ContactSubmissionsPageComponent implements OnInit {
 
   markRead(s: ContactSubmission): void {
     this.svc.markRead(s.id).subscribe({
-      next: () => this.rows.update(list =>
-        list.map(r => r.id === s.id ? { ...r, is_read: true } : r)
-      ),
+      next: () => {
+        this.rows.update(list =>
+          list.map(r => r.id === s.id ? { ...r, is_read: true } : r)
+        );
+        this.notifications.refreshCounts();
+      },
     });
   }
 

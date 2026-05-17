@@ -117,17 +117,28 @@ export async function getPublicStats() {
 }
 
 export async function getNotificationCounts() {
-  const [pendingEditsRow, pendingContactRequestsRow, pendingVolunteerSupportRow, pendingInterestRequestsRow] = await Promise.all([
+  const [
+    pendingEditsRow,
+    pendingContactRequestsRow,
+    pendingVolunteerSupportRow,
+    pendingInterestRequestsRow,
+    pendingContactUnlockRequestsRow,
+    pendingRecruiterAccessRequestsRow,
+  ] = await Promise.all([
     db('profile_edit_requests').where({ status: 'pending' }).count('id as count').first(),
-    db('contact_submissions').where({ is_read: false }).count('id as count').first(),
+    db('contact_submissions').where({ is_read: false }).count('id as count').first(),      // Contact Req... sidebar
     db('volunteer_support_requests').where({ status: 'pending' }).count('id as count').first(),
-    db('agency_interest_requests').where({ status: 'pending' }).count('id as count').first(),
+    db('agency_interest_requests').where({ status: 'pending' }).count('id as count').first(), // Interest Requ... sidebar
+    db('contact_unlock_requests').where({ status: 'pending' }).count('id as count').first(),  // Edit Requests tab 2
+    db('recruiter_access_requests').where({ status: 'pending' }).count('id as count').first(), // Edit Requests tab 4
   ]);
 
   return {
-    pendingEdits:            toCount(pendingEditsRow),
-    pendingContactRequests:  toCount(pendingContactRequestsRow),
-    pendingVolunteerSupport: toCount(pendingVolunteerSupportRow),
-    pendingInterestRequests: toCount(pendingInterestRequestsRow),
+    pendingEdits:                   toCount(pendingEditsRow),
+    pendingContactRequests:         toCount(pendingContactRequestsRow),
+    pendingVolunteerSupport:        toCount(pendingVolunteerSupportRow),
+    pendingInterestRequests:        toCount(pendingInterestRequestsRow),
+    pendingContactUnlockRequests:   toCount(pendingContactUnlockRequestsRow),
+    pendingRecruiterAccessRequests: toCount(pendingRecruiterAccessRequestsRow),
   };
 }

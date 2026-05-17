@@ -21,15 +21,16 @@ export async function createInterestRequest(recruiterId: string, dto: CreateInte
   const candidate = await db('candidates').where({ id: dto.candidate_id }).first();
   if (!candidate) throw new AppError(404, 'Candidate not found');
 
-  const existing = await db('agency_interest_requests')
+  // Only block if there is currently an active (pending or approved) request.
+  // Rejected / revoked requests are kept as history — do NOT delete them.
+  const blocking = await db('agency_interest_requests')
     .where({ recruiter_id: recruiterId, candidate_id: dto.candidate_id })
+    .whereIn('status', ['pending', 'approved'])
     .first();
 
-  if (existing) {
-    if (existing.status === 'approved') throw new AppError(409, 'An approved introduction already exists for this candidate.');
-    if (existing.status === 'pending')  throw new AppError(409, 'An interest request is already pending for this candidate.');
-    // rejected or revoked — allow re-request by deleting the old row
-    await db('agency_interest_requests').where({ id: existing.id }).delete();
+  if (blocking) {
+    if (blocking.status === 'approved') throw new AppError(409, 'An approved introduction already exists for this candidate.');
+    if (blocking.status === 'pending')  throw new AppError(409, 'An interest request is already pending for this candidate.');
   }
 
   const [row] = await db('agency_interest_requests')

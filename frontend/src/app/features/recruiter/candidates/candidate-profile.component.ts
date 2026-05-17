@@ -270,9 +270,11 @@ import { SearchableSelectComponent, SelectOption } from '../../../shared/compone
               <i class="bi"
                 [class.bi-hourglass-split]="interestRequest.status === 'pending'"
                 [class.bi-check-circle-fill]="interestRequest.status === 'approved'"
-                [class.bi-x-circle-fill]="interestRequest.status === 'rejected'"></i>
-              {{ interestRequest.status === 'pending' ? 'Request Pending — awaiting admin review' :
+                [class.bi-x-circle-fill]="interestRequest.status === 'rejected'"
+                [class.bi-slash-circle-fill]="interestRequest.status === 'revoked'"></i>
+              {{ interestRequest.status === 'pending'  ? 'Request Pending — awaiting admin review' :
                  interestRequest.status === 'approved' ? 'Request Approved — we will be in touch' :
+                 interestRequest.status === 'revoked'  ? 'Request Revoked — you may submit a new request' :
                  'Request Not Approved' }}
             </span>
           </div>
@@ -281,9 +283,9 @@ import { SearchableSelectComponent, SelectOption } from '../../../shared/compone
               <i class="bi bi-chat-left-text me-1"></i><strong>Admin note:</strong> {{ interestRequest.admin_note }}
             </div>
           }
-          @if (interestRequest.status === 'rejected') {
+          @if (interestRequest.status === 'rejected' || interestRequest.status === 'revoked') {
             <button class="btn btn-sm btn-outline-primary mt-3" (click)="resetInterestForm()">
-              <i class="bi bi-arrow-repeat me-1"></i>Submit New Request
+              <i class="bi bi-arrow-repeat me-1"></i>Submit Another Request
             </button>
           }
         } @else {
@@ -428,7 +430,17 @@ export class RecruiterCandidateProfileComponent implements OnInit {
       }
 
       if (this.isAgency && myInterests) {
-        const ir = myInterests.requests.find((r: InterestRequest) => r.candidate_id === this.candidateId);
+        // There may be multiple historical records for the same candidate.
+        // Priority: pending (actionable) > approved (active) > latest by created_at.
+        const forCandidate = myInterests.requests.filter(
+          (r: InterestRequest) => r.candidate_id === this.candidateId
+        );
+        const statusPriority: Record<string, number> = { pending: 0, approved: 1, revoked: 2, rejected: 3 };
+        const ir = forCandidate.sort((a: InterestRequest, b: InterestRequest) => {
+          const sp = (statusPriority[a.status] ?? 9) - (statusPriority[b.status] ?? 9);
+          if (sp !== 0) return sp;
+          return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+        })[0] ?? null;
         if (ir) this.interestRequest = ir;
       }
     });

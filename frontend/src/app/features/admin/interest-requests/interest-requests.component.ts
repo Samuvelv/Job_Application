@@ -8,6 +8,7 @@ import { ToastService } from '../../../core/services/toast.service';
 import { ConfirmDialogService } from '../../../core/services/confirm-dialog.service';
 import { PageHeaderComponent } from '../../../shared/components/page-header/page-header.component';
 import { EmptyStateComponent } from '../../../shared/components/empty-state/empty-state.component';
+import { NotificationService } from '../../../core/services/notification.service';
 
 @Component({
   selector: 'app-interest-requests',
@@ -486,6 +487,7 @@ export class InterestRequestsComponent implements OnInit, OnDestroy {
     private svc:           InterestRequestService,
     private toast:         ToastService,
     private confirmDialog: ConfirmDialogService,
+    private notifications: NotificationService,
   ) {}
 
   ngOnInit(): void {
@@ -597,6 +599,7 @@ export class InterestRequestsComponent implements OnInit, OnDestroy {
           this.closeModal();
           this.load();
           this.loadCounts();
+          this.notifications.refreshCounts();
         },
         error: (err) => {
           this.submitting = false;
@@ -627,6 +630,7 @@ export class InterestRequestsComponent implements OnInit, OnDestroy {
           this.toast.success('Interest request revoked');
           this.load();
           this.loadCounts();
+          this.notifications.refreshCounts();
         },
         error: (err) => this.toast.error(err?.error?.message ?? 'Failed to revoke request'),
       });
