@@ -104,26 +104,25 @@ import { AuthService } from '../../../core/services/auth.service';
             <!-- Form -->
             <form [formGroup]="form" (ngSubmit)="onSubmit()" novalidate>
 
-              <!-- Email -->
+              <!-- Email / Candidate ID -->
               <div class="auth-field">
-                <label for="email" class="form-label">Email address</label>
+                <label for="email" class="form-label">Email Address / Candidate ID</label>
                 <div style="position:relative">
-                  <i class="bi bi-envelope auth-field-icon"></i>
+                  <i class="bi bi-person-circle auth-field-icon"></i>
                   <input
                     id="email"
-                    type="email"
+                    type="text"
                     class="auth-underline-field"
                     [class.is-invalid]="submitted && f['email'].errors"
                     formControlName="email"
-                    placeholder="you@example.com"
-                    autocomplete="email"
+                    placeholder="you@example.com or 10001"
+                    autocomplete="username"
                   />
                   <span class="auth-field-underline"></span>
                 </div>
                 @if (submitted && f['email'].errors) {
                   <div class="invalid-feedback">
-                    @if (f['email'].errors['required']) { Email is required. }
-                    @if (f['email'].errors['email']) { Enter a valid email address. }
+                    @if (f['email'].errors['required']) { Email address or Candidate ID is required. }
                   </div>
                 }
               </div>
@@ -406,7 +405,7 @@ export class LoginComponent implements OnInit, OnDestroy {
     }
 
     this.form = this.fb.group({
-      email:    ['', [Validators.required, Validators.email]],
+      email:    ['', [Validators.required]],
       password: ['', [Validators.required, Validators.minLength(6)]],
     });
   }

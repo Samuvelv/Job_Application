@@ -352,7 +352,7 @@ function makePostalCodeGroupValidator(countryCtrl: string, postalCtrl: string): 
                   <i class="bi bi-upload me-1"></i>
                   {{ staged['resumes'] ? 'Change staged file' : (candidate.resume_url ? 'Request replace' : 'Request upload') }}
                 }
-                <input type="file" class="d-none" accept="application/pdf"
+                <input type="file" class="d-none" accept="application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
                   [disabled]="existingRequest?.status === 'pending'"
                   (change)="stageFile('resumes', $event)">
               </label>
@@ -408,7 +408,7 @@ function makePostalCodeGroupValidator(countryCtrl: string, postalCtrl: string): 
                   <i class="bi bi-upload me-1"></i>
                   {{ staged['videos'] ? 'Change staged file' : (candidate.intro_video_url ? 'Request replace' : 'Request upload') }}
                 }
-                <input type="file" class="d-none" accept="video/mp4,video/webm,video/ogg"
+                <input type="file" class="d-none" accept="video/mp4,video/webm,video/quicktime"
                   [disabled]="existingRequest?.status === 'pending'"
                   (change)="stageFile('videos', $event)">
               </label>
@@ -1578,6 +1578,11 @@ export class EditRequestComponent implements OnInit {
   stageFile(type: 'profiles' | 'resumes' | 'videos', event: Event): void {
     const file = (event.target as HTMLInputElement).files?.[0];
     if (!file) return;
+    if (type === 'videos' && file.size > 200 * 1024 * 1024) {
+      this.toast.show(`Video exceeds the 200 MB limit (selected: ${(file.size / (1024 * 1024)).toFixed(1)} MB). Please choose a smaller file.`, 'error');
+      (event.target as HTMLInputElement).value = '';
+      return;
+    }
     this.mediaLoading[type] = true;
     this.candidateService.stageMyFile(type, file).subscribe({
       next: (res) => {

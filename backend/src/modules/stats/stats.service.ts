@@ -24,10 +24,8 @@ export async function getAdminStats() {
       .where({ status: 'approved' })
       .whereRaw("reviewed_at >= date_trunc('day', now()) AND reviewed_at < date_trunc('day', now()) + interval '1 day'")
       .count('id as count').first(),
-    // Interviews arranged = contact unlock requests created today
-    db('contact_unlock_requests')
-      .whereRaw("created_at >= date_trunc('day', now()) AND created_at < date_trunc('day', now()) + interval '1 day'")
-      .count('id as count').first(),
+    // Interviews Arranged — dedicated feature not yet implemented; returns 0 until built
+    Promise.resolve({ count: 0 }),
     // Volunteer stats
     db('volunteers').count('id as count').first(),
     db('volunteers').where({ availability: 'Active' }).count('id as count').first(),
@@ -35,8 +33,8 @@ export async function getAdminStats() {
       .where({ status: 'connected' })
       .whereRaw("date_trunc('month', updated_at) = date_trunc('month', CURRENT_DATE)")
       .count('id as count').first(),
-    // Placements = total shortlists (candidates placed with recruiters)
-    db('shortlists').count('id as count').first(),
+    // Placements = candidates whose profile has been marked as 'placed' by admin
+    db('candidates').where({ profile_status: 'placed' }).count('id as count').first(),
     // Countries active = distinct non-null current_country values
     db('candidates')
       .countDistinct('current_country as count')

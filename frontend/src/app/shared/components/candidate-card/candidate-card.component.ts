@@ -18,8 +18,8 @@ import { MasterDataService } from '../../../core/services/master-data.service';
           <input type="checkbox" [checked]="selected"
             (change)="selectedChange.emit(!selected)">
         </label>
-        @if (candidate.candidate_number) {
-          <span class="autocode-badge autocode-badge--sm">{{ candidate.candidate_number }}</span>
+        @if (candidate.login_id) {
+          <span class="autocode-badge autocode-badge--login-id autocode-badge--sm">{{ candidate.login_id }}</span>
         }
         <span class="badge rounded-pill ms-auto"
           [class.badge-status-active]="candidate.profile_status === 'active'"

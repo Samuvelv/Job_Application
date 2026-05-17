@@ -51,6 +51,7 @@ export interface Candidate {
   user_id: string;
   email?: string;
   candidate_number?: string;
+  login_id?: number;
 
   // Personal
   first_name: string;

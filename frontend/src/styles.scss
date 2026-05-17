@@ -4717,6 +4717,23 @@ body {
     padding: .25rem .7rem;
     border-radius: 8px;
   }
+
+  // Login ID variant — indigo/violet to distinguish from the green reference badge
+  &--login-id {
+    font-size: .75rem;
+    padding: .25rem .7rem;
+    border-radius: 8px;
+    background: rgba(99, 102, 241, .1);
+    color: #4f46e5;
+    border-color: rgba(99, 102, 241, .25);
+    cursor: default;
+
+    [data-theme='dark'] & {
+      background: rgba(99, 102, 241, .2);
+      color: #a5b4fc;
+      border-color: rgba(99, 102, 241, .35);
+    }
+  }
 }
 
 // ── Registration success banner ───────────────────────────────────────────────
@@ -4770,6 +4787,30 @@ body {
     background: #dcfce7;
     color: #14532d;
     border: 1px solid #86efac;
+
+    // Login ID variant — uses amber/indigo to visually distinguish from reference ID
+    &--login {
+      background: #eef2ff;
+      color: #3730a3;
+      border-color: #a5b4fc;
+      font-size: 1rem;
+      letter-spacing: 1.5px;
+    }
+  }
+
+  &__hint {
+    margin-top: .5rem;
+    font-size: .8rem;
+    color: #1d4ed8;
+    background: #eff6ff;
+    border: 1px solid #bfdbfe;
+    border-radius: 6px;
+    padding: .375rem .75rem;
+    display: flex;
+    align-items: flex-start;
+    gap: .4rem;
+
+    i { flex-shrink: 0; margin-top: .1rem; }
   }
 }
 
@@ -4781,8 +4822,23 @@ body {
 
     &__title { color: #4ade80; }
     &__code-row { color: #86efac; }
-    &__code { background: rgba(22, 163, 74, .15); color: #bbf7d0; border-color: rgba(22, 163, 74, .3); }
+    &__code {
+      background: rgba(22, 163, 74, .15);
+      color: #bbf7d0;
+      border-color: rgba(22, 163, 74, .3);
+
+      &--login {
+        background: rgba(99, 102, 241, .18);
+        color: #a5b4fc;
+        border-color: rgba(99, 102, 241, .35);
+      }
+    }
     &__icon { color: #4ade80; }
+    &__hint {
+      background: rgba(59, 130, 246, .1);
+      border-color: rgba(59, 130, 246, .25);
+      color: #93c5fd;
+    }
   }
 }
 
@@ -7059,6 +7115,30 @@ body {
   color: #fca5a5;
   margin-top: .3rem;
   padding-left: 1.75rem;
+}
+
+// Login hint — instructional text below the identifier field
+.auth-field-hint {
+  display: flex;
+  flex-direction: column;
+  gap: .2rem;
+  margin-top: .55rem;
+  padding-left: 1.75rem;
+
+  span {
+    font-size: .72rem;
+    color: rgba(255,255,255,.42);
+    display: flex;
+    align-items: center;
+    gap: .35rem;
+    line-height: 1.4;
+
+    i {
+      font-size: .7rem;
+      flex-shrink: 0;
+      opacity: .7;
+    }
+  }
 }
 
 // Error alert
@@ -12449,5 +12529,238 @@ html { scroll-behavior: smooth; }
   .cr-compliance-header .ms-auto { margin-left: 0 !important; width: 100%; }
   .cr-compliance-row { padding: .75rem .75rem; gap: .625rem; }
   .cr-compliance-body { padding: .625rem .75rem; }
+}
+
+// ── Candidate Summary Card (Review Step) ────────────────────────────────────
+
+.cr-summary-card {
+  background: var(--th-surface);
+  border: 1px solid var(--th-border);
+  border-radius: var(--th-radius-xl);
+  padding: 1.5rem;
+  box-shadow: var(--th-shadow-card);
+  transition: var(--th-transition-slow);
+  cursor: default;
+
+  &:hover {
+    box-shadow: var(--th-shadow-card-hover);
+    border-color: rgba(var(--th-primary-rgb), 0.2);
+  }
+}
+
+// Card header label
+.cr-summary-header {
+  display: flex;
+  align-items: center;
+  gap: .5rem;
+  font-size: .75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .55px;
+  color: var(--th-text-secondary);
+  padding-bottom: .875rem;
+  margin-bottom: 1.125rem;
+  border-bottom: 1px solid var(--th-border);
+
+  i { font-size: .8125rem; color: var(--th-primary); }
+}
+
+// Zone A: Profile hero
+.cr-summary-hero {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 1.25rem;
+}
+
+.cr-summary-avatar {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: var(--th-gradient-purple);
+  color: #fff;
+  font-size: .9375rem;
+  font-weight: 700;
+  letter-spacing: .5px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  text-transform: uppercase;
+  box-shadow: var(--th-shadow-purple);
+  user-select: none;
+}
+
+.cr-summary-identity {
+  display: flex;
+  flex-direction: column;
+  gap: .25rem;
+  min-width: 0;
+}
+
+.cr-summary-name {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--th-text);
+  line-height: 1.25;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.cr-summary-jobtitle {
+  font-size: .8125rem;
+  color: var(--th-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+// Zone B: Metadata grid
+.cr-summary-meta-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: .75rem 1rem;
+  margin-bottom: 1.25rem;
+}
+
+.cr-summary-meta-row {
+  display: flex;
+  align-items: flex-start;
+  gap: .625rem;
+}
+
+.cr-summary-meta-icon {
+  width: 28px;
+  height: 28px;
+  border-radius: 7px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+
+  i { font-size: .8125rem; }
+
+  &--primary {
+    background: var(--th-primary-soft);
+    i { color: var(--th-primary); }
+  }
+
+  &--teal {
+    background: var(--th-teal-soft);
+    i { color: var(--th-teal); }
+  }
+
+  &--amber {
+    background: var(--th-amber-soft);
+    i { color: var(--th-amber); }
+  }
+
+  &--violet {
+    background: var(--th-violet-soft);
+    i { color: var(--th-violet); }
+  }
+}
+
+.cr-summary-meta-content {
+  display: flex;
+  flex-direction: column;
+  gap: .125rem;
+  min-width: 0;
+}
+
+.cr-summary-meta-label {
+  font-size: .6875rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: .45px;
+  color: var(--th-muted);
+  line-height: 1;
+}
+
+.cr-summary-meta-value {
+  font-size: .8125rem;
+  font-weight: 500;
+  color: var(--th-text);
+  line-height: 1.3;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+// Zone C: Skills & languages chips
+.cr-summary-chips-section {
+  display: flex;
+  flex-direction: column;
+  gap: .875rem;
+  padding-top: 1.125rem;
+  border-top: 1px solid var(--th-border);
+}
+
+.cr-summary-chips-group {
+  display: flex;
+  flex-direction: column;
+  gap: .5rem;
+}
+
+.cr-summary-chips-label {
+  font-size: .6875rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .5px;
+  color: var(--th-muted);
+  display: flex;
+  align-items: center;
+  gap: .3125rem;
+
+  i { font-size: .75rem; }
+}
+
+.cr-summary-chips-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: .375rem;
+}
+
+.cr-summary-chip {
+  display: inline-flex;
+  align-items: center;
+  padding: .25rem .625rem;
+  border-radius: 999px;
+  font-size: .75rem;
+  font-weight: 500;
+  line-height: 1;
+  white-space: nowrap;
+  transition: var(--th-transition);
+
+  &--primary {
+    background: var(--th-primary-soft);
+    color: var(--th-primary);
+    border: 1px solid rgba(var(--th-primary-rgb), 0.15);
+
+    &:hover {
+      background: var(--th-primary);
+      color: #fff;
+    }
+  }
+
+  &--teal {
+    background: var(--th-teal-soft);
+    color: var(--th-teal);
+    border: 1px solid rgba(20, 184, 166, 0.18);
+
+    &:hover {
+      background: var(--th-teal);
+      color: #fff;
+    }
+  }
+}
+
+// Responsive: stack meta grid to single column on mobile
+@media (max-width: 575px) {
+  .cr-summary-card { padding: 1.125rem; }
+  .cr-summary-meta-grid { grid-template-columns: 1fr; gap: .625rem; }
+  .cr-summary-name { font-size: .9375rem; }
+  .cr-summary-avatar { width: 42px; height: 42px; font-size: .875rem; }
 }
 

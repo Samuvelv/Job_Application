@@ -206,7 +206,7 @@ export async function exportCsv(req: Request, res: Response, next: NextFunction)
     const rows = await svc.exportCandidates(filters);
 
     const headers = [
-      'Candidate No', 'First Name', 'Last Name', 'Email', 'Phone',
+      'Login ID', 'Reference No', 'First Name', 'Last Name', 'Email', 'Phone',
       'Current Country', 'Target Countries', 'Profile Status',
       'Registration Fee Status', 'CV Format', 'Created Date',
     ];
@@ -214,6 +214,7 @@ export async function exportCsv(req: Request, res: Response, next: NextFunction)
     const lines = [
       headers.join(','),
       ...(rows as any[]).map((r) => [
+        csvEscape(r.login_id != null ? String(r.login_id) : ''),
         csvEscape(r.candidate_number),
         csvEscape(r.first_name),
         csvEscape(r.last_name),

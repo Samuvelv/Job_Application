@@ -39,7 +39,7 @@ import { SORT_OPTIONS } from '../../../core/constants/candidate-options';
         <i class="bi bi-search"></i>
         <input type="text" class="form-control form-control-sm"
           [formControl]="searchCtrl"
-          placeholder="Search name, email, job title…"
+          placeholder="Search name, email, job title, Login ID…"
           (keydown.enter)="doSearch()">
       </div>
       <div class="cfs-topbar__actions">
@@ -211,7 +211,7 @@ import { SORT_OPTIONS } from '../../../core/constants/candidate-options';
                         (change)="toggleSelectAll()"
                         title="Select all">
                     </th>
-                    <th>#</th>
+                    <th>Login ID</th>
                     <th>Candidate</th>
                     <th>Job Title</th>
                     <th>Industry</th>
@@ -233,8 +233,8 @@ import { SORT_OPTIONS } from '../../../core/constants/candidate-options';
                           (change)="toggleSelect(emp.id)">
                       </td>
                       <td>
-                        @if (emp.candidate_number) {
-                          <span class="autocode-badge">{{ emp.candidate_number }}</span>
+                        @if (emp.login_id) {
+                          <span class="autocode-badge autocode-badge--login-id">{{ emp.login_id }}</span>
                         }
                       </td>
                       <td>
@@ -755,11 +755,12 @@ export class CandidateListComponent implements OnInit {
       not_yet_created: 'Not Yet Created',
     };
     const headers = [
-      'Candidate No', 'First Name', 'Last Name', 'Email', 'Phone',
+      'Login ID', 'Reference No', 'First Name', 'Last Name', 'Email', 'Phone',
       'Current Country', 'Target Countries', 'Profile Status',
       'Registration Fee Status', 'CV Format', 'Created Date',
     ];
     const rows = selected.map(c => [
+      esc(c.login_id != null ? String(c.login_id) : ''),
       esc(c.candidate_number),
       esc(c.first_name),
       esc(c.last_name),

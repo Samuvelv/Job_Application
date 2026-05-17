@@ -247,6 +247,7 @@ export class CandidateRegisterComponent implements OnInit, OnDestroy {
   errorMsg    = '';
   successMsg  = '';
   createdCandidateNumber = '';
+  createdLoginId = 0;
   draftSaved  = false;
 
   pendingPhoto?:  File;
@@ -618,10 +619,16 @@ export class CandidateRegisterComponent implements OnInit, OnDestroy {
       country:    (v.current_country ?? '').trim() || null,
       city:       (v.current_city    ?? '').trim() || null,
       yearsExp:   v.years_experience ?? 0,
-      skillCount: this.filledSkillsCount,
-      expCount:   this.filledExperienceCount,
-      eduCount:   this.education.controls.filter(g => g.get('institution')?.value?.trim()).length,
-      langCount:  this.languages.controls.filter(g => g.get('language')?.value?.trim()).length,
+      skillCount:  this.filledSkillsCount,
+      expCount:    this.filledExperienceCount,
+      eduCount:    this.education.controls.filter(g => g.get('institution')?.value?.trim()).length,
+      langCount:   this.languages.controls.filter(g => g.get('language')?.value?.trim()).length,
+      skillNames:  this.skills.controls
+                     .map(g => g.get('skill_name')?.value?.trim())
+                     .filter(Boolean) as string[],
+      langNames:   this.languages.controls
+                     .map(g => g.get('language')?.value?.trim())
+                     .filter(Boolean) as string[],
     };
   }
 
@@ -901,6 +908,7 @@ export class CandidateRegisterComponent implements OnInit, OnDestroy {
         this.clearDraft();
         this.loading    = false;
         this.createdCandidateNumber = res.candidate.candidate_number ?? '';
+        this.createdLoginId         = res.candidate.login_id ?? 0;
         this.successMsg = `${res.candidate.first_name} ${res.candidate.last_name} registered successfully! Welcome email sent. WhatsApp notification dispatched (if number provided).`;
         setTimeout(() => this.router.navigate(['/admin/candidates']), 3000);
       },

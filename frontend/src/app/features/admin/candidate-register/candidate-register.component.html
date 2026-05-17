@@ -21,7 +21,16 @@
       <div class="reg-success-banner__title">{{ successMsg }}</div>
       @if (createdCandidateNumber) {
         <div class="reg-success-banner__code-row">
-          Candidate ID: <span class="reg-success-banner__code">{{ createdCandidateNumber }}</span>
+          Reference ID: <span class="reg-success-banner__code">{{ createdCandidateNumber }}</span>
+        </div>
+      }
+      @if (createdLoginId) {
+        <div class="reg-success-banner__code-row">
+          Login ID: <span class="reg-success-banner__code reg-success-banner__code--login">{{ createdLoginId }}</span>
+        </div>
+        <div class="reg-success-banner__hint">
+          <i class="bi bi-info-circle-fill"></i>
+          Candidate must use their <strong>Login ID</strong> (not email) to sign in to the portal.
         </div>
       }
     </div>
@@ -1053,43 +1062,55 @@
       </div>
 
       <!-- ── Candidate Summary ── -->
-      <div class="form-card mt-4 mb-0" style="background:var(--th-surface-raised)">
-        <h6 class="card-section-header card-section-header--purple mb-3" style="font-size:.8125rem">
-          <i class="bi bi-person-lines-fill"></i> Candidate Summary
-        </h6>
+      <div class="form-card cr-summary-card mt-4 mb-0">
 
-        <div class="row g-2 small">
+        <!-- Card header label -->
+        <div class="cr-summary-header">
+          <i class="bi bi-person-lines-fill"></i>
+          <span>Candidate Summary</span>
+        </div>
 
-          <!-- Name & Job Title -->
-          <div class="col-sm-6 d-flex flex-column gap-1">
-            <div class="d-flex align-items-start gap-2">
-              <i class="bi bi-person text-primary mt-1" style="width:1rem;flex-shrink:0"></i>
-              <div>
-                <div class="fw-semibold" style="color:var(--th-text)">
-                  {{ reviewSummary.name ?? '—' }}
-                </div>
-                @if (reviewSummary.jobTitle) {
-                  <div class="text-muted">{{ reviewSummary.jobTitle }}</div>
-                }
-              </div>
-            </div>
+        <!-- ── Zone A: Profile Hero ── -->
+        <div class="cr-summary-hero">
+          <!-- Initials avatar -->
+          <div class="cr-summary-avatar" aria-hidden="true">
+            {{ reviewSummary.name
+                ? (reviewSummary.name.split(' ')[0][0] || '')
+                  + (reviewSummary.name.split(' ').length > 1 ? reviewSummary.name.split(' ')[1][0] || '' : '')
+                : '?' }}
           </div>
 
+          <!-- Name + Job title -->
+          <div class="cr-summary-identity">
+            <div class="cr-summary-name">{{ reviewSummary.name ?? '—' }}</div>
+            @if (reviewSummary.jobTitle) {
+              <div class="cr-summary-jobtitle">{{ reviewSummary.jobTitle }}</div>
+            }
+          </div>
+        </div>
+
+        <!-- ── Zone B: Metadata Grid ── -->
+        <div class="cr-summary-meta-grid">
+
           <!-- Industry -->
-          <div class="col-sm-6 d-flex align-items-start gap-2">
-            <i class="bi bi-building text-primary mt-1" style="width:1rem;flex-shrink:0"></i>
-            <div>
-              <div class="text-muted" style="font-size:.75rem;text-transform:uppercase;letter-spacing:.4px">Industry</div>
-              <div style="color:var(--th-text)">{{ reviewSummary.industry ?? '—' }}</div>
+          <div class="cr-summary-meta-row">
+            <span class="cr-summary-meta-icon cr-summary-meta-icon--primary">
+              <i class="bi bi-building"></i>
+            </span>
+            <div class="cr-summary-meta-content">
+              <span class="cr-summary-meta-label">Industry</span>
+              <span class="cr-summary-meta-value">{{ reviewSummary.industry ?? '—' }}</span>
             </div>
           </div>
 
           <!-- Location -->
-          <div class="col-sm-6 d-flex align-items-start gap-2">
-            <i class="bi bi-geo-alt text-primary mt-1" style="width:1rem;flex-shrink:0"></i>
-            <div>
-              <div class="text-muted" style="font-size:.75rem;text-transform:uppercase;letter-spacing:.4px">Location</div>
-              <div style="color:var(--th-text)">
+          <div class="cr-summary-meta-row">
+            <span class="cr-summary-meta-icon cr-summary-meta-icon--teal">
+              <i class="bi bi-geo-alt"></i>
+            </span>
+            <div class="cr-summary-meta-content">
+              <span class="cr-summary-meta-label">Location</span>
+              <span class="cr-summary-meta-value">
                 @if (reviewSummary.city && reviewSummary.country) {
                   {{ reviewSummary.city }}, {{ reviewSummary.country }}
                 } @else if (reviewSummary.country) {
@@ -1097,53 +1118,80 @@
                 } @else {
                   —
                 }
-              </div>
+              </span>
             </div>
           </div>
 
           <!-- Experience -->
-          <div class="col-sm-6 d-flex align-items-start gap-2">
-            <i class="bi bi-briefcase text-primary mt-1" style="width:1rem;flex-shrink:0"></i>
-            <div>
-              <div class="text-muted" style="font-size:.75rem;text-transform:uppercase;letter-spacing:.4px">Experience</div>
-              <div style="color:var(--th-text)">
+          <div class="cr-summary-meta-row">
+            <span class="cr-summary-meta-icon cr-summary-meta-icon--amber">
+              <i class="bi bi-briefcase"></i>
+            </span>
+            <div class="cr-summary-meta-content">
+              <span class="cr-summary-meta-label">Experience</span>
+              <span class="cr-summary-meta-value">
                 {{ reviewSummary.yearsExp }} yr{{ reviewSummary.yearsExp === 1 ? '' : 's' }}
                 @if (reviewSummary.expCount > 0) {
-                  &nbsp;&middot;&nbsp;{{ reviewSummary.expCount }} position{{ reviewSummary.expCount === 1 ? '' : 's' }}
+                  &nbsp;&middot;&nbsp;
+                  {{ reviewSummary.expCount }} position{{ reviewSummary.expCount === 1 ? '' : 's' }}
                 }
-              </div>
+              </span>
             </div>
           </div>
 
-          <!-- Skills & Languages -->
-          <div class="col-sm-6 d-flex align-items-start gap-2">
-            <i class="bi bi-tools text-primary mt-1" style="width:1rem;flex-shrink:0"></i>
-            <div>
-              <div class="text-muted" style="font-size:.75rem;text-transform:uppercase;letter-spacing:.4px">Skills</div>
-              <div style="color:var(--th-text)">
-                {{ reviewSummary.skillCount }} skill{{ reviewSummary.skillCount === 1 ? '' : 's' }}
-                @if (reviewSummary.langCount > 0) {
-                  &nbsp;&middot;&nbsp;{{ reviewSummary.langCount }} language{{ reviewSummary.langCount === 1 ? '' : 's' }}
-                }
-              </div>
-            </div>
-          </div>
-
-          <!-- Education -->
+          <!-- Education (conditional) -->
           @if (reviewSummary.eduCount > 0) {
-            <div class="col-sm-6 d-flex align-items-start gap-2">
-              <i class="bi bi-mortarboard text-primary mt-1" style="width:1rem;flex-shrink:0"></i>
-              <div>
-                <div class="text-muted" style="font-size:.75rem;text-transform:uppercase;letter-spacing:.4px">Education</div>
-                <div style="color:var(--th-text)">
+            <div class="cr-summary-meta-row">
+              <span class="cr-summary-meta-icon cr-summary-meta-icon--violet">
+                <i class="bi bi-mortarboard"></i>
+              </span>
+              <div class="cr-summary-meta-content">
+                <span class="cr-summary-meta-label">Education</span>
+                <span class="cr-summary-meta-value">
                   {{ reviewSummary.eduCount }} qualification{{ reviewSummary.eduCount === 1 ? '' : 's' }}
-                </div>
+                </span>
               </div>
             </div>
           }
 
-        </div>
-      </div>
+        </div><!-- /meta-grid -->
+
+        <!-- ── Zone C: Skills & Languages Chips ── -->
+        @if (reviewSummary.skillNames.length > 0 || reviewSummary.langNames.length > 0) {
+          <div class="cr-summary-chips-section">
+
+            <!-- Skills -->
+            @if (reviewSummary.skillNames.length > 0) {
+              <div class="cr-summary-chips-group">
+                <span class="cr-summary-chips-label">
+                  <i class="bi bi-tools"></i> Skills
+                </span>
+                <div class="cr-summary-chips-list">
+                  @for (skill of reviewSummary.skillNames; track skill) {
+                    <span class="cr-summary-chip cr-summary-chip--primary">{{ skill }}</span>
+                  }
+                </div>
+              </div>
+            }
+
+            <!-- Languages -->
+            @if (reviewSummary.langNames.length > 0) {
+              <div class="cr-summary-chips-group">
+                <span class="cr-summary-chips-label">
+                  <i class="bi bi-translate"></i> Languages
+                </span>
+                <div class="cr-summary-chips-list">
+                  @for (lang of reviewSummary.langNames; track lang) {
+                    <span class="cr-summary-chip cr-summary-chip--teal">{{ lang }}</span>
+                  }
+                </div>
+              </div>
+            }
+
+          </div><!-- /chips-section -->
+        }
+
+      </div><!-- /cr-summary-card -->
 
       @if (draftSaved) {
         <div class="d-flex align-items-center gap-1 text-muted small mt-3">

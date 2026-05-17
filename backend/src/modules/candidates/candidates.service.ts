@@ -39,6 +39,8 @@ export async function createCandidate(dto: CreateCandidateDto, createdByAdminId:
   const userId         = uuidv4();
   const candidateId     = uuidv4();
 
+  let loginId = 0;
+
   await db.transaction(async (trx) => {
     // 1. Create user account
     await trx('users').insert({
@@ -53,11 +55,18 @@ export async function createCandidate(dto: CreateCandidateDto, createdByAdminId:
     const [{ nextval: seqVal }] = await trx.raw(`SELECT nextval('candidates_seq')`).then((r: any) => r.rows);
     const candidateNumber = `CAND-${String(seqVal).padStart(4, '0')}`;
 
+    // 2b. Generate numeric Login ID from dedicated sequence (starts at 10001)
+    const [{ nextval: loginSeqVal }] = await trx
+      .raw(`SELECT nextval('candidate_login_id_seq')`)
+      .then((r: any) => r.rows);
+    loginId = Number(loginSeqVal);
+
     // 3. Create candidate profile
     await trx('candidates').insert({
       id:               candidateId,
       user_id:          userId,
       candidate_number: candidateNumber,
+      login_id:         loginId,
       first_name:       dto.first_name,
       last_name:        dto.last_name,
       date_of_birth:    dto.date_of_birth    ?? null,
@@ -135,11 +144,12 @@ export async function createCandidate(dto: CreateCandidateDto, createdByAdminId:
     }
   });
 
-  // 4. Send welcome email (non-blocking)
+  // 4. Send welcome email (non-blocking) — include the numeric Login ID
   sendCandidateWelcomeEmail(
     dto.email,
     dto.password,
     `${dto.first_name} ${dto.last_name}`,
+    loginId,
   ).catch((err) => console.error('[EMAIL] Failed to send welcome email:', err));
 
   // 5. Notify admin of new registration (non-blocking)
@@ -171,13 +181,16 @@ function buildBaseQuery() {
 function applyFilters(query: any, filters: CandidateFilterDto): any {
   if (filters.search) {
     const term = `%${filters.search}%`;
-    query = query.where((b: any) =>
+    // If the search term is purely numeric, also match against login_id exactly
+    const numericId = /^\d+$/.test(filters.search.trim()) ? parseInt(filters.search.trim(), 10) : null;
+    query = query.where((b: any) => {
       b.whereILike('e.first_name', term)
        .orWhereILike('e.last_name', term)
        .orWhereILike('u.email', term)
        .orWhereILike('e.job_title', term)
-       .orWhereILike('e.occupation', term),
-    );
+       .orWhereILike('e.occupation', term);
+      if (numericId !== null) b.orWhere('e.login_id', numericId);
+    });
   }
   if (filters.occupation) query = query.whereILike('e.occupation', `%${filters.occupation}%`);
   if (filters.industry) {
@@ -298,7 +311,7 @@ export async function listCandidates(filters: CandidateFilterDto) {
   const offset = (page - 1) * limit;
 
   let query = buildBaseQuery().select(
-      'e.id', 'e.candidate_number', 'e.first_name', 'e.last_name', 'e.job_title',
+      'e.id', 'e.candidate_number', 'e.login_id', 'e.first_name', 'e.last_name', 'e.job_title',
       'e.industry', 'e.occupation', 'e.current_country', 'e.current_city',
       'e.years_experience',
       'e.profile_photo_url', 'e.profile_status', 'e.intro_video_url', 'e.created_at',
@@ -327,7 +340,7 @@ export async function listCandidates(filters: CandidateFilterDto) {
 
 export async function exportCandidates(filters: CandidateFilterDto) {
   let query = buildBaseQuery().select(
-      'e.candidate_number', 'e.first_name', 'e.last_name',
+      'e.login_id', 'e.candidate_number', 'e.first_name', 'e.last_name',
       'u.email', 'e.phone',
       'e.current_country', 'e.target_locations',
       'e.profile_status', 'e.registration_fee_status', 'e.cv_format',

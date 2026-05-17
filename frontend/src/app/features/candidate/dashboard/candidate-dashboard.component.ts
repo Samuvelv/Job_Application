@@ -89,6 +89,13 @@ interface CompletionSection {
       border-color: rgba(245,158,11,.35);
       color: #fde68a;
     }
+    .cd-hero__chip--login-id {
+      background: rgba(99,102,241,.25);
+      border-color: rgba(165,180,252,.4);
+      color: #c7d2fe;
+      font-weight: 600;
+      letter-spacing: .3px;
+    }
     .cd-hero__actions {
       display: flex;
       flex-wrap: wrap;
@@ -343,6 +350,11 @@ interface CompletionSection {
         @if (candidate()?.candidate_number) {
           <span class="cd-hero__chip">
             <i class="bi bi-person-badge"></i>{{ candidate()!.candidate_number }}
+          </span>
+        }
+        @if (candidate()?.login_id) {
+          <span class="cd-hero__chip cd-hero__chip--login-id" title="Use this ID to log in">
+            <i class="bi bi-key-fill"></i>Login ID: {{ candidate()!.login_id }}
           </span>
         }
         @if (stats()?.pendingRequest) {

@@ -16,7 +16,9 @@ import { db } from '../../config/db';
 import { env } from '../../config/env';
 
 const loginSchema = z.object({
-  email:    z.string().email(),
+  // Accepts either an email address (admin/recruiter) or a numeric Candidate
+  // Login ID (e.g. "10001").  Type detection is handled in auth.service.ts.
+  email:    z.string().min(1, 'Email address or Candidate ID is required'),
   password: z.string().min(6),
 });
 
