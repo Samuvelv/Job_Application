@@ -155,28 +155,38 @@ import { EmptyStateComponent }  from '../../../shared/components/empty-state/emp
       grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
       gap: 20px;
     }
-    .vb-card { border-radius: 12px; transition: box-shadow .2s; }
-    .vb-card:hover { box-shadow: 0 4px 20px rgba(0,0,0,.1); }
+    .vb-card {
+      border-radius: 12px;
+      transition: box-shadow .2s, border-color .2s;
+      background: var(--th-surface);
+      border-color: var(--th-border);
+    }
+    .vb-card:hover {
+      box-shadow: 0 4px 20px rgba(0,0,0,.12);
+      border-color: var(--th-primary);
+    }
 
     .vb-avatar {
       width: 56px; height: 56px;
       border-radius: 50%; flex-shrink: 0; object-fit: cover;
     }
-    .vb-avatar--photo { border: 2px solid var(--bs-primary); }
+    .vb-avatar--photo { border: 2px solid var(--th-primary); }
     .vb-avatar--initials {
       display: flex; align-items: center; justify-content: center;
-      background: linear-gradient(135deg, #6366f1, #8b5cf6);
+      background: linear-gradient(135deg, var(--th-primary), #8b5cf6);
       color: #fff; font-weight: 700; font-size: 1.2rem;
     }
 
     .vb-journey { display: flex; align-items: center; flex-wrap: wrap; gap: 4px; }
     .vb-journey__tag {
-      background: #f3f4f6; color: #374151;
+      background: var(--th-surface-2);
+      color: var(--th-text-secondary);
       font-size: 11px; font-weight: 500;
       border-radius: 4px; padding: 2px 8px;
     }
     .vb-journey__tag--placed {
-      background: #d1fae5; color: #065f46;
+      background: var(--th-success-soft);
+      color: var(--th-success);
     }
   `],
 })
