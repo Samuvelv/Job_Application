@@ -495,6 +495,11 @@ export async function updateCandidate(id: string, dto: UpdateCandidateDto) {
     }
   });
 
+  // Sync volunteer availability when profile_status changes
+  if (dto.profile_status !== undefined) {
+    await syncVolunteerAvailability(id, dto.profile_status);
+  }
+
   return getCandidateById(id);
 }
 
@@ -578,9 +583,10 @@ export async function bulkAction(
     case 'change_status': {
       const status = payload?.profile_status;
       if (!status) throw new AppError(400, 'payload.profile_status is required for change_status');
-      await db('candidates')
-        .whereIn('id', candidateIds)
+      await db('candidates').whereIn('id', candidateIds)
         .update({ profile_status: status, updated_at: new Date() });
+      // Sync volunteer availability for all affected candidates
+      await Promise.all(candidateIds.map(cid => syncVolunteerAvailability(cid, status)));
       return { updated: candidateIds.length };
     }
 
@@ -635,4 +641,50 @@ export async function inviteAsVolunteer(id: string): Promise<{ message: string }
   });
 
   return { message: `Volunteer invitation sent to ${candidate.email}` };
+}
+
+// ── Sync volunteer availability ───────────────────────────────────────────────
+
+/**
+ * Keeps volunteer availability in sync with candidate profile_status.
+ * Called after every profile_status update.
+ *
+ * Rules:
+ *   - newStatus !== 'placed'  → set availability = 'Inactive'
+ *   - newStatus === 'placed'  → set availability = 'Active' ONLY if currently 'Inactive'
+ *     (preserves admin-set 'Temporarily Unavailable')
+ */
+export async function syncVolunteerAvailability(
+  candidateId: string,
+  newStatus: string,
+): Promise<void> {
+  // Look up candidate email
+  const row = await db('candidates as c')
+    .join('users as u', 'u.id', 'c.user_id')
+    .select('u.email')
+    .where('c.id', candidateId)
+    .first();
+
+  if (!row?.email) return;
+
+  // Find matching volunteer by email
+  const volunteer = await db('volunteers')
+    .whereRaw('LOWER(email) = LOWER(?)', [row.email])
+    .select('id', 'availability')
+    .first();
+
+  if (!volunteer) return;
+
+  if (newStatus !== 'placed') {
+    // Deactivate regardless of current availability
+    await db('volunteers')
+      .where({ id: volunteer.id })
+      .update({ availability: 'Inactive', updated_at: new Date() });
+  } else if (newStatus === 'placed' && volunteer.availability === 'Inactive') {
+    // Re-place: restore to Active only if system-deactivated
+    await db('volunteers')
+      .where({ id: volunteer.id })
+      .update({ availability: 'Active', updated_at: new Date() });
+  }
+  // If newStatus === 'placed' but availability is 'Temporarily Unavailable' → no-op
 }

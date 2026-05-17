@@ -152,6 +152,10 @@ export async function updateVolunteer(id: string, dto: UpdateVolunteerDto) {
   const existing = await db('volunteers').where({ id }).first();
   if (!existing) throw new AppError(404, 'Volunteer not found');
 
+  if (dto.availability === 'Inactive') {
+    throw new AppError(400, 'Cannot manually set availability to Inactive');
+  }
+
   const patch: Record<string, unknown> = { updated_at: new Date() };
   if (dto.name               !== undefined) patch['name']               = dto.name;
   if (dto.email              !== undefined) patch['email']              = dto.email              ?? null;
