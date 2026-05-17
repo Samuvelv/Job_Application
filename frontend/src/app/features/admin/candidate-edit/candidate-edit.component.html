@@ -66,6 +66,41 @@
       </div>
     </div>
   }
+  <!-- ── Volunteer Reactivation Prompt (shown when re-setting status to Placed) ──── -->
+  @if (showVolunteerReactivatePrompt) {
+    <div class="placed-prompt-overlay">
+      <div class="placed-prompt">
+        <div class="placed-prompt__icon">
+          <i class="bi bi-person-check-fill"></i>
+        </div>
+        <h4 class="placed-prompt__title">Reactivate Volunteer Profile?</h4>
+        <p class="placed-prompt__msg">
+          <strong>{{ candidate?.first_name }} {{ candidate?.last_name }}</strong>
+          already has a volunteer record. Would you like to reactivate
+          their volunteer profile so they appear in the volunteers list again?
+        </p>
+        @if (reactivateError) {
+          <div class="alert alert-danger small py-2 mb-3">
+            <i class="bi bi-exclamation-triangle me-1"></i>{{ reactivateError }}
+          </div>
+        }
+        <div class="placed-prompt__actions">
+          <button class="placed-prompt__btn placed-prompt__btn--yes"
+            (click)="confirmReactivation()" [disabled]="reactivating">
+            @if (reactivating) {
+              <span class="spinner-border spinner-border-sm me-2"></span>Reactivating…
+            } @else {
+              <i class="bi bi-check2-circle me-2"></i>Yes, Reactivate
+            }
+          </button>
+          <button class="placed-prompt__btn placed-prompt__btn--no"
+            (click)="skipReactivation()" [disabled]="reactivating">
+            <i class="bi bi-x-circle me-1"></i>Not Now
+          </button>
+        </div>
+      </div>
+    </div>
+  }
   @if (errorMsg) {
     <div class="alert alert-danger d-flex align-items-center gap-2">
       <i class="bi bi-exclamation-triangle-fill"></i> {{ errorMsg }}

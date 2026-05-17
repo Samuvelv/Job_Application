@@ -214,6 +214,11 @@ export class CandidateEditComponent implements OnInit {
   inviteSending    = false;
   inviteError      = '';
 
+  // Volunteer reactivation prompt
+  showVolunteerReactivatePrompt = false;
+  reactivateError = '';
+  reactivating = false;
+
   form!: FormGroup;
 
   mediaLoading: Record<string, boolean> = {};
@@ -850,8 +855,11 @@ export class CandidateEditComponent implements OnInit {
         this.toast.success('Candidate updated');
         window.scrollTo({ top: 0, behavior: 'smooth' });
 
-        if (raw.profile_status === 'placed' && !res.candidate.is_volunteer) {
-          // Show volunteer invitation prompt only if not already a volunteer
+        if (raw.profile_status === 'placed' && res.candidate.volunteer_invite_status === 'converted') {
+          // Candidate already has a volunteer record — offer reactivation
+          this.showVolunteerReactivatePrompt = true;
+        } else if (raw.profile_status === 'placed' && !res.candidate.is_volunteer) {
+          // Never been a volunteer — offer invitation
           this.showPlacedPrompt = true;
         } else {
           setTimeout(() => this.router.navigate(['/admin/candidates', this.candidateId]), 1500);
@@ -913,6 +921,28 @@ export class CandidateEditComponent implements OnInit {
 
   skipInvitation(): void {
     this.showPlacedPrompt = false;
+    this.router.navigate(['/admin/candidates', this.candidateId]);
+  }
+
+  confirmReactivation(): void {
+    this.reactivating = true;
+    this.reactivateError = '';
+    this.volunteerSvc.reactivateVolunteer(this.candidateId).subscribe({
+      next: () => {
+        this.reactivating = false;
+        this.showVolunteerReactivatePrompt = false;
+        this.toast.success('Volunteer profile reactivated.');
+        this.router.navigate(['/admin/candidates', this.candidateId]);
+      },
+      error: (err) => {
+        this.reactivating = false;
+        this.reactivateError = err?.error?.message ?? 'Failed to reactivate volunteer.';
+      },
+    });
+  }
+
+  skipReactivation(): void {
+    this.showVolunteerReactivatePrompt = false;
     this.router.navigate(['/admin/candidates', this.candidateId]);
   }
 }
