@@ -4,6 +4,7 @@ import { Request, Response, NextFunction } from 'express';
 import { z, ZodObject, ZodSchema, ZodRawShape } from 'zod';
 import {
   assertAllowedTable,
+  ALLOWED_TABLES,
   listMasterRecords,
   getMasterRecord,
   createMasterRecord,
@@ -12,6 +13,7 @@ import {
   restoreMasterRecord,
 } from './master.service';
 import { logAudit } from '../../services/audit.service';
+import { db }       from '../../config/db';
 
 // ── Per-table Zod schemas ─────────────────────────────────────────────────────
 
@@ -175,5 +177,21 @@ export async function restoreRecord(req: Request, res: Response, next: NextFunct
       ipAddress:  req.ip,
     });
     res.json({ message: 'Record restored', data: record });
+  } catch (err) { next(err); }
+}
+
+// ── counts ────────────────────────────────────────────────────────────────────
+
+export async function getCounts(_req: Request, res: Response, next: NextFunction): Promise<void> {
+  try {
+    const results = await Promise.all(
+      ALLOWED_TABLES.map((table) =>
+        db(table).whereNull('deleted_at').count<{ count: string }>('id as count').first()
+          .then((row) => ({ table, count: Number(row?.count ?? 0) })),
+      ),
+    );
+    const counts: Record<string, number> = {};
+    for (const { table, count } of results) counts[table] = count;
+    res.json(counts);
   } catch (err) { next(err); }
 }

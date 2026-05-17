@@ -1007,6 +1007,13 @@ body {
 .modal-header { border-bottom-color: var(--th-border); }
 .modal-footer { border-top-color: var(--th-border); }
 
+// Allow ss-dropdown / cms-dropdown to escape modal-body overflow constraints
+// when a searchable-select or chip-multi-select is open inside a modal.
+.modal-body:has(.ss-wrap.ss-open),
+.modal-body:has(.cms-wrap.cms-open) {
+  overflow: visible;
+}
+
 // Dropdown
 .dropdown-menu {
   background: var(--th-surface);
@@ -12776,49 +12783,113 @@ html { scroll-behavior: smooth; }
 //  MASTER DATA MANAGEMENT MODULE
 // ------------------------------------------------------------------------------
 
-// -- Sidebar group styles ------------------------------------------------------
-.sidebar-group {
-  .sidebar-group__toggle {
-    display: flex;
-    align-items: center;
-    gap: .625rem;
-    width: 100%;
-    padding: .5rem .75rem;
-    border: none;
-    background: none;
-    cursor: pointer;
-    border-radius: var(--th-radius, 8px);
-    color: var(--th-text-secondary);
-    font-size: .875rem;
-    font-weight: 500;
-    transition: background .15s, color .15s;
+// -- Master data card grid -----------------------------------------------------
+.md-grid {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 1rem;
 
-    &:hover {
-      background: var(--th-primary-soft);
-      color: var(--th-primary);
-    }
+  @media (max-width: 1399px) { grid-template-columns: repeat(4, 1fr); }
+  @media (max-width: 991px)  { grid-template-columns: repeat(3, 1fr); }
+  @media (max-width: 767px)  { grid-template-columns: repeat(2, 1fr); }
+  @media (max-width: 479px)  { grid-template-columns: repeat(1, 1fr); }
+}
+
+.md-card {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: .875rem;
+  padding: .875rem 1rem;
+  background: var(--th-card-bg, #fff);
+  border: 1.5px solid var(--th-border, #e5e7eb);
+  border-radius: var(--th-radius-lg, 12px);
+  cursor: pointer;
+  transition: box-shadow .18s ease, border-color .18s ease, background .18s ease;
+  user-select: none;
+
+  &:hover {
+    box-shadow: 0 4px 16px rgba(0, 0, 0, .08);
+    border-color: var(--th-primary);
   }
 
-  &.is-open .sidebar-group__toggle {
-    color: var(--th-primary);
-    background: var(--th-primary-soft);
+  &--active {
+    border-color: var(--th-primary);
+    background: var(--th-primary-soft, #eef2ff);
+    box-shadow: 0 2px 12px rgba(99, 102, 241, .12);
   }
+}
 
-  .sidebar-group__children {
-    list-style: none;
-    padding: .25rem 0 .25rem .75rem;
-    margin: 0;
-    border-left: 2px solid var(--th-border);
-    margin-left: 1.35rem;
+.md-card__icon-wrap {
+  flex-shrink: 0;
+}
 
-    .sidebar-link--child {
-      padding: .3rem .625rem !important;
-      font-size: .8125rem;
-      gap: .5rem;
+.md-card__icon {
+  width: 40px;
+  height: 40px;
+  border-radius: var(--th-radius, 8px);
+  background: var(--th-primary-soft, #eef2ff);
+  color: var(--th-primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.1rem;
+  transition: background .18s, color .18s;
 
-      i { font-size: .8rem; min-width: 1rem; }
-    }
+  .md-card--active & {
+    background: var(--th-primary);
+    color: #fff;
   }
+}
+
+.md-card__body {
+  flex: 1;
+  min-width: 0;
+}
+
+.md-card__label {
+  font-size: .8rem;
+  font-weight: 600;
+  color: var(--th-text-secondary);
+  text-transform: uppercase;
+  letter-spacing: .04em;
+  line-height: 1.2;
+  margin-bottom: .15rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.md-card__count {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--th-text);
+  line-height: 1;
+
+  &--loading {
+    display: inline-block;
+    width: 2.5rem;
+    height: .875rem;
+    border-radius: 4px;
+    background: linear-gradient(90deg, var(--th-border) 25%, var(--th-card-bg) 50%, var(--th-border) 75%);
+    background-size: 200% 100%;
+    animation: md-shimmer 1.4s infinite;
+    vertical-align: middle;
+  }
+}
+
+.md-card__check {
+  position: absolute;
+  top: .5rem;
+  right: .5rem;
+  color: var(--th-primary);
+  font-size: .85rem;
+  line-height: 1;
+}
+
+@keyframes md-shimmer {
+  0%   { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
 }
 
 // -- Master management table overrides -----------------------------------------

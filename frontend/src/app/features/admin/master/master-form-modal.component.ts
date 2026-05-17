@@ -8,6 +8,7 @@ import { MasterTableConfig, MasterFieldDef } from './master-table.config';
 import { AdminMasterService, MasterRecord } from '../../../core/services/admin-master.service';
 import { ToastService } from '../../../core/services/toast.service';
 import { MasterDataService } from '../../../core/services/master-data.service';
+import { SearchableSelectComponent, SelectOption } from '../../../shared/components/searchable-select/searchable-select.component';
 
 // Re-export for convenience
 export type { MasterRecord } from '../../../core/services/admin-master.service';
@@ -15,7 +16,7 @@ export type { MasterRecord } from '../../../core/services/admin-master.service';
 @Component({
   selector: 'app-master-form-modal',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule],
+  imports: [CommonModule, ReactiveFormsModule, SearchableSelectComponent],
   template: `
     @if (visible) {
       <!-- Backdrop -->
@@ -23,7 +24,7 @@ export type { MasterRecord } from '../../../core/services/admin-master.service';
 
       <!-- Modal -->
       <div class="modal d-block" tabindex="-1" style="z-index:1055" role="dialog" aria-modal="true">
-        <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable" style="max-width:520px">
+          <div class="modal-dialog modal-dialog-centered" style="max-width:520px">
           <div class="modal-content mfm-modal">
 
             <!-- Header -->
@@ -55,14 +56,13 @@ export type { MasterRecord } from '../../../core/services/admin-master.service';
 
                       <!-- Select field -->
                       @if (field.type === 'select') {
-                        <select class="form-select form-select-sm"
+                        <app-searchable-select
                           [formControlName]="field.key"
-                          [class.is-invalid]="isInvalid(field.key)">
-                          <option value="" disabled>— Select {{ field.label }} —</option>
-                          @for (opt of getSelectOptions(field); track opt.id) {
-                            <option [value]="opt.id">{{ opt.label }}</option>
-                          }
-                        </select>
+                          [options]="getSelectOptionsForSearchable(field)"
+                          [allowClear]="false"
+                          [invalid]="isInvalid(field.key)"
+                          [placeholder]="'Select ' + field.label + '…'">
+                        </app-searchable-select>
                       }
 
                       <!-- Number field -->
@@ -134,21 +134,13 @@ export type { MasterRecord } from '../../../core/services/admin-master.service';
     }
   `,
   styles: [`
-    .mfm-modal { border: none; border-radius: var(--th-radius-xl, 14px); box-shadow: var(--th-shadow-xl); overflow: hidden; }
+    .mfm-modal { border: none; border-radius: var(--th-radius-xl, 14px); box-shadow: var(--th-shadow-xl); }
     .mfm-header { background: var(--th-surface, #fff); padding: 1.25rem 1.5rem 0; }
     .mfm-header__icon {
       width: 40px; height: 40px; border-radius: var(--th-radius, 8px);
       background: var(--th-primary-soft, #eef2ff);
       display: flex; align-items: center; justify-content: center;
       color: var(--th-primary, #5046e5); font-size: 1.1rem;
-    }
-    .form-control, .form-select {
-      border-color: var(--th-border, #e5e7eb);
-      font-size: .875rem;
-    }
-    .form-control:focus, .form-select:focus {
-      border-color: var(--th-primary, #5046e5);
-      box-shadow: 0 0 0 0.2rem rgba(80,70,229,.15);
     }
     .modal-body { padding: 1rem 1.5rem; }
     .modal-footer { padding: .75rem 1.5rem 1.25rem; }
@@ -211,6 +203,10 @@ export class MasterFormModalComponent implements OnInit, OnChanges {
       return this.masterData.occupations().map((o) => ({ id: o.id, label: o.name }));
     }
     return [];
+  }
+
+  getSelectOptionsForSearchable(field: MasterFieldDef): SelectOption[] {
+    return this.getSelectOptions(field).map((o) => ({ value: o.id, label: o.label }));
   }
 
   onSave(): void {

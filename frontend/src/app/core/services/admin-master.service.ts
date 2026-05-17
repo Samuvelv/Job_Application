@@ -95,4 +95,8 @@ export class AdminMasterService {
       `${this.base}/${table}/${id}/restore`, {},
     ).pipe(tap(() => this.masterData.invalidate()));
   }
+
+  getCounts(): Observable<Record<string, number>> {
+    return this.http.get<Record<string, number>>(`${this.base}/counts`);
+  }
 }

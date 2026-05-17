@@ -11,6 +11,7 @@ import {
   updateRecord,
   deleteRecord,
   restoreRecord,
+  getCounts,
 } from './master-admin.controller';
 
 const router = Router();
@@ -20,6 +21,8 @@ router.use(authenticate, authorize('admin'));
 
 // ── CRUD endpoints ────────────────────────────────────────────────────────────
 // :table is validated against ALLOWED_TABLES whitelist inside the controller
+// NOTE: /counts must be declared BEFORE /:table to avoid being matched as a table name
+router.get   ('/counts',             getCounts);
 router.get   ('/:table',             listRecords);
 router.get   ('/:table/:id',         getRecord);
 router.post  ('/:table',             createRecord);
