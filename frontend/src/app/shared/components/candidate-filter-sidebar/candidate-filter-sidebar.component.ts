@@ -9,7 +9,7 @@ import { CandidateFilters } from '../../../core/models/candidate.model';
 import { TagInputComponent } from '../tag-input/tag-input.component';
 import { ChipMultiSelectComponent, ChipOption } from '../chip-multi-select/chip-multi-select.component';
 import { SearchableSelectComponent, SelectOption } from '../searchable-select/searchable-select.component';
-import { REGISTRATION_FEE_STATUS_OPTIONS, CV_FORMAT_OPTIONS, SOURCE_OPTIONS } from '../../../core/constants/candidate-options';
+import { REGISTRATION_FEE_STATUS_OPTIONS, CV_FORMAT_OPTIONS, SOURCE_OPTIONS, PROFILE_STATUS_OPTIONS } from '../../../core/constants/candidate-options';
 
 export type FilterApplyEvent = CandidateFilters;
 
@@ -62,11 +62,7 @@ const AVAILABILITY_OPTIONS: SelectOption[] = [
   { value: '3_months',  label: 'Within 3 Months' },
 ];
 
-const PROFILE_STATUS_OPTIONS: SelectOption[] = [
-  { value: 'active',       label: 'Active' },
-  { value: 'pending_edit', label: 'Pending Edit' },
-  { value: 'inactive',     label: 'Inactive' },
-];
+
 
 
 @Component({

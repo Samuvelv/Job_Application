@@ -120,7 +120,17 @@ import { EmptyStateComponent } from '../../../shared/components/empty-state/empt
       <div class="row g-3">
         @for (entry of entries; track entry.shortlist_id) {
           <div class="col-md-6 col-lg-4">
-            <div class="candidate-card">
+            <div class="candidate-card" [class.candidate-card--placed]="entry.profile_status === 'placed'">
+
+              <!-- Placed banner -->
+              @if (entry.profile_status === 'placed') {
+                <div class="d-flex align-items-center gap-2 px-2 py-1 mb-2 rounded"
+                  style="background:var(--bs-success-bg-subtle);border:1px solid var(--bs-success-border-subtle)">
+                  <i class="bi bi-patch-check-fill text-success" style="font-size:.9rem"></i>
+                  <span class="small fw-semibold text-success">Candidate Placed</span>
+                  <span class="small text-muted ms-auto">No longer available</span>
+                </div>
+              }
 
               <!-- Avatar + name -->
               <div class="candidate-card__header">

@@ -24,6 +24,7 @@ import volunteerSupportRouter        from './modules/volunteer-support-requests/
 import uploadsRouter                 from './modules/uploads/uploads.router';
 import agencyReferralsRouter         from './modules/agency-referrals/agency-referrals.router';
 import agencyInterestRequestsRouter  from './modules/agency-interest-requests/agency-interest-requests.router';
+import recruiterAccessRequestsRouter from './modules/recruiter-access-requests/recruiter-access-requests.router';
 
 const app = express();
 
@@ -90,6 +91,7 @@ app.use('/api/v1/contact-submissions',               contactSubmissionsRouter);
 app.use('/api/v1/volunteer-support-requests',        volunteerSupportRouter);
 app.use('/api/v1/candidates/:candidateId/referrals', agencyReferralsRouter);
 app.use('/api/v1/interest-requests',                 agencyInterestRequestsRouter);
+app.use('/api/v1/recruiter-access-requests',         recruiterAccessRequestsRouter);
 // Generic /api/v1 mount LAST — never shadows any specific router above
 app.use('/api/v1',                                   uploadsRouter);
 

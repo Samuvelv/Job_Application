@@ -1,7 +1,7 @@
 // src/app/features/candidate/dashboard/candidate-dashboard.component.ts
 import { Component, signal, OnInit, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RouterLink } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
 import { forkJoin, of } from 'rxjs';
 import { catchError } from 'rxjs/operators';
 import { AuthService } from '../../../core/services/auth.service';
@@ -336,8 +336,60 @@ interface CompletionSection {
       0%  { background-position: 200% 0; }
       100%{ background-position: -200% 0; }
     }
+
+    /* ── Placed Banner ──────────────────────────────────────────────────── */
+    .placed-banner {
+      display: flex;
+      align-items: flex-start;
+      gap: 1rem;
+      padding: 1.1rem 1.25rem;
+      border-radius: 14px;
+      background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%);
+      border: 1.5px solid #6ee7b7;
+    }
+    .placed-banner__icon {
+      font-size: 2rem;
+      color: #059669;
+      flex-shrink: 0;
+      line-height: 1;
+    }
+    .placed-banner__title {
+      font-size: .95rem;
+      font-weight: 700;
+      color: #065f46;
+      margin-bottom: .3rem;
+    }
+    .placed-banner__sub {
+      font-size: .82rem;
+      color: #047857;
+      line-height: 1.5;
+    }
   `],
   template: `
+    <!-- ── Placed Banner ──────────────────────────────────────────────────── -->
+    @if (isPlaced()) {
+      <div class="placed-banner mb-4">
+        <div class="placed-banner__icon">
+          <i class="bi bi-patch-check-fill"></i>
+        </div>
+        <div class="placed-banner__body">
+          <div class="placed-banner__title">Congratulations! You have been successfully placed.</div>
+          <div class="placed-banner__sub">
+            Your profile is now in placed status. Profile editing and request changes are disabled.
+            You can continue to view your dashboard and profile information.
+          </div>
+        </div>
+      </div>
+    }
+
+    <!-- ── Blocked notice (redirected from guard) ─────────────────────────── -->
+    @if (placedBlocked()) {
+      <div class="alert alert-warning d-flex align-items-center gap-2 mb-4" role="alert">
+        <i class="bi bi-lock-fill flex-shrink-0"></i>
+        <span>This page is not accessible while your profile is in placed status.</span>
+      </div>
+    }
+
     <!-- ── Hero ──────────────────────────────────────────────────────────── -->
     <div class="cd-hero">
       <div class="cd-hero__eyebrow">Candidate Portal</div>
@@ -357,9 +409,14 @@ interface CompletionSection {
             <i class="bi bi-key-fill"></i>Login ID: {{ candidate()!.login_id }}
           </span>
         }
-        @if (stats()?.pendingRequest) {
+        @if (!isPlaced() && stats()?.pendingRequest) {
           <span class="cd-hero__chip cd-hero__chip--warn">
             <i class="bi bi-hourglass-split"></i>Edit request pending
+          </span>
+        }
+        @if (isPlaced()) {
+          <span class="cd-hero__chip" style="background:var(--bs-success-bg-subtle);color:var(--bs-success);border-color:var(--bs-success-border-subtle)">
+            <i class="bi bi-patch-check-fill"></i>Placed
           </span>
         }
       </div>
@@ -368,14 +425,16 @@ interface CompletionSection {
         <a routerLink="/candidate/profile" class="cd-hero__btn cd-hero__btn--solid">
           <i class="bi bi-person-circle"></i>My Profile
         </a>
-        @if (stats()?.pendingRequest) {
-          <a routerLink="/candidate/edit-request" class="cd-hero__btn cd-hero__btn--ghost-warn">
-            <i class="bi bi-hourglass-split"></i>Edit Pending
-          </a>
-        } @else {
-          <a routerLink="/candidate/edit-request" class="cd-hero__btn cd-hero__btn--ghost">
-            <i class="bi bi-pencil"></i>Request Edit
-          </a>
+        @if (!isPlaced()) {
+          @if (stats()?.pendingRequest) {
+            <a routerLink="/candidate/edit-request" class="cd-hero__btn cd-hero__btn--ghost-warn">
+              <i class="bi bi-hourglass-split"></i>Edit Pending
+            </a>
+          } @else {
+            <a routerLink="/candidate/edit-request" class="cd-hero__btn cd-hero__btn--ghost">
+              <i class="bi bi-pencil"></i>Request Edit
+            </a>
+          }
         }
       </div>
     </div>
@@ -408,115 +467,121 @@ interface CompletionSection {
         <i class="bi bi-chevron-right cd-link__arrow"></i>
       </a>
 
-      <!-- Request Edit -->
-      <a routerLink="/candidate/edit-request" class="cd-link">
-        <div class="cd-link__icon cd-link__icon--amber">
-          <i class="bi bi-pencil-square"></i>
-        </div>
-        <div class="cd-link__body">
-          <div class="cd-link__title">Request Edit</div>
-          <div class="cd-link__desc">Submit changes for admin approval</div>
-        </div>
-        @if (stats()?.pendingRequest) {
-          <span class="cd-link__badge">Pending</span>
-        }
-        <i class="bi bi-chevron-right cd-link__arrow"></i>
-      </a>
-
-    </div>
-
-    <!-- ── Profile Completion ─────────────────────────────────────────────── -->
-    <div class="cd-completion">
-      <div class="cd-completion__header">
-        <div class="cd-completion__icon">
-          <i class="bi bi-activity"></i>
-        </div>
-        <span class="cd-completion__title">Profile Completion</span>
-        @if (loading()) {
-          <span class="skeleton" style="width:52px;height:28px;display:block"></span>
-        } @else {
-          <span class="cd-completion__pct" [style.color]="completionColor()">
-            {{ completionPct() }}%
-          </span>
-        }
-      </div>
-
-      <div class="cd-completion__body">
-        <!-- Progress bar -->
-        @if (loading()) {
-          <div class="cd-progress mb-3">
-            <div class="cd-progress__fill cd-progress__fill--green skeleton" style="width:60%"></div>
-          </div>
-        } @else {
-          <div class="cd-progress">
-            <div class="cd-progress__fill"
-              [class.cd-progress__fill--green]="completionPct() >= 80"
-              [class.cd-progress__fill--amber]="completionPct() >= 50 && completionPct() < 80"
-              [class.cd-progress__fill--red]="completionPct() < 50"
-              [style.width]="completionPct() + '%'">
-            </div>
-          </div>
-          <div class="cd-progress__hint">
-            @if (completionPct() === 100) {
-              Your profile is fully complete and visible to recruiters.
-            } @else {
-              {{ 100 - completionPct() }}% remaining — complete your profile to improve recruiter visibility.
-            }
-          </div>
-        }
-
-        <!-- Section checklist -->
-        @if (!loading()) {
-          <div class="cd-sections">
-            @for (sec of sections(); track sec.label) {
-              <div class="cd-section">
-                <div class="cd-section__dot"
-                  [class.cd-section__dot--done]="sec.done"
-                  [class.cd-section__dot--miss]="!sec.done">
-                  <i class="bi" [class.bi-check-lg]="sec.done" [class.bi-dash]="!sec.done"></i>
-                </div>
-                <div class="cd-section__info">
-                  <div class="cd-section__label">{{ sec.label }}</div>
-                  <div class="cd-section__sub">{{ sec.done ? 'Complete' : 'Incomplete' }}</div>
-                </div>
-                <span class="cd-section__weight">{{ sec.weight }}%</span>
-              </div>
-            }
-          </div>
-        } @else {
-          <!-- Skeleton checklist -->
-          <div class="cd-sections">
-            @for (i of [1,2,3,4,5,6,7,8,9]; track i) {
-              <div class="cd-section">
-                <span class="skeleton" style="width:24px;height:24px;border-radius:50%;flex-shrink:0"></span>
-                <div class="flex-grow-1">
-                  <span class="skeleton" style="width:80%;height:12px;display:block;margin-bottom:4px"></span>
-                  <span class="skeleton" style="width:50%;height:10px;display:block"></span>
-                </div>
-              </div>
-            }
-          </div>
-        }
-      </div>
-
-      @if (!loading() && completionPct() < 100) {
-        <div class="cd-completion__footer">
-          <a routerLink="/candidate/edit-request"
-            style="font-size:13px;font-weight:600;color:var(--th-primary);text-decoration:none;
-              display:inline-flex;align-items:center;gap:5px">
+      <!-- Request Edit — hidden for placed candidates -->
+      @if (!isPlaced()) {
+        <a routerLink="/candidate/edit-request" class="cd-link">
+          <div class="cd-link__icon cd-link__icon--amber">
             <i class="bi bi-pencil-square"></i>
-            Update your profile to reach 100%
-            <i class="bi bi-arrow-right ms-1"></i>
-          </a>
-        </div>
+          </div>
+          <div class="cd-link__body">
+            <div class="cd-link__title">Request Edit</div>
+            <div class="cd-link__desc">Submit changes for admin approval</div>
+          </div>
+          @if (stats()?.pendingRequest) {
+            <span class="cd-link__badge">Pending</span>
+          }
+          <i class="bi bi-chevron-right cd-link__arrow"></i>
+        </a>
       }
+
     </div>
+
+    <!-- ── Profile Completion — hidden for placed candidates ──────────────── -->
+    @if (!isPlaced()) {
+      <div class="cd-completion">
+        <div class="cd-completion__header">
+          <div class="cd-completion__icon">
+            <i class="bi bi-activity"></i>
+          </div>
+          <span class="cd-completion__title">Profile Completion</span>
+          @if (loading()) {
+            <span class="skeleton" style="width:52px;height:28px;display:block"></span>
+          } @else {
+            <span class="cd-completion__pct" [style.color]="completionColor()">
+              {{ completionPct() }}%
+            </span>
+          }
+        </div>
+
+        <div class="cd-completion__body">
+          <!-- Progress bar -->
+          @if (loading()) {
+            <div class="cd-progress mb-3">
+              <div class="cd-progress__fill cd-progress__fill--green skeleton" style="width:60%"></div>
+            </div>
+          } @else {
+            <div class="cd-progress">
+              <div class="cd-progress__fill"
+                [class.cd-progress__fill--green]="completionPct() >= 80"
+                [class.cd-progress__fill--amber]="completionPct() >= 50 && completionPct() < 80"
+                [class.cd-progress__fill--red]="completionPct() < 50"
+                [style.width]="completionPct() + '%'">
+              </div>
+            </div>
+            <div class="cd-progress__hint">
+              @if (completionPct() === 100) {
+                Your profile is fully complete and visible to recruiters.
+              } @else {
+                {{ 100 - completionPct() }}% remaining — complete your profile to improve recruiter visibility.
+              }
+            </div>
+          }
+
+          <!-- Section checklist -->
+          @if (!loading()) {
+            <div class="cd-sections">
+              @for (sec of sections(); track sec.label) {
+                <div class="cd-section">
+                  <div class="cd-section__dot"
+                    [class.cd-section__dot--done]="sec.done"
+                    [class.cd-section__dot--miss]="!sec.done">
+                    <i class="bi" [class.bi-check-lg]="sec.done" [class.bi-dash]="!sec.done"></i>
+                  </div>
+                  <div class="cd-section__info">
+                    <div class="cd-section__label">{{ sec.label }}</div>
+                    <div class="cd-section__sub">{{ sec.done ? 'Complete' : 'Incomplete' }}</div>
+                  </div>
+                  <span class="cd-section__weight">{{ sec.weight }}%</span>
+                </div>
+              }
+            </div>
+          } @else {
+            <!-- Skeleton checklist -->
+            <div class="cd-sections">
+              @for (i of [1,2,3,4,5,6,7,8,9]; track i) {
+                <div class="cd-section">
+                  <span class="skeleton" style="width:24px;height:24px;border-radius:50%;flex-shrink:0"></span>
+                  <div class="flex-grow-1">
+                    <span class="skeleton" style="width:80%;height:12px;display:block;margin-bottom:4px"></span>
+                    <span class="skeleton" style="width:50%;height:10px;display:block"></span>
+                  </div>
+                </div>
+              }
+            </div>
+          }
+        </div>
+
+        @if (!loading() && completionPct() < 100) {
+          <div class="cd-completion__footer">
+            <a routerLink="/candidate/edit-request"
+              style="font-size:13px;font-weight:600;color:var(--th-primary);text-decoration:none;
+                display:inline-flex;align-items:center;gap:5px">
+              <i class="bi bi-pencil-square"></i>
+              Update your profile to reach 100%
+              <i class="bi bi-arrow-right ms-1"></i>
+            </a>
+          </div>
+        }
+      </div>
+    }
   `,
 })
 export class CandidateDashboardComponent implements OnInit {
-  stats     = signal<CandidateStats | null>(null);
-  candidate = signal<Candidate | null>(null);
-  loading   = signal(true);
+  stats        = signal<CandidateStats | null>(null);
+  candidate    = signal<Candidate | null>(null);
+  loading      = signal(true);
+  isPlaced     = signal(false);
+  placedBlocked = signal(false);
 
   // ── Derived ────────────────────────────────────────────────────────────────
 
@@ -543,16 +608,27 @@ export class CandidateDashboardComponent implements OnInit {
   /**
    * Section-level checklist derived from the loaded candidate profile.
    * Fields and weights exactly mirror the admin candidate-card completionPercent
-   * formula and the backend getCandidateStats() — all three are now in sync:
+   * formula and the backend getCandidateStats() — all three are in sync:
    *
-   *   base name(15) + photo(15) + job_title(10) + industry(10)
+   *   name/registration(15) + photo(15) + job_title(10) + industry(10)
    *   + current_country(10) + years_experience(10) + english_level(10)
    *   + intro_video_url(10) + nationality(5) + target_locations(5) = 100
+   *
+   * The "Name & Registration" section is always marked done because the base
+   * 15 points are unconditionally added by both the backend and admin card.
    */
   sections = computed<CompletionSection[]>(() => {
     const c = this.candidate();
     if (!c) return [];
     return [
+      {
+        // Base 15 points: name is always present after registration.
+        // Matching the +15 base in both the admin card and backend formula.
+        label:  'Name & Registration',
+        icon:   'bi-person-fill',
+        done:   true,
+        weight: 15,
+      },
       {
         label:  'Profile Photo',
         icon:   'bi-person-circle',
@@ -614,15 +690,26 @@ export class CandidateDashboardComponent implements OnInit {
     private auth: AuthService,
     private statsService: StatsService,
     private candidateService: CandidateService,
+    private router: Router,
   ) {}
 
   ngOnInit(): void {
+    // Check if redirected here by the placed-candidate guard
+    const nav = this.router.getCurrentNavigation();
+    const state = nav?.extras?.state ?? (history.state as any);
+    if (state?.placedBlocked) this.placedBlocked.set(true);
+
     forkJoin({
       profile: this.candidateService.getMyProfile().pipe(catchError(() => of(null))),
       stats:   this.statsService.getCandidateStats().pipe(catchError(() => of(null))),
     }).subscribe(({ profile, stats }) => {
-      if (profile) this.candidate.set(profile.candidate);
-      if (stats)   this.stats.set(stats);
+      if (profile) {
+        this.candidate.set(profile.candidate);
+        const placed = profile.candidate.profile_status === 'placed';
+        this.isPlaced.set(placed);
+        this.auth.setCandidateStatus(profile.candidate.profile_status ?? 'active');
+      }
+      if (stats) this.stats.set(stats);
       this.loading.set(false);
     });
   }

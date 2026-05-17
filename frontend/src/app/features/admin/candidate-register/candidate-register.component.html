@@ -765,11 +765,14 @@
                 <div class="d-flex align-items-start gap-2">
                   <div class="flex-grow-1">
                     <div class="d-flex gap-1">
-                      <select class="form-select form-select-sm" formControlName="start_month" style="width:90px">
-                        @for (m of MONTHS; track m.value) {
-                          <option [ngValue]="m.value">{{ m.label }}</option>
-                        }
-                      </select>
+                      <div style="width:110px;flex-shrink:0">
+                        <app-searchable-select
+                          formControlName="start_month"
+                          [options]="MONTHS"
+                          placeholder="Month"
+                          [allowClear]="false">
+                        </app-searchable-select>
+                      </div>
                       <input type="number" class="form-control form-control-sm" formControlName="start_year"
                         placeholder="YYYY" min="1950" [max]="currentYear"
                         [class.is-invalid]="education.at($index).get('start_year')!.invalid && education.at($index).get('start_year')!.touched">
@@ -782,11 +785,14 @@
                   <span class="text-muted fw-bold mt-1">–</span>
                   <div class="flex-grow-1">
                     <div class="d-flex gap-1">
-                      <select class="form-select form-select-sm" formControlName="end_month" style="width:90px">
-                        @for (m of MONTHS; track m.value) {
-                          <option [ngValue]="m.value">{{ m.label }}</option>
-                        }
-                      </select>
+                      <div style="width:110px;flex-shrink:0">
+                        <app-searchable-select
+                          formControlName="end_month"
+                          [options]="MONTHS"
+                          placeholder="Month"
+                          [allowClear]="false">
+                        </app-searchable-select>
+                      </div>
                       <input type="number" class="form-control form-control-sm" formControlName="end_year"
                         placeholder="YYYY" min="1950" [max]="currentYear + 6"
                         [class.is-invalid]="education.at($index).get('end_year')!.invalid && education.at($index).get('end_year')!.touched">

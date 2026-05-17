@@ -11,6 +11,7 @@ interface NavItem {
   icon: string;  // Bootstrap Icons class e.g. 'bi-grid-1x2-fill'
   route: string;
   badge?: () => number; // Optional badge count
+  iconColor?: string;   // Optional icon color e.g. '#f59e0b'
 }
 
 @Component({
@@ -32,7 +33,7 @@ interface NavItem {
                [title]="sidebar.isCollapsed() ? item.label : ''"
                (click)="sidebar.close()">
               <div class="sidebar-link__icon-wrapper">
-                <i class="bi {{ item.icon }}"></i>
+                 <i class="bi {{ item.icon }}" [style.color]="item.iconColor || null"></i>
                 @if (item.badge && item.badge() > 0) {
                   <span class="sidebar-link__badge">{{ item.badge() }}</span>
                 }
@@ -71,16 +72,21 @@ export class SidebarComponent implements OnDestroy {
           { label: 'Edit Requests',     icon: 'bi-pencil-square',     route: '/admin/edit-requests',       badge: () => this.notifications.pendingEdits() + this.notifications.pendingVolunteerSupport() },
           { label: 'Contact Requests',  icon: 'bi-envelope-fill',      route: '/admin/contact-submissions', badge: () => this.notifications.pendingContactRequests() },
           { label: 'Interest Requests', icon: 'bi-briefcase-fill',     route: '/admin/interest-requests',   badge: () => this.notifications.pendingInterestRequests() },
-          { label: 'Volunteers',        icon: 'bi-people-fill',        route: '/admin/volunteers' },
+          { label: 'Volunteers', icon: 'bi-mortarboard-fill', iconColor: '#f59e0b', route: '/admin/volunteers' },
           { label: 'Audit Logs',        icon: 'bi-journal-text',       route: '/admin/audit-logs' },
         ];
-      case 'candidate':
-        return [
-          { label: 'Dashboard',    icon: 'bi-grid-1x2-fill', route: '/candidate/dashboard' },
-          { label: 'My Profile',   icon: 'bi-person-circle', route: '/candidate/profile' },
-          { label: 'Request Edit', icon: 'bi-pencil',        route: '/candidate/edit-request' },
-          { label: 'Volunteers',   icon: 'bi-people-fill',  route: '/candidate/volunteers' },
-        ];
+      case 'candidate': {
+          const placed = this.auth.candidateStatus() === 'placed';
+          const items: NavItem[] = [
+            { label: 'Dashboard',  icon: 'bi-grid-1x2-fill', route: '/candidate/dashboard' },
+            { label: 'My Profile', icon: 'bi-person-circle', route: '/candidate/profile' },
+          ];
+          if (!placed) {
+            items.push({ label: 'Request Edit', icon: 'bi-pencil',      route: '/candidate/edit-request' });
+            items.push({ label: 'Volunteers',   icon: 'bi-people-fill', route: '/candidate/volunteers' });
+          }
+          return items;
+        }
       case 'recruiter':
         return [
           { label: 'Dashboard',          icon: 'bi-grid-1x2-fill',      route: '/recruiter/dashboard' },

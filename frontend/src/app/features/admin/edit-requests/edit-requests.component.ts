@@ -18,11 +18,15 @@ import { EmptyStateComponent } from '../../../shared/components/empty-state/empt
 import { EditRequestCardComponent } from '../../../shared/components/edit-request-card/edit-request-card.component';
 import { ContactRequestCardComponent } from '../../../shared/components/contact-request-card/contact-request-card.component';
 import { SearchableSelectComponent, SelectOption } from '../../../shared/components/searchable-select/searchable-select.component';
+import { RecruiterAccessRequestService, RecruiterAccessRequestCounts } from '../../../core/services/recruiter-access-request.service';
+import { RecruiterAccessRequest } from '../../../core/models/recruiter-access-request.model';
+import { NotificationService } from '../../../core/services/notification.service';
+import { EditChangesModalComponent } from '../../../shared/components/edit-request-card/edit-changes-modal.component';
 
 @Component({
   selector: 'app-edit-requests',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, FormsModule, PageHeaderComponent, EmptyStateComponent, EditRequestCardComponent, ContactRequestCardComponent, SearchableSelectComponent],
+  imports: [CommonModule, ReactiveFormsModule, FormsModule, PageHeaderComponent, EmptyStateComponent, EditRequestCardComponent, ContactRequestCardComponent, SearchableSelectComponent, EditChangesModalComponent],
   styles: [`
     .filter-bar {
       background: var(--th-surface);
@@ -237,7 +241,7 @@ import { SearchableSelectComponent, SelectOption } from '../../../shared/compone
   template: `
     <app-page-header
       title="Requests"
-      [subtitle]="activeSection === 'edit' ? (editPagination.total + ' edit requests') : activeSection === 'contact' ? (contactPagination.total + ' contact requests') : (supportPagination.total + ' volunteer support requests')"
+      [subtitle]="activeSection === 'edit' ? (editPagination.total + ' edit requests') : activeSection === 'contact' ? (contactPagination.total + ' contact requests') : activeSection === 'support' ? (supportPagination.total + ' volunteer support requests') : (accessPagination.total + ' recruiter access requests')"
       icon="bi-inbox-fill"
     />
 
@@ -268,6 +272,15 @@ import { SearchableSelectComponent, SelectOption } from '../../../shared/compone
         Volunteer Support
         @if (supportPendingCount > 0) {
           <span class="req-section-badge">{{ supportPendingCount }}</span>
+        }
+      </button>
+      <button class="req-section-btn"
+        [class.active]="activeSection === 'recruiter-access'"
+        (click)="setSection('recruiter-access')">
+        <i class="bi bi-key-fill"></i>
+        Recruiter Access Requests
+        @if (accessPendingCount > 0) {
+          <span class="req-section-badge">{{ accessPendingCount }}</span>
         }
       </button>
     </div>
@@ -419,7 +432,7 @@ import { SearchableSelectComponent, SelectOption } from '../../../shared/compone
         @if (editViewMode === 'card') {
           <div class="row g-3">
             @for (req of editRequests; track req.id) {
-              <div class="col-xxl-3 col-lg-4 col-md-6 col-12">
+              <div class="col-xxl-4 col-lg-4 col-md-6 col-12">
                 <app-edit-request-card
                   [request]="req"
                   [isAdmin]="true"
@@ -483,16 +496,19 @@ import { SearchableSelectComponent, SelectOption } from '../../../shared/compone
                     <td class="small text-muted">{{ req.created_at | date:'dd MMM yyyy' }}</td>
                     <td class="small text-muted">{{ req.reviewed_by_name || '—' }}</td>
                     <td class="text-end">
-                      @if (req.status === 'pending') {
-                        <div class="d-flex justify-content-end gap-1">
+                      <div class="d-flex justify-content-end gap-1">
+                        <button class="btn btn-xs btn-outline-secondary" title="View changes" (click)="openEditChangesModal(req)">
+                          <i class="bi bi-eye"></i>
+                        </button>
+                        @if (req.status === 'pending') {
                           <button class="btn btn-xs btn-success" (click)="onEditApproved({ id: req.id })">
                             <i class="bi bi-check"></i>
                           </button>
                           <button class="btn btn-xs btn-danger" (click)="onEditRejected({ id: req.id })">
                             <i class="bi bi-x"></i>
                           </button>
-                        </div>
-                      }
+                        }
+                      </div>
                     </td>
                   </tr>
                 }
@@ -500,6 +516,13 @@ import { SearchableSelectComponent, SelectOption } from '../../../shared/compone
             </table>
           </div>
         }
+
+        <!-- Changes modal for list view -->
+        <app-edit-changes-modal
+          [isOpen]="!!viewingEditRequest"
+          [changes]="viewingEditChanges"
+          (closed)="viewingEditRequest = null">
+        </app-edit-changes-modal>
 
         @if (editPagination.pages > 1) {
           <nav class="mt-4 d-flex justify-content-center">
@@ -656,7 +679,7 @@ import { SearchableSelectComponent, SelectOption } from '../../../shared/compone
         @if (contactViewMode === 'card') {
           <div class="row g-3">
             @for (req of contactRequests; track req.id) {
-              <div class="col-xxl-3 col-lg-4 col-md-6 col-12">
+              <div class="col-xxl-4 col-lg-4 col-md-6 col-12">
                 <app-contact-request-card
                   [request]="req"
                   [isAdmin]="true"
@@ -952,10 +975,258 @@ import { SearchableSelectComponent, SelectOption } from '../../../shared/compone
         }
       }
     }
+
+    <!-- ── RECRUITER ACCESS REQUESTS SECTION ── -->
+    @if (activeSection === 'recruiter-access') {
+
+      <!-- Filter bar -->
+      <div class="filter-bar">
+        <div class="filter-bar__row">
+
+          <!-- Search -->
+          <div class="filter-bar__group filter-bar__group--wide">
+            <span class="filter-bar__label"><i class="bi bi-search me-1"></i>Search</span>
+            <input
+              class="filter-bar__input"
+              type="text"
+              placeholder="Search by recruiter email…"
+              [(ngModel)]="accessSearch"
+              (ngModelChange)="accessSearch$.next($event)"
+            />
+          </div>
+
+          <!-- Date From -->
+          <div class="filter-bar__group">
+            <span class="filter-bar__label"><i class="bi bi-calendar me-1"></i>Date from</span>
+            <input
+              class="filter-bar__input"
+              type="date"
+              [(ngModel)]="accessDateFrom"
+              (ngModelChange)="onAccessFilterChange()"
+            />
+          </div>
+
+          <!-- Date To -->
+          <div class="filter-bar__group">
+            <span class="filter-bar__label"><i class="bi bi-calendar-check me-1"></i>Date to</span>
+            <input
+              class="filter-bar__input"
+              type="date"
+              [(ngModel)]="accessDateTo"
+              (ngModelChange)="onAccessFilterChange()"
+            />
+          </div>
+
+          <!-- Sort -->
+          <div class="filter-bar__group er-sort-group">
+            <span class="filter-bar__label"><i class="bi bi-sort-down me-1"></i>Sort</span>
+            <app-searchable-select
+              [ngModel]="accessSort"
+              (ngModelChange)="accessSort = $event; onAccessFilterChange()"
+              [options]="sortOptions"
+              placeholder="Sort"
+              [allowClear]="false">
+            </app-searchable-select>
+          </div>
+
+          <!-- View toggle -->
+          <div style="display:flex;align-items:flex-end;gap:6px;margin-left:auto">
+            <div class="cl-view-toggle" style="align-self:flex-end">
+              <button [class.active]="accessViewMode === 'card'" (click)="accessViewMode = 'card'" title="Card view"><i class="bi bi-grid-3x3-gap-fill"></i></button>
+              <button [class.active]="accessViewMode === 'list'" (click)="accessViewMode = 'list'" title="List view"><i class="bi bi-list-ul"></i></button>
+            </div>
+          </div>
+
+          <!-- Clear filters -->
+          @if (accessActiveFilterCount > 0) {
+            <button class="filter-bar__clear" (click)="clearAccessFilters()">
+              <i class="bi bi-x-lg"></i>
+              Clear
+              <span class="filter-bar__active-badge">{{ accessActiveFilterCount }}</span>
+            </button>
+          }
+        </div>
+      </div>
+
+      <!-- Status tabs -->
+      <div class="nav-pills-custom mb-4">
+        @for (tab of accessStatusTabs; track tab.value) {
+          <button class="nav-pill"
+            [class.active]="accessStatus === tab.value"
+            (click)="setAccessStatus($any(tab.value))">
+            {{ tab.label }}
+            <span class="nav-pill__count">{{ accessTabCount(tab.value) }}</span>
+          </button>
+        }
+      </div>
+
+      @if (accessLoading) {
+        <div class="loading-state">
+          <div class="spinner-border"></div>
+          <div class="loading-state__text">Loading requests…</div>
+        </div>
+      } @else if (accessRequests.length === 0) {
+        <app-empty-state
+          icon="bi-key"
+          [title]="accessStatus === 'pending' ? 'No pending requests — all caught up!' : accessStatus === '' ? 'No requests yet' : 'No ' + accessStatus + ' requests yet'"
+          [subtitle]="accessActiveFilterCount > 0 ? 'No results match your current filters. Try adjusting your search.' : ''"
+        />
+      } @else {
+
+        <!-- Card view -->
+        @if (accessViewMode === 'card') {
+          <div class="row g-3">
+            @for (req of accessRequests; track req.id) {
+              <div class="col-xxl-4 col-lg-4 col-md-6 col-12">
+                <div class="card h-100 border-0 shadow-sm" style="border-radius:14px;background:var(--th-surface);overflow:hidden">
+
+                  <!-- Coloured top stripe by status -->
+                  <div style="height:4px;background:{{
+                    req.status === 'approved' ? 'var(--bs-success)' :
+                    req.status === 'rejected' ? 'var(--bs-danger)'  :
+                    'var(--bs-warning)'}}"></div>
+
+                  <div class="card-body p-3 d-flex flex-column gap-2">
+
+                    <!-- Header row: avatar + email + status badge -->
+                    <div class="d-flex align-items-center gap-2">
+                      <!-- Avatar circle with initial -->
+                      <div class="flex-shrink-0 d-flex align-items-center justify-content-center rounded-circle fw-bold"
+                        style="width:36px;height:36px;font-size:.85rem;
+                          background:{{req.status==='approved'?'var(--bs-success-bg-subtle)':req.status==='rejected'?'var(--bs-danger-bg-subtle)':'var(--bs-warning-bg-subtle)'}};
+                          color:{{req.status==='approved'?'var(--bs-success)':req.status==='rejected'?'var(--bs-danger)':'var(--bs-warning)'}};
+                          border:2px solid {{req.status==='approved'?'var(--bs-success)':req.status==='rejected'?'var(--bs-danger)':'var(--bs-warning)'}};
+                        ">
+                        {{ (req.email | slice:0:1).toUpperCase() }}
+                      </div>
+                      <div class="flex-grow-1 min-w-0">
+                        <div class="fw-semibold small text-truncate" style="color:var(--th-text);max-width:160px" [title]="req.email">{{ req.email }}</div>
+                        <div class="text-muted" style="font-size:.7rem"><i class="bi bi-calendar3 me-1"></i>{{ req.created_at | date:'dd MMM yyyy' }}</div>
+                      </div>
+                      @if (req.status === 'pending') {
+                        <span class="badge bg-warning-subtle text-warning border border-warning-subtle flex-shrink-0" style="font-size:.68rem">Pending</span>
+                      } @else if (req.status === 'approved') {
+                        <span class="badge bg-success-subtle text-success border border-success-subtle flex-shrink-0" style="font-size:.68rem">Approved</span>
+                      } @else {
+                        <span class="badge bg-danger-subtle text-danger border border-danger-subtle flex-shrink-0" style="font-size:.68rem">Rejected</span>
+                      }
+                    </div>
+
+                    <!-- Message block -->
+                    @if (req.message) {
+                      <div class="rounded p-2" style="background:var(--th-surface-2);border-left:3px solid var(--th-border)">
+                        <p class="small text-muted mb-0" style="line-height:1.45;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden">
+                          <i class="bi bi-chat-left-quote me-1 opacity-50"></i>{{ req.message }}
+                        </p>
+                      </div>
+                    } @else {
+                      <p class="small text-muted fst-italic mb-0">No message provided.</p>
+                    }
+
+                    <!-- Reviewed info (non-pending) -->
+                    @if (req.status !== 'pending' && req.reviewed_by_name) {
+                      <div class="d-flex align-items-center gap-1 small text-muted">
+                        <i class="bi bi-person-check"></i>
+                        <span>Reviewed by <strong>{{ req.reviewed_by_name }}</strong></span>
+                      </div>
+                    }
+                    @if (req.admin_note) {
+                      <div class="small text-muted fst-italic px-2 py-1 rounded" style="background:var(--th-surface-2)">
+                        <i class="bi bi-sticky me-1"></i>{{ req.admin_note }}
+                      </div>
+                    }
+
+                    <!-- Actions -->
+                    @if (req.status === 'pending') {
+                      <div class="d-flex gap-2 mt-auto pt-1">
+                        <button class="btn btn-sm btn-success flex-grow-1" (click)="openAccessReview(req, 'approved')">
+                          <i class="bi bi-check-circle me-1"></i>Approve
+                        </button>
+                        <button class="btn btn-sm btn-outline-danger flex-grow-1" (click)="openAccessReview(req, 'rejected')">
+                          <i class="bi bi-x-circle me-1"></i>Reject
+                        </button>
+                      </div>
+                    }
+                  </div>
+                </div>
+              </div>
+            }
+          </div>
+        }
+
+        <!-- List view -->
+        @if (accessViewMode === 'list') {
+          <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+              <thead class="table-light">
+                <tr>
+                  <th>Email</th>
+                  <th>Message</th>
+                  <th>Submitted</th>
+                  <th>Reviewed By</th>
+                  <th>Status</th>
+                  <th class="text-end">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (req of accessRequests; track req.id) {
+                  <tr>
+                    <td class="fw-semibold small">{{ req.email }}</td>
+                    <td class="small text-muted" style="max-width:220px;white-space:pre-wrap;overflow:hidden">{{ req.message || '—' }}</td>
+                    <td class="small text-muted">{{ req.created_at | date:'dd MMM yyyy' }}</td>
+                    <td class="small text-muted">{{ req.reviewed_by_name || '—' }}</td>
+                    <td>
+                      @if (req.status === 'pending') {
+                        <span class="badge bg-warning-subtle text-warning border border-warning-subtle" style="font-size:.7rem">Pending</span>
+                      } @else if (req.status === 'approved') {
+                        <span class="badge bg-success-subtle text-success border border-success-subtle" style="font-size:.7rem">Approved</span>
+                      } @else {
+                        <span class="badge bg-danger-subtle text-danger border border-danger-subtle" style="font-size:.7rem">Rejected</span>
+                      }
+                    </td>
+                    <td class="text-end">
+                      @if (req.status === 'pending') {
+                        <div class="d-flex justify-content-end gap-1">
+                          <button class="btn btn-xs btn-success" title="Approve" (click)="openAccessReview(req, 'approved')">
+                            <i class="bi bi-check"></i>
+                          </button>
+                          <button class="btn btn-xs btn-danger" title="Reject" (click)="openAccessReview(req, 'rejected')">
+                            <i class="bi bi-x"></i>
+                          </button>
+                        </div>
+                      }
+                    </td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+        }
+
+        <!-- Pagination -->
+        @if (accessPagination.pages > 1) {
+          <nav class="mt-4 d-flex justify-content-center">
+            <ul class="pagination pagination-sm mb-0">
+              <li class="page-item" [class.disabled]="accessPagination.page === 1">
+                <button class="page-link" (click)="goToAccessPage(accessPagination.page - 1)">«</button>
+              </li>
+              @for (pg of accessPageNumbers(); track pg) {
+                <li class="page-item" [class.active]="pg === accessPagination.page">
+                  <button class="page-link" (click)="goToAccessPage(pg)">{{ pg }}</button>
+                </li>
+              }
+              <li class="page-item" [class.disabled]="accessPagination.page === accessPagination.pages">
+                <button class="page-link" (click)="goToAccessPage(accessPagination.page + 1)">»</button>
+              </li>
+            </ul>
+          </nav>
+        }
+      }
+    }
   `,
 })
 export class EditRequestsComponent implements OnInit, OnDestroy {
-  activeSection: 'edit' | 'contact' | 'support' = 'edit';
+  activeSection: 'edit' | 'contact' | 'support' | 'recruiter-access' = 'edit';
 
   // Edit requests state
   editRequests: EditRequest[] = [];
@@ -964,6 +1235,8 @@ export class EditRequestsComponent implements OnInit, OnDestroy {
   editStatus = 'pending';
   editReviewingId: string | null = null;
   editPendingCount = 0;
+  viewingEditRequest: EditRequest | null = null;
+  viewingEditChanges: { key: string; label: string; oldValue: string; newValue: string }[] = [];
 
   // Edit filter state
   editSearch = '';
@@ -1019,6 +1292,42 @@ export class EditRequestsComponent implements OnInit, OnDestroy {
 
   // Support counts
   supportCounts: VolunteerSupportRequestCounts = { pending: 0, connected: 0, closed: 0, total: 0 };
+
+  // Recruiter access requests state
+  accessRequests: RecruiterAccessRequest[] = [];
+  accessLoading = false;
+  accessSearch = '';
+  accessDateFrom = '';
+  accessDateTo = '';
+  accessSort: 'newest' | 'oldest' = 'newest';
+  accessViewMode: 'card' | 'list' = 'card';
+  accessStatus: 'pending' | 'approved' | 'rejected' | '' = 'pending';
+  accessPagination = { page: 1, limit: 20, total: 0, pages: 0 };
+  accessCounts: RecruiterAccessRequestCounts = { pending: 0, approved: 0, rejected: 0, total: 0 };
+  accessPendingCount = 0;
+  accessStatusTabs = [
+    { label: 'Pending',  value: 'pending'  },
+    { label: 'Approved', value: 'approved' },
+    { label: 'Rejected', value: 'rejected' },
+    { label: 'All',      value: ''         },
+  ];
+
+  // Inline review state
+  // Inline review state (unused — review is now handled via confirm popup)
+
+  private computeAccessExpiry(value: number, unit: string): Date {
+    const dt = new Date();
+    switch (unit) {
+      case 'hours':  dt.setHours(dt.getHours() + value);       break;
+      case 'days':   dt.setDate(dt.getDate() + value);          break;
+      case 'weeks':  dt.setDate(dt.getDate() + value * 7);      break;
+      case 'months': dt.setMonth(dt.getMonth() + value);        break;
+      case 'years':  dt.setFullYear(dt.getFullYear() + value);  break;
+    }
+    return dt;
+  }
+
+  accessSearch$ = new Subject<string>();
 
   supportStatusTabs = [
     { label: 'Pending',   value: 'pending'   },
@@ -1087,6 +1396,8 @@ export class EditRequestsComponent implements OnInit, OnDestroy {
     private supportRequestService: VolunteerSupportRequestService,
     private toast: ToastService,
     private confirmDialog: ConfirmDialogService,
+    private accessRequestSvc: RecruiterAccessRequestService,
+    private notifications: NotificationService,
   ) {
     this.reviewForm = this.fb.group({ admin_note: [''] });
   }
@@ -1119,12 +1430,22 @@ export class EditRequestsComponent implements OnInit, OnDestroy {
       this.loadSupportRequests();
     });
 
+    this.accessSearch$.pipe(
+      debounceTime(300),
+      distinctUntilChanged(),
+      takeUntil(this.destroy$),
+    ).subscribe(() => {
+      this.accessPagination.page = 1;
+      this.loadAccessRequests();
+    });
+
     this.loadEditRequests();
     this.loadContactRequests();
     this.loadSupportRequests();
     this.refreshEditCounts();
     this.refreshContactCounts();
     this.refreshSupportCounts();
+    this.refreshAccessCounts();
   }
 
   ngOnDestroy(): void {
@@ -1188,11 +1509,15 @@ export class EditRequestsComponent implements OnInit, OnDestroy {
     return '';
   }
 
-  setSection(section: 'edit' | 'contact' | 'support'): void {
+  setSection(section: 'edit' | 'contact' | 'support' | 'recruiter-access'): void {
     this.activeSection = section;
     this.cancelReview();
     this.editSelectedIds    = new Set();
     this.contactSelectedIds = new Set();
+    if (section === 'recruiter-access') {
+      this.loadAccessRequests();
+      this.refreshAccessCounts();
+    }
   }
 
   // ── Edit filter helpers ────────────────────────────────────────────────────
@@ -1301,6 +1626,7 @@ export class EditRequestsComponent implements OnInit, OnDestroy {
           }
           this.loadEditRequests();
           this.refreshEditCounts();
+          this.notifications.refreshCounts();
         },
         error: (err) => {
           this.bulkSubmitting = false;
@@ -1365,6 +1691,7 @@ export class EditRequestsComponent implements OnInit, OnDestroy {
           }
           this.loadContactRequests();
           this.refreshContactCounts();
+          this.notifications.refreshCounts();
         },
         error: (err) => {
           this.bulkSubmitting = false;
@@ -1434,6 +1761,58 @@ export class EditRequestsComponent implements OnInit, OnDestroy {
 
   startEditReview(id: string): void { this.editReviewingId = id; this.reviewForm.reset(); }
 
+  openEditChangesModal(req: EditRequest): void {
+    this.viewingEditRequest = req;
+    const data = req.requested_data ?? {};
+    const oldValues = req.old_values ?? {};
+    this.viewingEditChanges = Object.entries(data)
+      .filter(([key]) => key !== 'id' && key !== 'user_id')
+      .map(([key, newVal]) => ({
+        key,
+        label: this.formatFieldLabel(key),
+        oldValue: this.formatValue(oldValues[key]),
+        newValue: this.formatValue(newVal),
+      }))
+      .filter(c => c.oldValue !== c.newValue);
+  }
+
+  private formatFieldLabel(key: string): string {
+    return key.replace(/_/g, ' ').replace(/([A-Z])/g, ' $1').trim()
+      .split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()).join(' ');
+  }
+
+  private formatValue(value: unknown): string {
+    if (value === null || value === undefined) return '';
+    if (typeof value === 'boolean') return value ? 'Yes' : 'No';
+    if (Array.isArray(value)) {
+      if (value.length === 0) return '';
+      if (typeof value[0] === 'object' && value[0] !== null) {
+        const first = value[0] as Record<string, unknown>;
+        if ('skill_name' in first && 'proficiency' in first)
+          return value.map((s: any) => `${s.skill_name} (${s.proficiency})`).join(', ');
+        if ('language' in first && 'proficiency' in first)
+          return value.map((l: any) => `${l.language} (${l.proficiency})`).join(', ');
+        if ('degree' in first && 'institution' in first)
+          return value.map((e: any) => `${e.degree} from ${e.institution} (${e.start_year}–${e.end_year})`).join('; ');
+        if ('company_name' in first)
+          return value.map((e: any) => `${e.job_title} at ${e.company_name}`).join('; ');
+        return value.map((item: any) =>
+          Object.values(item).filter(v => v !== null && v !== undefined).join(' - ')
+        ).join('; ');
+      }
+      return value.join(', ');
+    }
+    if (typeof value === 'object') {
+      return Object.entries(value as Record<string, unknown>)
+        .filter(([, v]) => v !== null && v !== undefined)
+        .map(([k, v]) => `${this.formatFieldLabel(k)}: ${v}`).join(', ');
+    }
+    // Normalise ISO datetime strings to date-only
+    const str = String(value);
+    if (/^\d{4}-\d{2}-\d{2}T/.test(str)) return str.substring(0, 10);
+    return str;
+  }
+
   confirmEditReview(id: string, status: 'approved' | 'rejected'): void {
     this.reviewSubmitting = true;
     const admin_note = this.reviewForm.value.admin_note || undefined;
@@ -1443,6 +1822,8 @@ export class EditRequestsComponent implements OnInit, OnDestroy {
         this.editReviewingId  = null;
         this.toast.success(`Request ${status}`);
         this.loadEditRequests();
+        this.refreshEditCounts();
+        this.notifications.refreshCounts();
       },
       error: (err) => {
         this.reviewSubmitting = false;
@@ -1507,6 +1888,8 @@ export class EditRequestsComponent implements OnInit, OnDestroy {
         this.contactReviewingId  = null;
         this.toast.success(`Request ${status}`);
         this.loadContactRequests();
+        this.refreshContactCounts();
+        this.notifications.refreshCounts();
       },
       error: (err) => {
         this.reviewSubmitting = false;
@@ -1523,6 +1906,7 @@ export class EditRequestsComponent implements OnInit, OnDestroy {
         this.toast.success('Request approved');
         this.loadEditRequests();
         this.refreshEditCounts();
+        this.notifications.refreshCounts();
       },
       error: (err) => {
         this.reviewSubmitting = false;
@@ -1539,6 +1923,7 @@ export class EditRequestsComponent implements OnInit, OnDestroy {
         this.toast.success('Request rejected');
         this.loadEditRequests();
         this.refreshEditCounts();
+        this.notifications.refreshCounts();
       },
       error: (err) => {
         this.reviewSubmitting = false;
@@ -1559,6 +1944,7 @@ export class EditRequestsComponent implements OnInit, OnDestroy {
         this.toast.success('Request approved');
         this.loadContactRequests();
         this.refreshContactCounts();
+        this.notifications.refreshCounts();
       },
       error: (err) => {
         this.reviewSubmitting = false;
@@ -1575,6 +1961,7 @@ export class EditRequestsComponent implements OnInit, OnDestroy {
         this.toast.success('Request rejected');
         this.loadContactRequests();
         this.refreshContactCounts();
+        this.notifications.refreshCounts();
       },
       error: (err) => {
         this.reviewSubmitting = false;
@@ -1640,6 +2027,7 @@ export class EditRequestsComponent implements OnInit, OnDestroy {
           this.toast.success('Contact access revoked');
           this.loadContactRequests();
           this.refreshContactCounts();
+          this.notifications.refreshCounts();
         },
         error: (err) => {
           this.reviewSubmitting = false;
@@ -1658,6 +2046,112 @@ export class EditRequestsComponent implements OnInit, OnDestroy {
         this.supportPendingCount = c.pending;
       },
       error: () => { /* non-fatal */ },
+    });
+  }
+
+  refreshAccessCounts(): void {
+    this.accessRequestSvc.getCounts().subscribe({
+      next: (c) => { this.accessCounts = c; this.accessPendingCount = c.pending; },
+      error: () => { /* non-fatal */ },
+    });
+  }
+
+  loadAccessRequests(): void {
+    this.accessLoading = true;
+    this.accessRequestSvc.list({
+      status:    this.accessStatus    || undefined,
+      search:    this.accessSearch    || undefined,
+      date_from: this.accessDateFrom  || undefined,
+      date_to:   this.accessDateTo    || undefined,
+      sort:      this.accessSort,
+      page:      this.accessPagination.page,
+      limit:     this.accessPagination.limit,
+    }).subscribe({
+      next: (res) => {
+        this.accessRequests = res.data;
+        this.accessPagination = res.pagination;
+        this.accessLoading = false;
+      },
+      error: () => { this.accessLoading = false; },
+    });
+  }
+
+  setAccessStatus(s: 'pending' | 'approved' | 'rejected' | ''): void {
+    this.accessStatus = s;
+    this.accessPagination.page = 1;
+    this.loadAccessRequests();
+  }
+
+  accessTabCount(s: string): number {
+    if (s === '') return this.accessCounts.total;
+    return (this.accessCounts as unknown as Record<string, number>)[s] ?? 0;
+  }
+
+  get accessActiveFilterCount(): number {
+    return [this.accessSearch, this.accessDateFrom, this.accessDateTo]
+      .filter(v => !!v).length;
+  }
+
+  onAccessFilterChange(): void {
+    this.accessPagination.page = 1;
+    this.loadAccessRequests();
+  }
+
+  clearAccessFilters(): void {
+    this.accessSearch   = '';
+    this.accessDateFrom = '';
+    this.accessDateTo   = '';
+    this.accessSort     = 'newest';
+    this.accessPagination.page = 1;
+    this.loadAccessRequests();
+  }
+
+  goToAccessPage(page: number): void {
+    if (page < 1 || page > this.accessPagination.pages) return;
+    this.accessPagination.page = page;
+    this.loadAccessRequests();
+  }
+
+  accessPageNumbers(): number[] {
+    return this._pageNumbers(this.accessPagination);
+  }
+
+  openAccessReview(req: RecruiterAccessRequest, status: 'approved' | 'rejected'): void {
+    const isApproval = status === 'approved';
+    this.confirmDialog.confirm({
+      title:        isApproval ? 'Approve Access Request?' : 'Reject Access Request?',
+      message:      isApproval
+        ? `Grant extended portal access to ${req.email}. Set the new duration below.`
+        : `Deny the access extension request from ${req.email}. The recruiter will be notified.`,
+      confirmLabel: isApproval ? 'Approve' : 'Reject',
+      cancelLabel:  'Cancel',
+      confirmClass: isApproval ? 'btn-success' : 'btn-danger',
+      icon: isApproval ? 'bi-check-circle-fill' : 'bi-exclamation-triangle-fill',
+      showDurationField: isApproval,
+      durationLabel: 'Extend Access Duration',
+      showNoteField: true,
+      noteLabel:        isApproval ? 'Admin Note (Optional)' : 'Reason for Rejection (Optional)',
+      notePlaceholder:  isApproval ? 'Optional note sent to the recruiter…' : 'Explain why this request is being rejected…',
+    }).then(result => {
+      if (!result.confirmed) return;
+      const newExpiresAt = (isApproval && result.durationValue && result.durationUnit)
+        ? this.computeAccessExpiry(result.durationValue, result.durationUnit).toISOString()
+        : null;
+      this.accessRequestSvc.review(req.id, {
+        status,
+        new_expires_at: newExpiresAt,
+        admin_note: result.notes || null,
+      }).subscribe({
+        next: () => {
+          this.loadAccessRequests();
+          this.refreshAccessCounts();
+          this.notifications.refreshCounts();
+          this.toast.success(isApproval ? 'Access request approved.' : 'Access request rejected.');
+        },
+        error: (err) => {
+          this.toast.error(err?.error?.message ?? 'Failed to submit review.');
+        },
+      });
     });
   }
 
@@ -1758,6 +2252,7 @@ export class EditRequestsComponent implements OnInit, OnDestroy {
         this.toast.success(status === 'connected' ? 'Marked as Connected' : 'Request Closed');
         this.loadSupportRequests();
         this.refreshSupportCounts();
+        this.notifications.refreshCounts();
       },
       error: (err) => {
         this.supportReviewingId = null;

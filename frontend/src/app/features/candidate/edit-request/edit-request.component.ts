@@ -1195,7 +1195,8 @@ export class EditRequestComponent implements OnInit {
   previewUrl  = '';
   previewName = '';
 
-  private loadedCountry: string | null = null;
+  private loadedCountry:    string | null = null;
+  private originalSnapshot: Record<string, unknown> = {};
 
   // ── Computed options ───────────────────────────────────────────────────────
 
@@ -1512,9 +1513,175 @@ export class EditRequestComponent implements OnInit {
       const found = this.master.countries().find(c => c.name === country);
       if (found) this.master.loadCities(found.id);
     }
+
+    // Capture the baseline snapshot for change detection
+    this.originalSnapshot = this.buildOriginalSnapshot(emp);
   }
 
-  // ── FormArray getters ──────────────────────────────────────────────────────
+  // ── Baseline snapshot for change detection ────────────────────────────────
+  // Mirrors the exact same transformation logic as submit() so we can deep-diff.
+  private buildOriginalSnapshot(emp: Candidate): Record<string, unknown> {
+    const { dialCode: phoneDial, number: phoneNum } = this.splitPhone(emp.phone ?? '');
+    const { dialCode: waDial,   number: waNum     } = this.splitPhone(emp.whatsapp_number ?? '');
+
+    // Parse visa_status (same as buildForm)
+    let visaSelect = '';
+    let visaOther  = '';
+    if (emp.visa_status) {
+      if (emp.visa_status.startsWith('Other: ')) {
+        visaSelect = 'other'; visaOther = emp.visa_status.slice('Other: '.length);
+      } else if (emp.visa_status === 'Other — specify') {
+        visaSelect = 'other';
+      } else {
+        visaSelect = emp.visa_status;
+      }
+    }
+
+    // Reconstruct composed values the same way submit() does
+    const phone      = phoneNum ? `${phoneDial}${phoneNum}`.trim() : undefined;
+    const whatsapp   = waNum    ? `${waDial}${waNum}`.trim()       : undefined;
+    const visaStatus = visaSelect === 'other'
+      ? (visaOther?.trim() ? `Other: ${visaOther.trim()}` : 'Other — specify')
+      : (visaSelect || undefined);
+
+    // Scalar fields — same filter as submit(): exclude '' and null
+    const rawScalars: Record<string, unknown> = {
+      first_name:        emp.first_name        ?? '',
+      last_name:         emp.last_name         ?? '',
+      date_of_birth:     emp.date_of_birth     ?? '',
+      gender:            emp.gender            ?? '',
+      marital_status:    emp.marital_status    ?? '',
+      bio:               emp.bio               ?? '',
+      linkedin_url:      emp.linkedin_url      ?? '',
+      job_title:         emp.job_title         ?? '',
+      occupation:        emp.occupation        ?? '',
+      industry:          emp.industry          ?? '',
+      employment_status: emp.employment_status ?? '',
+      years_experience:  emp.years_experience  ?? 0,
+      notice_period_id:  (emp as any).notice_period_id ?? null,
+      current_country:   emp.current_country   ?? '',
+      current_city:      emp.current_city      ?? '',
+      postal_code:       emp.postal_code       ?? '',
+      has_passport:      emp.has_passport      ?? false,
+      nationality:       emp.nationality       ?? '',
+    };
+    const snap: Record<string, unknown> = Object.fromEntries(
+      Object.entries(rawScalars).filter(([, v]) => v !== '' && v !== null),
+    );
+    if (phone)      snap['phone']           = phone;
+    if (whatsapp)   snap['whatsapp_number'] = whatsapp;
+    if (visaStatus) snap['visa_status']     = visaStatus;
+
+    // Arrays — always present (mirrors clean['target_locations'] / clean['hobbies'])
+    snap['target_locations'] = Array.isArray(emp.target_locations) ? [...emp.target_locations] : [];
+    snap['hobbies']          = Array.isArray(emp.hobbies)          ? [...emp.hobbies]          : [];
+
+    // Skills — same filter as submit()
+    snap['skills'] = (emp.skills ?? [])
+      .filter((s: any) => s.skill_name?.trim())
+      .map((s: any) => ({ skill_name: s.skill_name ?? '', proficiency: s.proficiency ?? '' }));
+
+    // Languages
+    snap['languages'] = (emp.languages ?? [])
+      .filter((l: any) => l.language?.trim())
+      .map((l: any) => ({ language: l.language ?? '', proficiency: l.proficiency ?? '' }));
+
+    // Experience — mirror submit() transformation (compose reason_for_leaving, currently_working)
+    snap['experience'] = (emp.experience ?? [])
+      .filter((e: any) => e.company_name?.trim() || e.job_title?.trim())
+      .map((e: any) => {
+        let rflSel = '', rflOther = '';
+        if (e.reason_for_leaving?.startsWith('Other: ')) {
+          rflSel = 'Other'; rflOther = e.reason_for_leaving.slice(7);
+        } else if (e.reason_for_leaving === 'Other') {
+          rflSel = 'Other';
+        } else {
+          rflSel = e.reason_for_leaving ?? '';
+        }
+        const cw = !e.end_date; // mirrors: currently_working = [!e.end_date] in buildForm
+        return {
+          job_title:          e.job_title    ?? '',
+          company_name:       e.company_name ?? '',
+          start_date:         e.start_date   ?? '',
+          end_date:           cw ? null : (e.end_date || null),
+          location:           e.location     ?? '',
+          description:        e.description  ?? '',
+          reason_for_leaving: rflSel === 'Other'
+            ? (rflOther?.trim() ? `Other: ${rflOther.trim()}` : 'Other')
+            : (rflSel || undefined),
+        };
+      });
+
+    // Education — same filter as submit()
+    snap['education'] = (emp.education ?? [])
+      .filter((e: any) => e.institution?.trim() || e.degree?.trim())
+      .map((e: any) => ({
+        institution:    e.institution    ?? '',
+        degree:         e.degree         ?? '',
+        field_of_study: e.field_of_study ?? '',
+        start_year:     e.start_year     ?? null,
+        start_month:    e.start_month    ?? 1,
+        end_year:       e.end_year       ?? null,
+        end_month:      e.end_month      ?? 1,
+        location:       e.location       ?? '',
+      }));
+
+    // Certificates — passed through fromEntries as-is in submit(); mirror the form group shape
+    snap['certificates'] = (emp.certificates ?? []).map((c: any) => ({
+      id:          c.id          ?? null,
+      name:        c.name        ?? '',
+      issuer:      c.issuer      ?? '',
+      issue_date:  c.issue_date  ?? '',
+      expiry_date: c.expiry_date ?? '',
+      no_expiry:   c.no_expiry   ?? false,
+      file_url:    c.file_url    ?? '',
+    }));
+
+    return snap;
+  }
+
+  // ── Deep equality check ────────────────────────────────────────────────────
+  // null and undefined are treated as equivalent.
+  // ISO date strings are normalised to YYYY-MM-DD before comparing.
+  // Number/string coercion handles range-slider string output vs numeric DB values.
+  private deepEqual(a: unknown, b: unknown): boolean {
+    const av: unknown = a === undefined ? null : a;
+    const bv: unknown = b === undefined ? null : b;
+    if (av === bv) return true;
+    if (av === null || bv === null) return false;
+
+    // Normalise ISO date strings → YYYY-MM-DD
+    if (typeof av === 'string' && typeof bv === 'string') {
+      const norm = (s: string) => /^\d{4}-\d{2}-\d{2}T/.test(s) ? s.substring(0, 10) : s;
+      return norm(av) === norm(bv);
+    }
+
+    // Coerce number ↔ string (range sliders emit string after user interaction)
+    if ((typeof av === 'number' && typeof bv === 'string') ||
+        (typeof av === 'string' && typeof bv === 'number')) {
+      return String(av) === String(bv);
+    }
+
+    if (typeof av !== typeof bv) return false;
+
+    if (Array.isArray(av) && Array.isArray(bv)) {
+      if (av.length !== bv.length) return false;
+      return av.every((item, i) => this.deepEqual(item, (bv as unknown[])[i]));
+    }
+    if (Array.isArray(av) !== Array.isArray(bv)) return false;
+
+    if (typeof av === 'object') {
+      const ao = av as Record<string, unknown>;
+      const bo = bv as Record<string, unknown>;
+      const aKeys = Object.keys(ao).sort();
+      const bKeys = Object.keys(bo).sort();
+      if (aKeys.length !== bKeys.length) return false;
+      return aKeys.every(k => bKeys.includes(k) && this.deepEqual(ao[k], bo[k]));
+    }
+    return false;
+  }
+
+  // ── FormArray getters ───────────────────────────────────────────────────────
   get skillsArray():     FormArray { return this.form!.get('skills')       as FormArray; }
   get languagesArray():  FormArray { return this.form!.get('languages')    as FormArray; }
   get experienceArray(): FormArray { return this.form!.get('experience')   as FormArray; }
@@ -1632,7 +1799,7 @@ export class EditRequestComponent implements OnInit {
       ? (raw.visa_status_other?.trim() ? `Other: ${raw.visa_status_other.trim()}` : 'Other — specify')
       : (raw.visa_status_select || undefined);
 
-    // Build payload excluding helper controls
+    // Build full payload excluding helper controls
     const excluded = new Set(['phone_dial_code', 'phone_number', 'whatsapp_dial_code', 'whatsapp_same_as_phone', 'visa_status_select', 'visa_status_other']);
     const clean: Record<string, unknown> = Object.fromEntries(
       Object.entries(raw).filter(([k, v]) => !excluded.has(k) && v !== '' && v !== null),
@@ -1669,7 +1836,34 @@ export class EditRequestComponent implements OnInit {
       if (field) clean[field] = relativePath;
     });
 
-    this.editRequestService.submit(clean).subscribe({
+    // ── Change detection ──────────────────────────────────────────────────────
+    // Compare every field in clean against the original snapshot.
+    // Also detect any field present in originalSnapshot but absent/cleared in clean.
+    const mediaFields = new Set(['profile_photo_url', 'resume_url', 'intro_video_url']);
+    const allKeys = new Set([...Object.keys(clean), ...Object.keys(this.originalSnapshot)]);
+    const changedPayload: Record<string, unknown> = {};
+
+    for (const key of allKeys) {
+      // Staged media is always a real change — include as-is
+      if (mediaFields.has(key)) {
+        if (key in clean) changedPayload[key] = clean[key];
+        continue;
+      }
+      const current  = key in clean                  ? clean[key]                  : null;
+      const original = key in this.originalSnapshot  ? this.originalSnapshot[key]  : null;
+      if (!this.deepEqual(current, original)) {
+        // Include the new value (null if the field was cleared)
+        changedPayload[key] = key in clean ? clean[key] : null;
+      }
+    }
+
+    if (Object.keys(changedPayload).length === 0) {
+      this.submitting = false;
+      this.toast.show('No changes detected. Modify at least one field before submitting.', 'info');
+      return;
+    }
+
+    this.editRequestService.submit(changedPayload).subscribe({
       next: (res) => {
         this.submitting      = false;
         this.existingRequest = res.request;

@@ -7741,6 +7741,12 @@ body {
   box-shadow: 0 0 0 2px rgba(245,158,11,.2), var(--th-shadow-card);
 }
 
+.candidate-card--placed {
+  opacity: .8;
+  box-shadow: 0 0 0 2px rgba(22,163,74,.25), var(--th-shadow-card);
+  background: linear-gradient(135deg, #fff 80%, rgba(22,163,74,.04) 100%);
+}
+
 // ── Small inline badges ────────────────────────────────────────────────────
 .cand-badge {
   display: inline-flex; align-items: center; gap: .25rem;
@@ -10356,6 +10362,7 @@ html { scroll-behavior: smooth; }
   gap: .625rem;
   transition: var(--th-transition-slow);
   position: relative;
+  height: 100%;         /* fill the grid cell */
 
   &:hover {
     box-shadow: var(--th-shadow-card-hover);
@@ -10557,7 +10564,7 @@ html { scroll-behavior: smooth; }
 
 // Profile completion bar
 .cl-card__completion {
-  margin-top: .125rem;
+  margin-top: auto;     /* push bar + date + actions to bottom */
 }
 
 .cl-card__completion-header {

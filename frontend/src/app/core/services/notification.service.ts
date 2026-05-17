@@ -63,9 +63,11 @@ export class NotificationService implements OnDestroy {
   }
 
   /**
-   * Refresh notification counts from HTTP
+   * Refresh notification counts from HTTP.
+   * Call this after any admin action that changes a count (approve, reject, etc.)
+   * so the sidebar badges update immediately without waiting for the 30s poll.
    */
-  private refreshCounts(): void {
+  refreshCounts(): void {
     this.http
       .get<NotificationCounts>(`${environment.apiUrl}/stats/notifications/counts`)
       .subscribe({

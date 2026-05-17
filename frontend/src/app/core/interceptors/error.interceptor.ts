@@ -24,7 +24,11 @@ export const errorInterceptor: HttpInterceptorFn = (
           }
           break;
         case 403:
-          router.navigate(['/unauthorized']);
+          if ((err.error?.message as string | undefined)?.includes('Your access has expired')) {
+            router.navigate(['/unauthorized'], { state: { reason: 'expired' } });
+          } else {
+            router.navigate(['/unauthorized']);
+          }
           break;
         case 429:
           toast.warning('Too many requests. Please slow down.');

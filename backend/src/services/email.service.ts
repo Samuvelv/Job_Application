@@ -844,3 +844,104 @@ export async function sendNewIpLoginAlert(opts: {
     `,
   });
 }
+
+// ── Recruiter Access Request: Admin notification ──────────────────────────────
+
+export async function sendAdminRecruiterAccessRequest(opts: {
+  name: string;
+  email: string;
+  message: string | null;
+}): Promise<void> {
+  const adminEmail = env.ADMIN_EMAIL ?? env.EMAIL_FROM ?? 'admin@ntlcareernexus.com';
+  await sendMail({
+    to: adminEmail,
+    subject: `Access Extension Request — ${opts.name}`,
+    html: `
+      <div style="font-family:Inter,sans-serif;background:#f8fafc;padding:32px 0;">
+        <div style="max-width:560px;margin:0 auto;background:#fff;border-radius:16px;overflow:hidden;box-shadow:0 4px 24px rgba(99,102,241,.10);">
+          <div style="background:linear-gradient(135deg,#6366f1 0%,#a78bfa 100%);padding:28px 32px 24px;">
+            <div style="font-size:22px;font-weight:700;color:#fff;">NTL Career Nexus</div>
+            <div style="font-size:13px;color:rgba(255,255,255,.75);margin-top:4px;">Recruiter Access Extension Request</div>
+          </div>
+          <div style="padding:28px 32px;">
+            <p style="margin:0 0 16px;font-size:15px;color:#374151;">
+              <strong>${opts.name}</strong> (<a href="mailto:${opts.email}" style="color:#6366f1;">${opts.email}</a>) has requested an access extension.
+            </p>
+            ${opts.message ? `
+            <div style="background:#f5f3ff;border:1px solid #ddd6fe;border-radius:8px;padding:14px 16px;margin-bottom:20px;">
+              <div style="font-size:11px;font-weight:700;color:#7c3aed;text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px;">Message</div>
+              <p style="margin:0;font-size:14px;color:#374151;">${opts.message}</p>
+            </div>` : ''}
+            <p style="font-size:13px;color:#6b7280;">Log in to the admin panel to review this request.</p>
+          </div>
+        </div>
+      </div>
+    `,
+  });
+}
+
+// ── Recruiter Access Request: Approved ────────────────────────────────────────
+
+export async function sendRecruiterAccessRequestApproved(opts: {
+  email: string;
+  name: string;
+  newExpiryDate: string;
+}): Promise<void> {
+  await sendMail({
+    to: opts.email,
+    subject: 'Your Access Extension Has Been Approved — NTL Career Nexus',
+    html: `
+      <div style="font-family:Inter,sans-serif;background:#f8fafc;padding:32px 0;">
+        <div style="max-width:560px;margin:0 auto;background:#fff;border-radius:16px;overflow:hidden;box-shadow:0 4px 24px rgba(16,185,129,.10);">
+          <div style="background:linear-gradient(135deg,#10b981 0%,#34d399 100%);padding:28px 32px 24px;">
+            <div style="font-size:22px;font-weight:700;color:#fff;">NTL Career Nexus</div>
+            <div style="font-size:13px;color:rgba(255,255,255,.80);margin-top:4px;">Access Extension Approved</div>
+          </div>
+          <div style="padding:28px 32px;">
+            <p style="margin:0 0 16px;font-size:15px;color:#374151;">Hi <strong>${opts.name}</strong>,</p>
+            <p style="margin:0 0 20px;font-size:15px;color:#374151;">
+              Your access extension request has been <strong style="color:#10b981;">approved</strong>.
+              Your account is now accessible until <strong>${opts.newExpiryDate}</strong>.
+            </p>
+            <p style="font-size:13px;color:#6b7280;">You can log in to the platform at any time before this date.</p>
+          </div>
+        </div>
+      </div>
+    `,
+  });
+}
+
+// ── Recruiter Access Request: Rejected ────────────────────────────────────────
+
+export async function sendRecruiterAccessRequestRejected(opts: {
+  email: string;
+  name: string;
+  adminNote: string | null;
+}): Promise<void> {
+  await sendMail({
+    to: opts.email,
+    subject: 'Access Extension Request Update — NTL Career Nexus',
+    html: `
+      <div style="font-family:Inter,sans-serif;background:#f8fafc;padding:32px 0;">
+        <div style="max-width:560px;margin:0 auto;background:#fff;border-radius:16px;overflow:hidden;box-shadow:0 4px 24px rgba(239,68,68,.08);">
+          <div style="background:linear-gradient(135deg,#ef4444 0%,#f87171 100%);padding:28px 32px 24px;">
+            <div style="font-size:22px;font-weight:700;color:#fff;">NTL Career Nexus</div>
+            <div style="font-size:13px;color:rgba(255,255,255,.80);margin-top:4px;">Access Extension Not Approved</div>
+          </div>
+          <div style="padding:28px 32px;">
+            <p style="margin:0 0 16px;font-size:15px;color:#374151;">Hi <strong>${opts.name}</strong>,</p>
+            <p style="margin:0 0 20px;font-size:15px;color:#374151;">
+              Unfortunately your access extension request has not been approved at this time.
+            </p>
+            ${opts.adminNote ? `
+            <div style="background:#fef2f2;border:1px solid #fecaca;border-radius:8px;padding:14px 16px;margin-bottom:20px;">
+              <div style="font-size:11px;font-weight:700;color:#dc2626;text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px;">Note from Admin</div>
+              <p style="margin:0;font-size:14px;color:#374151;">${opts.adminNote}</p>
+            </div>` : ''}
+            <p style="font-size:13px;color:#6b7280;">If you have questions, please contact the administrator directly.</p>
+          </div>
+        </div>
+      </div>
+    `,
+  });
+}

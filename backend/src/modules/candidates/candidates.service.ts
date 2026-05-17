@@ -262,6 +262,7 @@ function applyFilters(query: any, filters: CandidateFilterDto): any {
   }
   if (filters.gender)                query = query.where('e.gender', filters.gender);
   if (filters.profileStatus)         query = query.where('e.profile_status', filters.profileStatus);
+  if ((filters as any).excludePlaced) query = query.whereNot('e.profile_status', 'placed');
   if (filters.registrationFeeStatus) query = query.where('e.registration_fee_status', filters.registrationFeeStatus);
   if (filters.cvFormat)              query = query.where('e.cv_format', filters.cvFormat);
   if (filters.hasVideo === 'true')   query = query.whereNotNull('e.intro_video_url');

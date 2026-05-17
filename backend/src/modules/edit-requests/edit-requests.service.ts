@@ -38,13 +38,57 @@ export async function submitEditRequest(
   // Get current candidate data to store as old values
   const candidateData = await db('candidates').where({ id: candidate.id }).first();
   const oldValues: Record<string, unknown> = {};
-  
-  // Extract only the fields that are being changed
+
+  // Scalar/JSON columns that live directly on the candidates row
   Object.keys(requestedData).forEach(key => {
     if (key in candidateData) {
       oldValues[key] = candidateData[key];
     }
   });
+
+  // Relation-table arrays: fetch old data from join tables when the candidate
+  // is submitting changes for those fields, so admins see the true previous value.
+  const relationKeys = new Set(Object.keys(requestedData));
+
+  if (relationKeys.has('skills')) {
+    const rows = await db('candidate_skills')
+      .where({ candidate_id: candidate.id })
+      .select('skill_name', 'proficiency')
+      .orderBy('skill_name');
+    oldValues['skills'] = rows;
+  }
+
+  if (relationKeys.has('languages')) {
+    const rows = await db('candidate_languages')
+      .where({ candidate_id: candidate.id })
+      .select('language', 'proficiency')
+      .orderBy('language');
+    oldValues['languages'] = rows;
+  }
+
+  if (relationKeys.has('experience')) {
+    const rows = await db('candidate_experience')
+      .where({ candidate_id: candidate.id })
+      .select('job_title', 'company_name', 'start_date', 'end_date', 'location', 'description', 'reason_for_leaving')
+      .orderBy('start_date', 'desc');
+    oldValues['experience'] = rows;
+  }
+
+  if (relationKeys.has('education')) {
+    const rows = await db('candidate_education')
+      .where({ candidate_id: candidate.id })
+      .select('institution', 'degree', 'field_of_study', 'start_year', 'start_month', 'end_year', 'end_month', 'location')
+      .orderBy('start_year', 'desc');
+    oldValues['education'] = rows;
+  }
+
+  if (relationKeys.has('certificates')) {
+    const rows = await db('candidate_certificates')
+      .where({ candidate_id: candidate.id })
+      .select('name', 'issuer', 'issue_date', 'expiry_date', 'no_expiry')
+      .orderBy('issue_date', 'desc');
+    oldValues['certificates'] = rows;
+  }
 
   const id = uuidv4();
   await db('profile_edit_requests').insert({

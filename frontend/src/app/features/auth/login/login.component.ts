@@ -424,6 +424,7 @@ export class LoginComponent implements OnInit, OnDestroy {
     if (this.form.invalid) return;
 
     this.loading = true;
+    sessionStorage.setItem('auth:pendingEmail', this.form.getRawValue().email);
     this.auth.login(this.form.getRawValue()).subscribe({
       next: (res) => {
         this.loading = false;

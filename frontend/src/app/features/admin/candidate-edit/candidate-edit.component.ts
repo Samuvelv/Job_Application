@@ -14,7 +14,7 @@ import { VolunteerService } from '../../../core/services/volunteer.service';
 import { SearchableSelectComponent, SelectOption } from '../../../shared/components/searchable-select/searchable-select.component';
 import { ChipMultiSelectComponent, ChipOption } from '../../../shared/components/chip-multi-select/chip-multi-select.component';
 import { Candidate, Certificate } from '../../../core/models/candidate.model';
-import { REGISTRATION_FEE_STATUS_OPTIONS, CV_FORMAT_OPTIONS, SOURCE_OPTIONS, EMPLOYMENT_STATUS_OPTIONS, VISA_STATUS_OPTIONS, REASON_FOR_LEAVING_OPTIONS } from '../../../core/constants/candidate-options';
+import { REGISTRATION_FEE_STATUS_OPTIONS, CV_FORMAT_OPTIONS, SOURCE_OPTIONS, EMPLOYMENT_STATUS_OPTIONS, VISA_STATUS_OPTIONS, REASON_FOR_LEAVING_OPTIONS, PROFILE_STATUS_OPTIONS } from '../../../core/constants/candidate-options';
 
 // ── LinkedIn URL validator ─────────────────────────────────────────────────
 function linkedInValidator(): ValidatorFn {
@@ -242,12 +242,7 @@ export class CandidateEditComponent implements OnInit {
   readonly SALARY_TYPES  = ['monthly', 'annual', 'hourly'];
   readonly PROFICIENCY_SKILL = ['beginner', 'intermediate', 'expert'];
   readonly PROFICIENCY_LANG  = ['A1', 'A2', 'B1', 'B2', 'C1', 'C2', 'native'];
-  readonly STATUSES = [
-    { value: 'active',       label: 'Active'       },
-    { value: 'inactive',     label: 'Inactive'     },
-    { value: 'pending_edit', label: 'Pending Edit' },
-    { value: 'placed',       label: 'Placed'       },
-  ];
+  readonly STATUSES = PROFILE_STATUS_OPTIONS;
   readonly currentYear = new Date().getFullYear();
   readonly MONTHS = [
     { value: 1, label: 'Jan' }, { value: 2, label: 'Feb' }, { value: 3, label: 'Mar' },
@@ -276,12 +271,7 @@ export class CandidateEditComponent implements OnInit {
     { value: 'C2',     label: 'C2 — Proficient'         },
     { value: 'native', label: 'Native'                   },
   ];
-  readonly statusOptions: SelectOption[] = [
-    { value: 'active',       label: 'Active'       },
-    { value: 'inactive',     label: 'Inactive'     },
-    { value: 'pending_edit', label: 'Pending Edit' },
-    { value: 'placed',       label: 'Placed'       },
-  ];
+  readonly statusOptions: SelectOption[] = PROFILE_STATUS_OPTIONS;
   readonly registrationFeeStatusOptions = REGISTRATION_FEE_STATUS_OPTIONS;
   readonly cvFormatOptions             = CV_FORMAT_OPTIONS;
   readonly sourceOptions               = SOURCE_OPTIONS;

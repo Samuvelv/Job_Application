@@ -14,7 +14,7 @@ import { CandidateCardComponent } from '../../../shared/components/candidate-car
 import { SearchableSelectComponent, SelectOption } from '../../../shared/components/searchable-select/searchable-select.component';
 import { ToastService } from '../../../core/services/toast.service';
 import { ConfirmDialogService } from '../../../core/services/confirm-dialog.service';
-import { SORT_OPTIONS } from '../../../core/constants/candidate-options';
+import { SORT_OPTIONS, PROFILE_STATUS_OPTIONS, PROFILE_STATUS_WITH_COLOR } from '../../../core/constants/candidate-options';
 
 @Component({
   selector: 'app-candidate-list',
@@ -41,6 +41,16 @@ import { SORT_OPTIONS } from '../../../core/constants/candidate-options';
           [formControl]="searchCtrl"
           placeholder="Search name, email, job title, Login ID…"
           (keydown.enter)="doSearch()">
+      </div>
+      <!-- Profile Status filter -->
+      <div class="cl-sort-wrap">
+        <i class="bi bi-person-badge cl-sort-wrap__icon"></i>
+        <app-searchable-select
+          [formControl]="statusFilterCtrl"
+          [options]="PROFILE_STATUS_OPTIONS"
+          [allowClear]="true"
+          placeholder="Profile Status…">
+        </app-searchable-select>
       </div>
       <div class="cfs-topbar__actions">
         <button type="button" class="filter-search-btn" (click)="doSearch()">
@@ -258,9 +268,6 @@ import { SORT_OPTIONS } from '../../../core/constants/candidate-options';
                       <td class="small">{{ emp.industry || '—' }}</td>
                       <td class="small">
                         <div>{{ flagOf(emp.current_country) }} {{ emp.current_city || '' }}{{ emp.current_city && emp.current_country ? ', ' : '' }}{{ emp.current_country || '—' }}</div>
-                        @if (emp.nationality) {
-                          <div class="text-muted" style="font-size:.7rem">{{ flagOf(emp.nationality) }} {{ emp.nationality }}</div>
-                        }
                         @if (firstTarget(emp.target_locations)) {
                           <div class="text-muted" style="font-size:.7rem">→ {{ flagOf(firstTarget(emp.target_locations)) }} {{ firstTarget(emp.target_locations) }}</div>
                         }
@@ -402,7 +409,6 @@ import { SORT_OPTIONS } from '../../../core/constants/candidate-options';
                     @if (emp.job_title) { <span><i class="bi bi-briefcase me-1"></i>{{ emp.job_title }}</span> }
                     @if (emp.current_country) { <span><i class="bi bi-geo-alt me-1"></i>{{ flagOf(emp.current_country) }} {{ emp.current_city ? emp.current_city + ', ' : '' }}{{ emp.current_country }}</span> }
                     @if (emp.years_experience != null) { <span><i class="bi bi-clock-history me-1"></i>{{ emp.years_experience }} yrs</span> }
-                    @if (emp.nationality) { <span>{{ flagOf(emp.nationality) }} {{ emp.nationality }}</span> }
                     @if (firstTarget(emp.target_locations)) { <span>→ {{ flagOf(firstTarget(emp.target_locations)) }} {{ firstTarget(emp.target_locations) }}</span> }
                     @if (emp.english_level) { <span><i class="bi bi-translate me-1"></i>EN: {{ englishLabel(emp.english_level) }}</span> }
                     <span>
@@ -541,14 +547,12 @@ export class CandidateListComponent implements OnInit {
   bulkProcessing = false;
   statusDropOpen = false;
 
-  readonly PROFILE_STATUSES = [
-    { value: 'active',       label: 'Active',       color: 'var(--th-success)' },
-    { value: 'inactive',     label: 'Inactive',     color: 'var(--th-muted)'   },
-    { value: 'pending_edit', label: 'Pending Edit', color: 'var(--th-warning)' },
-  ];
+  readonly PROFILE_STATUSES = PROFILE_STATUS_WITH_COLOR;
+  readonly PROFILE_STATUS_OPTIONS: SelectOption[] = PROFILE_STATUS_OPTIONS;
 
-  searchCtrl = this.fb.control('');
-  sortCtrl   = this.fb.control<string>('newest');
+  searchCtrl       = this.fb.control('');
+  sortCtrl         = this.fb.control<string>('newest');
+  statusFilterCtrl = this.fb.control<string | null>(null);
   readonly SORT_OPTIONS: SelectOption[] = SORT_OPTIONS;
   private sidebarFilters: CandidateFilters = {};
 
@@ -566,11 +570,8 @@ export class CandidateListComponent implements OnInit {
   ngOnInit(): void {
     this.master.loadAll();
     this.loadCandidates();
-    // Re-load on sort change (app-searchable-select uses formControl, no (change) event)
-    this.sortCtrl.valueChanges.pipe(
-      skip(1),
-      distinctUntilChanged(),
-    ).subscribe(() => this.onSortChange());
+    // Re-load on sort change
+    this.sortCtrl.valueChanges.pipe(skip(1), distinctUntilChanged()).subscribe(() => this.onSortChange());
   }
 
   // ── View mode ────────────────────────────────────────────────────────────────
@@ -672,13 +673,13 @@ export class CandidateListComponent implements OnInit {
   onFiltersApplied(filters: CandidateFilters): void {
     this.sidebarFilters = filters;
     this.sidebarActiveCount = Object.keys(filters).length;
-    this.hasActiveFilters = this.sidebarActiveCount > 0 || !!this.searchCtrl.value;
+    this.hasActiveFilters = this.sidebarActiveCount > 0 || !!this.searchCtrl.value || !!this.statusFilterCtrl.value;
     this.pagination.page = 1;
     this.loadCandidates();
   }
 
   doSearch(): void {
-    this.hasActiveFilters = Object.keys(this.sidebarFilters).length > 0 || !!this.searchCtrl.value;
+    this.hasActiveFilters = Object.keys(this.sidebarFilters).length > 0 || !!this.searchCtrl.value || !!this.statusFilterCtrl.value;
     this.pagination.page = 1;
     this.loadCandidates();
   }
@@ -690,6 +691,7 @@ export class CandidateListComponent implements OnInit {
 
   clearAll(): void {
     this.searchCtrl.setValue('');
+    this.statusFilterCtrl.setValue(null);
     this.sidebarFilters = {};
     this.sidebarActiveCount = 0;
     this.hasActiveFilters = false;
@@ -704,10 +706,11 @@ export class CandidateListComponent implements OnInit {
     this.selectedIds.clear();
     const params: CandidateFilters = {
       ...this.sidebarFilters,
-      search:  this.searchCtrl.value || undefined,
-      sortBy:  this.sortCtrl.value   || 'newest',
-      page:    this.pagination.page,
-      limit:   20,
+      search:        this.searchCtrl.value        || undefined,
+      profileStatus: this.statusFilterCtrl.value  || undefined,
+      sortBy:        this.sortCtrl.value           || 'newest',
+      page:          this.pagination.page,
+      limit:         20,
     };
     this.empSvc.list(params).subscribe({
       next:  res => { this.candidates = res.data; this.pagination = res.pagination; this.loading = false; },

@@ -16,6 +16,13 @@ export class AuthService {
   // Reactive signal for current user — components can read this directly
   currentUser = signal<User | null>(this.loadUser());
 
+  // Candidate placement status — set after profile loads; used by sidebar + guard
+  candidateStatus = signal<string | null>(null);
+
+  setCandidateStatus(status: string): void {
+    this.candidateStatus.set(status);
+  }
+
   constructor(private http: HttpClient, private router: Router) {}
 
   // ── Login ────────────────────────────────────────────────────────────────────
@@ -61,6 +68,7 @@ export class AuthService {
     localStorage.removeItem(TOKEN_KEY);
     localStorage.removeItem(USER_KEY);
     this.currentUser.set(null);
+    this.candidateStatus.set(null);
     this.router.navigate(['/login']);
   }
 

@@ -40,6 +40,8 @@ export async function create(req: Request, res: Response, next: NextFunction): P
 export async function list(req: Request, res: Response, next: NextFunction): Promise<void> {
   try {
     const filters = CandidateFilterSchema.parse(req.query);
+    // Recruiters must not see placed candidates in search results
+    if (req.user!.role === 'recruiter') (filters as any).excludePlaced = true;
     const result  = await svc.listCandidates(filters);
     // Strip sensitive fields from recruiter responses
     if (req.user!.role === 'recruiter') {

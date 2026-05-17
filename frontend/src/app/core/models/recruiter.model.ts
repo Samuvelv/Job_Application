@@ -60,6 +60,7 @@ export interface ShortlistEntry {
   years_experience?: number;
   profile_photo_url?: string;
   email?: string;
+  profile_status?: string;
 }
 
 export interface RecruiterFilters {

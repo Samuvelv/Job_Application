@@ -9,6 +9,7 @@ import { MasterDataService } from '../../../core/services/master-data.service';
   selector: 'app-candidate-card',
   standalone: true,
   imports: [CommonModule, RouterLink],
+  styles: [':host { display: block; height: 100%; }'],
   template: `
     <div class="cl-card" [class.cl-card--selected]="selected">
 
