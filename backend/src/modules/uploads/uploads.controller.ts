@@ -18,7 +18,7 @@ import { logAudit } from '../../services/audit.service';
 
 // Public base URL for uploaded files.
 //   Local : http://localhost:3000/uploads
-//   VPS   : https://infortsolutions.in/uploads
+//   VPS   : https://ntlcareernexus.com/uploads
 const UPLOADS_BASE_URL = `${env.APP_URL.replace(/\/$/, '')}/uploads`;
 
 // ── Type helpers ──────────────────────────────────────────────────────────────
@@ -38,8 +38,8 @@ const p = (v: string | string[]): string => (Array.isArray(v) ? v[0] : v);
 /**
  * Build the public URL for a newly saved file.
  *   type=profiles, filename=abc.jpg
- *   → http://localhost:3000/uploads/profiles/abc.jpg   (local)
- *   → https://infortsolutions.in/uploads/profiles/abc.jpg  (VPS)
+ *   → http://localhost:3000/uploads/profiles/abc.jpg        (local)
+ *   → https://ntlcareernexus.com/uploads/profiles/abc.jpg   (VPS)
  */
 function buildFileUrl(type: string, filename: string): string {
   return `${UPLOADS_BASE_URL}/${type}/${filename}`;

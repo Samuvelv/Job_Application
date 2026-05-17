@@ -24,6 +24,9 @@ export async function createSubmission(data: CreateSubmissionDto) {
   sendAdminContactRequestNotification(
     data.name.trim(),
     data.email.trim().toLowerCase(),
+    data.phone?.trim() || null,
+    data.subject?.trim() || null,
+    data.message.trim(),
   ).catch(() => { /* non-fatal */ });
 
   return row;

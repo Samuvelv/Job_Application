@@ -79,7 +79,7 @@ export const CreateCandidateSchema = z.object({
   // Location
   current_country:  z.string().max(100).optional(),
   current_city:     z.string().max(100).optional(),
-  nationality:      z.string().max(100).optional(),
+  nationality:      z.string().max(100).nullable().optional(),
   postal_code:      z.string().max(20).optional(),
   target_locations: z.array(z.string()).optional(),
   hobbies:          z.array(z.string()).optional(),
@@ -113,6 +113,7 @@ export const CreateCandidateSchema = z.object({
 export const UpdateCandidateSchema = CreateCandidateSchema
   .omit({ email: true, password: true })
   .extend({
+    email:                    z.string().email('Invalid email address').max(255).optional(),
     profile_photo_url:        z.string().optional().nullable(),
     resume_url:               z.string().optional().nullable(),
     intro_video_url:          z.string().optional().nullable(),

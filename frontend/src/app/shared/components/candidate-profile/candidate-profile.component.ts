@@ -47,6 +47,11 @@ type Tab = 'overview' | 'experience' | 'education' | 'documents' | 'activity';
               @if (candidate.candidate_number) {
                 <span class="autocode-badge autocode-badge--lg">{{ candidate.candidate_number }}</span>
               }
+              @if (candidate.login_id) {
+                <span class="autocode-badge autocode-badge--login-id" title="Your Candidate Login ID — use this to sign in">
+                  <i class="bi bi-key-fill" style="font-size:.75rem;margin-right:.25rem"></i>{{ candidate.login_id }}
+                </span>
+              }
               <span class="badge rounded-pill px-3 py-2"
                 [class.badge-status-active]="candidate.profile_status === 'active'"
                 [class.badge-status-pending]="candidate.profile_status === 'pending_edit'"

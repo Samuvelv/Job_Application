@@ -14,7 +14,17 @@ import { VolunteerService } from '../../../core/services/volunteer.service';
 import { SearchableSelectComponent, SelectOption } from '../../../shared/components/searchable-select/searchable-select.component';
 import { ChipMultiSelectComponent, ChipOption } from '../../../shared/components/chip-multi-select/chip-multi-select.component';
 import { Candidate, Certificate } from '../../../core/models/candidate.model';
-import { REGISTRATION_FEE_STATUS_OPTIONS, CV_FORMAT_OPTIONS, SOURCE_OPTIONS, EMPLOYMENT_STATUS_OPTIONS, VISA_STATUS_OPTIONS, REASON_FOR_LEAVING_OPTIONS } from '../../../core/constants/candidate-options';
+import { REGISTRATION_FEE_STATUS_OPTIONS, CV_FORMAT_OPTIONS, SOURCE_OPTIONS, EMPLOYMENT_STATUS_OPTIONS, VISA_STATUS_OPTIONS, REASON_FOR_LEAVING_OPTIONS, PROFILE_STATUS_OPTIONS } from '../../../core/constants/candidate-options';
+
+// ── Email validator ────────────────────────────────────────────────────────
+function emailValidator(): ValidatorFn {
+  return (ctrl: AbstractControl): ValidationErrors | null => {
+    const v = (ctrl.value as string || '').trim();
+    if (!v) return null;
+    const ok = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(v);
+    return ok ? null : { invalidEmail: true };
+  };
+}
 
 // ── LinkedIn URL validator ─────────────────────────────────────────────────
 function linkedInValidator(): ValidatorFn {
@@ -214,6 +224,14 @@ export class CandidateEditComponent implements OnInit {
   inviteSending    = false;
   inviteError      = '';
 
+  // Volunteer reactivation prompt
+  showVolunteerReactivatePrompt = false;
+  reactivateError = '';
+  reactivating = false;
+
+  // Volunteer impact confirmation (status change away from placed)
+  showVolunteerImpactConfirm = false;
+
   form!: FormGroup;
 
   mediaLoading: Record<string, boolean> = {};
@@ -242,12 +260,7 @@ export class CandidateEditComponent implements OnInit {
   readonly SALARY_TYPES  = ['monthly', 'annual', 'hourly'];
   readonly PROFICIENCY_SKILL = ['beginner', 'intermediate', 'expert'];
   readonly PROFICIENCY_LANG  = ['A1', 'A2', 'B1', 'B2', 'C1', 'C2', 'native'];
-  readonly STATUSES = [
-    { value: 'active',       label: 'Active'       },
-    { value: 'inactive',     label: 'Inactive'     },
-    { value: 'pending_edit', label: 'Pending Edit' },
-    { value: 'placed',       label: 'Placed'       },
-  ];
+  readonly STATUSES = PROFILE_STATUS_OPTIONS;
   readonly currentYear = new Date().getFullYear();
   readonly MONTHS = [
     { value: 1, label: 'Jan' }, { value: 2, label: 'Feb' }, { value: 3, label: 'Mar' },
@@ -276,12 +289,7 @@ export class CandidateEditComponent implements OnInit {
     { value: 'C2',     label: 'C2 — Proficient'         },
     { value: 'native', label: 'Native'                   },
   ];
-  readonly statusOptions: SelectOption[] = [
-    { value: 'active',       label: 'Active'       },
-    { value: 'inactive',     label: 'Inactive'     },
-    { value: 'pending_edit', label: 'Pending Edit' },
-    { value: 'placed',       label: 'Placed'       },
-  ];
+  readonly statusOptions: SelectOption[] = PROFILE_STATUS_OPTIONS;
   readonly registrationFeeStatusOptions = REGISTRATION_FEE_STATUS_OPTIONS;
   readonly cvFormatOptions             = CV_FORMAT_OPTIONS;
   readonly sourceOptions               = SOURCE_OPTIONS;
@@ -700,6 +708,7 @@ export class CandidateEditComponent implements OnInit {
     }
 
     this.form = this.fb.group({
+      email:         [emp.email ?? '', [Validators.required, emailValidator()]],
       first_name:    [emp.first_name, [Validators.required, Validators.minLength(3), Validators.maxLength(100), Validators.pattern(/^[a-zA-Z\s'\-]+$/)]],
       last_name:     [emp.last_name,  [Validators.required, Validators.minLength(3), Validators.maxLength(100), Validators.pattern(/^[a-zA-Z\s'\-]+$/)]],
       date_of_birth: [emp.date_of_birth ?? '', [Validators.required, dobValidator()]],
@@ -796,6 +805,35 @@ export class CandidateEditComponent implements OnInit {
   // ── Submit ────────────────────────────────────────────────────────────────
   onSubmit(): void {
     if (this.form.invalid) { this.form.markAllAsTouched(); return; }
+
+    // Guard: if moving a placed volunteer away from placed, confirm first
+    const newStatus = this.form.getRawValue().profile_status;
+    const currentStatus = this.candidate?.profile_status;
+    const isVolunteer = this.candidate?.is_volunteer;
+
+    if (
+      currentStatus === 'placed' &&
+      isVolunteer &&
+      newStatus !== 'placed'
+    ) {
+      this.showVolunteerImpactConfirm = true;
+      return;
+    }
+
+    this._doSubmit();
+  }
+
+  confirmVolunteerImpact(): void {
+    this.showVolunteerImpactConfirm = false;
+    this._doSubmit();
+  }
+
+  cancelVolunteerImpact(): void {
+    this.showVolunteerImpactConfirm = false;
+  }
+
+  private _doSubmit(): void {
+    if (this.form.invalid) { this.form.markAllAsTouched(); return; }
     this.saving   = true;
     this.errorMsg = '';
 
@@ -805,6 +843,7 @@ export class CandidateEditComponent implements OnInit {
     const education = this.isExperienceBased ? [] : raw.education.filter((e: any) => e.institution?.trim() || e.degree?.trim());
 
     const payload = {
+      email:         raw.email?.trim() || undefined,
       first_name:    raw.first_name,
       last_name:     raw.last_name,
       date_of_birth: raw.date_of_birth   || undefined,
@@ -828,7 +867,7 @@ export class CandidateEditComponent implements OnInit {
       notice_period_id: raw.notice_period_id || undefined,
       current_country: raw.current_country || undefined,
       current_city:  raw.current_city    || undefined,
-      nationality:   raw.nationality     || undefined,
+      nationality:   raw.nationality !== null && raw.nationality !== '' ? raw.nationality : null,
       postal_code:   raw.postal_code     || undefined,
       has_passport:  raw.has_passport    ?? false,
       target_locations: Array.isArray(raw.target_locations) ? raw.target_locations : [],
@@ -860,8 +899,13 @@ export class CandidateEditComponent implements OnInit {
         this.toast.success('Candidate updated');
         window.scrollTo({ top: 0, behavior: 'smooth' });
 
-        if (raw.profile_status === 'placed' && !res.candidate.is_volunteer) {
-          // Show volunteer invitation prompt only if not already a volunteer
+        if (raw.profile_status === 'placed'
+            && res.candidate.volunteer_invite_status === 'converted'
+            && res.candidate.volunteer_availability === 'Inactive') {
+          // Volunteer exists but is system-deactivated — offer reactivation
+          this.showVolunteerReactivatePrompt = true;
+        } else if (raw.profile_status === 'placed' && !res.candidate.is_volunteer) {
+          // Never been a volunteer — offer invitation
           this.showPlacedPrompt = true;
         } else {
           setTimeout(() => this.router.navigate(['/admin/candidates', this.candidateId]), 1500);
@@ -923,6 +967,29 @@ export class CandidateEditComponent implements OnInit {
 
   skipInvitation(): void {
     this.showPlacedPrompt = false;
+    this.router.navigate(['/admin/candidates', this.candidateId]);
+  }
+
+  confirmReactivation(): void {
+    this.reactivating = true;
+    this.reactivateError = '';
+    this.volunteerSvc.reactivateVolunteer(this.candidateId).subscribe({
+      next: () => {
+        this.reactivating = false;
+        this.showVolunteerReactivatePrompt = false;
+        this.toast.success('Volunteer profile reactivated.');
+        this.router.navigate(['/admin/candidates', this.candidateId]);
+      },
+      error: (err) => {
+        this.reactivating = false;
+        this.reactivateError = err?.error?.message ?? 'Failed to reactivate volunteer.';
+      },
+    });
+  }
+
+  skipReactivation(): void {
+    this.reactivateError = '';
+    this.showVolunteerReactivatePrompt = false;
     this.router.navigate(['/admin/candidates', this.candidateId]);
   }
 }

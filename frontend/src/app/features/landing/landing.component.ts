@@ -1,19 +1,74 @@
 // src/app/features/landing/landing.component.ts
 import {
-  Component, HostListener, signal, inject, OnInit, OnDestroy, ViewChild, ElementRef
+  Component, HostListener, signal, inject, OnInit, OnDestroy, ViewChild, ElementRef, computed
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
-import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
+import {
+  ReactiveFormsModule, FormBuilder, FormGroup, Validators,
+  AbstractControl, ValidationErrors, ValidatorFn,
+} from '@angular/forms';
 import { ThemeService } from '../../core/services/theme.service';
 import { ToastService } from '../../core/services/toast.service';
 import { StatsService } from '../../core/services/stats.service';
 import { ContactSubmissionService } from '../../core/services/contact-submission.service';
+import { MasterDataService } from '../../core/services/master-data.service';
+import { SearchableSelectComponent, SelectOption } from '../../shared/components/searchable-select/searchable-select.component';
+
+// ── Phone rules (same as candidate form) ─────────────────────────────────────
+interface PhoneRule { minLen: number; maxLen: number; pattern?: RegExp; hint: string; }
+const PHONE_RULES: Record<string, PhoneRule> = {
+  '+91':  { minLen: 10, maxLen: 10, pattern: /^[6-9]\d{9}$/,   hint: '10 digits starting with 6–9 (India)' },
+  '+1':   { minLen: 10, maxLen: 10, pattern: /^\d{10}$/,        hint: '10 digits (US / Canada)' },
+  '+44':  { minLen: 10, maxLen: 11, pattern: /^7\d{9}$/,        hint: '10 digits starting with 7 (UK mobile)' },
+  '+61':  { minLen: 9,  maxLen: 9,  pattern: /^[4]\d{8}$/,      hint: '9 digits starting with 4 (Australia)' },
+  '+971': { minLen: 9,  maxLen: 9,  pattern: /^[5]\d{8}$/,      hint: '9 digits starting with 5 (UAE)' },
+  '+234': { minLen: 10, maxLen: 11, pattern: /^[7-9]\d{9,10}$/, hint: '10–11 digits starting with 7–9 (Nigeria)' },
+  '+254': { minLen: 9,  maxLen: 9,  pattern: /^[7]\d{8}$/,      hint: '9 digits starting with 7 (Kenya)' },
+  '+27':  { minLen: 9,  maxLen: 9,  pattern: /^[6-8]\d{8}$/,    hint: '9 digits starting with 6–8 (South Africa)' },
+  '+49':  { minLen: 10, maxLen: 12, pattern: /^\d{10,12}$/,     hint: '10–12 digits (Germany)' },
+  '+33':  { minLen: 9,  maxLen: 9,  pattern: /^[6-7]\d{8}$/,    hint: '9 digits starting with 6–7 (France)' },
+};
+const PHONE_FALLBACK: PhoneRule = { minLen: 5, maxLen: 15, pattern: /^\d{5,15}$/, hint: '5–15 digits' };
+function getPhoneRule(dialCode: string): PhoneRule { return PHONE_RULES[dialCode] ?? PHONE_FALLBACK; }
+
+// Optional phone validator — only validates when phone has a value
+function makeOptionalPhoneValidator(dialCtrl: string, numCtrl: string): ValidatorFn {
+  return (group: AbstractControl): ValidationErrors | null => {
+    const dial = group.get(dialCtrl)?.value as string || '';
+    const num  = (group.get(numCtrl)?.value as string || '').replace(/\s+/g, '');
+    const numControl = group.get(numCtrl);
+    if (!numControl) return null;
+    if (!num) {
+      const cur = numControl.errors;
+      if (cur?.['phoneInvalid']) {
+        const { phoneInvalid: _, ...rest } = cur;
+        numControl.setErrors(Object.keys(rest).length ? rest : null);
+      }
+      return null;
+    }
+    const rule = getPhoneRule(dial);
+    const digitsOnly = /^\d+$/.test(num);
+    const lenOk = num.length >= rule.minLen && num.length <= rule.maxLen;
+    const patOk = rule.pattern ? rule.pattern.test(num) : true;
+    if (!digitsOnly || !lenOk || !patOk) {
+      const msg = `Invalid number for ${dial}. Expected: ${rule.hint}.`;
+      numControl.setErrors({ ...(numControl.errors || {}), phoneInvalid: msg });
+      return { phoneInvalid: true };
+    }
+    const cur = numControl.errors;
+    if (cur?.['phoneInvalid']) {
+      const { phoneInvalid: _, ...rest } = cur;
+      numControl.setErrors(Object.keys(rest).length ? rest : null);
+    }
+    return null;
+  };
+}
 
 @Component({
   selector: 'app-landing',
   standalone: true,
-  imports: [CommonModule, RouterLink, ReactiveFormsModule],
+  imports: [CommonModule, RouterLink, ReactiveFormsModule, SearchableSelectComponent],
   template: `
 <!-- ══════════════════════════════════════════════
      NAVBAR
@@ -144,7 +199,7 @@ import { ContactSubmissionService } from '../../core/services/contact-submission
           <span class="lp-countries__dot"></span>
         </div>
         <div class="lp-countries__track-wrap">
-          <div class="lp-countries__row">
+          <div class="lp-countries__row" #countriesTrack>
             <div class="lp-countries__item">
               <div class="lp-countries__flag-wrap"><img src="https://flagcdn.com/w40/de.png" alt="Germany"></div>
               <span class="lp-countries__name">Germany</span>
@@ -221,7 +276,7 @@ import { ContactSubmissionService } from '../../core/services/contact-submission
   <!-- Wave divider -->
   <div class="lp-hero__wave">
     <svg viewBox="0 0 1440 80" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
-      <path d="M0,40 C360,80 1080,0 1440,40 L1440,80 L0,80 Z" fill="var(--lp-section-bg)"/>
+      <path d="M0,40 C360,80 1080,0 1440,40 L1440,80 L0,80 Z" fill="var(--lp-section-alt)"/>
     </svg>
   </div>
 </section>
@@ -442,8 +497,8 @@ import { ContactSubmissionService } from '../../core/services/contact-submission
               <div>
                 <div class="lp-testimonial-card__name">{{ t.name }}</div>
                 <div class="lp-testimonial-card__role">{{ t.role }}</div>
-              </div>
-            </div>
+          </div>
+        </div>
           </div>
         }
       </div>
@@ -568,24 +623,53 @@ import { ContactSubmissionService } from '../../core/services/contact-submission
             </div>
           </div>
 
-          <div class="lp-contact__form-group">
-            <label>Subject</label>
-            <select formControlName="subject">
-              <option value="">Select a subject…</option>
-              <option value="general">General Enquiry</option>
-              <option value="job">Looking for a Job</option>
-              <option value="hire">Looking to Hire</option>
-              <option value="other">Other</option>
-            </select>
+          <div class="lp-contact__form-row">
+            <div class="lp-contact__form-group">
+              <label>Phone <span style="font-weight:400;color:var(--th-muted)">(Optional)</span></label>
+              <div class="phone-input-group">
+                <app-searchable-select
+                  formControlName="dial_code"
+                  [options]="dialCodeOptions()"
+                  placeholder="🌐"
+                  class="dial-select">
+                </app-searchable-select>
+                <input type="tel" class="phone-number-input"
+                  formControlName="phone"
+                  placeholder="e.g. 9876543210"
+                  [class.is-invalid]="contactInvalid('phone')">
+              </div>
+              @if (contactInvalid('phone')) {
+                <span class="lp-contact__form-error">
+                  {{ contactForm.get('phone')?.errors?.['phoneInvalid'] || 'Invalid phone number.' }}
+                </span>
+              }
+            </div>
+            <div class="lp-contact__form-group">
+              <label>Subject</label>
+              <app-searchable-select
+                formControlName="subject"
+                [options]="subjectOptions"
+                placeholder="Select a subject…"
+                [allowClear]="true">
+              </app-searchable-select>
+            </div>
           </div>
 
           <div class="lp-contact__form-group">
             <label>Message</label>
             <textarea formControlName="message" rows="5" placeholder="Tell us how we can help…"
+              maxlength="1000"
               [class.is-invalid]="contactInvalid('message')"></textarea>
             @if (contactInvalid('message')) {
               <span class="lp-contact__form-error">Message is required.</span>
             }
+            <div class="lp-contact__char-count-row">
+              <span class="lp-contact__char-count"
+                [class.lp-contact__char-count--warn]="(contactForm.get('message')?.value?.length || 0) >= 800"
+                [class.lp-contact__char-count--limit]="(contactForm.get('message')?.value?.length || 0) >= 950">
+                {{ contactForm.get('message')?.value?.length || 0 }} / 1000
+              </span>
+            </div>
           </div>
 
           <button type="submit" class="lp-btn-primary lp-btn--full" [disabled]="contactSending">
@@ -677,6 +761,18 @@ export class LandingComponent implements OnInit, OnDestroy {
   private fb    = inject(FormBuilder);
   private statsService = inject(StatsService);
   private contactSvc   = inject(ContactSubmissionService);
+  private master       = inject(MasterDataService);
+
+  dialCodeOptions = computed<SelectOption[]>(() =>
+    this.master.countries().map(c => ({ value: c.dial_code, label: `${c.flag_emoji} ${c.dial_code}`, sublabel: c.name }))
+  );
+
+  subjectOptions: SelectOption[] = [
+    { value: 'general', label: 'General Enquiry' },
+    { value: 'job',     label: 'Looking for a Job' },
+    { value: 'hire',    label: 'Looking to Hire' },
+    { value: 'other',   label: 'Other' },
+  ];
 
   scrolled      = false;
   mobileOpen    = signal(false);
@@ -879,11 +975,15 @@ export class LandingComponent implements OnInit, OnDestroy {
 
   ngOnInit(): void {
     this.contactForm = this.fb.group({
-      name:    ['', Validators.required],
-      email:   ['', [Validators.required, Validators.email]],
-      subject: [''],
-      message: ['', Validators.required],
-    });
+      name:      ['', Validators.required],
+      email:     ['', [Validators.required, Validators.email]],
+      dial_code: ['+91'],
+      phone:     [''],
+      subject:   [''],
+      message:   ['', [Validators.required, Validators.maxLength(1000)]],
+    }, { validators: [makeOptionalPhoneValidator('dial_code', 'phone')] });
+
+    this.master.loadAll();
 
     this.statsService.getPublicStats().subscribe({
       next: (s) => {
@@ -927,8 +1027,9 @@ export class LandingComponent implements OnInit, OnDestroy {
   submitContact(): void {
     if (this.contactForm.invalid) { this.contactForm.markAllAsTouched(); return; }
     this.contactSending = true;
-    const { name, email, subject, message } = this.contactForm.value;
-    this.contactSvc.submit({ name, email, subject, message }).subscribe({
+    const { name, email, dial_code, phone, subject, message } = this.contactForm.value;
+    const fullPhone = phone ? `${dial_code || ''}${phone}`.trim() : null;
+    this.contactSvc.submit({ name, email, phone: fullPhone, subject, message }).subscribe({
       next: () => {
         this.contactSending = false;
         this.contactForm.reset();

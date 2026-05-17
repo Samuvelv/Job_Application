@@ -2,6 +2,20 @@ import { SelectOption } from '../../shared/components/searchable-select/searchab
 
 export interface SortOption { value: string; label: string; }
 
+export const PROFILE_STATUS_OPTIONS: SelectOption[] = [
+  { value: 'active',       label: 'Active'       },
+  { value: 'inactive',     label: 'Inactive'     },
+  { value: 'pending_edit', label: 'Pending Edit' },
+  { value: 'placed',       label: 'Placed'       },
+];
+
+export const PROFILE_STATUS_WITH_COLOR: { value: string; label: string; color: string }[] = [
+  { value: 'active',       label: 'Active',       color: 'var(--th-success)' },
+  { value: 'inactive',     label: 'Inactive',     color: 'var(--th-muted)'   },
+  { value: 'pending_edit', label: 'Pending Edit', color: 'var(--th-warning)' },
+  { value: 'placed',       label: 'Placed',       color: 'var(--th-info)'    },
+];
+
 export const SORT_OPTIONS: SortOption[] = [
   { value: 'newest',       label: 'Newest First'             },
   { value: 'oldest',       label: 'Oldest First'             },

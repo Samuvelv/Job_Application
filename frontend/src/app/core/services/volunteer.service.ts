@@ -65,4 +65,11 @@ export class VolunteerService {
   delete(id: string): Observable<{ message: string }> {
     return this.http.delete<{ message: string }>(`${this.api}/${id}`);
   }
+
+  reactivateVolunteer(candidateId: string): Observable<{ volunteer: Volunteer }> {
+    return this.http.post<{ volunteer: Volunteer }>(
+      `${environment.apiUrl}/candidates/${candidateId}/reactivate-volunteer`,
+      {},
+    );
+  }
 }

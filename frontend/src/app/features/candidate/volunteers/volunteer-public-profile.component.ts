@@ -248,11 +248,11 @@ import { VolunteerSupportRequest }        from '../../../core/models/volunteer-s
       gap: 16px;
       padding: 60px 0;
     }
-    .loading-state__text { color: #6b7280; }
+    .loading-state__text { color: var(--th-text-secondary); }
 
     /* Hero card */
     .vpp-hero { border-radius: 12px; }
-    .vpp-name { font-size: 1.6rem; font-weight: 700; color: #111827; }
+    .vpp-name { font-size: 1.6rem; font-weight: 700; color: var(--th-text); }
 
     /* Avatar */
     .vpp-avatar {
@@ -261,10 +261,10 @@ import { VolunteerSupportRequest }        from '../../../core/models/volunteer-s
       object-fit: cover;
       flex-shrink: 0;
     }
-    .vpp-avatar--photo { border: 3px solid var(--bs-primary); }
+    .vpp-avatar--photo { border: 3px solid var(--th-primary); }
     .vpp-avatar--initials {
       display: flex; align-items: center; justify-content: center;
-      background: linear-gradient(135deg, #6366f1, #8b5cf6);
+      background: linear-gradient(135deg, var(--th-primary), #8b5cf6);
       color: #fff;
       font-size: 2rem;
       font-weight: 700;
@@ -282,21 +282,21 @@ import { VolunteerSupportRequest }        from '../../../core/models/volunteer-s
       font-size: 0.7rem;
       text-transform: uppercase;
       letter-spacing: 1px;
-      color: #9ca3af;
+      color: var(--th-text-secondary);
       font-weight: 600;
     }
     .vpp-journey__value {
       font-size: 1.1rem;
       font-weight: 600;
-      color: #111827;
+      color: var(--th-text);
     }
-    .vpp-journey__arrow { font-size: 1.5rem; color: var(--bs-primary); }
+    .vpp-journey__arrow { font-size: 1.5rem; color: var(--th-primary); }
 
     /* Success story */
     .vpp-story {
       font-size: 1rem;
       line-height: 1.8;
-      color: #374151;
+      color: var(--th-text-secondary);
       white-space: pre-line;
     }
 

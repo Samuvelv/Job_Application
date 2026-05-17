@@ -37,7 +37,7 @@ export const MAX_SIZES: Record<string, number> = {
   profiles:     5  * 1024 * 1024,  //  5 MB
   resumes:      10 * 1024 * 1024,  // 10 MB
   certificates: 10 * 1024 * 1024,  // 10 MB
-  videos:       50 * 1024 * 1024,  // 50 MB
+  videos:       200 * 1024 * 1024,  // 200 MB
 };
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -121,7 +121,7 @@ export const upload = multer({
   storage,
   fileFilter,
   limits: {
-    fileSize: 50 * 1024 * 1024, // hard global cap 50 MB; per-type enforced in controller
+    fileSize: 200 * 1024 * 1024, // hard global cap 200 MB; per-type enforced in controller
     files:    1,
   },
 });

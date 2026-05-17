@@ -1,5 +1,6 @@
 // src/app/features/candidate/candidate.routes.ts
 import { Routes } from '@angular/router';
+import { placedCandidateGuard } from '../../core/guards/placed-candidate.guard';
 
 export const candidateRoutes: Routes = [
   {
@@ -19,16 +20,19 @@ export const candidateRoutes: Routes = [
   },
   {
     path: 'edit-request',
+    canActivate: [placedCandidateGuard],
     loadComponent: () =>
       import('./edit-request/edit-request.component').then((m) => m.EditRequestComponent),
   },
   {
     path: 'volunteers',
+    canActivate: [placedCandidateGuard],
     loadComponent: () =>
       import('./volunteers/volunteer-browse.component').then((m) => m.VolunteerBrowseComponent),
   },
   {
     path: 'volunteers/:id',
+    canActivate: [placedCandidateGuard],
     loadComponent: () =>
       import('./volunteers/volunteer-public-profile.component').then((m) => m.VolunteerPublicProfileComponent),
   },

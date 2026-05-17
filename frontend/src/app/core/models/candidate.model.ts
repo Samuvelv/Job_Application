@@ -51,6 +51,7 @@ export interface Candidate {
   user_id: string;
   email?: string;
   candidate_number?: string;
+  login_id?: number;
 
   // Personal
   first_name: string;
@@ -96,6 +97,7 @@ export interface Candidate {
   contact_locked?: boolean;
   is_volunteer?: boolean;
   volunteer_invite_status?: 'invited' | 'converted' | null;
+  volunteer_availability?: string | null;
 
   // Relations
   skills?: Skill[];

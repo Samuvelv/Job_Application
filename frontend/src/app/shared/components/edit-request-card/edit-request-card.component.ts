@@ -87,10 +87,10 @@ interface FieldChange {
             </div>
 
             <!-- Show More Button -->
-            @if (getChangeCount() > 2) {
+            @if (getChangeCount() > 1) {
               <button class="btn-show-more" (click)="onViewAllChanges()">
                 <i class="bi bi-plus-lg"></i>
-                Show {{ getChangeCount() - 2 }} more change{{ getChangeCount() - 2 !== 1 ? 's' : '' }}
+                Show {{ getChangeCount() - 1 }} more change{{ getChangeCount() - 1 !== 1 ? 's' : '' }}
               </button>
             }
           </div>
@@ -101,6 +101,11 @@ interface FieldChange {
           <div class="admin-notes-section">
             <p class="admin-note-label">Admin Note</p>
             <p class="admin-note-text">{{ request.admin_note }}</p>
+            @if (isNoteTruncated()) {
+              <button class="btn-read-more" (click)="showNoteModal = true">
+                Read more <i class="bi bi-chevron-right"></i>
+              </button>
+            }
           </div>
         }
       </div>
@@ -137,16 +142,24 @@ interface FieldChange {
       </div>
 
       <!-- Card Footer (Action Buttons) -->
-      @if (request.status === 'pending' && (isAdmin || isRecruiter) && !isSubmitting) {
+      @if ((isAdmin || isRecruiter) && !isSubmitting) {
         <div class="card-footer">
-          <button class="btn btn-success btn-action" (click)="onApproveClick()">
-            <i class="bi bi-check-circle"></i>
-            Approve
+          <button class="btn btn-action btn-action--view" (click)="onViewAllChanges()">
+            <i class="bi bi-eye"></i>
+            View
           </button>
-          <button class="btn btn-danger btn-action" (click)="onRejectClick()">
-            <i class="bi bi-x-circle"></i>
-            Reject
-          </button>
+          @if (request.status === 'pending') {
+            <div class="btn-action-group">
+              <button class="btn btn-success btn-action" (click)="onApproveClick()">
+                <i class="bi bi-check-circle"></i>
+                Approve
+              </button>
+              <button class="btn btn-danger btn-action" (click)="onRejectClick()">
+                <i class="bi bi-x-circle"></i>
+                Reject
+              </button>
+            </div>
+          }
         </div>
       }
 
@@ -167,6 +180,23 @@ interface FieldChange {
       [changes]="getFormattedChanges()"
       (closed)="showChangesModal = false">
     </app-edit-changes-modal>
+
+    <!-- Admin Note Full Modal -->
+    @if (showNoteModal) {
+      <div class="note-modal-backdrop" (click)="showNoteModal = false">
+        <div class="note-modal-panel" (click)="$event.stopPropagation()">
+          <div class="note-modal-header">
+            <span class="note-modal-title">Admin Note</span>
+            <button class="note-modal-close" (click)="showNoteModal = false">
+              <i class="bi bi-x-lg"></i>
+            </button>
+          </div>
+          <div class="note-modal-body">
+            <p>{{ request.admin_note }}</p>
+          </div>
+        </div>
+      </div>
+    }
   `,
   styles: [`
     .edit-request-card {
@@ -323,6 +353,10 @@ interface FieldChange {
       color: var(--th-text);
       line-height: 1.4;
       word-wrap: break-word;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
     }
 
     /* ── Changes List Section ── */
@@ -460,6 +494,103 @@ interface FieldChange {
       color: var(--th-text);
       line-height: 1.4;
       word-wrap: break-word;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+
+    .btn-read-more {
+      margin-top: 0.375rem;
+      padding: 0;
+      background: none;
+      border: none;
+      cursor: pointer;
+      font-size: 0.78rem;
+      font-weight: 500;
+      color: var(--th-primary);
+      display: inline-flex;
+      align-items: center;
+      gap: 0.2rem;
+      transition: opacity 0.15s ease;
+    }
+
+    .btn-read-more:hover {
+      opacity: 0.75;
+    }
+
+    .btn-read-more i {
+      font-size: 0.7rem;
+    }
+
+    /* ── Admin Note Modal ── */
+    .note-modal-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.45);
+      z-index: 1060;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 1rem;
+    }
+
+    .note-modal-panel {
+      background: var(--th-surface);
+      border: 1px solid var(--th-border);
+      border-radius: var(--th-radius-lg, 8px);
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+      width: 100%;
+      max-width: 480px;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    .note-modal-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0.875rem 1rem;
+      border-bottom: 1px solid var(--th-border);
+      background: var(--th-surface-2);
+    }
+
+    .note-modal-title {
+      font-size: 0.9rem;
+      font-weight: 600;
+      color: var(--th-text);
+    }
+
+    .note-modal-close {
+      background: none;
+      border: none;
+      cursor: pointer;
+      color: var(--th-muted);
+      font-size: 0.85rem;
+      padding: 0.25rem;
+      border-radius: var(--th-radius, 4px);
+      transition: color 0.15s ease, background 0.15s ease;
+      display: flex;
+      align-items: center;
+    }
+
+    .note-modal-close:hover {
+      color: var(--th-text);
+      background: var(--th-surface-raised);
+    }
+
+    .note-modal-body {
+      padding: 1rem;
+    }
+
+    .note-modal-body p {
+      margin: 0;
+      font-size: 0.875rem;
+      color: var(--th-text);
+      line-height: 1.6;
+      white-space: pre-wrap;
+      word-wrap: break-word;
     }
 
     /* ── Audit Trail ── */
@@ -528,13 +659,47 @@ interface FieldChange {
 
     /* ── Footer ── */
     .card-footer {
-      padding: 1rem;
+      padding: 0.75rem 1rem;
       border-top: 1px solid var(--th-border);
       background: var(--th-surface);
       display: flex;
+      align-items: center;
       gap: 0.5rem;
     }
 
+    /* View button: auto-width, left-anchored */
+    .btn-action--view {
+      flex: 0 0 auto;
+      padding: 0.4rem 0.75rem;
+      font-size: 0.8rem;
+      font-weight: 500;
+      border-radius: var(--th-radius, 4px);
+      display: flex;
+      align-items: center;
+      gap: 0.35rem;
+      transition: all 0.2s ease;
+      background: transparent;
+      color: var(--th-muted);
+      border: 1px solid var(--th-border);
+    }
+
+    .btn-action--view:hover {
+      color: var(--th-text);
+      border-color: var(--th-text-secondary);
+      background: var(--th-surface-2);
+    }
+
+    .btn-action--view i {
+      font-size: 0.8rem;
+    }
+
+    /* Approve / Reject group: pushes to the right, fills remaining space */
+    .btn-action-group {
+      display: flex;
+      gap: 0.5rem;
+      flex: 1;
+      margin-left: auto;
+    }
 
     .btn-action {
       flex: 1;
@@ -653,6 +818,14 @@ export class EditRequestCardComponent implements OnInit {
 
   isSubmitting = false;
   showChangesModal = false;
+  showNoteModal = false;
+
+  /** True when the admin note is long enough to warrant a "Read More" link */
+  isNoteTruncated(): boolean {
+    if (!this.request?.admin_note) return false;
+    // Approximate: 2 lines × ~80 chars per line
+    return this.request.admin_note.length > 120 || this.request.admin_note.includes('\n');
+  }
 
   constructor(private confirmDialogService: ConfirmDialogService) {}
 
@@ -675,10 +848,10 @@ export class EditRequestCardComponent implements OnInit {
   }
 
   /**
-   * Get the first 2 changes for display
+   * Get the first 1 change for display in the card
    */
   getVisibleChanges(): FieldChange[] {
-    return this.getFormattedChanges().slice(0, 2);
+    return this.getFormattedChanges().slice(0, 1);
   }
 
   /**
@@ -787,8 +960,11 @@ export class EditRequestCardComponent implements OnInit {
         .map(([k, v]) => `${this.formatFieldLabel(k)}: ${v}`);
       return entries.length > 0 ? entries.join(', ') : '';
     }
-    
-    return String(value);
+
+    // Normalise ISO datetime strings to date-only (e.g. date_of_birth from DB)
+    const str = String(value);
+    if (/^\d{4}-\d{2}-\d{2}T/.test(str)) return str.substring(0, 10);
+    return str;
   }
 
   /**

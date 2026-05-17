@@ -40,6 +40,11 @@ router.post('/:id/invite-volunteer',
   ctrl.inviteVolunteer,
 );
 
+router.post('/:id/reactivate-volunteer',
+  authorize('admin'),
+  ctrl.reactivateVolunteer,
+);
+
 router.put('/:id',
   authorize('admin'),
   ctrl.update,

@@ -24,10 +24,8 @@ export async function getAdminStats() {
       .where({ status: 'approved' })
       .whereRaw("reviewed_at >= date_trunc('day', now()) AND reviewed_at < date_trunc('day', now()) + interval '1 day'")
       .count('id as count').first(),
-    // Interviews arranged = contact unlock requests created today
-    db('contact_unlock_requests')
-      .whereRaw("created_at >= date_trunc('day', now()) AND created_at < date_trunc('day', now()) + interval '1 day'")
-      .count('id as count').first(),
+    // Interviews Arranged — dedicated feature not yet implemented; returns 0 until built
+    Promise.resolve({ count: 0 }),
     // Volunteer stats
     db('volunteers').count('id as count').first(),
     db('volunteers').where({ availability: 'Active' }).count('id as count').first(),
@@ -35,8 +33,8 @@ export async function getAdminStats() {
       .where({ status: 'connected' })
       .whereRaw("date_trunc('month', updated_at) = date_trunc('month', CURRENT_DATE)")
       .count('id as count').first(),
-    // Placements = total shortlists (candidates placed with recruiters)
-    db('shortlists').count('id as count').first(),
+    // Placements = candidates whose profile has been marked as 'placed' by admin
+    db('candidates').where({ profile_status: 'placed' }).count('id as count').first(),
     // Countries active = distinct non-null current_country values
     db('candidates')
       .countDistinct('current_country as count')
@@ -65,6 +63,12 @@ export async function getCandidateStats(userId: string) {
   const candidate = await db('candidates').where({ user_id: userId }).first();
   if (!candidate) return { profileCompleteness: 0, pendingRequest: false };
 
+  // english_level is not a column on candidates — derive it from candidate_languages
+  const hasEnglish = !!(await db('candidate_languages')
+    .where({ candidate_id: candidate.id })
+    .whereRaw("LOWER(language) = 'english'")
+    .first());
+
   // Mirrors the frontend candidate-card completionPercent formula exactly
   // so the dashboard percentage always matches the admin candidate list.
   // Base 15 (name always present after registration) + optional fields up to 100.
@@ -74,7 +78,7 @@ export async function getCandidateStats(userId: string) {
   if (candidate.industry)                                     score += 10;
   if (candidate.current_country)                              score += 10;
   if (candidate.years_experience != null)                     score += 10;
-  if (candidate.english_level)                                score += 10;
+  if (hasEnglish)                                             score += 10;
   if (candidate.intro_video_url)                              score += 10;
   if (candidate.nationality)                                  score +=  5;
   if (candidate.target_locations && candidate.target_locations.length > 0) score += 5;
@@ -119,17 +123,28 @@ export async function getPublicStats() {
 }
 
 export async function getNotificationCounts() {
-  const [pendingEditsRow, pendingContactRequestsRow, pendingVolunteerSupportRow, pendingInterestRequestsRow] = await Promise.all([
+  const [
+    pendingEditsRow,
+    pendingContactRequestsRow,
+    pendingVolunteerSupportRow,
+    pendingInterestRequestsRow,
+    pendingContactUnlockRequestsRow,
+    pendingRecruiterAccessRequestsRow,
+  ] = await Promise.all([
     db('profile_edit_requests').where({ status: 'pending' }).count('id as count').first(),
-    db('contact_submissions').where({ is_read: false }).count('id as count').first(),
+    db('contact_submissions').where({ is_read: false }).count('id as count').first(),      // Contact Req... sidebar
     db('volunteer_support_requests').where({ status: 'pending' }).count('id as count').first(),
-    db('agency_interest_requests').where({ status: 'pending' }).count('id as count').first(),
+    db('agency_interest_requests').where({ status: 'pending' }).count('id as count').first(), // Interest Requ... sidebar
+    db('contact_unlock_requests').where({ status: 'pending' }).count('id as count').first(),  // Edit Requests tab 2
+    db('recruiter_access_requests').where({ status: 'pending' }).count('id as count').first(), // Edit Requests tab 4
   ]);
 
   return {
-    pendingEdits:            toCount(pendingEditsRow),
-    pendingContactRequests:  toCount(pendingContactRequestsRow),
-    pendingVolunteerSupport: toCount(pendingVolunteerSupportRow),
-    pendingInterestRequests: toCount(pendingInterestRequestsRow),
+    pendingEdits:                   toCount(pendingEditsRow),
+    pendingContactRequests:         toCount(pendingContactRequestsRow),
+    pendingVolunteerSupport:        toCount(pendingVolunteerSupportRow),
+    pendingInterestRequests:        toCount(pendingInterestRequestsRow),
+    pendingContactUnlockRequests:   toCount(pendingContactUnlockRequestsRow),
+    pendingRecruiterAccessRequests: toCount(pendingRecruiterAccessRequestsRow),
   };
 }

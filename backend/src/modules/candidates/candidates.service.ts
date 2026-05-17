@@ -39,6 +39,8 @@ export async function createCandidate(dto: CreateCandidateDto, createdByAdminId:
   const userId         = uuidv4();
   const candidateId     = uuidv4();
 
+  let loginId = 0;
+
   await db.transaction(async (trx) => {
     // 1. Create user account
     await trx('users').insert({
@@ -53,11 +55,18 @@ export async function createCandidate(dto: CreateCandidateDto, createdByAdminId:
     const [{ nextval: seqVal }] = await trx.raw(`SELECT nextval('candidates_seq')`).then((r: any) => r.rows);
     const candidateNumber = `CAND-${String(seqVal).padStart(4, '0')}`;
 
+    // 2b. Generate numeric Login ID from dedicated sequence (starts at 10001)
+    const [{ nextval: loginSeqVal }] = await trx
+      .raw(`SELECT nextval('candidate_login_id_seq')`)
+      .then((r: any) => r.rows);
+    loginId = Number(loginSeqVal);
+
     // 3. Create candidate profile
     await trx('candidates').insert({
       id:               candidateId,
       user_id:          userId,
       candidate_number: candidateNumber,
+      login_id:         loginId,
       first_name:       dto.first_name,
       last_name:        dto.last_name,
       date_of_birth:    dto.date_of_birth    ?? null,
@@ -135,11 +144,12 @@ export async function createCandidate(dto: CreateCandidateDto, createdByAdminId:
     }
   });
 
-  // 4. Send welcome email (non-blocking)
+  // 4. Send welcome email (non-blocking) — include the numeric Login ID
   sendCandidateWelcomeEmail(
     dto.email,
     dto.password,
     `${dto.first_name} ${dto.last_name}`,
+    loginId,
   ).catch((err) => console.error('[EMAIL] Failed to send welcome email:', err));
 
   // 5. Notify admin of new registration (non-blocking)
@@ -171,13 +181,16 @@ function buildBaseQuery() {
 function applyFilters(query: any, filters: CandidateFilterDto): any {
   if (filters.search) {
     const term = `%${filters.search}%`;
-    query = query.where((b: any) =>
+    // If the search term is purely numeric, also match against login_id exactly
+    const numericId = /^\d+$/.test(filters.search.trim()) ? parseInt(filters.search.trim(), 10) : null;
+    query = query.where((b: any) => {
       b.whereILike('e.first_name', term)
        .orWhereILike('e.last_name', term)
        .orWhereILike('u.email', term)
        .orWhereILike('e.job_title', term)
-       .orWhereILike('e.occupation', term),
-    );
+       .orWhereILike('e.occupation', term);
+      if (numericId !== null) b.orWhere('e.login_id', numericId);
+    });
   }
   if (filters.occupation) query = query.whereILike('e.occupation', `%${filters.occupation}%`);
   if (filters.industry) {
@@ -249,6 +262,7 @@ function applyFilters(query: any, filters: CandidateFilterDto): any {
   }
   if (filters.gender)                query = query.where('e.gender', filters.gender);
   if (filters.profileStatus)         query = query.where('e.profile_status', filters.profileStatus);
+  if ((filters as any).excludePlaced) query = query.whereNot('e.profile_status', 'placed');
   if (filters.registrationFeeStatus) query = query.where('e.registration_fee_status', filters.registrationFeeStatus);
   if (filters.cvFormat)              query = query.where('e.cv_format', filters.cvFormat);
   if (filters.hasVideo === 'true')   query = query.whereNotNull('e.intro_video_url');
@@ -298,7 +312,7 @@ export async function listCandidates(filters: CandidateFilterDto) {
   const offset = (page - 1) * limit;
 
   let query = buildBaseQuery().select(
-      'e.id', 'e.candidate_number', 'e.first_name', 'e.last_name', 'e.job_title',
+      'e.id', 'e.candidate_number', 'e.login_id', 'e.first_name', 'e.last_name', 'e.job_title',
       'e.industry', 'e.occupation', 'e.current_country', 'e.current_city',
       'e.years_experience',
       'e.profile_photo_url', 'e.profile_status', 'e.intro_video_url', 'e.created_at',
@@ -327,7 +341,7 @@ export async function listCandidates(filters: CandidateFilterDto) {
 
 export async function exportCandidates(filters: CandidateFilterDto) {
   let query = buildBaseQuery().select(
-      'e.candidate_number', 'e.first_name', 'e.last_name',
+      'e.login_id', 'e.candidate_number', 'e.first_name', 'e.last_name',
       'u.email', 'e.phone',
       'e.current_country', 'e.target_locations',
       'e.profile_status', 'e.registration_fee_status', 'e.cv_format',
@@ -355,6 +369,7 @@ export async function getCandidateById(id: string) {
     ? await db('volunteers').whereRaw('LOWER(email) = LOWER(?)', [candidate.email]).first()
     : null;
   const is_volunteer = !!volunteerMatch;
+  const volunteer_availability = volunteerMatch?.availability ?? null;
 
   // Auto-sync volunteer_invite_status → 'converted' when a matching volunteer record exists
   let volunteer_invite_status = candidate.volunteer_invite_status ?? null;
@@ -366,7 +381,7 @@ export async function getCandidateById(id: string) {
     }).catch(() => { /* non-fatal */ });
   }
 
-  return { ...candidate, ...relations, is_volunteer, volunteer_invite_status };
+  return { ...candidate, ...relations, is_volunteer, volunteer_invite_status, volunteer_availability };
 }
 
 // ── Get by user_id (for candidate self-view) ───────────────────────────────────
@@ -397,11 +412,28 @@ export async function updateCandidate(id: string, dto: UpdateCandidateDto) {
   const candidate = await db('candidates').where({ id }).first();
   if (!candidate) throw new AppError(404, 'Candidate not found');
 
+  // Email uniqueness check (outside transaction so we can throw before starting)
+  if (dto.email !== undefined) {
+    const emailLower = dto.email.toLowerCase();
+    const conflict = await db('users')
+      .where({ email: emailLower })
+      .whereNot({ id: candidate.user_id })
+      .first();
+    if (conflict) throw new AppError(409, 'This email address is already in use by another account');
+  }
+
   await db.transaction(async (trx) => {
     // Update core fields
     const {
-      skills, languages, experience, education, certificates, new_password, ...coreFields
+      skills, languages, experience, education, certificates, new_password, email, ...coreFields
     } = dto;
+
+    // Handle email change
+    if (email !== undefined) {
+      await trx('users')
+        .where({ id: candidate.user_id })
+        .update({ email: email.toLowerCase(), updated_at: new Date() });
+    }
 
     // Handle password change
     if (new_password) {
@@ -480,6 +512,11 @@ export async function updateCandidate(id: string, dto: UpdateCandidateDto) {
         );
     }
   });
+
+  // Sync volunteer availability when profile_status changes
+  if (dto.profile_status !== undefined) {
+    await syncVolunteerAvailability(id, dto.profile_status);
+  }
 
   return getCandidateById(id);
 }
@@ -564,9 +601,10 @@ export async function bulkAction(
     case 'change_status': {
       const status = payload?.profile_status;
       if (!status) throw new AppError(400, 'payload.profile_status is required for change_status');
-      await db('candidates')
-        .whereIn('id', candidateIds)
+      await db('candidates').whereIn('id', candidateIds)
         .update({ profile_status: status, updated_at: new Date() });
+      // Sync volunteer availability for all affected candidates
+      await Promise.all(candidateIds.map(cid => syncVolunteerAvailability(cid, status)));
       return { updated: candidateIds.length };
     }
 
@@ -621,4 +659,48 @@ export async function inviteAsVolunteer(id: string): Promise<{ message: string }
   });
 
   return { message: `Volunteer invitation sent to ${candidate.email}` };
+}
+
+// ── Sync volunteer availability ───────────────────────────────────────────────
+
+/**
+ * Keeps volunteer records in sync with candidate profile_status.
+ * Called after every profile_status update.
+ *
+ * Rules:
+ *   - newStatus !== 'placed'  → hard-delete the volunteer row (CASCADE removes support requests)
+ *                               and reset volunteer_invite_status = null on the candidate
+ *   - newStatus === 'placed'  → no-op (volunteer row no longer exists; frontend invite prompt handles re-creation)
+ */
+export async function syncVolunteerAvailability(
+  candidateId: string,
+  newStatus: string,
+): Promise<void> {
+  // Look up candidate email
+  const row = await db('candidates as c')
+    .join('users as u', 'u.id', 'c.user_id')
+    .select('u.email')
+    .where('c.id', candidateId)
+    .first();
+
+  if (!row?.email) return;
+
+  // Find matching volunteer by email
+  const volunteer = await db('volunteers')
+    .whereRaw('LOWER(email) = LOWER(?)', [row.email])
+    .select('id', 'availability')
+    .first();
+
+  if (!volunteer) return;
+
+  if (newStatus !== 'placed') {
+    // Hard-delete the volunteer row; CASCADE on volunteer_id removes support requests automatically.
+    // Reset volunteer_invite_status so re-placement shows the invite prompt again.
+    await db('volunteers').where({ id: volunteer.id }).delete();
+    await db('candidates').where({ id: candidateId }).update({
+      volunteer_invite_status: null,
+      updated_at: new Date(),
+    });
+  }
+  // On re-placement: volunteer row no longer exists → frontend invite prompt handles it normally.
 }

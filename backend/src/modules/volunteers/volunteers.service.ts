@@ -23,8 +23,9 @@ export async function listVolunteers(filters: {
     .select(
       'v.*',
       db.raw(`COALESCE(v.photo_url, c.profile_photo_url) AS photo_url`),
-    );
-  let countQuery = db('volunteers as v');
+    )
+    .where('v.availability', '!=', 'Inactive');
+  let countQuery = db('volunteers as v').where('v.availability', '!=', 'Inactive');
 
   function applyFilters(q: any) {
     if (search) {
@@ -151,6 +152,10 @@ export async function updateVolunteer(id: string, dto: UpdateVolunteerDto) {
   const existing = await db('volunteers').where({ id }).first();
   if (!existing) throw new AppError(404, 'Volunteer not found');
 
+  if (dto.availability === 'Inactive') {
+    throw new AppError(400, 'Cannot manually set availability to Inactive');
+  }
+
   const patch: Record<string, unknown> = { updated_at: new Date() };
   if (dto.name               !== undefined) patch['name']               = dto.name;
   if (dto.email              !== undefined) patch['email']              = dto.email              ?? null;
@@ -187,6 +192,7 @@ export async function getVolunteerById(id: string) {
     .where('v.id', id)
     .first();
   if (!row) throw new AppError(404, 'Volunteer not found');
+  if (row.availability === 'Inactive') throw new AppError(404, 'Volunteer not found');
   return row;
 }
 

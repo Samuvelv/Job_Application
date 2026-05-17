@@ -10,11 +10,16 @@ export interface ConfirmOptions {
   showNoteField?: boolean;
   noteLabel?: string;
   notePlaceholder?: string;
+  showDurationField?: boolean;
+  durationLabel?: string;
+  icon?: string;
 }
 
 export interface ConfirmResult {
   confirmed: boolean;
   notes?: string;
+  durationValue?: number | null;
+  durationUnit?: string | null;
 }
 
 @Injectable({ providedIn: 'root' })

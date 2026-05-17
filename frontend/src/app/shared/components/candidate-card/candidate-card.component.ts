@@ -9,6 +9,7 @@ import { MasterDataService } from '../../../core/services/master-data.service';
   selector: 'app-candidate-card',
   standalone: true,
   imports: [CommonModule, RouterLink],
+  styles: [':host { display: block; height: 100%; }'],
   template: `
     <div class="cl-card" [class.cl-card--selected]="selected">
 
@@ -18,8 +19,8 @@ import { MasterDataService } from '../../../core/services/master-data.service';
           <input type="checkbox" [checked]="selected"
             (change)="selectedChange.emit(!selected)">
         </label>
-        @if (candidate.candidate_number) {
-          <span class="autocode-badge autocode-badge--sm">{{ candidate.candidate_number }}</span>
+        @if (candidate.login_id) {
+          <span class="autocode-badge autocode-badge--login-id autocode-badge--sm">{{ candidate.login_id }}</span>
         }
         <span class="badge rounded-pill ms-auto"
           [class.badge-status-active]="candidate.profile_status === 'active'"

@@ -28,6 +28,34 @@
     </div>
   }
 
+  <!-- ── Volunteer Impact Confirmation (status change away from Placed) ─── -->
+  @if (showVolunteerImpactConfirm) {
+    <div class="placed-prompt-overlay">
+      <div class="placed-prompt">
+        <div class="placed-prompt__icon">
+          <i class="bi bi-exclamation-triangle-fill text-warning"></i>
+        </div>
+        <h4 class="placed-prompt__title">Volunteer Profile Impact</h4>
+        <p class="placed-prompt__msg">
+          This candidate is currently an active volunteer. Changing the profile
+          status from <strong>'Placed'</strong> will deactivate the volunteer
+          profile and remove related volunteer visibility/data from the platform.
+          Are you sure you want to continue?
+        </p>
+        <div class="placed-prompt__actions">
+          <button class="placed-prompt__btn placed-prompt__btn--yes"
+            (click)="confirmVolunteerImpact()">
+            <i class="bi bi-check2-circle me-2"></i>Confirm Change
+          </button>
+          <button class="placed-prompt__btn placed-prompt__btn--no"
+            (click)="cancelVolunteerImpact()">
+            <i class="bi bi-x-circle me-1"></i>Cancel
+          </button>
+        </div>
+      </div>
+    </div>
+  }
+
   <!-- ── Volunteer Invitation Prompt (shown when status set to Placed) ──── -->
   @if (showPlacedPrompt) {
     <div class="placed-prompt-overlay">
@@ -61,6 +89,41 @@
           <button class="placed-prompt__btn placed-prompt__btn--no"
             (click)="skipInvitation()" [disabled]="inviteSending">
             <i class="bi bi-x-circle me-1"></i>No, Not Now
+          </button>
+        </div>
+      </div>
+    </div>
+  }
+  <!-- ── Volunteer Reactivation Prompt (shown when re-setting status to Placed) ──── -->
+  @if (showVolunteerReactivatePrompt) {
+    <div class="placed-prompt-overlay">
+      <div class="placed-prompt">
+        <div class="placed-prompt__icon">
+          <i class="bi bi-person-check-fill"></i>
+        </div>
+        <h4 class="placed-prompt__title">Reactivate Volunteer Profile?</h4>
+        <p class="placed-prompt__msg">
+          <strong>{{ candidate?.first_name }} {{ candidate?.last_name }}</strong>
+          already has a volunteer record. Would you like to reactivate
+          their volunteer profile so they appear in the volunteers list again?
+        </p>
+        @if (reactivateError) {
+          <div class="alert alert-danger small py-2 mb-3">
+            <i class="bi bi-exclamation-triangle me-1"></i>{{ reactivateError }}
+          </div>
+        }
+        <div class="placed-prompt__actions">
+          <button class="placed-prompt__btn placed-prompt__btn--yes"
+            (click)="confirmReactivation()" [disabled]="reactivating">
+            @if (reactivating) {
+              <span class="spinner-border spinner-border-sm me-2"></span>Reactivating…
+            } @else {
+              <i class="bi bi-check2-circle me-2"></i>Yes, Reactivate
+            }
+          </button>
+          <button class="placed-prompt__btn placed-prompt__btn--no"
+            (click)="skipReactivation()" [disabled]="reactivating">
+            <i class="bi bi-x-circle me-1"></i>Not Now
           </button>
         </div>
       </div>
@@ -488,6 +551,17 @@
             <div class="text-danger small mt-1">
               @if (form.get('whatsapp_number')?.errors?.['required'])     { WhatsApp number is required. }
               @else if (form.get('whatsapp_number')?.errors?.['phoneInvalid']) { {{ form.get('whatsapp_number')?.errors?.['phoneInvalid'] }} }
+            </div>
+          }
+        </div>
+        <!-- Email Address -->
+        <div class="col-md-6">
+          <label class="form-label">Email Address <span class="text-danger">*</span></label>
+          <input type="email" class="form-control" formControlName="email" [class.is-invalid]="invalid('email')" placeholder="email@example.com" autocomplete="off">
+          @if (invalid('email') && form.get('email')?.errors) {
+            <div class="invalid-feedback d-block">
+              @if (form.get('email')?.errors?.['required'])     { Email address is required. }
+              @else if (form.get('email')?.errors?.['invalidEmail']) { Please enter a valid email address. }
             </div>
           }
         </div>
@@ -1044,11 +1118,14 @@
                 <div class="d-flex align-items-start gap-2">
                   <div class="flex-grow-1">
                     <div class="d-flex gap-1">
-                      <select class="form-select form-select-sm" formControlName="start_month" style="width:90px">
-                        @for (m of MONTHS; track m.value) {
-                          <option [ngValue]="m.value">{{ m.label }}</option>
-                        }
-                      </select>
+                      <div style="width:110px;flex-shrink:0">
+                        <app-searchable-select
+                          formControlName="start_month"
+                          [options]="MONTHS"
+                          placeholder="Month"
+                          [allowClear]="false">
+                        </app-searchable-select>
+                      </div>
                       <input type="number" class="form-control form-control-sm" formControlName="start_year"
                         placeholder="YYYY" min="1950" [max]="currentYear"
                         [class.is-invalid]="education.at($index).get('start_year')!.invalid && education.at($index).get('start_year')!.touched">
@@ -1061,11 +1138,14 @@
                   <span class="text-muted fw-bold mt-1">–</span>
                   <div class="flex-grow-1">
                     <div class="d-flex gap-1">
-                      <select class="form-select form-select-sm" formControlName="end_month" style="width:90px">
-                        @for (m of MONTHS; track m.value) {
-                          <option [ngValue]="m.value">{{ m.label }}</option>
-                        }
-                      </select>
+                      <div style="width:110px;flex-shrink:0">
+                        <app-searchable-select
+                          formControlName="end_month"
+                          [options]="MONTHS"
+                          placeholder="Month"
+                          [allowClear]="false">
+                        </app-searchable-select>
+                      </div>
                       <input type="number" class="form-control form-control-sm" formControlName="end_year"
                         placeholder="YYYY" min="1950" [max]="currentYear + 6"
                         [class.is-invalid]="education.at($index).get('end_year')!.invalid && education.at($index).get('end_year')!.touched">

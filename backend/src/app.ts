@@ -17,6 +17,7 @@ import editRequestsRouter            from './modules/edit-requests/edit-requests
 import auditLogsRouter               from './modules/audit-logs/audit-logs.router';
 import statsRouter                   from './modules/stats/stats.router';
 import masterRouter                  from './modules/master/master.router';
+import masterAdminRouter             from './modules/master/master-admin.router';
 import contactRequestsRouter         from './modules/contact-requests/contact-requests.router';
 import volunteersRouter              from './modules/volunteers/volunteers.router';
 import contactSubmissionsRouter      from './modules/contact-submissions/contact-submissions.router';
@@ -24,6 +25,7 @@ import volunteerSupportRouter        from './modules/volunteer-support-requests/
 import uploadsRouter                 from './modules/uploads/uploads.router';
 import agencyReferralsRouter         from './modules/agency-referrals/agency-referrals.router';
 import agencyInterestRequestsRouter  from './modules/agency-interest-requests/agency-interest-requests.router';
+import recruiterAccessRequestsRouter from './modules/recruiter-access-requests/recruiter-access-requests.router';
 
 const app = express();
 
@@ -84,12 +86,14 @@ app.use('/api/v1/edit-requests',                     editRequestsRouter);
 app.use('/api/v1/audit-logs',                        auditLogsRouter);
 app.use('/api/v1/stats',                             statsRouter);
 app.use('/api/v1/master',                            masterRouter);
+app.use('/api/v1/admin/master',                      masterAdminRouter);
 app.use('/api/v1/contact-requests',                  contactRequestsRouter);
 app.use('/api/v1/volunteers',                        volunteersRouter);
 app.use('/api/v1/contact-submissions',               contactSubmissionsRouter);
 app.use('/api/v1/volunteer-support-requests',        volunteerSupportRouter);
 app.use('/api/v1/candidates/:candidateId/referrals', agencyReferralsRouter);
 app.use('/api/v1/interest-requests',                 agencyInterestRequestsRouter);
+app.use('/api/v1/recruiter-access-requests',         recruiterAccessRequestsRouter);
 // Generic /api/v1 mount LAST — never shadows any specific router above
 app.use('/api/v1',                                   uploadsRouter);
 

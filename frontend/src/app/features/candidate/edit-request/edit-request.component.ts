@@ -44,6 +44,16 @@ function linkedInValidator(): ValidatorFn {
   };
 }
 
+// ── Email validator ────────────────────────────────────────────────────────
+function emailValidator(): ValidatorFn {
+  return (ctrl: AbstractControl): ValidationErrors | null => {
+    const v = (ctrl.value as string || '').trim();
+    if (!v) return null;
+    const ok = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(v);
+    return ok ? null : { invalidEmail: true };
+  };
+}
+
 interface PhoneRule { minLen: number; maxLen: number; pattern?: RegExp; hint: string; }
 const PHONE_RULES: Record<string, PhoneRule> = {
   '+91':  { minLen: 10, maxLen: 10, pattern: /^[6-9]\d{9}$/,   hint: '10 digits starting with 6–9 (India)' },
@@ -352,7 +362,7 @@ function makePostalCodeGroupValidator(countryCtrl: string, postalCtrl: string): 
                   <i class="bi bi-upload me-1"></i>
                   {{ staged['resumes'] ? 'Change staged file' : (candidate.resume_url ? 'Request replace' : 'Request upload') }}
                 }
-                <input type="file" class="d-none" accept="application/pdf"
+                <input type="file" class="d-none" accept="application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
                   [disabled]="existingRequest?.status === 'pending'"
                   (change)="stageFile('resumes', $event)">
               </label>
@@ -408,7 +418,7 @@ function makePostalCodeGroupValidator(countryCtrl: string, postalCtrl: string): 
                   <i class="bi bi-upload me-1"></i>
                   {{ staged['videos'] ? 'Change staged file' : (candidate.intro_video_url ? 'Request replace' : 'Request upload') }}
                 }
-                <input type="file" class="d-none" accept="video/mp4,video/webm,video/ogg"
+                <input type="file" class="d-none" accept="video/mp4,video/webm,video/quicktime"
                   [disabled]="existingRequest?.status === 'pending'"
                   (change)="stageFile('videos', $event)">
               </label>
@@ -549,6 +559,21 @@ function makePostalCodeGroupValidator(countryCtrl: string, postalCtrl: string): 
                 <div class="text-danger small mt-1">
                   @if (form!.get('whatsapp_number')?.errors?.['required'])          { WhatsApp number is required. }
                   @else if (form!.get('whatsapp_number')?.errors?.['phoneInvalid']) { {{ form!.get('whatsapp_number')?.errors?.['phoneInvalid'] }} }
+                </div>
+              }
+            </div>
+
+            <!-- Email Address -->
+            <div class="col-md-6">
+              <label class="form-label small fw-semibold">Email Address <span class="text-danger">*</span></label>
+              <input type="email" formControlName="email" class="form-control form-control-sm"
+                [class.is-invalid]="form!.get('email')?.invalid && form!.get('email')?.touched"
+                [attr.disabled]="existingRequest?.status === 'pending' ? true : null"
+                placeholder="email@example.com" autocomplete="off">
+              @if (form!.get('email')?.touched && form!.get('email')?.errors) {
+                <div class="invalid-feedback d-block small">
+                  @if (form!.get('email')?.errors?.['required'])          { Email address is required. }
+                  @else if (form!.get('email')?.errors?.['invalidEmail']) { Please enter a valid email address. }
                 </div>
               }
             </div>
@@ -1076,59 +1101,150 @@ function makePostalCodeGroupValidator(countryCtrl: string, postalCtrl: string): 
         <!-- ── Certificates ───────────────────────────────────────────────── -->
         <div class="form-card mb-4">
           <div class="d-flex justify-content-between align-items-center mb-3">
-            <h5 class="card-section-header mb-0"><i class="bi bi-patch-check"></i> Certificates</h5>
-            <button type="button" class="btn btn-sm btn-outline-primary" (click)="addCertEntry()">+ Add</button>
+            <h5 class="card-section-header mb-0">
+              <i class="bi bi-patch-check"></i> Certificates
+              @if (certificateArray.length) {
+                <span class="badge bg-secondary rounded-pill ms-2" style="font-size:.7rem">
+                  {{ certificateArray.length }}
+                </span>
+              }
+            </h5>
+            @if (!pendingNewCert) {
+              <button type="button" class="btn btn-sm btn-outline-primary"
+                [disabled]="existingRequest?.status === 'pending'"
+                (click)="initNewCert()">
+                <i class="bi bi-plus-lg me-1"></i>Add Certificate
+              </button>
+            }
           </div>
-          <div class="d-flex flex-column gap-3">
+
+          <!-- Existing certificates -->
+          <div class="d-flex flex-column gap-2">
             @for (ctrl of certificateArray.controls; track $index) {
-              <div [formGroup]="asGroup(ctrl)" class="card border" style="border-radius:var(--th-radius)">
-                <div class="card-body p-3">
-                  <div class="d-flex justify-content-between align-items-start mb-2">
-                    <span class="small fw-semibold text-muted">Certificate {{ $index + 1 }}</span>
-                    <button type="button" class="btn btn-sm btn-outline-danger py-0 px-1" (click)="removeCertEntry($index)">
-                      <i class="bi bi-x-lg"></i>
-                    </button>
+              <div class="d-flex align-items-start gap-2 p-2 rounded border"
+                style="background:var(--th-surface-raised)">
+                <i class="bi bi-file-earmark-check text-success flex-shrink-0 mt-1"></i>
+                <div class="flex-grow-1 overflow-hidden">
+                  <div class="small fw-semibold text-truncate">
+                    {{ asGroup(ctrl).get('name')?.value || 'Certificate' }}
                   </div>
-                  <div class="row g-2">
-                    <div class="col-12 col-md-6">
-                      <label class="form-label form-label-sm">Name</label>
-                      <input type="text" class="form-control form-control-sm" formControlName="name" placeholder="Certificate name">
-                    </div>
-                    <div class="col-12 col-md-6">
-                      <label class="form-label form-label-sm">Issuing Organisation</label>
-                      <input type="text" class="form-control form-control-sm" formControlName="issuer" placeholder="e.g. Amazon Web Services">
-                    </div>
-                    <div class="col-6 col-md-3">
-                      <label class="form-label form-label-sm">Issue Date</label>
-                      <input type="date" class="form-control form-control-sm" formControlName="issue_date">
-                    </div>
-                    <div class="col-6 col-md-3">
-                      <label class="form-label form-label-sm">Expiry Date</label>
-                      <input type="date" class="form-control form-control-sm" formControlName="expiry_date"
-                        [attr.disabled]="asGroup(ctrl).get('no_expiry')?.value ? true : null">
-                    </div>
-                    <div class="col-12 col-md-6 d-flex align-items-end pb-1">
-                      <div class="form-check mb-0">
-                        <input class="form-check-input" type="checkbox" [id]="'cert-no-expiry-'+$index" formControlName="no_expiry">
-                        <label class="form-check-label small" [for]="'cert-no-expiry-'+$index">No Expiry</label>
-                      </div>
-                    </div>
-                  </div>
-                  @if (asGroup(ctrl).get('file_url')?.value) {
-                    <div class="mt-2">
-                      <a [href]="asGroup(ctrl).get('file_url')?.value" target="_blank" class="btn btn-sm btn-outline-secondary">
-                        <i class="bi bi-eye me-1"></i> View current file
-                      </a>
-                      <span class="text-muted small ms-2">(file managed by admin)</span>
+                  @if (asGroup(ctrl).get('issuer')?.value) {
+                    <div class="text-muted" style="font-size:.75rem">
+                      {{ asGroup(ctrl).get('issuer')?.value }}
                     </div>
                   }
+                  <div class="text-muted" style="font-size:.72rem">
+                    @if (asGroup(ctrl).get('issue_date')?.value) {
+                      Issued: {{ asGroup(ctrl).get('issue_date')?.value | date:'dd MMM yyyy' }}
+                    }
+                    @if (asGroup(ctrl).get('no_expiry')?.value) { &nbsp;· No Expiry }
+                    @else if (asGroup(ctrl).get('expiry_date')?.value) {
+                      &nbsp;· Expires: {{ asGroup(ctrl).get('expiry_date')?.value | date:'dd MMM yyyy' }}
+                    }
+                  </div>
+                </div>
+                <div class="d-flex gap-1 flex-shrink-0">
+                  @if (asGroup(ctrl).get('file_url')?.value) {
+                    <a [href]="asGroup(ctrl).get('file_url')?.value" target="_blank"
+                      class="btn btn-sm btn-outline-secondary py-1 px-2" title="View certificate">
+                      <i class="bi bi-eye"></i>
+                    </a>
+                  }
+                  <button type="button" class="btn btn-sm btn-outline-danger py-1 px-2"
+                    title="Remove certificate"
+                    [disabled]="certDeleting === asGroup(ctrl).get('id')?.value || existingRequest?.status === 'pending'"
+                    (click)="deleteCert(asGroup(ctrl).value)">
+                    @if (certDeleting === asGroup(ctrl).get('id')?.value) {
+                      <span class="spinner-border spinner-border-sm"></span>
+                    } @else {
+                      <i class="bi bi-trash"></i>
+                    }
+                  </button>
                 </div>
               </div>
             }
-            @if (!certificateArray.length) {
-              <div class="text-muted small">No certificates — click Add to request adding one.</div>
+
+            @if (!certificateArray.length && !pendingNewCert) {
+              <div class="text-muted small py-1">
+                No certificates yet — click <strong>Add Certificate</strong> to upload one.
+              </div>
             }
           </div>
+
+          <!-- New certificate form -->
+          @if (pendingNewCert) {
+            <div class="card border border-success mt-3">
+              <div class="card-body p-3">
+                <div class="fw-semibold small text-success mb-2">
+                  <i class="bi bi-plus-circle me-1"></i>New Certificate
+                </div>
+                <div class="row g-2">
+                  <div class="col-12 col-md-6">
+                    <label class="form-label form-label-sm">
+                      Name <span class="text-danger">*</span>
+                    </label>
+                    <input type="text" class="form-control form-control-sm"
+                      placeholder="e.g. AWS Solutions Architect"
+                      [value]="pendingNewCert.name"
+                      (input)="pendingNewCert!.name = $any($event.target).value">
+                  </div>
+                  <div class="col-12 col-md-6">
+                    <label class="form-label form-label-sm">Issuing Organisation</label>
+                    <input type="text" class="form-control form-control-sm"
+                      placeholder="e.g. Amazon Web Services"
+                      [value]="pendingNewCert.issuer"
+                      (input)="pendingNewCert!.issuer = $any($event.target).value">
+                  </div>
+                  <div class="col-6 col-md-3">
+                    <label class="form-label form-label-sm">Issue Date</label>
+                    <input type="date" class="form-control form-control-sm"
+                      [value]="pendingNewCert.issue_date"
+                      (input)="pendingNewCert!.issue_date = $any($event.target).value">
+                  </div>
+                  <div class="col-6 col-md-3">
+                    <label class="form-label form-label-sm">Expiry Date</label>
+                    <input type="date" class="form-control form-control-sm"
+                      [value]="pendingNewCert.expiry_date"
+                      [disabled]="pendingNewCert.no_expiry"
+                      (input)="pendingNewCert!.expiry_date = $any($event.target).value">
+                  </div>
+                  <div class="col-6 col-md-3 d-flex align-items-end pb-1">
+                    <div class="form-check mb-0">
+                      <input class="form-check-input" type="checkbox" id="new-cert-no-expiry"
+                        [checked]="pendingNewCert.no_expiry"
+                        (change)="toggleNewCertNoExpiry($event)">
+                      <label class="form-check-label small" for="new-cert-no-expiry">No Expiry</label>
+                    </div>
+                  </div>
+                  <div class="col-6 col-md-3 d-flex align-items-end">
+                    <label class="btn btn-sm btn-outline-secondary w-100 mb-0" style="cursor:pointer">
+                      <i class="bi bi-paperclip me-1"></i>
+                      {{ pendingNewCert.file ? pendingNewCert.file.name : 'Attach File *' }}
+                      <input type="file" class="d-none"
+                        accept=".pdf,image/jpeg,image/png"
+                        (change)="onNewCertFileSelected($event)">
+                    </label>
+                  </div>
+                </div>
+                <div class="d-flex gap-2 mt-3">
+                  <button type="button" class="btn btn-sm btn-success"
+                    [disabled]="mediaLoading['certificates']"
+                    (click)="submitNewCert()">
+                    @if (mediaLoading['certificates']) {
+                      <span class="spinner-border spinner-border-sm me-1"></span>Uploading…
+                    } @else {
+                      <i class="bi bi-cloud-upload me-1"></i>Upload
+                    }
+                  </button>
+                  <button type="button" class="btn btn-sm btn-outline-secondary"
+                    [disabled]="mediaLoading['certificates']"
+                    (click)="cancelNewCert()">
+                    Cancel
+                  </button>
+                </div>
+              </div>
+            </div>
+          }
         </div>
 
         @if (submitError) {
@@ -1190,12 +1306,20 @@ export class EditRequestComponent implements OnInit {
   stagedRelative: Record<string, string> = {};
   mediaLoading:   Record<string, boolean> = {};
 
+  // Certificate direct-upload state (live API, mirrors admin candidate-edit pattern)
+  certDeleting: number | null = null;
+  pendingNewCert: {
+    name: string; issuer: string; issue_date: string;
+    expiry_date: string; no_expiry: boolean; file?: File;
+  } | null = null;
+
   previewOpen = false;
   previewType: 'image' | 'video' | 'pdf' = 'image';
   previewUrl  = '';
   previewName = '';
 
-  private loadedCountry: string | null = null;
+  private loadedCountry:   string | null = null;
+  originalSnapshot: Record<string, unknown> = {};
 
   // ── Computed options ───────────────────────────────────────────────────────
 
@@ -1366,6 +1490,7 @@ export class EditRequestComponent implements OnInit {
 
     this.form = this.fb.group({
       // Personal
+      email:                  [emp.email         ?? '', [Validators.required, emailValidator()]],
       first_name:             [emp.first_name    ?? '', [Validators.required, Validators.minLength(3), Validators.maxLength(100), Validators.pattern(/^[a-zA-Z\s'\-]+$/)]],
       last_name:              [emp.last_name     ?? '', [Validators.required, Validators.minLength(3), Validators.maxLength(100), Validators.pattern(/^[a-zA-Z\s'\-]+$/)]],
       date_of_birth:          [emp.date_of_birth ?? '', [Validators.required, dobValidator()]],
@@ -1512,9 +1637,176 @@ export class EditRequestComponent implements OnInit {
       const found = this.master.countries().find(c => c.name === country);
       if (found) this.master.loadCities(found.id);
     }
+
+    // Capture the baseline snapshot for change detection
+    this.originalSnapshot = this.buildOriginalSnapshot(emp);
   }
 
-  // ── FormArray getters ──────────────────────────────────────────────────────
+  // ── Baseline snapshot for change detection ────────────────────────────────
+  // Mirrors the exact same transformation logic as submit() so we can deep-diff.
+  private buildOriginalSnapshot(emp: Candidate): Record<string, unknown> {
+    const { dialCode: phoneDial, number: phoneNum } = this.splitPhone(emp.phone ?? '');
+    const { dialCode: waDial,   number: waNum     } = this.splitPhone(emp.whatsapp_number ?? '');
+
+    // Parse visa_status (same as buildForm)
+    let visaSelect = '';
+    let visaOther  = '';
+    if (emp.visa_status) {
+      if (emp.visa_status.startsWith('Other: ')) {
+        visaSelect = 'other'; visaOther = emp.visa_status.slice('Other: '.length);
+      } else if (emp.visa_status === 'Other — specify') {
+        visaSelect = 'other';
+      } else {
+        visaSelect = emp.visa_status;
+      }
+    }
+
+    // Reconstruct composed values the same way submit() does
+    const phone      = phoneNum ? `${phoneDial}${phoneNum}`.trim() : undefined;
+    const whatsapp   = waNum    ? `${waDial}${waNum}`.trim()       : undefined;
+    const visaStatus = visaSelect === 'other'
+      ? (visaOther?.trim() ? `Other: ${visaOther.trim()}` : 'Other — specify')
+      : (visaSelect || undefined);
+
+    // Scalar fields — same filter as submit(): exclude '' and null
+    const rawScalars: Record<string, unknown> = {
+      email:             emp.email             ?? '',
+      first_name:        emp.first_name        ?? '',
+      last_name:         emp.last_name         ?? '',
+      date_of_birth:     emp.date_of_birth     ?? '',
+      gender:            emp.gender            ?? '',
+      marital_status:    emp.marital_status    ?? '',
+      bio:               emp.bio               ?? '',
+      linkedin_url:      emp.linkedin_url      ?? '',
+      job_title:         emp.job_title         ?? '',
+      occupation:        emp.occupation        ?? '',
+      industry:          emp.industry          ?? '',
+      employment_status: emp.employment_status ?? '',
+      years_experience:  emp.years_experience  ?? 0,
+      notice_period_id:  (emp as any).notice_period_id ?? null,
+      current_country:   emp.current_country   ?? '',
+      current_city:      emp.current_city      ?? '',
+      postal_code:       emp.postal_code       ?? '',
+      has_passport:      emp.has_passport      ?? false,
+      nationality:       emp.nationality       ?? '',
+    };
+    const snap: Record<string, unknown> = Object.fromEntries(
+      Object.entries(rawScalars).filter(([, v]) => v !== '' && v !== null),
+    );
+    if (phone)      snap['phone']           = phone;
+    if (whatsapp)   snap['whatsapp_number'] = whatsapp;
+    if (visaStatus) snap['visa_status']     = visaStatus;
+
+    // Arrays — always present (mirrors clean['target_locations'] / clean['hobbies'])
+    snap['target_locations'] = Array.isArray(emp.target_locations) ? [...emp.target_locations] : [];
+    snap['hobbies']          = Array.isArray(emp.hobbies)          ? [...emp.hobbies]          : [];
+
+    // Skills — same filter as submit()
+    snap['skills'] = (emp.skills ?? [])
+      .filter((s: any) => s.skill_name?.trim())
+      .map((s: any) => ({ skill_name: s.skill_name ?? '', proficiency: s.proficiency ?? '' }));
+
+    // Languages
+    snap['languages'] = (emp.languages ?? [])
+      .filter((l: any) => l.language?.trim())
+      .map((l: any) => ({ language: l.language ?? '', proficiency: l.proficiency ?? '' }));
+
+    // Experience — mirror submit() transformation (compose reason_for_leaving, currently_working)
+    snap['experience'] = (emp.experience ?? [])
+      .filter((e: any) => e.company_name?.trim() || e.job_title?.trim())
+      .map((e: any) => {
+        let rflSel = '', rflOther = '';
+        if (e.reason_for_leaving?.startsWith('Other: ')) {
+          rflSel = 'Other'; rflOther = e.reason_for_leaving.slice(7);
+        } else if (e.reason_for_leaving === 'Other') {
+          rflSel = 'Other';
+        } else {
+          rflSel = e.reason_for_leaving ?? '';
+        }
+        const cw = !e.end_date; // mirrors: currently_working = [!e.end_date] in buildForm
+        return {
+          job_title:          e.job_title    ?? '',
+          company_name:       e.company_name ?? '',
+          start_date:         e.start_date   ?? '',
+          end_date:           cw ? null : (e.end_date || null),
+          location:           e.location     ?? '',
+          description:        e.description  ?? '',
+          reason_for_leaving: rflSel === 'Other'
+            ? (rflOther?.trim() ? `Other: ${rflOther.trim()}` : 'Other')
+            : (rflSel || undefined),
+        };
+      });
+
+    // Education — same filter as submit()
+    snap['education'] = (emp.education ?? [])
+      .filter((e: any) => e.institution?.trim() || e.degree?.trim())
+      .map((e: any) => ({
+        institution:    e.institution    ?? '',
+        degree:         e.degree         ?? '',
+        field_of_study: e.field_of_study ?? '',
+        start_year:     e.start_year     ?? null,
+        start_month:    e.start_month    ?? 1,
+        end_year:       e.end_year       ?? null,
+        end_month:      e.end_month      ?? 1,
+        location:       e.location       ?? '',
+      }));
+
+    // Certificates — passed through fromEntries as-is in submit(); mirror the form group shape
+    snap['certificates'] = (emp.certificates ?? []).map((c: any) => ({
+      id:          c.id          ?? null,
+      name:        c.name        ?? '',
+      issuer:      c.issuer      ?? '',
+      issue_date:  c.issue_date  ?? '',
+      expiry_date: c.expiry_date ?? '',
+      no_expiry:   c.no_expiry   ?? false,
+      file_url:    c.file_url    ?? '',
+    }));
+
+    return snap;
+  }
+
+  // ── Deep equality check ────────────────────────────────────────────────────
+  // null and undefined are treated as equivalent.
+  // ISO date strings are normalised to YYYY-MM-DD before comparing.
+  // Number/string coercion handles range-slider string output vs numeric DB values.
+  private deepEqual(a: unknown, b: unknown): boolean {
+    const av: unknown = a === undefined ? null : a;
+    const bv: unknown = b === undefined ? null : b;
+    if (av === bv) return true;
+    if (av === null || bv === null) return false;
+
+    // Normalise ISO date strings → YYYY-MM-DD
+    if (typeof av === 'string' && typeof bv === 'string') {
+      const norm = (s: string) => /^\d{4}-\d{2}-\d{2}T/.test(s) ? s.substring(0, 10) : s;
+      return norm(av) === norm(bv);
+    }
+
+    // Coerce number ↔ string (range sliders emit string after user interaction)
+    if ((typeof av === 'number' && typeof bv === 'string') ||
+        (typeof av === 'string' && typeof bv === 'number')) {
+      return String(av) === String(bv);
+    }
+
+    if (typeof av !== typeof bv) return false;
+
+    if (Array.isArray(av) && Array.isArray(bv)) {
+      if (av.length !== bv.length) return false;
+      return av.every((item, i) => this.deepEqual(item, (bv as unknown[])[i]));
+    }
+    if (Array.isArray(av) !== Array.isArray(bv)) return false;
+
+    if (typeof av === 'object') {
+      const ao = av as Record<string, unknown>;
+      const bo = bv as Record<string, unknown>;
+      const aKeys = Object.keys(ao).sort();
+      const bKeys = Object.keys(bo).sort();
+      if (aKeys.length !== bKeys.length) return false;
+      return aKeys.every(k => bKeys.includes(k) && this.deepEqual(ao[k], bo[k]));
+    }
+    return false;
+  }
+
+  // ── FormArray getters ───────────────────────────────────────────────────────
   get skillsArray():     FormArray { return this.form!.get('skills')       as FormArray; }
   get languagesArray():  FormArray { return this.form!.get('languages')    as FormArray; }
   get experienceArray(): FormArray { return this.form!.get('experience')   as FormArray; }
@@ -1556,6 +1848,107 @@ export class EditRequestComponent implements OnInit {
   }
   removeCertEntry(i: number): void { this.certificateArray.removeAt(i); }
 
+  // ── Certificate direct management (live API — mirrors admin candidate-edit) ──
+
+  initNewCert(): void {
+    this.pendingNewCert = { name: '', issuer: '', issue_date: '', expiry_date: '', no_expiry: false };
+  }
+
+  cancelNewCert(): void { this.pendingNewCert = null; }
+
+  toggleNewCertNoExpiry(event: Event): void {
+    if (!this.pendingNewCert) return;
+    this.pendingNewCert.no_expiry = (event.target as HTMLInputElement).checked;
+    if (this.pendingNewCert.no_expiry) this.pendingNewCert.expiry_date = '';
+  }
+
+  onNewCertFileSelected(event: Event): void {
+    const file = (event.target as HTMLInputElement).files?.[0];
+    if (!file || !this.pendingNewCert) return;
+    this.pendingNewCert.file = file;
+    if (!this.pendingNewCert.name) {
+      this.pendingNewCert.name = file.name.replace(/\.[^.]+$/, '');
+    }
+    (event.target as HTMLInputElement).value = '';
+  }
+
+  submitNewCert(): void {
+    const c = this.pendingNewCert;
+    if (!c || !c.file) {
+      this.toast.show('Please attach a certificate file.', 'error');
+      return;
+    }
+    const candidateId = this.candidate!.id;
+    this.mediaLoading['certificates'] = true;
+
+    this.candidateService.uploadCertificate(candidateId, c.file, {
+      name:        c.name || c.file.name,
+      issuer:      c.issuer      || undefined,
+      issue_date:  c.issue_date  || undefined,
+      expiry_date: c.no_expiry   ? null : (c.expiry_date || null),
+      no_expiry:   c.no_expiry,
+    }).subscribe({
+      next: () => {
+        this.mediaLoading['certificates'] = false;
+        this.pendingNewCert = null;
+        this.toast.show('Certificate uploaded successfully.', 'success');
+        // Refresh profile so the new cert appears and snapshot stays in sync
+        this.candidateService.getMyProfile().subscribe(r => {
+          this.candidate = r.candidate;
+          const certs = this.form!.get('certificates') as FormArray;
+          while (certs.length) certs.removeAt(0);
+          (r.candidate.certificates ?? []).forEach((cert: any) => certs.push(this.fb.group({
+            id:          [cert.id          ?? null],
+            name:        [cert.name        ?? ''],
+            issuer:      [cert.issuer      ?? ''],
+            issue_date:  [cert.issue_date  ?? ''],
+            expiry_date: [cert.expiry_date ?? ''],
+            no_expiry:   [cert.no_expiry   ?? false],
+            file_url:    [cert.file_url    ?? ''],
+          })));
+          // Sync snapshot so the refreshed certs are not flagged as a pending change
+          this.originalSnapshot['certificates'] = (r.candidate.certificates ?? []).map((cert: any) => ({
+            id:          cert.id          ?? null,
+            name:        cert.name        ?? '',
+            issuer:      cert.issuer      ?? '',
+            issue_date:  cert.issue_date  ?? '',
+            expiry_date: cert.expiry_date ?? '',
+            no_expiry:   cert.no_expiry   ?? false,
+            file_url:    cert.file_url    ?? '',
+          }));
+        });
+      },
+      error: (err) => {
+        this.mediaLoading['certificates'] = false;
+        this.toast.show(err?.error?.message ?? 'Upload failed. Please try again.', 'error');
+      },
+    });
+  }
+
+  deleteCert(cert: any): void {
+    if (!cert.id || !this.candidate) return;
+    this.certDeleting = cert.id;
+    this.candidateService.deleteMyCertificate(this.candidate.id, cert.id).subscribe({
+      next: () => {
+        this.certDeleting = null;
+        this.toast.show('Certificate removed.', 'success');
+        // Remove from FormArray
+        const certs = this.form!.get('certificates') as FormArray;
+        const idx = certs.controls.findIndex(
+          c => (c as FormGroup).get('id')?.value === cert.id,
+        );
+        if (idx >= 0) certs.removeAt(idx);
+        // Sync snapshot so the removal is not re-flagged as a diff
+        this.originalSnapshot['certificates'] = (this.originalSnapshot['certificates'] as any[])
+          ?.filter((c: any) => c.id !== cert.id) ?? [];
+      },
+      error: (err) => {
+        this.certDeleting = null;
+        this.toast.show(err?.error?.message ?? 'Failed to remove certificate.', 'error');
+      },
+    });
+  }
+
   // ── Bio word counter ───────────────────────────────────────────────────────
   countWords(text: string): number {
     return text.trim() === '' ? 0 : text.trim().split(/\s+/).filter(Boolean).length;
@@ -1578,6 +1971,11 @@ export class EditRequestComponent implements OnInit {
   stageFile(type: 'profiles' | 'resumes' | 'videos', event: Event): void {
     const file = (event.target as HTMLInputElement).files?.[0];
     if (!file) return;
+    if (type === 'videos' && file.size > 200 * 1024 * 1024) {
+      this.toast.show(`Video exceeds the 200 MB limit (selected: ${(file.size / (1024 * 1024)).toFixed(1)} MB). Please choose a smaller file.`, 'error');
+      (event.target as HTMLInputElement).value = '';
+      return;
+    }
     this.mediaLoading[type] = true;
     this.candidateService.stageMyFile(type, file).subscribe({
       next: (res) => {
@@ -1627,7 +2025,7 @@ export class EditRequestComponent implements OnInit {
       ? (raw.visa_status_other?.trim() ? `Other: ${raw.visa_status_other.trim()}` : 'Other — specify')
       : (raw.visa_status_select || undefined);
 
-    // Build payload excluding helper controls
+    // Build full payload excluding helper controls
     const excluded = new Set(['phone_dial_code', 'phone_number', 'whatsapp_dial_code', 'whatsapp_same_as_phone', 'visa_status_select', 'visa_status_other']);
     const clean: Record<string, unknown> = Object.fromEntries(
       Object.entries(raw).filter(([k, v]) => !excluded.has(k) && v !== '' && v !== null),
@@ -1664,7 +2062,34 @@ export class EditRequestComponent implements OnInit {
       if (field) clean[field] = relativePath;
     });
 
-    this.editRequestService.submit(clean).subscribe({
+    // ── Change detection ──────────────────────────────────────────────────────
+    // Compare every field in clean against the original snapshot.
+    // Also detect any field present in originalSnapshot but absent/cleared in clean.
+    const mediaFields = new Set(['profile_photo_url', 'resume_url', 'intro_video_url']);
+    const allKeys = new Set([...Object.keys(clean), ...Object.keys(this.originalSnapshot)]);
+    const changedPayload: Record<string, unknown> = {};
+
+    for (const key of allKeys) {
+      // Staged media is always a real change — include as-is
+      if (mediaFields.has(key)) {
+        if (key in clean) changedPayload[key] = clean[key];
+        continue;
+      }
+      const current  = key in clean                  ? clean[key]                  : null;
+      const original = key in this.originalSnapshot  ? this.originalSnapshot[key]  : null;
+      if (!this.deepEqual(current, original)) {
+        // Include the new value (null if the field was cleared)
+        changedPayload[key] = key in clean ? clean[key] : null;
+      }
+    }
+
+    if (Object.keys(changedPayload).length === 0) {
+      this.submitting = false;
+      this.toast.show('No changes detected. Modify at least one field before submitting.', 'info');
+      return;
+    }
+
+    this.editRequestService.submit(changedPayload).subscribe({
       next: (res) => {
         this.submitting      = false;
         this.existingRequest = res.request;

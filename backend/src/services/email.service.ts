@@ -71,13 +71,14 @@ export async function sendCandidateCredentials(
   password: string,
   name: string,
 ): Promise<void> {
-  return sendCandidateWelcomeEmail(email, password, name);
+  return sendCandidateWelcomeEmail(email, password, name, 0);
 }
 
 export async function sendCandidateWelcomeEmail(
   email: string,
   password: string,
   name: string,
+  loginId: number = 0,
 ): Promise<void> {
   await sendMail({
     to: email,
@@ -95,16 +96,38 @@ export async function sendCandidateWelcomeEmail(
           <p style="font-size:15px;color:#374151;line-height:1.7;">
             In the meantime, you can log in to view and update your profile:
           </p>
+          ${loginId ? `
+          <div style="background:#f0f4ff;border:2px solid #4f46e5;border-radius:10px;padding:16px 20px;margin:16px 0;">
+            <p style="margin:0 0 6px;font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:#4f46e5;">Your Candidate Login ID</p>
+            <p style="margin:0;font-size:32px;font-weight:800;color:#1e1b4b;letter-spacing:2px;">${loginId}</p>
+            <p style="margin:6px 0 0;font-size:12px;color:#6b7280;">Use this ID — not your email — to sign in to your candidate portal.</p>
+          </div>
+          ` : ''}
           <table style="border-collapse:collapse;margin:16px 0;width:100%;max-width:400px;">
+            ${loginId ? `
+            <tr style="background:#f9fafb;">
+              <td style="padding:10px 14px;font-weight:600;color:#374151;border:1px solid #e5e7eb;">Candidate Login ID</td>
+              <td style="padding:10px 14px;color:#111827;font-weight:700;border:1px solid #e5e7eb;">${loginId}</td>
+            </tr>
+            ` : `
             <tr style="background:#f9fafb;">
               <td style="padding:10px 14px;font-weight:600;color:#374151;border:1px solid #e5e7eb;">Email</td>
               <td style="padding:10px 14px;color:#111827;border:1px solid #e5e7eb;">${email}</td>
             </tr>
+            `}
             <tr>
               <td style="padding:10px 14px;font-weight:600;color:#374151;border:1px solid #e5e7eb;">Password</td>
               <td style="padding:10px 14px;color:#111827;border:1px solid #e5e7eb;">${password}</td>
             </tr>
+            <tr style="background:#f9fafb;">
+              <td style="padding:10px 14px;font-weight:600;color:#374151;border:1px solid #e5e7eb;">Email (communications only)</td>
+              <td style="padding:10px 14px;color:#6b7280;border:1px solid #e5e7eb;">${email}</td>
+            </tr>
           </table>
+          <p style="font-size:13px;color:#6b7280;background:#fffbeb;border:1px solid #fde68a;border-radius:6px;padding:10px 14px;">
+            <strong>Important:</strong> Please use your <strong>Candidate Login ID (${loginId || 'provided above'})</strong> and Password to sign in.
+            Your email address is used for communications only and cannot be used to log in.
+          </p>
           <p style="margin-top:24px;">
             <a href="${env.FRONTEND_URL}/login" style="background:#4f46e5;color:#fff;padding:12px 24px;border-radius:6px;text-decoration:none;display:inline-block;font-size:15px;">
               Log In to Your Profile
@@ -394,26 +417,75 @@ export async function sendAdminVolunteerSupportNotification(
 }
 
 export async function sendAdminContactNotification(
-  recruiterName: string,
-  recruiterEmail: string,
+  name: string,
+  email: string,
+  phone: string | null,
+  subject: string | null,
+  message: string,
 ): Promise<void> {
   if (!env.ADMIN_EMAIL) {
     console.warn('⚠️  ADMIN_EMAIL not configured, skipping admin notification');
     return;
   }
 
+  const subjectLabel  = subject  ? subject.charAt(0).toUpperCase() + subject.slice(1) : null;
+  const submittedAt   = new Date().toLocaleString('en-GB', { dateStyle: 'full', timeStyle: 'short', timeZone: 'UTC' }) + ' UTC';
+
+  const phoneRow  = phone   ? `<tr style="background:#f9fafb;"><td style="padding:10px 14px;font-weight:600;color:#374151;border:1px solid #e5e7eb;white-space:nowrap;">📞 Phone</td><td style="padding:10px 14px;color:#111827;border:1px solid #e5e7eb;">${phone}</td></tr>` : '';
+  const subjectRow = subjectLabel ? `<tr><td style="padding:10px 14px;font-weight:600;color:#374151;border:1px solid #e5e7eb;white-space:nowrap;">📌 Subject</td><td style="padding:10px 14px;color:#111827;border:1px solid #e5e7eb;">${subjectLabel}</td></tr>` : '';
+
   await sendMail({
     to: env.ADMIN_EMAIL,
-    subject: '💬 New Contact Request Received',
+    subject: `💬 New Contact Message from ${name}`,
     html: `
-      <h2>New Contact Request</h2>
-      <p>A recruiter has submitted a new contact request.</p>
-      <table style="border-collapse:collapse;margin:16px 0;">
-        <tr><td style="padding:8px;font-weight:bold;">Recruiter:</td><td style="padding:8px;">${recruiterName}</td></tr>
-        <tr><td style="padding:8px;font-weight:bold;">Email:</td><td style="padding:8px;">${recruiterEmail}</td></tr>
-        <tr><td style="padding:8px;font-weight:bold;">Time:</td><td style="padding:8px;">${new Date().toUTCString()}</td></tr>
-      </table>
-      <p><a href="${env.FRONTEND_URL}/admin/contact-submissions" style="background:#4f46e5;color:#fff;padding:12px 24px;border-radius:6px;text-decoration:none;">Review Submissions</a></p>
+      <div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;">
+
+        <!-- Header -->
+        <div style="background:linear-gradient(135deg,#4f46e5,#7c3aed);padding:32px 24px;border-radius:12px 12px 0 0;text-align:center;">
+          <div style="font-size:40px;margin-bottom:12px;">✉️</div>
+          <h1 style="color:#fff;margin:0 0 6px;font-size:22px;font-weight:700;">New Contact Message</h1>
+          <p style="color:rgba(255,255,255,0.8);margin:0;font-size:14px;">from <strong style="color:#fff;">${name}</strong></p>
+        </div>
+
+        <!-- Body card -->
+        <div style="background:#fff;padding:32px 24px;border:1px solid #e5e7eb;border-top:none;border-radius:0 0 12px 12px;">
+
+          <!-- Detail table -->
+          <table style="border-collapse:collapse;width:100%;margin-bottom:24px;">
+            <tr style="background:#f9fafb;">
+              <td style="padding:10px 14px;font-weight:600;color:#374151;border:1px solid #e5e7eb;white-space:nowrap;">👤 Name</td>
+              <td style="padding:10px 14px;color:#111827;border:1px solid #e5e7eb;">${name}</td>
+            </tr>
+            <tr>
+              <td style="padding:10px 14px;font-weight:600;color:#374151;border:1px solid #e5e7eb;white-space:nowrap;">📧 Email</td>
+              <td style="padding:10px 14px;border:1px solid #e5e7eb;"><a href="mailto:${email}" style="color:#4f46e5;text-decoration:none;">${email}</a></td>
+            </tr>
+            ${phoneRow}
+            ${subjectRow}
+            <tr style="background:#f9fafb;">
+              <td style="padding:10px 14px;font-weight:600;color:#374151;border:1px solid #e5e7eb;white-space:nowrap;">🕒 Submitted</td>
+              <td style="padding:10px 14px;color:#6b7280;border:1px solid #e5e7eb;font-size:13px;">${submittedAt}</td>
+            </tr>
+          </table>
+
+          <!-- Message block -->
+          <p style="font-size:13px;font-weight:700;color:#374151;text-transform:uppercase;letter-spacing:0.06em;margin:0 0 8px;">Message</p>
+          <div style="background:#f5f3ff;border-left:4px solid #6366f1;border-radius:0 8px 8px 0;padding:16px 18px;font-size:15px;color:#111827;line-height:1.7;white-space:pre-wrap;">${message}</div>
+
+          <!-- CTA -->
+          <p style="margin-top:28px;text-align:center;">
+            <a href="${env.FRONTEND_URL}/admin/contact-submissions"
+               style="background:#4f46e5;color:#fff;padding:12px 28px;border-radius:8px;text-decoration:none;display:inline-block;font-size:15px;font-weight:600;">
+              View in Admin Panel
+            </a>
+          </p>
+
+          <!-- Footer -->
+          <p style="color:#9ca3af;font-size:12px;margin-top:24px;border-top:1px solid #f3f4f6;padding-top:16px;text-align:center;">
+            This is an automated notification from NTL Career Nexus. Do not reply to this email.
+          </p>
+        </div>
+      </div>
     `,
   });
 }
@@ -767,6 +839,107 @@ export async function sendNewIpLoginAlert(opts: {
           <p style="color:#888;font-size:12px;margin-top:24px;border-top:1px solid #f3f4f6;padding-top:16px;">
             This security alert was sent automatically by the NTL Career Nexus platform. Do not reply to this email.
           </p>
+        </div>
+      </div>
+    `,
+  });
+}
+
+// ── Recruiter Access Request: Admin notification ──────────────────────────────
+
+export async function sendAdminRecruiterAccessRequest(opts: {
+  name: string;
+  email: string;
+  message: string | null;
+}): Promise<void> {
+  const adminEmail = env.ADMIN_EMAIL ?? env.EMAIL_FROM ?? 'admin@ntlcareernexus.com';
+  await sendMail({
+    to: adminEmail,
+    subject: `Access Extension Request — ${opts.name}`,
+    html: `
+      <div style="font-family:Inter,sans-serif;background:#f8fafc;padding:32px 0;">
+        <div style="max-width:560px;margin:0 auto;background:#fff;border-radius:16px;overflow:hidden;box-shadow:0 4px 24px rgba(99,102,241,.10);">
+          <div style="background:linear-gradient(135deg,#6366f1 0%,#a78bfa 100%);padding:28px 32px 24px;">
+            <div style="font-size:22px;font-weight:700;color:#fff;">NTL Career Nexus</div>
+            <div style="font-size:13px;color:rgba(255,255,255,.75);margin-top:4px;">Recruiter Access Extension Request</div>
+          </div>
+          <div style="padding:28px 32px;">
+            <p style="margin:0 0 16px;font-size:15px;color:#374151;">
+              <strong>${opts.name}</strong> (<a href="mailto:${opts.email}" style="color:#6366f1;">${opts.email}</a>) has requested an access extension.
+            </p>
+            ${opts.message ? `
+            <div style="background:#f5f3ff;border:1px solid #ddd6fe;border-radius:8px;padding:14px 16px;margin-bottom:20px;">
+              <div style="font-size:11px;font-weight:700;color:#7c3aed;text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px;">Message</div>
+              <p style="margin:0;font-size:14px;color:#374151;">${opts.message}</p>
+            </div>` : ''}
+            <p style="font-size:13px;color:#6b7280;">Log in to the admin panel to review this request.</p>
+          </div>
+        </div>
+      </div>
+    `,
+  });
+}
+
+// ── Recruiter Access Request: Approved ────────────────────────────────────────
+
+export async function sendRecruiterAccessRequestApproved(opts: {
+  email: string;
+  name: string;
+  newExpiryDate: string;
+}): Promise<void> {
+  await sendMail({
+    to: opts.email,
+    subject: 'Your Access Extension Has Been Approved — NTL Career Nexus',
+    html: `
+      <div style="font-family:Inter,sans-serif;background:#f8fafc;padding:32px 0;">
+        <div style="max-width:560px;margin:0 auto;background:#fff;border-radius:16px;overflow:hidden;box-shadow:0 4px 24px rgba(16,185,129,.10);">
+          <div style="background:linear-gradient(135deg,#10b981 0%,#34d399 100%);padding:28px 32px 24px;">
+            <div style="font-size:22px;font-weight:700;color:#fff;">NTL Career Nexus</div>
+            <div style="font-size:13px;color:rgba(255,255,255,.80);margin-top:4px;">Access Extension Approved</div>
+          </div>
+          <div style="padding:28px 32px;">
+            <p style="margin:0 0 16px;font-size:15px;color:#374151;">Hi <strong>${opts.name}</strong>,</p>
+            <p style="margin:0 0 20px;font-size:15px;color:#374151;">
+              Your access extension request has been <strong style="color:#10b981;">approved</strong>.
+              Your account is now accessible until <strong>${opts.newExpiryDate}</strong>.
+            </p>
+            <p style="font-size:13px;color:#6b7280;">You can log in to the platform at any time before this date.</p>
+          </div>
+        </div>
+      </div>
+    `,
+  });
+}
+
+// ── Recruiter Access Request: Rejected ────────────────────────────────────────
+
+export async function sendRecruiterAccessRequestRejected(opts: {
+  email: string;
+  name: string;
+  adminNote: string | null;
+}): Promise<void> {
+  await sendMail({
+    to: opts.email,
+    subject: 'Access Extension Request Update — NTL Career Nexus',
+    html: `
+      <div style="font-family:Inter,sans-serif;background:#f8fafc;padding:32px 0;">
+        <div style="max-width:560px;margin:0 auto;background:#fff;border-radius:16px;overflow:hidden;box-shadow:0 4px 24px rgba(239,68,68,.08);">
+          <div style="background:linear-gradient(135deg,#ef4444 0%,#f87171 100%);padding:28px 32px 24px;">
+            <div style="font-size:22px;font-weight:700;color:#fff;">NTL Career Nexus</div>
+            <div style="font-size:13px;color:rgba(255,255,255,.80);margin-top:4px;">Access Extension Not Approved</div>
+          </div>
+          <div style="padding:28px 32px;">
+            <p style="margin:0 0 16px;font-size:15px;color:#374151;">Hi <strong>${opts.name}</strong>,</p>
+            <p style="margin:0 0 20px;font-size:15px;color:#374151;">
+              Unfortunately your access extension request has not been approved at this time.
+            </p>
+            ${opts.adminNote ? `
+            <div style="background:#fef2f2;border:1px solid #fecaca;border-radius:8px;padding:14px 16px;margin-bottom:20px;">
+              <div style="font-size:11px;font-weight:700;color:#dc2626;text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px;">Note from Admin</div>
+              <p style="margin:0;font-size:14px;color:#374151;">${opts.adminNote}</p>
+            </div>` : ''}
+            <p style="font-size:13px;color:#6b7280;">If you have questions, please contact the administrator directly.</p>
+          </div>
         </div>
       </div>
     `,

@@ -45,6 +45,14 @@ export class MasterDataService {
 
   constructor(private http: HttpClient) {}
 
+  /**
+   * Invalidate the in-memory cache so the next loadAll() call re-fetches
+   * from the server. Called by AdminMasterService after any mutation.
+   */
+  invalidate(): void {
+    this.loaded = false;
+  }
+
   /** Call once on app init (or lazily on first form load) */
   async loadAll(): Promise<void> {
     if (this.loaded) return;

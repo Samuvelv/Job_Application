@@ -9,6 +9,8 @@ interface NotificationCounts {
   pendingContactRequests: number;
   pendingVolunteerSupport: number;
   pendingInterestRequests: number;
+  pendingContactUnlockRequests: number;
+  pendingRecruiterAccessRequests: number;
 }
 
 @Injectable({ providedIn: 'root' })
@@ -21,6 +23,8 @@ export class NotificationService implements OnDestroy {
     pendingContactRequests: 0,
     pendingVolunteerSupport: 0,
     pendingInterestRequests: 0,
+    pendingContactUnlockRequests: 0,
+    pendingRecruiterAccessRequests: 0,
   });
 
   // Public computed properties for UI
@@ -28,11 +32,25 @@ export class NotificationService implements OnDestroy {
   pendingContactRequests  = computed(() => this.counts().pendingContactRequests);
   pendingVolunteerSupport = computed(() => this.counts().pendingVolunteerSupport);
   pendingInterestRequests = computed(() => this.counts().pendingInterestRequests);
-  totalPending            = computed(() =>
+  pendingContactUnlockRequests   = computed(() => this.counts().pendingContactUnlockRequests);
+  pendingRecruiterAccessRequests = computed(() => this.counts().pendingRecruiterAccessRequests);
+
+  // Total for the Edit Requests page (all 4 tabs)
+  totalEditRequestsPending = computed(() =>
+    this.counts().pendingEdits +
+    this.counts().pendingContactUnlockRequests +
+    this.counts().pendingVolunteerSupport +
+    this.counts().pendingRecruiterAccessRequests,
+  );
+
+  // Grand total across everything (kept for reference)
+  totalPending = computed(() =>
     this.counts().pendingEdits +
     this.counts().pendingContactRequests +
     this.counts().pendingVolunteerSupport +
-    this.counts().pendingInterestRequests,
+    this.counts().pendingInterestRequests +
+    this.counts().pendingContactUnlockRequests +
+    this.counts().pendingRecruiterAccessRequests,
   );
 
   private pollingInterval: any = null;
@@ -63,9 +81,11 @@ export class NotificationService implements OnDestroy {
   }
 
   /**
-   * Refresh notification counts from HTTP
+   * Refresh notification counts from HTTP.
+   * Call this after any admin action that changes a count (approve, reject, etc.)
+   * so the sidebar badges update immediately without waiting for the 30s poll.
    */
-  private refreshCounts(): void {
+  refreshCounts(): void {
     this.http
       .get<NotificationCounts>(`${environment.apiUrl}/stats/notifications/counts`)
       .subscribe({
