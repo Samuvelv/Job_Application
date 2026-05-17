@@ -369,6 +369,7 @@ export async function getCandidateById(id: string) {
     ? await db('volunteers').whereRaw('LOWER(email) = LOWER(?)', [candidate.email]).first()
     : null;
   const is_volunteer = !!volunteerMatch;
+  const volunteer_availability = volunteerMatch?.availability ?? null;
 
   // Auto-sync volunteer_invite_status → 'converted' when a matching volunteer record exists
   let volunteer_invite_status = candidate.volunteer_invite_status ?? null;
@@ -380,7 +381,7 @@ export async function getCandidateById(id: string) {
     }).catch(() => { /* non-fatal */ });
   }
 
-  return { ...candidate, ...relations, is_volunteer, volunteer_invite_status };
+  return { ...candidate, ...relations, is_volunteer, volunteer_invite_status, volunteer_availability };
 }
 
 // ── Get by user_id (for candidate self-view) ───────────────────────────────────

@@ -97,6 +97,7 @@ export interface Candidate {
   contact_locked?: boolean;
   is_volunteer?: boolean;
   volunteer_invite_status?: 'invited' | 'converted' | null;
+  volunteer_availability?: string | null;
 
   // Relations
   skills?: Skill[];

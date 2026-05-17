@@ -855,8 +855,10 @@ export class CandidateEditComponent implements OnInit {
         this.toast.success('Candidate updated');
         window.scrollTo({ top: 0, behavior: 'smooth' });
 
-        if (raw.profile_status === 'placed' && res.candidate.volunteer_invite_status === 'converted') {
-          // Candidate already has a volunteer record — offer reactivation
+        if (raw.profile_status === 'placed'
+            && res.candidate.volunteer_invite_status === 'converted'
+            && res.candidate.volunteer_availability === 'Inactive') {
+          // Volunteer exists but is system-deactivated — offer reactivation
           this.showVolunteerReactivatePrompt = true;
         } else if (raw.profile_status === 'placed' && !res.candidate.is_volunteer) {
           // Never been a volunteer — offer invitation
@@ -942,6 +944,7 @@ export class CandidateEditComponent implements OnInit {
   }
 
   skipReactivation(): void {
+    this.reactivateError = '';
     this.showVolunteerReactivatePrompt = false;
     this.router.navigate(['/admin/candidates', this.candidateId]);
   }
