@@ -3,7 +3,7 @@ import { z } from 'zod';
 
 const SUPPORT_METHODS = ['WhatsApp Support', 'Phone Call Support', 'Platform Messaging Only'] as const;
 const CONTACT_PREFS   = ['WhatsApp', 'Email', 'Platform Only'] as const;
-const AVAILABILITIES  = ['Active', 'Temporarily Unavailable'] as const;
+const AVAILABILITIES  = ['Active', 'Temporarily Unavailable', 'Inactive'] as const;
 
 export const CreateVolunteerSchema = z.object({
   name:               z.string().min(1, 'Name is required').max(200),
