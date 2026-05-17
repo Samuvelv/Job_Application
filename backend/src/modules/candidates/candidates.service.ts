@@ -647,13 +647,13 @@ export async function inviteAsVolunteer(id: string): Promise<{ message: string }
 // ── Sync volunteer availability ───────────────────────────────────────────────
 
 /**
- * Keeps volunteer availability in sync with candidate profile_status.
+ * Keeps volunteer records in sync with candidate profile_status.
  * Called after every profile_status update.
  *
  * Rules:
- *   - newStatus !== 'placed'  → set availability = 'Inactive'
- *   - newStatus === 'placed'  → set availability = 'Active' ONLY if currently 'Inactive'
- *     (preserves admin-set 'Temporarily Unavailable')
+ *   - newStatus !== 'placed'  → hard-delete the volunteer row (CASCADE removes support requests)
+ *                               and reset volunteer_invite_status = null on the candidate
+ *   - newStatus === 'placed'  → no-op (volunteer row no longer exists; frontend invite prompt handles re-creation)
  */
 export async function syncVolunteerAvailability(
   candidateId: string,
@@ -677,19 +677,13 @@ export async function syncVolunteerAvailability(
   if (!volunteer) return;
 
   if (newStatus !== 'placed') {
-    // Deactivate regardless of current availability
-    await db('volunteers')
-      .where({ id: volunteer.id })
-      .update({ availability: 'Inactive', updated_at: new Date() });
-    // Hard-delete all support requests linked to this volunteer
-    await db('volunteer_support_requests')
-      .where({ volunteer_id: volunteer.id })
-      .delete();
-  } else if (newStatus === 'placed' && volunteer.availability === 'Inactive') {
-    // Re-place: restore to Active only if system-deactivated
-    await db('volunteers')
-      .where({ id: volunteer.id })
-      .update({ availability: 'Active', updated_at: new Date() });
+    // Hard-delete the volunteer row; CASCADE on volunteer_id removes support requests automatically.
+    // Reset volunteer_invite_status so re-placement shows the invite prompt again.
+    await db('volunteers').where({ id: volunteer.id }).delete();
+    await db('candidates').where({ id: candidateId }).update({
+      volunteer_invite_status: null,
+      updated_at: new Date(),
+    });
   }
-  // If newStatus === 'placed' but availability is 'Temporarily Unavailable' → no-op
+  // On re-placement: volunteer row no longer exists → frontend invite prompt handles it normally.
 }
