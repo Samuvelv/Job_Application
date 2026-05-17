@@ -63,6 +63,12 @@ export async function getCandidateStats(userId: string) {
   const candidate = await db('candidates').where({ user_id: userId }).first();
   if (!candidate) return { profileCompleteness: 0, pendingRequest: false };
 
+  // english_level is not a column on candidates — derive it from candidate_languages
+  const hasEnglish = !!(await db('candidate_languages')
+    .where({ candidate_id: candidate.id })
+    .whereRaw("LOWER(language) = 'english'")
+    .first());
+
   // Mirrors the frontend candidate-card completionPercent formula exactly
   // so the dashboard percentage always matches the admin candidate list.
   // Base 15 (name always present after registration) + optional fields up to 100.
@@ -72,7 +78,7 @@ export async function getCandidateStats(userId: string) {
   if (candidate.industry)                                     score += 10;
   if (candidate.current_country)                              score += 10;
   if (candidate.years_experience != null)                     score += 10;
-  if (candidate.english_level)                                score += 10;
+  if (hasEnglish)                                             score += 10;
   if (candidate.intro_video_url)                              score += 10;
   if (candidate.nationality)                                  score +=  5;
   if (candidate.target_locations && candidate.target_locations.length > 0) score += 5;

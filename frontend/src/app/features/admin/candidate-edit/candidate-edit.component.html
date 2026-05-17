@@ -554,6 +554,17 @@
             </div>
           }
         </div>
+        <!-- Email Address -->
+        <div class="col-md-6">
+          <label class="form-label">Email Address <span class="text-danger">*</span></label>
+          <input type="email" class="form-control" formControlName="email" [class.is-invalid]="invalid('email')" placeholder="email@example.com" autocomplete="off">
+          @if (invalid('email') && form.get('email')?.errors) {
+            <div class="invalid-feedback d-block">
+              @if (form.get('email')?.errors?.['required'])     { Email address is required. }
+              @else if (form.get('email')?.errors?.['invalidEmail']) { Please enter a valid email address. }
+            </div>
+          }
+        </div>
         <div class="col-12">
           <label class="form-label">Bio / Self Introduction</label>
           <textarea class="form-control" formControlName="bio" rows="3"

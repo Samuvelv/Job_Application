@@ -412,11 +412,28 @@ export async function updateCandidate(id: string, dto: UpdateCandidateDto) {
   const candidate = await db('candidates').where({ id }).first();
   if (!candidate) throw new AppError(404, 'Candidate not found');
 
+  // Email uniqueness check (outside transaction so we can throw before starting)
+  if (dto.email !== undefined) {
+    const emailLower = dto.email.toLowerCase();
+    const conflict = await db('users')
+      .where({ email: emailLower })
+      .whereNot({ id: candidate.user_id })
+      .first();
+    if (conflict) throw new AppError(409, 'This email address is already in use by another account');
+  }
+
   await db.transaction(async (trx) => {
     // Update core fields
     const {
-      skills, languages, experience, education, certificates, new_password, ...coreFields
+      skills, languages, experience, education, certificates, new_password, email, ...coreFields
     } = dto;
+
+    // Handle email change
+    if (email !== undefined) {
+      await trx('users')
+        .where({ id: candidate.user_id })
+        .update({ email: email.toLowerCase(), updated_at: new Date() });
+    }
 
     // Handle password change
     if (new_password) {

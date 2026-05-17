@@ -16,6 +16,16 @@ import { ChipMultiSelectComponent, ChipOption } from '../../../shared/components
 import { Candidate, Certificate } from '../../../core/models/candidate.model';
 import { REGISTRATION_FEE_STATUS_OPTIONS, CV_FORMAT_OPTIONS, SOURCE_OPTIONS, EMPLOYMENT_STATUS_OPTIONS, VISA_STATUS_OPTIONS, REASON_FOR_LEAVING_OPTIONS, PROFILE_STATUS_OPTIONS } from '../../../core/constants/candidate-options';
 
+// ── Email validator ────────────────────────────────────────────────────────
+function emailValidator(): ValidatorFn {
+  return (ctrl: AbstractControl): ValidationErrors | null => {
+    const v = (ctrl.value as string || '').trim();
+    if (!v) return null;
+    const ok = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(v);
+    return ok ? null : { invalidEmail: true };
+  };
+}
+
 // ── LinkedIn URL validator ─────────────────────────────────────────────────
 function linkedInValidator(): ValidatorFn {
   return (ctrl: AbstractControl): ValidationErrors | null => {
@@ -698,6 +708,7 @@ export class CandidateEditComponent implements OnInit {
     }
 
     this.form = this.fb.group({
+      email:         [emp.email ?? '', [Validators.required, emailValidator()]],
       first_name:    [emp.first_name, [Validators.required, Validators.minLength(3), Validators.maxLength(100), Validators.pattern(/^[a-zA-Z\s'\-]+$/)]],
       last_name:     [emp.last_name,  [Validators.required, Validators.minLength(3), Validators.maxLength(100), Validators.pattern(/^[a-zA-Z\s'\-]+$/)]],
       date_of_birth: [emp.date_of_birth ?? '', [Validators.required, dobValidator()]],
@@ -832,6 +843,7 @@ export class CandidateEditComponent implements OnInit {
     const education = this.isExperienceBased ? [] : raw.education.filter((e: any) => e.institution?.trim() || e.degree?.trim());
 
     const payload = {
+      email:         raw.email?.trim() || undefined,
       first_name:    raw.first_name,
       last_name:     raw.last_name,
       date_of_birth: raw.date_of_birth   || undefined,
@@ -855,7 +867,7 @@ export class CandidateEditComponent implements OnInit {
       notice_period_id: raw.notice_period_id || undefined,
       current_country: raw.current_country || undefined,
       current_city:  raw.current_city    || undefined,
-      nationality:   raw.nationality     || undefined,
+      nationality:   raw.nationality !== null && raw.nationality !== '' ? raw.nationality : null,
       postal_code:   raw.postal_code     || undefined,
       has_passport:  raw.has_passport    ?? false,
       target_locations: Array.isArray(raw.target_locations) ? raw.target_locations : [],

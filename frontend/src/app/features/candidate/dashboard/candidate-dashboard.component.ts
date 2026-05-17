@@ -662,7 +662,7 @@ export class CandidateDashboardComponent implements OnInit {
       {
         label:  'English Level',
         icon:   'bi-translate',
-        done:   !!c.english_level,
+        done:   !!((c as any).languages as any[])?.some((l: any) => l.language?.toLowerCase() === 'english'),
         weight: 10,
       },
       {
