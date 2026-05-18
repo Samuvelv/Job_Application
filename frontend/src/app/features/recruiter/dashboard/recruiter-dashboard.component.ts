@@ -243,6 +243,30 @@ import { Recruiter } from '../../../core/models/recruiter.model';
     .rd-link-card:hover .rd-link-card__cta { text-decoration: underline; }
   `],
   template: `
+    <!-- ── Access Expired Modal (non-dismissible) ──────────────────────────── -->
+    @if (isExpired()) {
+      <div style="position:fixed;inset:0;z-index:9999;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,.55);backdrop-filter:blur(4px);">
+        <div style="background:var(--th-surface);border:1px solid rgba(239,68,68,.3);border-radius:1.25rem;padding:2.25rem 2rem;max-width:420px;width:90%;box-shadow:0 24px 48px rgba(0,0,0,.25);text-align:center;">
+          <!-- Icon -->
+          <div style="width:64px;height:64px;border-radius:50%;background:rgba(239,68,68,.1);border:2px solid rgba(239,68,68,.25);display:flex;align-items:center;justify-content:center;margin:0 auto 1.25rem;">
+            <i class="bi bi-shield-lock-fill" style="font-size:1.75rem;color:#ef4444;"></i>
+          </div>
+          <!-- Message -->
+          <h5 style="font-weight:700;font-size:1.15rem;color:var(--th-text);margin-bottom:.5rem;">Access Expired</h5>
+          <p style="font-size:.875rem;color:var(--th-text-muted);line-height:1.6;margin-bottom:1.75rem;">
+            Your recruiter access has expired. Please contact the administrator to renew your subscription, then log in again.
+          </p>
+          <!-- Logout button -->
+          <button (click)="auth.logout()"
+            style="display:inline-flex;align-items:center;justify-content:center;gap:.5rem;width:100%;padding:.7rem 1.5rem;border-radius:.75rem;border:none;background:#ef4444;color:#fff;font-size:.9rem;font-weight:600;cursor:pointer;transition:background .2s;"
+            onmouseover="this.style.background='#dc2626'"
+            onmouseout="this.style.background='#ef4444'">
+            <i class="bi bi-box-arrow-right"></i> Log Out
+          </button>
+        </div>
+      </div>
+    }
+
     <!-- ── Hero ──────────────────────────────────────────────────────────── -->
     <div class="rd-hero">
       <div class="rd-hero__eyebrow">Recruiter Portal</div>
@@ -375,7 +399,7 @@ export class RecruiterDashboardComponent implements OnInit {
   contactName = computed(() => this.profile()?.contact_name ?? '');
 
   constructor(
-    private auth: AuthService,
+    public auth: AuthService,
     private statsService: StatsService,
     private recruiterService: RecruiterService,
   ) {}
