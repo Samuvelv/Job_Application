@@ -1353,8 +1353,10 @@ export class EditRequestComponent implements OnInit {
   readonly noticePeriodOptions = computed<SelectOption[]>(() =>
     this.master.noticePeriods().map(n => ({ value: n.id, label: n.label })));
 
-  readonly targetLocationChipOptions = computed<ChipOption[]>(() =>
-    this.master.countries().map(c => ({ value: c.name, label: `${c.flag_emoji} ${c.name}` })));
+  readonly targetLocationChipOptions = computed<ChipOption[]>(() => [
+    { value: 'Any Location', label: '🌍 Any Location' },
+    ...this.master.countries().map(c => ({ value: c.name, label: `${c.flag_emoji} ${c.name}` })),
+  ]);
 
   readonly hobbyChipOptions = computed<ChipOption[]>(() =>
     this.master.hobbies().map(h => ({ value: h.name, label: h.name })));

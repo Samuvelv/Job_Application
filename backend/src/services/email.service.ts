@@ -70,8 +70,9 @@ export async function sendCandidateCredentials(
   email: string,
   password: string,
   name: string,
+  loginId: number = 0,
 ): Promise<void> {
-  return sendCandidateWelcomeEmail(email, password, name, 0);
+  return sendCandidateWelcomeEmail(email, password, name, loginId);
 }
 
 export async function sendCandidateWelcomeEmail(
@@ -146,6 +147,7 @@ export async function sendCandidateCredentialsResent(
   email: string,
   password: string,
   name: string,
+  loginId: number = 0,
 ): Promise<void> {
   await sendMail({
     to: email,
@@ -160,16 +162,38 @@ export async function sendCandidateCredentialsResent(
             Hi <strong>${name}</strong>, your login credentials have been resent by the NTL Career Nexus admin team.
             Use the details below to access your account.
           </p>
+          ${loginId ? `
+          <div style="background:#f0f4ff;border:2px solid #4f46e5;border-radius:10px;padding:16px 20px;margin:16px 0;">
+            <p style="margin:0 0 6px;font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:#4f46e5;">Your Candidate Login ID</p>
+            <p style="margin:0;font-size:32px;font-weight:800;color:#1e1b4b;letter-spacing:2px;">${loginId}</p>
+            <p style="margin:6px 0 0;font-size:12px;color:#6b7280;">Use this ID — not your email — to sign in to your candidate portal.</p>
+          </div>
+          ` : ''}
           <table style="border-collapse:collapse;margin:16px 0;width:100%;max-width:400px;">
+            ${loginId ? `
+            <tr style="background:#f9fafb;">
+              <td style="padding:10px 14px;font-weight:600;color:#374151;border:1px solid #e5e7eb;">Candidate Login ID</td>
+              <td style="padding:10px 14px;color:#111827;font-weight:700;border:1px solid #e5e7eb;">${loginId}</td>
+            </tr>
+            ` : `
             <tr style="background:#f9fafb;">
               <td style="padding:10px 14px;font-weight:600;color:#374151;border:1px solid #e5e7eb;">Email</td>
               <td style="padding:10px 14px;color:#111827;border:1px solid #e5e7eb;">${email}</td>
             </tr>
+            `}
             <tr>
               <td style="padding:10px 14px;font-weight:600;color:#374151;border:1px solid #e5e7eb;">Password</td>
               <td style="padding:10px 14px;color:#111827;border:1px solid #e5e7eb;">${password}</td>
             </tr>
+            <tr style="background:#f9fafb;">
+              <td style="padding:10px 14px;font-weight:600;color:#374151;border:1px solid #e5e7eb;">Email (communications only)</td>
+              <td style="padding:10px 14px;color:#6b7280;border:1px solid #e5e7eb;">${email}</td>
+            </tr>
           </table>
+          <p style="font-size:13px;color:#6b7280;background:#fffbeb;border:1px solid #fde68a;border-radius:6px;padding:10px 14px;">
+            <strong>Important:</strong> Please use your <strong>Candidate Login ID (${loginId || 'provided above'})</strong> and Password to sign in.
+            Your email address is used for communications only and cannot be used to log in.
+          </p>
           <p style="margin-top:24px;">
             <a href="${env.FRONTEND_URL}/login" style="background:#4f46e5;color:#fff;padding:12px 24px;border-radius:6px;text-decoration:none;display:inline-block;font-size:15px;">
               Log In to Your Profile

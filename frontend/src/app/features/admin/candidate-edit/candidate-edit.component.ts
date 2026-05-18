@@ -1,5 +1,6 @@
 // src/app/features/admin/candidate-edit/candidate-edit.component.ts
-import { Component, OnInit, computed } from '@angular/core';
+import { Component, OnInit, OnDestroy, computed } from '@angular/core';
+import { forkJoin, of } from 'rxjs';
 import { CommonModule } from '@angular/common';
 import {
   ReactiveFormsModule, FormBuilder, FormGroup,
@@ -209,7 +210,7 @@ function makePostalCodeGroupValidator(countryCtrl: string, postalCtrl: string): 
   imports: [CommonModule, ReactiveFormsModule, RouterLink, SearchableSelectComponent, ChipMultiSelectComponent],
   templateUrl: './candidate-edit.component.html',
 })
-export class CandidateEditComponent implements OnInit {
+export class CandidateEditComponent implements OnInit, OnDestroy {
   candidateId = '';
   candidate: Candidate | null = null;
   loadError = '';
@@ -236,6 +237,10 @@ export class CandidateEditComponent implements OnInit {
 
   mediaLoading: Record<string, boolean> = {};
   certDeleting: number | null = null;
+
+  // Staged (deferred) media files — uploaded only when Save is clicked
+  stagedFiles:    Partial<Record<'profiles' | 'resumes' | 'videos', File>>   = {};
+  stagedPreviews: Partial<Record<'profiles' | 'resumes' | 'videos', string>> = {};
 
   // Per-cert inline editing
   editingCertId: number | null = null;
@@ -334,8 +339,10 @@ export class CandidateEditComponent implements OnInit {
   noticePeriodOptions = computed<SelectOption[]>(() =>
     this.master.noticePeriods().map(n => ({ value: n.id, label: n.label })));
 
-  targetLocationChipOptions = computed<ChipOption[]>(() =>
-    this.master.countries().map(c => ({ value: c.name, label: `${c.flag_emoji} ${c.name}` })));
+  targetLocationChipOptions = computed<ChipOption[]>(() => [
+    { value: 'Any Location', label: '🌍 Any Location' },
+    ...this.master.countries().map(c => ({ value: c.name, label: `${c.flag_emoji} ${c.name}` })),
+  ]);
 
   hobbyChipOptions = computed<ChipOption[]>(() =>
     this.master.hobbies().map(h => ({ value: h.name, label: h.name })));
@@ -552,26 +559,46 @@ export class CandidateEditComponent implements OnInit {
   uploadFile(type: 'profiles' | 'resumes' | 'videos' | 'certificates', event: Event): void {
     const file = (event.target as HTMLInputElement).files?.[0];
     if (!file || !this.candidate) return;
-    if (type === 'videos' && file.size > 200 * 1024 * 1024) {
-      this.toast.error(`Video exceeds the 200 MB limit (selected: ${(file.size / (1024 * 1024)).toFixed(1)} MB). Please choose a smaller file.`);
-      (event.target as HTMLInputElement).value = '';
+    (event.target as HTMLInputElement).value = '';
+
+    // Certificates are uploaded immediately (they carry metadata via a separate flow)
+    if (type === 'certificates') {
+      this.mediaLoading[type] = true;
+      this.empSvc.uploadFile(this.candidateId, type, file, file.name.replace(/\.[^.]+$/, '')).subscribe({
+        next: () => {
+          this.mediaLoading[type] = false;
+          this.toast.success('Certificate uploaded');
+          this.empSvc.getById(this.candidateId).subscribe(r => { this.candidate = r.candidate; });
+        },
+        error: (err) => {
+          this.mediaLoading[type] = false;
+          this.toast.error(err?.error?.message ?? 'Upload failed');
+        },
+      });
       return;
     }
-    this.mediaLoading[type] = true;
-    const name = type === 'certificates' ? file.name.replace(/\.[^.]+$/, '') : undefined;
-    this.empSvc.uploadFile(this.candidateId, type, file, name).subscribe({
-      next: () => {
-        this.mediaLoading[type] = false;
-        this.toast.success('File uploaded');
-        this.empSvc.getById(this.candidateId).subscribe(r => { this.candidate = r.candidate; });
-        (event.target as HTMLInputElement).value = '';
-      },
-      error: (err) => {
-        this.mediaLoading[type] = false;
-        this.toast.error(err?.error?.message ?? 'Upload failed');
-        (event.target as HTMLInputElement).value = '';
-      },
-    });
+
+    // Profile photo / resume / video — stage locally, upload on Save
+    if (type === 'videos' && file.size > 200 * 1024 * 1024) {
+      this.toast.error(`Video exceeds the 200 MB limit (selected: ${(file.size / (1024 * 1024)).toFixed(1)} MB). Please choose a smaller file.`);
+      return;
+    }
+
+    // Revoke any previous object URL to avoid memory leaks
+    const prev = this.stagedPreviews[type];
+    if (prev) URL.revokeObjectURL(prev);
+
+    this.stagedFiles[type]    = file;
+    this.stagedPreviews[type] = URL.createObjectURL(file);
+    this.toast.success(`${file.name} staged — click Save to apply`);
+  }
+
+  /** Discard a staged (not-yet-saved) media file */
+  clearStaged(type: 'profiles' | 'resumes' | 'videos'): void {
+    const prev = this.stagedPreviews[type];
+    if (prev) URL.revokeObjectURL(prev);
+    delete this.stagedFiles[type];
+    delete this.stagedPreviews[type];
   }
 
   deleteFile(type: 'profiles' | 'resumes' | 'videos'): void {
@@ -891,29 +918,51 @@ export class CandidateEditComponent implements OnInit {
       is_experience_based: this.isExperienceBased,
     };
 
-    this.empSvc.update(this.candidateId, payload as any).subscribe({
-      next: (res) => {
-        this.saving     = false;
-        this.candidate   = res.candidate;
-        this.successMsg = 'Candidate updated successfully!';
-        this.toast.success('Candidate updated');
-        window.scrollTo({ top: 0, behavior: 'smooth' });
+    // Upload any staged media files first, then save the form
+    const uploadJobs = (['profiles', 'resumes', 'videos'] as const)
+      .filter(t => this.stagedFiles[t])
+      .map(t => this.empSvc.uploadFile(this.candidateId, t, this.stagedFiles[t]!));
 
-        if (raw.profile_status === 'placed'
-            && res.candidate.volunteer_invite_status === 'converted'
-            && res.candidate.volunteer_availability === 'Inactive') {
-          // Volunteer exists but is system-deactivated — offer reactivation
-          this.showVolunteerReactivatePrompt = true;
-        } else if (raw.profile_status === 'placed' && !res.candidate.is_volunteer) {
-          // Never been a volunteer — offer invitation
-          this.showPlacedPrompt = true;
-        } else {
-          setTimeout(() => this.router.navigate(['/admin/candidates', this.candidateId]), 1500);
-        }
+    const flush$ = uploadJobs.length ? forkJoin(uploadJobs) : of([]);
+
+    flush$.subscribe({
+      next: () => {
+        // Clear staged state
+        (['profiles', 'resumes', 'videos'] as const).forEach(t => {
+          const url = this.stagedPreviews[t];
+          if (url) URL.revokeObjectURL(url);
+          delete this.stagedFiles[t];
+          delete this.stagedPreviews[t];
+        });
+        this.empSvc.update(this.candidateId, payload as any).subscribe({
+          next: (res) => {
+            this.saving     = false;
+            this.candidate   = res.candidate;
+            this.successMsg = 'Candidate updated successfully!';
+            this.toast.success('Candidate updated');
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+
+            if (raw.profile_status === 'placed'
+                && res.candidate.volunteer_invite_status === 'converted'
+                && res.candidate.volunteer_availability === 'Inactive') {
+              // Volunteer exists but is system-deactivated — offer reactivation
+              this.showVolunteerReactivatePrompt = true;
+            } else if (raw.profile_status === 'placed' && !res.candidate.is_volunteer) {
+              // Never been a volunteer — offer invitation
+              this.showPlacedPrompt = true;
+            } else {
+              setTimeout(() => this.router.navigate(['/admin/candidates', this.candidateId]), 1500);
+            }
+          },
+          error: (err) => {
+            this.saving   = false;
+            this.errorMsg = err?.error?.message ?? 'Update failed. Please try again.';
+          },
+        });
       },
       error: (err) => {
         this.saving   = false;
-        this.errorMsg = err?.error?.message ?? 'Update failed. Please try again.';
+        this.errorMsg = err?.error?.message ?? 'Media upload failed. Please try again.';
       },
     });
   }
@@ -991,5 +1040,13 @@ export class CandidateEditComponent implements OnInit {
     this.reactivateError = '';
     this.showVolunteerReactivatePrompt = false;
     this.router.navigate(['/admin/candidates', this.candidateId]);
+  }
+
+  ngOnDestroy(): void {
+    // Revoke any staged object URLs to prevent memory leaks
+    (['profiles', 'resumes', 'videos'] as const).forEach(t => {
+      const url = this.stagedPreviews[t];
+      if (url) URL.revokeObjectURL(url);
+    });
   }
 }

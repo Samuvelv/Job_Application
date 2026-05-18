@@ -354,8 +354,10 @@ export class CandidateRegisterComponent implements OnInit, OnDestroy {
   noticePeriodOptions = computed<SelectOption[]>(() =>
     this.master.noticePeriods().map(n => ({ value: n.id, label: n.label })));
 
-  targetLocationChipOptions = computed<ChipOption[]>(() =>
-    this.master.countries().map(c => ({ value: c.name, label: `${c.flag_emoji} ${c.name}` })));
+  targetLocationChipOptions = computed<ChipOption[]>(() => [
+    { value: 'Any Location', label: '🌍 Any Location' },
+    ...this.master.countries().map(c => ({ value: c.name, label: `${c.flag_emoji} ${c.name}` })),
+  ]);
 
   hobbyChipOptions = computed<ChipOption[]>(() =>
     this.master.hobbies().map(h => ({ value: h.name, label: h.name })));

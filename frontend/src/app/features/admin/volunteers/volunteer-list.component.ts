@@ -512,7 +512,9 @@ import { SearchableSelectComponent, SelectOption } from '../../../shared/compone
       .cl-view-toggle button:not(.active):hover { background: var(--th-surface, #fff); color: var(--th-text, #111); }
 
       /* ── Grid layout ─────────────────────────────────────────────── */
-      .vol-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 1.25rem; }
+      .vol-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.25rem; }
+      @media (min-width: 576px) and (max-width: 991px) { .vol-grid { grid-template-columns: repeat(2, 1fr); } }
+      @media (max-width: 575px) { .vol-grid { grid-template-columns: 1fr; } }
 
       /* ── Card ───────────────────────────────────────────────────── */
       .vol-card {
