@@ -304,16 +304,29 @@ export class CandidatesComponent implements OnInit {
   }
 
   toggleShortlist(emp: Candidate): void {
-    if (this.shortlistedIds.has(emp.id)) return; // shortlist is add-only in this view
-    this.recruiterService.addToShortlist(emp.id).subscribe({
-      next: () => {
-        this.shortlistedIds = new Set([...this.shortlistedIds, emp.id]);
-        this.toast.success(`${emp.first_name} ${emp.last_name} added to shortlist`);
-      },
-      error: (err) => {
-        this.toast.error(err?.error?.message ?? 'Failed to shortlist');
-      },
-    });
+    if (this.shortlistedIds.has(emp.id)) {
+      this.recruiterService.removeFromShortlist(emp.id).subscribe({
+        next: () => {
+          const updated = new Set(this.shortlistedIds);
+          updated.delete(emp.id);
+          this.shortlistedIds = updated;
+          this.toast.success(`${emp.first_name} ${emp.last_name} removed from shortlist`);
+        },
+        error: (err) => {
+          this.toast.error(err?.error?.message ?? 'Failed to remove from shortlist');
+        },
+      });
+    } else {
+      this.recruiterService.addToShortlist(emp.id).subscribe({
+        next: () => {
+          this.shortlistedIds = new Set([...this.shortlistedIds, emp.id]);
+          this.toast.success(`${emp.first_name} ${emp.last_name} added to shortlist`);
+        },
+        error: (err) => {
+          this.toast.error(err?.error?.message ?? 'Failed to shortlist');
+        },
+      });
+    }
   }
 
   openRequestModal(candidate: Candidate): void {
