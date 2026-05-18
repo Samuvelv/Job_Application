@@ -206,11 +206,10 @@ import { EmptyStateComponent } from '../../../shared/components/empty-state/empt
                 [disabled]="removing === entry.candidate_id"
                 title="Remove from shortlist">
                 @if (removing === entry.candidate_id) {
-                  <span class="spinner-border spinner-border-sm"></span>
+                  <span class="spinner-border spinner-border-sm" style="width:.75rem;height:.75rem;border-width:2px;"></span>
                 } @else {
                   <i class="bi bi-bookmark-x"></i>
                 }
-                <span>{{ removing === entry.candidate_id ? 'Removing…' : 'Remove' }}</span>
               </button>
             </div>
 
