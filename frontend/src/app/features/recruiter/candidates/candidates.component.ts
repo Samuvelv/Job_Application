@@ -27,7 +27,7 @@ import { RecruiterCandidateCardComponent } from '../../../shared/components/recr
     <app-page-header
       title="Search Talent"
       [subtitle]="pagination.total + ' candidates available'"
-      icon="bi-person-search"
+          icon="bi-person-lines-fill"
     />
 
     <!-- Top search bar -->
@@ -78,7 +78,7 @@ import { RecruiterCandidateCardComponent } from '../../../shared/components/recr
         </div>
       } @else if (candidates.length === 0) {
         <app-empty-state
-          icon="bi-person-search"
+      icon="bi-person-lines-fill"
           title="No candidates match your filters"
           subtitle="Try adjusting your search criteria."
         />
