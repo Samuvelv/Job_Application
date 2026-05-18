@@ -42,11 +42,30 @@ export async function list(req: Request, res: Response, next: NextFunction): Pro
     const filters = CandidateFilterSchema.parse(req.query);
     // Recruiters must not see placed candidates in search results
     if (req.user!.role === 'recruiter') (filters as any).excludePlaced = true;
-    const result  = await svc.listCandidates(filters);
-    // Strip sensitive fields from recruiter responses
+    const result = await svc.listCandidates(filters);
+
     if (req.user!.role === 'recruiter') {
-      result.data = result.data.map(({ plain_password, ...rest }: any) => rest);
+      // Get the recruiter record for this user
+      const recruiter = await getRecruiterByUserId(req.user!.sub);
+
+      // Fetch all approved agency interest requests for this recruiter
+      const approvedRows = await db('agency_interest_requests')
+        .where({ recruiter_id: recruiter.id, status: 'approved' })
+        .select('candidate_id');
+      const approvedSet = new Set<string>(approvedRows.map((r: any) => r.candidate_id));
+
+      // Per candidate: expose contact fields only if approved, always strip plain_password
+      result.data = result.data.map((c: any) => {
+        const { plain_password, ...rest } = c;
+        if (!approvedSet.has(rest.id)) {
+          rest.phone           = null;
+          rest.whatsapp_number = null;
+          rest.email           = null;
+        }
+        return rest;
+      });
     }
+
     res.json(result);
   } catch (err) { next(err); }
 }
