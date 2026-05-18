@@ -1,23 +1,27 @@
 // src/app/features/recruiter/candidates/candidates.component.ts
 import { Component, OnInit, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { ReactiveFormsModule, FormBuilder, FormControl } from '@angular/forms';
+import { ReactiveFormsModule, FormBuilder, FormControl, FormGroup, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
-import { catchError, of } from 'rxjs';
+import { catchError, forkJoin, of } from 'rxjs';
 import { CandidateService, PaginatedCandidates } from '../../../core/services/candidate.service';
 import { RecruiterService } from '../../../core/services/recruiter.service';
+import { InterestRequestService, InterestRequest } from '../../../core/services/interest-request.service';
 import { Candidate, CandidateFilters } from '../../../core/models/candidate.model';
 import { ToastService } from '../../../core/services/toast.service';
 import { PageHeaderComponent } from '../../../shared/components/page-header/page-header.component';
 import { EmptyStateComponent } from '../../../shared/components/empty-state/empty-state.component';
 import { CandidateFilterSidebarComponent } from '../../../shared/components/candidate-filter-sidebar/candidate-filter-sidebar.component';
+import { RecruiterCandidateCardComponent } from '../../../shared/components/recruiter-candidate-card/recruiter-candidate-card.component';
 
 @Component({
   selector: 'app-candidates',
   standalone: true,
   imports: [
     CommonModule, ReactiveFormsModule,
-    PageHeaderComponent, EmptyStateComponent, CandidateFilterSidebarComponent,
+    PageHeaderComponent, EmptyStateComponent,
+    CandidateFilterSidebarComponent,
+    RecruiterCandidateCardComponent,
   ],
   template: `
     <app-page-header
@@ -56,7 +60,7 @@ import { CandidateFilterSidebarComponent } from '../../../shared/components/cand
       </div>
     </div>
 
-    <!-- Filter sidebar (right-side off-canvas) -->
+    <!-- Filter sidebar -->
     <app-candidate-filter-sidebar
       #filterSidebar
       [showProfileStatus]="false"
@@ -67,117 +71,108 @@ import { CandidateFilterSidebarComponent } from '../../../shared/components/cand
     <!-- Results -->
     <div class="cfs-results">
 
-        @if (loading) {
-          <div class="loading-state">
-            <div class="spinner-border"></div>
-            <div class="loading-state__text">Searching candidates…</div>
-          </div>
-        } @else if (candidates.length === 0) {
-          <app-empty-state
-            icon="bi-person-search"
-            title="No candidates match your filters"
-            subtitle="Try adjusting your search criteria."
-          />
-        } @else {
-          <div class="row g-3">
-            @for (emp of candidates; track emp.id) {
-              <div class="col-12 col-xl-4 col-lg-6 col-md-6">
-                <div class="candidate-card" [class.candidate-card--shortlisted]="shortlistedIds.has(emp.id)">
+      @if (loading) {
+        <div class="loading-state">
+          <div class="spinner-border"></div>
+          <div class="loading-state__text">Searching candidates…</div>
+        </div>
+      } @else if (candidates.length === 0) {
+        <app-empty-state
+          icon="bi-person-search"
+          title="No candidates match your filters"
+          subtitle="Try adjusting your search criteria."
+        />
+      } @else {
+        <div class="cl-grid">
+          @for (emp of candidates; track emp.id) {
+            <app-recruiter-candidate-card
+              [candidate]="emp"
+              [interestRequest]="interestMap.get(emp.id) ?? null"
+              [isShortlisted]="shortlistedIds.has(emp.id)"
+              (shortlist)="toggleShortlist(emp)"
+              (requestInterest)="openRequestModal(emp)"
+            />
+          }
+        </div>
 
-                  <div class="candidate-card__band"></div>
+        <!-- Pagination -->
+        @if (pagination.pages > 1) {
+          <nav class="mt-4 d-flex justify-content-center">
+            <ul class="pagination pagination-sm mb-0">
+              <li class="page-item" [class.disabled]="pagination.page === 1">
+                <button class="page-link" (click)="goToPage(pagination.page - 1)">«</button>
+              </li>
+              @for (pg of pageNumbers(); track pg) {
+                <li class="page-item" [class.active]="pg === pagination.page">
+                  <button class="page-link" (click)="goToPage(pg)">{{ pg }}</button>
+                </li>
+              }
+              <li class="page-item" [class.disabled]="pagination.page === pagination.pages">
+                <button class="page-link" (click)="goToPage(pagination.page + 1)">»</button>
+              </li>
+            </ul>
+          </nav>
+        }
+      }
 
-                  <div class="candidate-card__header">
-                    @if (emp.profile_photo_url) {
-                      <img [src]="emp.profile_photo_url" alt="photo" class="candidate-card__avatar">
-                    } @else {
-                      <div class="candidate-card__avatar-placeholder">
-                        {{ emp.first_name[0] }}{{ emp.last_name[0] }}
-                      </div>
-                    }
-                    <div class="overflow-hidden flex-grow-1">
-                      <div class="candidate-card__name">{{ emp.first_name }} {{ emp.last_name }}</div>
-                      <div class="candidate-card__title">{{ emp.job_title || emp.occupation || '—' }}</div>
-                      @if (emp.current_city || emp.current_country) {
-                        <div class="candidate-card__location">
-                          <i class="bi bi-geo-alt"></i>
-                          {{ emp.current_city }}{{ emp.current_city && emp.current_country ? ', ' : '' }}{{ emp.current_country }}
-                        </div>
-                      }
-                    </div>
-                    @if (shortlistedIds.has(emp.id)) {
-                      <span class="candidate-card__bookmark candidate-card__bookmark--active" title="Shortlisted">
-                        <i class="bi bi-bookmark-star-fill"></i>
-                      </span>
-                    }
-                  </div>
+    </div>
 
-                  <div class="candidate-card__meta">
-                    @if (emp.industry) {
-                      <span class="cand-badge cand-badge--industry">
-                        <i class="bi bi-building"></i> {{ emp.industry }}
-                      </span>
-                    }
-                    @if (emp.years_experience != null) {
-                      <span class="cand-badge cand-badge--exp">
-                        <i class="bi bi-briefcase"></i> {{ emp.years_experience }} yrs
-                      </span>
-                    }
-                  </div>
-
-                  @if (emp.skills?.length) {
-                    <div class="candidate-card__skills">
-                      @for (s of emp.skills!.slice(0, 3); track s.skill_name) {
-                        <span class="tag-chip tag-chip--skill small">{{ s.skill_name }}</span>
-                      }
-                      @if (emp.skills!.length > 3) {
-                        <span class="cand-badge cand-badge--more">+{{ emp.skills!.length - 3 }}</span>
-                      }
-                    </div>
+    <!-- ── Interest Request Modal ── -->
+    @if (modalCandidate) {
+      <div class="modal-backdrop fade show" style="z-index:1050;" (click)="closeModal()"></div>
+      <div class="modal d-block" style="z-index:1055;" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered" (click)="$event.stopPropagation()">
+          <div class="modal-content">
+            <div class="modal-header">
+              <h5 class="modal-title">
+                <i class="bi bi-send-fill me-2 text-primary"></i>
+                Request Interest — {{ modalCandidate.first_name }} {{ modalCandidate.last_name }}
+              </h5>
+              <button type="button" class="btn-close" (click)="closeModal()"></button>
+            </div>
+            <form [formGroup]="requestForm" (ngSubmit)="submitRequest()">
+              <div class="modal-body">
+                <div class="mb-3">
+                  <label class="form-label fw-semibold">Sector <span class="text-danger">*</span></label>
+                  <input type="text" class="form-control" formControlName="sector"
+                    placeholder="e.g. Information Technology">
+                  @if (requestForm.get('sector')?.invalid && requestForm.get('sector')?.touched) {
+                    <div class="text-danger small mt-1">Sector is required.</div>
                   }
-
-                  <div class="candidate-card__footer">
-                    <button class="btn btn-sm btn-primary flex-grow-1 cand-view-btn"
-                      (click)="viewProfile(emp)">
-                      <i class="bi bi-person-lines-fill me-1"></i>View Profile
-                    </button>
-                    @if (!shortlistedIds.has(emp.id)) {
-                      <button class="btn btn-sm btn-outline-secondary candidate-card__shortlist-btn"
-                        (click)="shortlist(emp)" [disabled]="shortlisting === emp.id" title="Add to shortlist">
-                        @if (shortlisting === emp.id) {
-                          <span class="spinner-border spinner-border-sm"></span>
-                        } @else {
-                          <i class="bi bi-bookmark-plus"></i>
-                        }
-                      </button>
-                    }
-                  </div>
-
+                </div>
+                <div class="mb-3">
+                  <label class="form-label fw-semibold">Country <span class="text-danger">*</span></label>
+                  <input type="text" class="form-control" formControlName="country"
+                    placeholder="e.g. United Kingdom">
+                  @if (requestForm.get('country')?.invalid && requestForm.get('country')?.touched) {
+                    <div class="text-danger small mt-1">Country is required.</div>
+                  }
+                </div>
+                <div class="mb-3">
+                  <label class="form-label fw-semibold">Message <span class="text-danger">*</span></label>
+                  <textarea class="form-control" rows="4" formControlName="message"
+                    placeholder="Describe why you are interested in this candidate…"></textarea>
+                  @if (requestForm.get('message')?.invalid && requestForm.get('message')?.touched) {
+                    <div class="text-danger small mt-1">Message is required (min 10 characters).</div>
+                  }
                 </div>
               </div>
-            }
+              <div class="modal-footer">
+                <button type="button" class="btn btn-outline-secondary btn-sm"
+                  (click)="closeModal()" [disabled]="submitting">Cancel</button>
+                <button type="submit" class="btn btn-primary btn-sm"
+                  [disabled]="requestForm.invalid || submitting">
+                  @if (submitting) {
+                    <span class="spinner-border spinner-border-sm me-1"></span>
+                  }
+                  Submit Request
+                </button>
+              </div>
+            </form>
           </div>
-
-          <!-- Pagination -->
-          @if (pagination.pages > 1) {
-            <nav class="mt-4 d-flex justify-content-center">
-              <ul class="pagination pagination-sm mb-0">
-                <li class="page-item" [class.disabled]="pagination.page === 1">
-                  <button class="page-link" (click)="goToPage(pagination.page - 1)">«</button>
-                </li>
-                @for (pg of pageNumbers(); track pg) {
-                  <li class="page-item" [class.active]="pg === pagination.page">
-                    <button class="page-link" (click)="goToPage(pg)">{{ pg }}</button>
-                  </li>
-                }
-                <li class="page-item" [class.disabled]="pagination.page === pagination.pages">
-                  <button class="page-link" (click)="goToPage(pagination.page + 1)">»</button>
-                </li>
-              </ul>
-            </nav>
-          }
-        }
-
-      </div><!-- /cfs-results -->
+        </div>
+      </div>
+    }
   `,
 })
 export class CandidatesComponent implements OnInit {
@@ -192,6 +187,14 @@ export class CandidatesComponent implements OnInit {
   sidebarActiveCount = 0;
   hasActiveFilters = false;
 
+  /** Map of candidateId → most-recent InterestRequest for this recruiter */
+  interestMap = new Map<string, InterestRequest>();
+
+  /** Interest request modal state */
+  modalCandidate: Candidate | null = null;
+  submitting = false;
+  requestForm: FormGroup;
+
   searchCtrl = new FormControl('');
   private sidebarFilters: CandidateFilters = {};
 
@@ -200,8 +203,15 @@ export class CandidatesComponent implements OnInit {
     private router: Router,
     private candidateService: CandidateService,
     private recruiterService: RecruiterService,
+    private interestRequestService: InterestRequestService,
     private toast: ToastService,
-  ) {}
+  ) {
+    this.requestForm = this.fb.group({
+      sector:  ['', Validators.required],
+      country: ['', Validators.required],
+      message: ['', [Validators.required, Validators.minLength(10)]],
+    });
+  }
 
   ngOnInit(): void {
     this.loadShortlist();
@@ -214,9 +224,7 @@ export class CandidatesComponent implements OnInit {
     else this.filterSidebar.closeSidebar();
   }
 
-  onSidebarToggled(open: boolean): void {
-    this.sidebarVisible = open;
-  }
+  onSidebarToggled(open: boolean): void { this.sidebarVisible = open; }
 
   onFiltersApplied(filters: CandidateFilters): void {
     this.sidebarFilters = filters;
@@ -258,12 +266,31 @@ export class CandidatesComponent implements OnInit {
       page:   this.pagination.page,
       limit:  this.pagination.limit,
     };
-    this.candidateService.list(params)
-      .pipe(catchError(() => of(null as unknown as PaginatedCandidates)))
-      .subscribe((res) => {
-        this.loading = false;
-        if (res) { this.candidates = res.data; this.pagination = res.pagination; }
-      });
+
+    forkJoin({
+      candidates: this.candidateService.list(params).pipe(
+        catchError(() => of(null as unknown as PaginatedCandidates)),
+      ),
+      requests: this.interestRequestService.getMyRequests().pipe(
+        catchError(() => of({ requests: [] as InterestRequest[] })),
+      ),
+    }).subscribe(({ candidates, requests }) => {
+      this.loading = false;
+      if (candidates) {
+        this.candidates   = candidates.data;
+        this.pagination   = candidates.pagination;
+      }
+      // Build map: candidateId → most-recent request (sorted by created_at desc)
+      const sorted = [...(requests?.requests ?? [])].sort(
+        (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime(),
+      );
+      this.interestMap = new Map<string, InterestRequest>();
+      for (const req of sorted) {
+        if (!this.interestMap.has(req.candidate_id)) {
+          this.interestMap.set(req.candidate_id, req);
+        }
+      }
+    });
   }
 
   goToPage(page: number): void {
@@ -276,21 +303,50 @@ export class CandidatesComponent implements OnInit {
     return Array.from({ length: this.pagination.pages }, (_, i) => i + 1);
   }
 
-  viewProfile(emp: Candidate): void {
-    this.router.navigate(['/recruiter/candidates', emp.id]);
-  }
-
-  shortlist(emp: Candidate): void {
-    this.shortlisting = emp.id;
+  toggleShortlist(emp: Candidate): void {
+    if (this.shortlistedIds.has(emp.id)) return; // shortlist is add-only in this view
     this.recruiterService.addToShortlist(emp.id).subscribe({
       next: () => {
-        this.shortlisting = null;
         this.shortlistedIds = new Set([...this.shortlistedIds, emp.id]);
         this.toast.success(`${emp.first_name} ${emp.last_name} added to shortlist`);
       },
       error: (err) => {
-        this.shortlisting = null;
         this.toast.error(err?.error?.message ?? 'Failed to shortlist');
+      },
+    });
+  }
+
+  openRequestModal(candidate: Candidate): void {
+    this.modalCandidate = candidate;
+    this.requestForm.reset();
+    this.submitting = false;
+  }
+
+  closeModal(): void {
+    this.modalCandidate = null;
+    this.requestForm.reset();
+  }
+
+  submitRequest(): void {
+    if (this.requestForm.invalid || !this.modalCandidate) return;
+    this.submitting = true;
+    const { sector, country, message } = this.requestForm.value;
+    this.interestRequestService.create({
+      candidate_id: this.modalCandidate.id,
+      sector,
+      country,
+      message,
+    }).subscribe({
+      next: (res) => {
+        this.submitting = false;
+        // Add the new request to the map so the card immediately shows "Pending"
+        this.interestMap.set(res.request.candidate_id, res.request);
+        this.toast.success('Interest request submitted. Awaiting admin approval.');
+        this.closeModal();
+      },
+      error: (err) => {
+        this.submitting = false;
+        this.toast.error(err?.error?.message ?? 'Failed to submit request');
       },
     });
   }
