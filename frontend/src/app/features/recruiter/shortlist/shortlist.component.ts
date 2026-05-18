@@ -213,6 +213,7 @@ import { EmptyStateComponent } from '../../../shared/components/empty-state/empt
             <!-- Actions -->
             <div class="cl-card__actions">
               <a [routerLink]="['/recruiter/candidates', entry.candidate_id]"
+                [queryParams]="{ returnTo: 'shortlist' }"
                 class="cl-card__action cl-card__action--view">
                 <i class="bi bi-eye"></i><span>View</span>
               </a>
