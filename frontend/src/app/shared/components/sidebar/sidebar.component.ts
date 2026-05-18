@@ -91,7 +91,7 @@ export class SidebarComponent implements OnDestroy {
       case 'recruiter':
         return [
           { label: 'Dashboard',        icon: 'bi-grid-1x2-fill',     route: '/recruiter/dashboard' },
-          { label: 'Search Talent',    icon: 'bi-person-search',      route: '/recruiter/candidates' },
+          { label: 'Search Talent',    icon: 'bi-search',             route: '/recruiter/candidates' },
           { label: 'My Shortlist',     icon: 'bi-bookmark-star-fill', route: '/recruiter/shortlist' },
           { label: 'Interest Requests',icon: 'bi-briefcase-fill',     route: '/recruiter/interest-requests' },
         ];
