@@ -14,6 +14,20 @@ import { MasterDataService } from '../../../core/services/master-data.service';
   template: `
     <div class="cl-card">
 
+      <!-- ── Shortlisted badge (top-right corner) ── -->
+      @if (isShortlisted) {
+        <span style="
+          position:absolute;top:.55rem;right:.55rem;
+          display:inline-flex;align-items:center;gap:.25rem;
+          font-size:.62rem;font-weight:700;letter-spacing:.4px;text-transform:uppercase;
+          padding:.2rem .45rem;border-radius:999px;
+          background:rgba(16,185,129,.15);color:var(--th-emerald);
+          border:1px solid rgba(16,185,129,.35);
+          pointer-events:none;z-index:1;">
+          <i class="bi bi-bookmark-star-fill"></i> Shortlisted
+        </span>
+      }
+
       <!-- ── Hero: avatar + name + title ── -->
       <div class="cl-card__hero">
         <div class="cl-card__avatar-wrap">
@@ -137,13 +151,14 @@ import { MasterDataService } from '../../../core/services/master-data.service';
         </a>
 
         <button class="cl-card__action"
-          [class.cl-card__action--activate]="!isShortlisted"
-          [class.cl-card__action--deactivate]="isShortlisted"
+          [class.cl-card__action--forward]="!isShortlisted"
+          [class.cl-card__action--activate]="isShortlisted"
           (click)="shortlist.emit()"
-          [title]="isShortlisted ? 'Remove from shortlist' : 'Add to shortlist'">
+          [title]="isShortlisted ? 'Shortlisted' : 'Add to shortlist'">
           <i class="bi"
             [class.bi-bookmark-plus]="!isShortlisted"
             [class.bi-bookmark-star-fill]="isShortlisted"></i>
+          @if (isShortlisted) { <span>Saved</span> }
         </button>
 
         @if (requestStatus === 'pending') {
