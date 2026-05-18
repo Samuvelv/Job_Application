@@ -47,36 +47,49 @@ import { MasterDataService } from '../../../core/services/master-data.service';
         </div>
       </div>
 
-      <!-- ── Industry & Experience ── -->
-      <div style="display:flex;flex-direction:column;gap:.35rem;">
-        @if (candidate.industry) {
-          <div style="display:flex;align-items:center;gap:.5rem;">
-            <span style="font-size:.65rem;font-weight:600;text-transform:uppercase;letter-spacing:.4px;color:var(--th-text-muted);min-width:4.5rem;">Industry</span>
-            <span style="font-size:.8rem;font-weight:500;"><i class="bi bi-building me-1" style="opacity:.6;"></i>{{ candidate.industry }}</span>
-          </div>
-        }
-        @if (candidate.years_experience != null) {
-          <div style="display:flex;align-items:center;gap:.5rem;">
-            <span style="font-size:.65rem;font-weight:600;text-transform:uppercase;letter-spacing:.4px;color:var(--th-text-muted);min-width:4.5rem;">Experience</span>
-            <span style="font-size:.8rem;font-weight:500;"><i class="bi bi-clock-history me-1" style="opacity:.6;"></i>{{ candidate.years_experience }} {{ candidate.years_experience === 1 ? 'year' : 'years' }}</span>
-          </div>
-        }
-      </div>
+      <!-- ── Info rows ── -->
+      <div style="display:flex;flex-direction:column;gap:0;border:1px solid var(--th-border);border-radius:.625rem;overflow:hidden;">
 
-      <!-- ── Location ── -->
-      <div style="display:flex;flex-direction:column;gap:.35rem;">
+        @if (candidate.industry) {
+          <div style="display:flex;align-items:center;gap:0;padding:.42rem .7rem;border-bottom:1px solid var(--th-border);">
+            <span style="display:inline-flex;align-items:center;gap:.3rem;font-size:.66rem;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--th-text-muted);min-width:6.2rem;flex-shrink:0;">
+              <i class="bi bi-building" style="font-size:.72rem;color:var(--th-primary);opacity:.8;"></i>Industry
+              <span style="margin-left:auto;">:</span>
+            </span>
+            <span style="font-size:.8rem;font-weight:500;color:var(--th-text);padding-left:.5rem;">{{ candidate.industry }}</span>
+          </div>
+        }
+
+        @if (candidate.years_experience != null) {
+          <div style="display:flex;align-items:center;gap:0;padding:.42rem .7rem;border-bottom:1px solid var(--th-border);">
+            <span style="display:inline-flex;align-items:center;gap:.3rem;font-size:.66rem;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--th-text-muted);min-width:6.2rem;flex-shrink:0;">
+              <i class="bi bi-clock-history" style="font-size:.72rem;color:var(--th-primary);opacity:.8;"></i>Exp.
+              <span style="margin-left:auto;">:</span>
+            </span>
+            <span style="font-size:.8rem;font-weight:500;color:var(--th-text);padding-left:.5rem;">{{ candidate.years_experience }} {{ candidate.years_experience === 1 ? 'year' : 'years' }}</span>
+          </div>
+        }
+
         @if (candidate.current_country) {
-          <div style="display:flex;align-items:center;gap:.5rem;">
-            <span style="font-size:.65rem;font-weight:600;text-transform:uppercase;letter-spacing:.4px;color:var(--th-text-muted);min-width:4.5rem;">Location</span>
-            <span style="font-size:.8rem;font-weight:500;"><i class="bi bi-geo-alt-fill me-1" style="opacity:.6;"></i>{{ candidate.current_city ? candidate.current_city + ', ' : '' }}{{ candidate.current_country }}</span>
+          <div style="display:flex;align-items:center;gap:0;padding:.42rem .7rem;border-bottom:1px solid var(--th-border);">
+            <span style="display:inline-flex;align-items:center;gap:.3rem;font-size:.66rem;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--th-text-muted);min-width:6.2rem;flex-shrink:0;">
+              <i class="bi bi-geo-alt-fill" style="font-size:.72rem;color:var(--th-primary);opacity:.8;"></i>Location
+              <span style="margin-left:auto;">:</span>
+            </span>
+            <span style="font-size:.8rem;font-weight:500;color:var(--th-text);padding-left:.5rem;">{{ candidate.current_city ? candidate.current_city + ', ' : '' }}{{ candidate.current_country }}</span>
           </div>
         }
+
         @if (firstTarget) {
-          <div style="display:flex;align-items:center;gap:.5rem;">
-            <span style="font-size:.65rem;font-weight:600;text-transform:uppercase;letter-spacing:.4px;color:var(--th-text-muted);min-width:4.5rem;">Target</span>
-            <span style="font-size:.8rem;font-weight:500;"><i class="bi bi-send me-1" style="opacity:.6;"></i>{{ firstTarget }}</span>
+          <div style="display:flex;align-items:center;gap:0;padding:.42rem .7rem;">
+            <span style="display:inline-flex;align-items:center;gap:.3rem;font-size:.66rem;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--th-text-muted);min-width:6.2rem;flex-shrink:0;">
+              <i class="bi bi-send-fill" style="font-size:.72rem;color:var(--th-primary);opacity:.8;"></i>Target
+              <span style="margin-left:auto;">:</span>
+            </span>
+            <span style="font-size:.8rem;font-weight:500;color:var(--th-text);padding-left:.5rem;">{{ firstTarget }}</span>
           </div>
         }
+
       </div>
 
       <!-- ── Skills ── -->
