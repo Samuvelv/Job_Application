@@ -117,7 +117,19 @@ import { EmptyStateComponent } from '../../../shared/components/empty-state/empt
 
           <div class="cl-card">
 
-            <!-- Shortlisted badge -->
+            <!-- Added date badge (top-left) -->
+            <span style="
+              position:absolute;top:.55rem;left:.55rem;
+              display:inline-flex;align-items:center;gap:.25rem;
+              font-size:.62rem;font-weight:600;letter-spacing:.3px;
+              padding:.2rem .45rem;border-radius:999px;
+              background:var(--th-surface-alt);color:var(--th-text-muted);
+              border:1px solid var(--th-border);
+              pointer-events:none;z-index:1;">
+              <i class="bi bi-calendar3"></i> {{ entry.shortlisted_at | date:'dd MMM yyyy' }}
+            </span>
+
+            <!-- Shortlisted badge (top-right) -->
             <span style="
               position:absolute;top:.55rem;right:.55rem;
               display:inline-flex;align-items:center;gap:.25rem;
@@ -197,12 +209,6 @@ import { EmptyStateComponent } from '../../../shared/components/empty-state/empt
                 <i class="bi bi-sticky me-1"></i>{{ entry.notes }}
               </div>
             }
-
-            <!-- Added date -->
-            <div style="font-size:.7rem;color:var(--th-text-muted);display:flex;align-items:center;gap:.3rem;">
-              <i class="bi bi-calendar3" style="opacity:.6;"></i>
-              Added {{ entry.shortlisted_at | date:'dd MMM yyyy' }}
-            </div>
 
             <!-- Actions -->
             <div class="cl-card__actions">
