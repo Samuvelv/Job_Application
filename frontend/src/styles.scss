@@ -9675,8 +9675,8 @@ html { scroll-behavior: smooth; }
   border: 1px solid var(--th-border);
   &:hover {
     transform: translateY(-6px);
-    box-shadow: var(--th-shadow-card-hover);
-    border-color: rgba(80,70,229,.3);
+    box-shadow: 0 20px 48px -8px var(--card-shadow, rgba(80,70,229,.28)), 0 4px 16px rgba(0,0,0,.08);
+    border-color: transparent;
   }
 }
 .lp-why__icon {
@@ -9781,7 +9781,7 @@ html { scroll-behavior: smooth; }
   box-shadow: var(--th-shadow-card);
   position: relative;
   transition: var(--th-transition-slow);
-  &:hover { transform: translateY(-5px); box-shadow: var(--th-shadow-card-hover); border-color: rgba(80,70,229,.25); }
+  &:hover { transform: translateY(-5px); box-shadow: 0 20px 48px -8px var(--card-shadow, rgba(80,70,229,.28)), 0 4px 16px rgba(0,0,0,.08); border-color: transparent; }
   // Arrow connector between steps
   &:not(:last-child)::after {
     content: '\F285'; // bi-arrow-right
