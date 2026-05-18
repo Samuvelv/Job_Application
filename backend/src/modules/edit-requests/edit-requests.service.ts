@@ -269,13 +269,13 @@ export async function reviewEditRequest(
       ? JSON.parse(request.requested_data)
       : request.requested_data;
 
-    // Strip problematic fields from certificates before passing to updateCandidate.
+    // Strip `id` from certificates before passing to updateCandidate.
     // The edit-request form stores { id, file_url, ... } on each cert entry.
-    // Passing `id` into a fresh INSERT causes a PK/unique constraint violation,
-    // and `file_url` is not a writable column in this context.
+    // Passing `id` into a fresh INSERT causes a PK/unique constraint violation.
+    // `file_url` must be preserved so existing certificate files are not wiped.
     const { certificates, ...dataWithoutCerts } = requestedData;
     const cleanCerts = Array.isArray(certificates)
-      ? certificates.map(({ id: _id, file_url: _fu, ...rest }: any) => rest)
+      ? certificates.map(({ id: _id, ...rest }: any) => rest)
       : undefined;
     const dataToApply = {
       ...dataWithoutCerts,

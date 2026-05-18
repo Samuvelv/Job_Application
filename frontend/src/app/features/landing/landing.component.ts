@@ -393,8 +393,8 @@ function makeOptionalPhoneValidator(dialCtrl: string, numCtrl: string): Validato
 
     <div class="lp-features__grid">
       @for (w of whyDifferent; track w.title) {
-        <div class="lp-why__card">
-          <div class="lp-why__icon"><i class="bi {{ w.icon }}"></i></div>
+        <div class="lp-why__card" [style.--card-shadow]="w.shadow">
+          <div class="lp-why__icon" [style.background]="w.color"><i class="bi {{ w.icon }}"></i></div>
           <h3 class="lp-why__title">{{ w.title }}</h3>
           <p class="lp-why__desc">{{ w.desc }}</p>
         </div>
@@ -430,18 +430,18 @@ function makeOptionalPhoneValidator(dialCtrl: string, numCtrl: string): Validato
     <div class="lp-hiw__steps">
       @if (activeTab() === 'candidate') {
         @for (step of candidateSteps; track step.title) {
-          <div class="lp-hiw__step">
+          <div class="lp-hiw__step" [style.--card-shadow]="step.shadow">
             <div class="lp-hiw__step-num">{{ $index + 1 }}</div>
-            <div class="lp-hiw__step-icon"><i class="bi {{ step.icon }}"></i></div>
+            <div class="lp-hiw__step-icon" [style.background]="step.color"><i class="bi {{ step.icon }}"></i></div>
             <h4 class="lp-hiw__step-title">{{ step.title }}</h4>
             <p class="lp-hiw__step-desc">{{ step.desc }}</p>
           </div>
         }
       } @else {
         @for (step of recruiterSteps; track step.title) {
-          <div class="lp-hiw__step">
+          <div class="lp-hiw__step" [style.--card-shadow]="step.shadow">
             <div class="lp-hiw__step-num">{{ $index + 1 }}</div>
-            <div class="lp-hiw__step-icon"><i class="bi {{ step.icon }}"></i></div>
+            <div class="lp-hiw__step-icon" [style.background]="step.color"><i class="bi {{ step.icon }}"></i></div>
             <h4 class="lp-hiw__step-title">{{ step.title }}</h4>
             <p class="lp-hiw__step-desc">{{ step.desc }}</p>
           </div>
@@ -589,9 +589,6 @@ function makeOptionalPhoneValidator(dialCtrl: string, numCtrl: string): Validato
           <div class="lp-contact__social">
             <a class="lp-contact__social-btn" href="https://wa.me/919360454326" target="_blank" title="WhatsApp">
               <i class="bi bi-whatsapp"></i>
-            </a>
-            <a class="lp-contact__social-btn" href="https://www.youtube.com/@namakal2london" target="_blank" title="YouTube">
-              <i class="bi bi-youtube"></i>
             </a>
             <a class="lp-contact__social-btn" href="mailto:hello@ntlcareernexus.com" title="Email">
               <i class="bi bi-envelope-fill"></i>
@@ -901,31 +898,37 @@ export class LandingComponent implements OnInit, OnDestroy {
   whyDifferent = [
     {
       icon: 'bi-shield-check',
+      color: 'var(--th-gradient-primary)',
+      shadow: 'rgba(80,70,229,.28)',
       title: 'Closed & Verified Platform',
       desc: 'Not a public job board. Every candidate and recruiter is personally approved by our admin team before getting access.',
     },
     {
       icon: 'bi-people-fill',
+      color: 'var(--th-gradient-teal)',
+      shadow: 'rgba(20,184,166,.28)',
       title: 'We Do The Work For You',
       desc: 'You don\'t apply blindly to hundreds of jobs. Our team personally matches and forwards your profile to the right employer.',
     },
     {
       icon: 'bi-globe2',
+      color: 'var(--th-gradient-orange)',
+      shadow: 'rgba(249,115,22,.28)',
       title: 'Visa Sponsorship Focus Only',
       desc: 'We only work with employers who hold a valid sponsor licence. Every opportunity on our platform is real, legal, and verified.',
     },
   ];
 
   candidateSteps = [
-    { icon: 'bi-person-plus-fill',       title: 'Register & Pay',                      desc: 'Create your account and complete your registration. Our team will contact you within 24 hours to begin your profile setup.' },
-    { icon: 'bi-people-fill',            title: 'We Build & Match Your Profile',       desc: 'Our team personally reviews your background, builds your professional profile, and matches you to visa-sponsored employers in your chosen country.' },
-    { icon: 'bi-send-fill',              title: 'We Make the Introduction',            desc: 'We forward your profile directly to matched employers, arrange the interview introduction, and guide you through the visa process step by step.' },
+    { icon: 'bi-person-plus-fill', color: 'var(--th-gradient-primary)', shadow: 'rgba(80,70,229,.28)',   title: 'Register & Pay',                      desc: 'Admins create your profile and grant you access to the platform. Our team will contact you within 24 hours to begin your onboarding.' },
+    { icon: 'bi-people-fill',      color: 'var(--th-gradient-teal)',    shadow: 'rgba(20,184,166,.28)',  title: 'We Build & Match Your Profile',       desc: 'Our team personally reviews your background, builds your professional profile, and matches you to visa-sponsored employers in your chosen country.' },
+    { icon: 'bi-send-fill',        color: 'var(--th-gradient-pink)',    shadow: 'rgba(236,72,153,.28)',  title: 'We Make the Introduction',            desc: 'We forward your profile directly to matched employers, arrange the interview introduction, and guide you through the visa process step by step.' },
   ];
 
   recruiterSteps = [
-    { icon: 'bi-building-add',       title: 'Set Up Your Account',      desc: 'Admins create your recruiter profile and grant you access to the talent pool immediately.' },
-    { icon: 'bi-funnel',             title: 'Search & Shortlist',       desc: 'Use powerful filters to find candidates that match your requirements. Save the best to your shortlist.' },
-    { icon: 'bi-envelope-arrow-up-fill', title: 'Request & Hire',       desc: 'Request contact info for your top candidates. Once approved, reach out directly and make the hire.' },
+    { icon: 'bi-building-add',           color: 'var(--th-gradient-primary)', shadow: 'rgba(80,70,229,.28)',  title: 'Set Up Your Account',      desc: 'Admins create your recruiter profile and grant you access to the talent pool immediately.' },
+    { icon: 'bi-funnel',                 color: 'var(--th-gradient-orange)',  shadow: 'rgba(249,115,22,.28)', title: 'Search & Shortlist',       desc: 'Use powerful filters to find candidates that match your requirements. Save the best to your shortlist.' },
+    { icon: 'bi-envelope-arrow-up-fill', color: 'var(--th-gradient-teal)',   shadow: 'rgba(20,184,166,.28)', title: 'Request & Hire',           desc: 'Request contact info for your top candidates. Once approved, reach out directly and make the hire.' },
   ];
 
   testimonials = [
@@ -955,7 +958,6 @@ export class LandingComponent implements OnInit, OnDestroy {
     { icon: 'bi-whatsapp',       label: 'WhatsApp', value: '+91 93604 54326',        href: 'https://wa.me/919360454326?text=Hi%2C%20I%20would%20like%20to%20know%20more%20about%20NTL%20Career%20Nexus' },
     { icon: 'bi-telephone-fill', label: 'Call Us',  value: '+91 82485 38157',        href: 'tel:+918248538157' },
     { icon: 'bi-envelope-fill',  label: 'Email',    value: 'hello@ntlcareernexus.com', href: 'mailto:hello@ntlcareernexus.com' },
-    { icon: 'bi-youtube',        label: 'YouTube',  value: '@namakal2london',         href: 'https://www.youtube.com/@namakal2london' },
   ];
 
   contactInfoDetails = [

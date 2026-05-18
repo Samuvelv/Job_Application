@@ -33,13 +33,11 @@ import { MasterDataService } from '../../../core/services/master-data.service';
 
       <!-- ── Contact person ── -->
       <div class="rc-card__contact">
-        <i class="bi bi-person-fill rc-card__contact-icon"></i>
-        <div>
-          <div class="rc-card__contact-name">{{ recruiter.contact_name }}</div>
-          @if (recruiter.contact_job_title) {
-            <div class="rc-card__contact-role">{{ recruiter.contact_job_title }}</div>
-          }
-        </div>
+        <i class="bi bi-person-circle rc-card__contact-icon"></i>
+        <div class="rc-card__contact-name">{{ recruiter.contact_name }}</div>
+        @if (recruiter.contact_job_title) {
+          <div class="rc-card__contact-role">{{ recruiter.contact_job_title }}</div>
+        }
       </div>
 
       <!-- ── Location + industry + type + sponsor ── -->
@@ -100,29 +98,29 @@ import { MasterDataService } from '../../../core/services/master-data.service';
       </div>
 
       <!-- ── Actions ── -->
-      <div class="rc-card__actions">
+      <div class="cl-card__actions">
         <a [routerLink]="['/admin/recruiters', recruiter.id]"
-          class="rc-card__action rc-card__action--view" title="View profile">
+          class="cl-card__action cl-card__action--view" title="View profile">
           <i class="bi bi-eye"></i><span>View</span>
         </a>
-        <button class="rc-card__action rc-card__action--edit"
+        <button class="cl-card__action cl-card__action--edit"
           (click)="edit.emit()" title="Edit">
           <i class="bi bi-pencil"></i><span>Edit</span>
         </button>
-        <button class="rc-card__action rc-card__action--mail"
+        <button class="cl-card__action cl-card__action--mail"
           (click)="resendCreds.emit()" title="Resend credentials">
           <i class="bi bi-envelope"></i>
         </button>
-        <button class="rc-card__action"
-          [class.rc-card__action--activate]="!recruiter.is_active"
-          [class.rc-card__action--deactivate]="recruiter.is_active"
+        <button class="cl-card__action"
+          [class.cl-card__action--activate]="!recruiter.is_active"
+          [class.cl-card__action--deactivate]="recruiter.is_active"
           (click)="toggleActive.emit()"
           [title]="recruiter.is_active ? 'Deactivate' : 'Activate'">
           <i class="bi"
             [class.bi-person-check-fill]="!recruiter.is_active"
             [class.bi-person-x-fill]="recruiter.is_active"></i>
         </button>
-        <button class="rc-card__action rc-card__action--danger"
+        <button class="cl-card__action cl-card__action--danger"
           (click)="delete.emit()" title="Delete">
           <i class="bi bi-trash"></i>
         </button>

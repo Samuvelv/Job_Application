@@ -1,7 +1,7 @@
 // src/app/features/recruiter/candidates/candidate-profile.component.ts
 import { Component, OnInit, computed, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { ActivatedRoute, RouterLink } from '@angular/router';
+import { ActivatedRoute, RouterLink, Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { catchError, forkJoin, of } from 'rxjs';
 import { CandidateService } from '../../../core/services/candidate.service';
@@ -82,8 +82,8 @@ import { SearchableSelectComponent, SelectOption } from '../../../shared/compone
   template: `
     <!-- Back button + action bar -->
     <div class="d-flex align-items-center gap-3 mb-3 flex-wrap">
-      <a routerLink="/recruiter/candidates" class="btn btn-sm btn-outline-secondary">
-        <i class="bi bi-arrow-left me-1"></i>Back to Candidates
+      <a [routerLink]="backLink" class="btn btn-sm btn-outline-secondary">
+        <i class="bi bi-arrow-left me-1"></i>{{ backLabel }}
       </a>
 
       @if (candidate) {
@@ -386,6 +386,7 @@ export class RecruiterCandidateProfileComponent implements OnInit {
 
   constructor(
     private route: ActivatedRoute,
+    private router: Router,
     private candidateService: CandidateService,
     private recruiterService: RecruiterService,
     private contactRequestService: ContactRequestService,
@@ -393,9 +394,18 @@ export class RecruiterCandidateProfileComponent implements OnInit {
     private toast: ToastService,
   ) {}
 
+  backLink = '/recruiter/candidates';
+  backLabel = 'Back to Candidates';
+
   ngOnInit(): void {
     this.master.loadAll();
     this.candidateId = this.route.snapshot.paramMap.get('id')!;
+
+    const returnTo = this.route.snapshot.queryParamMap.get('returnTo');
+    if (returnTo === 'shortlist') {
+      this.backLink  = '/recruiter/shortlist';
+      this.backLabel = 'Back to Shortlist';
+    }
 
     forkJoin({
       profile:        this.candidateService.getById(this.candidateId).pipe(catchError(() => of(null))),

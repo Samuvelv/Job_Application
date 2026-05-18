@@ -136,7 +136,6 @@
   }
 
   <!-- ══ Section: Media ══════════════════════════════════════════════════════ -->
-  @if (!isExperienceBased) {
   <div class="form-card mb-4">
     <h5 class="card-section-header card-section-header--warning mb-4">
       <i class="bi bi-images"></i> Media &amp; Documents
@@ -148,7 +147,16 @@
         <div class="media-upload-cell">
           <div class="media-upload-cell__label"><i class="bi bi-person-circle me-1"></i> Profile Photo</div>
           <div class="media-upload-cell__preview">
-            @if (candidate.profile_photo_url) {
+            @if (stagedPreviews['profiles']) {
+              <img [src]="stagedPreviews['profiles']" alt="Staged photo" class="media-upload-cell__img">
+              <div class="media-upload-cell__actions">
+                <span class="badge bg-warning text-dark me-1" style="font-size:.65rem"><i class="bi bi-clock me-1"></i>Pending</span>
+                <button type="button" class="media-upload-cell__action-btn"
+                  (click)="openPreview('image', stagedPreviews['profiles']!, 'Profile Photo (Pending)')"><i class="bi bi-eye"></i></button>
+                <button type="button" class="media-upload-cell__action-btn media-upload-cell__action-btn--danger"
+                  title="Discard staged file" (click)="clearStaged('profiles')"><i class="bi bi-x-lg"></i></button>
+              </div>
+            } @else if (candidate.profile_photo_url) {
               <img [src]="candidate.profile_photo_url" alt="Profile photo" class="media-upload-cell__img"
                 (error)="$any($event.target).style.display='none'">
               <div class="media-upload-cell__actions">
@@ -161,9 +169,8 @@
               <div class="media-upload-cell__empty"><i class="bi bi-person-circle"></i><span>No photo</span></div>
             }
           </div>
-          <label class="btn btn-sm btn-outline-secondary w-100 mt-2" [class.disabled]="mediaLoading['profiles']">
-            @if (mediaLoading['profiles']) { <span class="spinner-border spinner-border-sm me-1"></span> Uploading… }
-            @else { <i class="bi bi-upload me-1"></i>{{ candidate.profile_photo_url ? 'Replace' : 'Upload' }} }
+          <label class="btn btn-sm btn-outline-secondary w-100 mt-2">
+            <i class="bi bi-upload me-1"></i>{{ (candidate.profile_photo_url || stagedPreviews['profiles']) ? 'Replace' : 'Upload' }}
             <input type="file" class="d-none" accept="image/jpeg,image/png,image/webp" (change)="uploadFile('profiles', $event)">
           </label>
           <div class="form-text text-muted mt-2">
@@ -177,7 +184,17 @@
         <div class="media-upload-cell">
           <div class="media-upload-cell__label"><i class="bi bi-file-earmark-person me-1"></i> Resume / CV</div>
           <div class="media-upload-cell__preview media-upload-cell__preview--doc">
-            @if (candidate.resume_url) {
+            @if (stagedFiles['resumes']) {
+              <i class="bi bi-file-earmark-pdf-fill media-upload-cell__doc-icon"></i>
+              <span class="media-upload-cell__doc-label">{{ stagedFiles['resumes']!.name }}</span>
+              <div class="media-upload-cell__actions">
+                <span class="badge bg-warning text-dark me-1" style="font-size:.65rem"><i class="bi bi-clock me-1"></i>Pending</span>
+                <button type="button" class="media-upload-cell__action-btn"
+                  (click)="openPreview('pdf', stagedPreviews['resumes']!, 'Resume / CV (Pending)')"><i class="bi bi-eye"></i></button>
+                <button type="button" class="media-upload-cell__action-btn media-upload-cell__action-btn--danger"
+                  title="Discard staged file" (click)="clearStaged('resumes')"><i class="bi bi-x-lg"></i></button>
+              </div>
+            } @else if (candidate.resume_url) {
               <i class="bi bi-file-earmark-pdf-fill media-upload-cell__doc-icon"></i>
               <span class="media-upload-cell__doc-label">Resume / CV</span>
               <div class="media-upload-cell__actions">
@@ -190,9 +207,8 @@
               <div class="media-upload-cell__empty"><i class="bi bi-file-earmark-person"></i><span>No resume</span></div>
             }
           </div>
-          <label class="btn btn-sm btn-outline-secondary w-100 mt-2" [class.disabled]="mediaLoading['resumes']">
-            @if (mediaLoading['resumes']) { <span class="spinner-border spinner-border-sm me-1"></span> Uploading… }
-            @else { <i class="bi bi-upload me-1"></i>{{ candidate.resume_url ? 'Replace' : 'Upload' }} }
+          <label class="btn btn-sm btn-outline-secondary w-100 mt-2">
+            <i class="bi bi-upload me-1"></i>{{ (candidate.resume_url || stagedFiles['resumes']) ? 'Replace' : 'Upload' }}
             <input type="file" class="d-none" accept=".pdf,.doc,.docx" (change)="uploadFile('resumes', $event)">
           </label>
         </div>
@@ -203,7 +219,17 @@
         <div class="media-upload-cell">
           <div class="media-upload-cell__label"><i class="bi bi-camera-video me-1"></i> Intro Video</div>
           <div class="media-upload-cell__preview media-upload-cell__preview--doc">
-            @if (candidate.intro_video_url) {
+            @if (stagedFiles['videos']) {
+              <i class="bi bi-play-circle-fill media-upload-cell__doc-icon" style="color:var(--th-purple)"></i>
+              <span class="media-upload-cell__doc-label">{{ stagedFiles['videos']!.name }}</span>
+              <div class="media-upload-cell__actions">
+                <span class="badge bg-warning text-dark me-1" style="font-size:.65rem"><i class="bi bi-clock me-1"></i>Pending</span>
+                <button type="button" class="media-upload-cell__action-btn"
+                  (click)="openPreview('video', stagedPreviews['videos']!, 'Intro Video (Pending)')"><i class="bi bi-eye"></i></button>
+                <button type="button" class="media-upload-cell__action-btn media-upload-cell__action-btn--danger"
+                  title="Discard staged file" (click)="clearStaged('videos')"><i class="bi bi-x-lg"></i></button>
+              </div>
+            } @else if (candidate.intro_video_url) {
               <i class="bi bi-play-circle-fill media-upload-cell__doc-icon" style="color:var(--th-purple)"></i>
               <span class="media-upload-cell__doc-label">Intro Video</span>
               <div class="media-upload-cell__actions">
@@ -216,9 +242,8 @@
               <div class="media-upload-cell__empty"><i class="bi bi-camera-video"></i><span>No video</span></div>
             }
           </div>
-          <label class="btn btn-sm btn-outline-secondary w-100 mt-2" [class.disabled]="mediaLoading['videos']">
-            @if (mediaLoading['videos']) { <span class="spinner-border spinner-border-sm me-1"></span> Uploading… }
-            @else { <i class="bi bi-upload me-1"></i>{{ candidate.intro_video_url ? 'Replace' : 'Upload' }} }
+          <label class="btn btn-sm btn-outline-secondary w-100 mt-2">
+            <i class="bi bi-upload me-1"></i>{{ (candidate.intro_video_url || stagedFiles['videos']) ? 'Replace' : 'Upload' }}
             <input type="file" class="d-none" accept="video/mp4,video/webm,video/ogg" (change)="uploadFile('videos', $event)">
           </label>
           <div class="text-muted mt-1" style="font-size:.7rem">MP4, WEBM — max 200 MB</div>
@@ -379,7 +404,7 @@
 
     </div>
   </div>
-  } <!-- end @if (!isExperienceBased) for Media & Documents -->
+
 
   <!-- ── File Preview Overlay ────────────────────────────────────────────────── -->
   @if (previewOpen) {

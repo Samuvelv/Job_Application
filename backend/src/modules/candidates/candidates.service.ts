@@ -619,7 +619,7 @@ export async function resendCredentials(candidateId: string): Promise<void> {
   const candidate = await db('candidates as e')
     .join('users as u', 'u.id', 'e.user_id')
     .where('e.id', candidateId)
-    .select('u.email', 'e.first_name', 'e.last_name', 'e.plain_password')
+    .select('u.email', 'e.first_name', 'e.last_name', 'e.plain_password', 'e.login_id')
     .first();
 
   if (!candidate) throw new AppError(404, 'Candidate not found');
@@ -629,6 +629,7 @@ export async function resendCredentials(candidateId: string): Promise<void> {
     candidate.email,
     candidate.plain_password,
     `${candidate.first_name} ${candidate.last_name}`,
+    candidate.login_id ?? 0,
   );
 }
 

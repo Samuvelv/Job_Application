@@ -61,6 +61,7 @@ export interface ShortlistEntry {
   profile_photo_url?: string;
   email?: string;
   profile_status?: string;
+  target_locations?: string[];
 }
 
 export interface RecruiterFilters {
