@@ -202,13 +202,16 @@ import { EmptyStateComponent } from '../../../shared/components/empty-state/empt
               </a>
 
               <button class="cl-card__action cl-card__action--danger"
+                style="width:auto;padding:.3rem .55rem;"
                 (click)="remove(entry)"
                 [disabled]="removing === entry.candidate_id"
                 title="Remove from shortlist">
                 @if (removing === entry.candidate_id) {
                   <span class="spinner-border spinner-border-sm" style="width:.75rem;height:.75rem;border-width:2px;"></span>
+                  <span>Removing…</span>
                 } @else {
                   <i class="bi bi-bookmark-x"></i>
+                  <span>Remove</span>
                 }
               </button>
             </div>
