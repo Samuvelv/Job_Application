@@ -473,6 +473,7 @@ export async function getShortlist(recruiterId: string) {
       'e.years_experience',
       'e.profile_photo_url',
       'e.profile_status',
+      'e.target_locations',
       'u.email',
     )
     .where('s.recruiter_id', recruiterId)
