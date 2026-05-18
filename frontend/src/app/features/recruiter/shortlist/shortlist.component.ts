@@ -24,12 +24,10 @@ import { EmptyStateComponent } from '../../../shared/components/empty-state/empt
       </a>
     </app-page-header>
 
-    <!-- Filter card (client-side) -->
+    <!-- Filter bar -->
     @if (!loading && allEntries.length > 0) {
       <div class="filter-card">
         <form [formGroup]="filterForm" (ngSubmit)="applyFilters()">
-
-          <!-- Basic row -->
           <div class="filter-card__search-row">
             <div class="filter-card__search-input-wrap">
               <i class="bi bi-search"></i>
@@ -45,8 +43,7 @@ import { EmptyStateComponent } from '../../../shared/components/empty-state/empt
               <button type="button" class="filter-card__adv-toggle"
                 [class.is-open]="advOpen"
                 (click)="advOpen = !advOpen">
-                <i class="bi bi-sliders2"></i>
-                Advanced
+                <i class="bi bi-sliders2"></i> Advanced
                 @if (activeAdvCount > 0) {
                   <span class="filter-card__badge">{{ activeAdvCount }}</span>
                 }
@@ -60,7 +57,6 @@ import { EmptyStateComponent } from '../../../shared/components/empty-state/empt
             </div>
           </div>
 
-          <!-- Advanced panel -->
           <div class="filter-card__advanced" [class.is-open]="advOpen">
             <div class="filter-card__advanced-inner">
               <div class="row g-2">
@@ -92,7 +88,6 @@ import { EmptyStateComponent } from '../../../shared/components/empty-state/empt
               </div>
             </div>
           </div>
-
         </form>
       </div>
     }
@@ -117,79 +112,110 @@ import { EmptyStateComponent } from '../../../shared/components/empty-state/empt
         subtitle="Try adjusting your search criteria."
       />
     } @else {
-      <div class="row g-3">
+      <div class="cl-grid">
         @for (entry of entries; track entry.shortlist_id) {
-          <div class="col-md-6 col-lg-4">
-            <div class="candidate-card" [class.candidate-card--placed]="entry.profile_status === 'placed'">
 
-              <!-- Placed banner -->
-              @if (entry.profile_status === 'placed') {
-                <div class="d-flex align-items-center gap-2 px-2 py-1 mb-2 rounded"
-                  style="background:var(--bs-success-bg-subtle);border:1px solid var(--bs-success-border-subtle)">
-                  <i class="bi bi-patch-check-fill text-success" style="font-size:.9rem"></i>
-                  <span class="small fw-semibold text-success">Candidate Placed</span>
-                  <span class="small text-muted ms-auto">No longer available</span>
-                </div>
-              }
+          <div class="cl-card">
 
-              <!-- Avatar + name -->
-              <div class="candidate-card__header">
+            <!-- Shortlisted badge -->
+            <span style="
+              position:absolute;top:.55rem;right:.55rem;
+              display:inline-flex;align-items:center;gap:.25rem;
+              font-size:.62rem;font-weight:700;letter-spacing:.4px;text-transform:uppercase;
+              padding:.2rem .45rem;border-radius:999px;
+              background:rgba(245,158,11,.13);color:#f59e0b;
+              border:1px solid rgba(245,158,11,.4);
+              pointer-events:none;z-index:1;">
+              <i class="bi bi-bookmark-star-fill"></i> Shortlisted
+            </span>
+
+            <!-- Hero -->
+            <div class="cl-card__hero">
+              <div class="cl-card__avatar-wrap">
                 @if (entry.profile_photo_url) {
-                  <img [src]="entry.profile_photo_url" alt="photo"
-                    class="rounded-circle flex-shrink-0"
-                    style="width:52px;height:52px;object-fit:cover;">
+                  <img [src]="entry.profile_photo_url" alt=""
+                    class="cl-card__avatar"
+                    (error)="$any($event.target).style.display='none'">
                 } @else {
-                  <div class="candidate-card__avatar-placeholder">
+                  <div class="cl-card__avatar-placeholder">
                     {{ entry.first_name[0] }}{{ entry.last_name[0] }}
                   </div>
                 }
-                <div class="overflow-hidden">
-                  <div class="candidate-card__name">{{ entry.first_name }} {{ entry.last_name }}</div>
-                  <div class="candidate-card__title">{{ entry.job_title || entry.occupation || '—' }}</div>
-                </div>
               </div>
+              <div class="cl-card__name">{{ entry.first_name }} {{ entry.last_name }}</div>
+              <div class="cl-card__job">{{ entry.job_title || entry.occupation || '—' }}</div>
+            </div>
 
-              <!-- Meta -->
-              <div class="small text-muted mb-2">
-                @if (entry.industry) {
-                  <span class="badge bg-light text-dark border me-1">{{ entry.industry }}</span>
-                }
-                @if (entry.current_city || entry.current_country) {
-                  <span>
-                    <i class="bi bi-geo-alt me-1"></i>{{ entry.current_city }}{{ entry.current_city && entry.current_country ? ', ' : '' }}{{ entry.current_country }}
+            <!-- Info rows -->
+            <div style="display:flex;flex-direction:column;gap:0;border:1px solid var(--th-border);border-radius:.625rem;overflow:hidden;">
+
+              @if (entry.industry) {
+                <div style="display:flex;align-items:center;gap:0;padding:.42rem .7rem;border-bottom:1px solid var(--th-border);">
+                  <span style="display:inline-flex;align-items:center;gap:.3rem;font-size:.66rem;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--th-text-muted);min-width:6.2rem;flex-shrink:0;">
+                    <i class="bi bi-building" style="font-size:.72rem;color:var(--th-primary);opacity:.8;"></i>Industry
+                    <span style="margin-left:auto;">:</span>
                   </span>
-                }
-              </div>
+                  <span style="font-size:.8rem;font-weight:500;color:var(--th-text);padding-left:.5rem;">{{ entry.industry }}</span>
+                </div>
+              }
 
               @if (entry.years_experience != null) {
-                <div class="small text-muted mb-2">
-                  <i class="bi bi-briefcase me-1"></i>{{ entry.years_experience }} yrs experience
+                <div style="display:flex;align-items:center;gap:0;padding:.42rem .7rem;border-bottom:1px solid var(--th-border);">
+                  <span style="display:inline-flex;align-items:center;gap:.3rem;font-size:.66rem;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--th-text-muted);min-width:6.2rem;flex-shrink:0;">
+                    <i class="bi bi-clock-history" style="font-size:.72rem;color:var(--th-primary);opacity:.8;"></i>Exp.
+                    <span style="margin-left:auto;">:</span>
+                  </span>
+                  <span style="font-size:.8rem;font-weight:500;color:var(--th-text);padding-left:.5rem;">{{ entry.years_experience }} {{ entry.years_experience === 1 ? 'year' : 'years' }}</span>
                 </div>
               }
 
-              @if (entry.notes) {
-                <div class="alert alert-light py-1 px-2 small mb-2">
-                  <i class="bi bi-sticky me-1"></i><span class="text-muted">Note:</span> {{ entry.notes }}
+              @if (entry.current_country) {
+                <div style="display:flex;align-items:center;gap:0;padding:.42rem .7rem;">
+                  <span style="display:inline-flex;align-items:center;gap:.3rem;font-size:.66rem;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--th-text-muted);min-width:6.2rem;flex-shrink:0;">
+                    <i class="bi bi-geo-alt-fill" style="font-size:.72rem;color:var(--th-primary);opacity:.8;"></i>Location
+                    <span style="margin-left:auto;">:</span>
+                  </span>
+                  <span style="font-size:.8rem;font-weight:500;color:var(--th-text);padding-left:.5rem;">{{ entry.current_city ? entry.current_city + ', ' : '' }}{{ entry.current_country }}</span>
                 </div>
               }
-
-              <div class="text-muted small mb-3">
-                <i class="bi bi-calendar3 me-1"></i>Added {{ entry.shortlisted_at | date:'dd MMM yyyy' }}
-              </div>
-
-              <div class="candidate-card__footer">
-                <button class="btn btn-sm btn-outline-danger flex-grow-1"
-                  (click)="remove(entry)" [disabled]="removing === entry.candidate_id">
-                  @if (removing === entry.candidate_id) {
-                    <span class="spinner-border spinner-border-sm me-1"></span>Removing…
-                  } @else {
-                    <i class="bi bi-bookmark-x me-1"></i>Remove from Shortlist
-                  }
-                </button>
-              </div>
 
             </div>
+
+            <!-- Note (if any) -->
+            @if (entry.notes) {
+              <div style="font-size:.75rem;color:var(--th-text-muted);background:var(--th-surface-alt);border:1px solid var(--th-border);border-radius:.5rem;padding:.4rem .6rem;">
+                <i class="bi bi-sticky me-1"></i>{{ entry.notes }}
+              </div>
+            }
+
+            <!-- Added date -->
+            <div style="font-size:.7rem;color:var(--th-text-muted);display:flex;align-items:center;gap:.3rem;">
+              <i class="bi bi-calendar3" style="opacity:.6;"></i>
+              Added {{ entry.shortlisted_at | date:'dd MMM yyyy' }}
+            </div>
+
+            <!-- Actions -->
+            <div class="cl-card__actions">
+              <a [routerLink]="['/recruiter/candidates', entry.candidate_id]"
+                class="cl-card__action cl-card__action--view">
+                <i class="bi bi-eye"></i><span>View</span>
+              </a>
+
+              <button class="cl-card__action cl-card__action--danger"
+                (click)="remove(entry)"
+                [disabled]="removing === entry.candidate_id"
+                title="Remove from shortlist">
+                @if (removing === entry.candidate_id) {
+                  <span class="spinner-border spinner-border-sm"></span>
+                } @else {
+                  <i class="bi bi-bookmark-x"></i>
+                }
+                <span>{{ removing === entry.candidate_id ? 'Removing…' : 'Remove' }}</span>
+              </button>
+            </div>
+
           </div>
+
         }
       </div>
     }
@@ -217,9 +243,7 @@ export class ShortlistComponent implements OnInit {
     });
   }
 
-  ngOnInit(): void {
-    this.load();
-  }
+  ngOnInit(): void { this.load(); }
 
   get activeAdvCount(): number {
     const v = this.filterForm.value;
@@ -228,21 +252,20 @@ export class ShortlistComponent implements OnInit {
   }
 
   get hasAnyFilter(): boolean {
-    const v = this.filterForm.value;
-    return Object.values(v).some(x => x !== null && x !== '' && x !== undefined);
+    return Object.values(this.filterForm.value).some(x => x !== null && x !== '' && x !== undefined);
   }
 
   applyFilters(): void {
     const v = this.filterForm.value;
-    const search  = (v.search || '').toLowerCase().trim();
+    const search   = (v.search  || '').toLowerCase().trim();
     const industry = (v.industry || '').toLowerCase().trim();
     const country  = (v.currentCountry || '').toLowerCase().trim();
     const minYrs   = v.yearsExperience ? +v.yearsExperience : null;
 
     this.entries = this.allEntries.filter(e => {
-      if (search && !`${e.first_name} ${e.last_name} ${e.job_title || ''} ${e.occupation || ''}`.toLowerCase().includes(search)) return false;
-      if (industry && !(e.industry || '').toLowerCase().includes(industry)) return false;
-      if (country  && !(e.current_country || '').toLowerCase().includes(country)) return false;
+      if (search   && !`${e.first_name} ${e.last_name} ${e.job_title || ''} ${e.occupation || ''}`.toLowerCase().includes(search))   return false;
+      if (industry && !(e.industry        || '').toLowerCase().includes(industry)) return false;
+      if (country  && !(e.current_country || '').toLowerCase().includes(country))  return false;
       if (minYrs !== null && (e.years_experience == null || e.years_experience < minYrs)) return false;
       return true;
     });
@@ -270,9 +293,9 @@ export class ShortlistComponent implements OnInit {
     this.recruiterService.removeFromShortlist(entry.candidate_id).subscribe({
       next: () => {
         this.removing   = null;
-        this.allEntries = this.allEntries.filter((e) => e.candidate_id !== entry.candidate_id);
-        this.entries    = this.entries.filter((e) => e.candidate_id !== entry.candidate_id);
-        this.toast.success('Removed from shortlist');
+        this.allEntries = this.allEntries.filter(e => e.candidate_id !== entry.candidate_id);
+        this.entries    = this.entries.filter(e => e.candidate_id !== entry.candidate_id);
+        this.toast.success(`${entry.first_name} ${entry.last_name} removed from shortlist`);
       },
       error: (err) => {
         this.removing = null;
