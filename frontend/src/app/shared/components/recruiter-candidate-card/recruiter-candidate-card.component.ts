@@ -152,13 +152,14 @@ import { MasterDataService } from '../../../core/services/master-data.service';
 
         <button class="cl-card__action"
           [class.cl-card__action--forward]="!isShortlisted"
-          [class.cl-card__action--activate]="isShortlisted"
+          [style.color]="isShortlisted ? '#f59e0b' : null"
+          [style.border-color]="isShortlisted ? 'rgba(245,158,11,.5)' : null"
+          [style.background]="isShortlisted ? 'rgba(245,158,11,.12)' : null"
           (click)="shortlist.emit()"
           [title]="isShortlisted ? 'Shortlisted' : 'Add to shortlist'">
           <i class="bi"
             [class.bi-bookmark-plus]="!isShortlisted"
             [class.bi-bookmark-star-fill]="isShortlisted"></i>
-          @if (isShortlisted) { <span>Saved</span> }
         </button>
 
         @if (requestStatus === 'pending') {
