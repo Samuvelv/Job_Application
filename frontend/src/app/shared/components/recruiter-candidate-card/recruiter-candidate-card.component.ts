@@ -47,61 +47,35 @@ import { MasterDataService } from '../../../core/services/master-data.service';
         </div>
       </div>
 
-      <!-- ── Location chips ── -->
-      <div class="cl-card__location">
-        @if (candidate.nationality) {
-          <span class="cl-card__loc-chip">
-            🪪 {{ flagOf(candidate.nationality) }} {{ candidate.nationality }}
-          </span>
-        }
-        @if (candidate.current_country) {
-          <span class="cl-card__loc-chip">
-            <i class="bi bi-geo-alt-fill"></i>
-            {{ flagOf(candidate.current_country) }}
-            {{ candidate.current_city ? candidate.current_city + ', ' : '' }}{{ candidate.current_country }}
-          </span>
-        }
-        @if (firstTarget) {
-          <span class="cl-card__loc-chip cl-card__loc-chip--target">
-            → {{ flagOf(firstTarget) }} {{ firstTarget }}
-          </span>
-        }
-      </div>
-
-      <!-- ── Stats row: industry · exp · english ── -->
-      <div class="cl-card__stats">
+      <!-- ── Industry & Experience ── -->
+      <div style="display:flex;flex-direction:column;gap:.35rem;">
         @if (candidate.industry) {
-          <span class="cl-card__stat">
-            <i class="bi bi-building"></i> {{ candidate.industry }}
-          </span>
+          <div style="display:flex;align-items:center;gap:.5rem;">
+            <span style="font-size:.65rem;font-weight:600;text-transform:uppercase;letter-spacing:.4px;color:var(--th-text-muted);min-width:4.5rem;">Industry</span>
+            <span style="font-size:.8rem;font-weight:500;"><i class="bi bi-building me-1" style="opacity:.6;"></i>{{ candidate.industry }}</span>
+          </div>
         }
         @if (candidate.years_experience != null) {
-          <span class="cl-card__stat">
-            <i class="bi bi-clock-history"></i> {{ candidate.years_experience }} yrs
-          </span>
-        }
-        @if (englishLabel) {
-          <span class="cl-card__stat">
-            <i class="bi bi-translate"></i> {{ englishLabel }}
-          </span>
+          <div style="display:flex;align-items:center;gap:.5rem;">
+            <span style="font-size:.65rem;font-weight:600;text-transform:uppercase;letter-spacing:.4px;color:var(--th-text-muted);min-width:4.5rem;">Experience</span>
+            <span style="font-size:.8rem;font-weight:500;"><i class="bi bi-clock-history me-1" style="opacity:.6;"></i>{{ candidate.years_experience }} {{ candidate.years_experience === 1 ? 'year' : 'years' }}</span>
+          </div>
         }
       </div>
 
-      <!-- ── Flags: video + CV format ── -->
-      <div class="cl-card__flags">
-        <span class="cl-card__flag"
-          [class.cl-card__flag--has-video]="!!candidate.intro_video_url"
-          [class.cl-card__flag--no-video]="!candidate.intro_video_url">
-          @if (candidate.intro_video_url) {
-            <i class="bi bi-camera-video-fill"></i> Video
-          } @else {
-            <i class="bi bi-camera-video-off"></i> No video
-          }
-        </span>
-        @if (cvFormatLabel) {
-          <span class="cl-card__flag cl-card__flag--cv">
-            <i class="bi bi-file-earmark-text"></i> {{ cvFormatLabel }}
-          </span>
+      <!-- ── Location ── -->
+      <div style="display:flex;flex-direction:column;gap:.35rem;">
+        @if (candidate.current_country) {
+          <div style="display:flex;align-items:center;gap:.5rem;">
+            <span style="font-size:.65rem;font-weight:600;text-transform:uppercase;letter-spacing:.4px;color:var(--th-text-muted);min-width:4.5rem;">Location</span>
+            <span style="font-size:.8rem;font-weight:500;"><i class="bi bi-geo-alt-fill me-1" style="opacity:.6;"></i>{{ candidate.current_city ? candidate.current_city + ', ' : '' }}{{ candidate.current_country }}</span>
+          </div>
+        }
+        @if (firstTarget) {
+          <div style="display:flex;align-items:center;gap:.5rem;">
+            <span style="font-size:.65rem;font-weight:600;text-transform:uppercase;letter-spacing:.4px;color:var(--th-text-muted);min-width:4.5rem;">Target</span>
+            <span style="font-size:.8rem;font-weight:500;"><i class="bi bi-send me-1" style="opacity:.6;"></i>{{ firstTarget }}</span>
+          </div>
         }
       </div>
 
