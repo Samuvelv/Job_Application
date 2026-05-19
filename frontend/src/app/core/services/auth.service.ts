@@ -48,11 +48,13 @@ export class AuthService {
     this.currentUser.set(null);
     this.candidateStatus.set(null);
 
-    // Notify user
+    // Show toast first — delay redirect so the user can read it before leaving the page
     this.toast.warning('Your session has expired. Please login again.');
 
-    // Redirect to login
-    this.router.navigate(['/login']);
+    setTimeout(() => {
+      this.sessionExpired = false; // reset so the guard works after fresh login
+      this.router.navigate(['/login']);
+    }, 1500);
   }
 
   // ── Login ────────────────────────────────────────────────────────────────────

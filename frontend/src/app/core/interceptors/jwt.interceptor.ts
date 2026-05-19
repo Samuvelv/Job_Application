@@ -5,7 +5,10 @@ import { Observable, switchMap, catchError, throwError, BehaviorSubject, filter,
 import { AuthService } from '../services/auth.service';
 
 let isRefreshing = false;
+// Use EMPTY_TOKEN sentinel so queued requests can detect failure vs. success
 const refreshSubject = new BehaviorSubject<string | null>(null);
+
+const REFRESH_FAILED = '__REFRESH_FAILED__';
 
 export const jwtInterceptor: HttpInterceptorFn = (
   req: HttpRequest<unknown>,
@@ -50,7 +53,9 @@ function handle401(
       }),
       catchError((err) => {
         isRefreshing = false;
-        refreshSubject.next(null); // unblock any queued requests
+        // Signal failure to all queued requests so they don't hang forever
+        refreshSubject.next(REFRESH_FAILED);
+        refreshSubject.next(null); // reset back to idle
         auth.handleSessionExpiry();
         return throwError(() => err);
       }),
@@ -61,6 +66,12 @@ function handle401(
   return refreshSubject.pipe(
     filter((t): t is string => t !== null),
     take(1),
-    switchMap((token) => next(addToken(req, token))),
+    switchMap((token) => {
+      // If refresh failed, discard queued request silently (session expiry already handled)
+      if (token === REFRESH_FAILED) {
+        return throwError(() => new Error('Session expired'));
+      }
+      return next(addToken(req, token));
+    }),
   );
 }
