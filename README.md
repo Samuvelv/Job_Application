@@ -6,14 +6,17 @@ A full-stack job application platform with an **Angular** frontend, **Node.js/Ex
 
 ## Tech Stack
 
-| Layer    | Technology                          |
-|----------|-------------------------------------|
-| Frontend | Angular 17, Bootstrap 5             |
-| Backend  | Node.js, Express, TypeScript        |
-| Database | PostgreSQL 15+                      |
-| ORM/Migrations | Knex.js                       |
-| File Storage | Cloudinary                      |
-| Auth     | JWT (access + refresh tokens)       |
+| Layer            | Technology                                      |
+|------------------|-------------------------------------------------|
+| Frontend         | Angular 17, Bootstrap 5, ng-bootstrap           |
+| Backend          | Node.js, Express 5, TypeScript                  |
+| Database         | PostgreSQL 15+                                  |
+| Query Builder / Migrations | Knex.js 3                             |
+| File Storage     | Local (`uploads/`) + Cloudinary                 |
+| Auth             | JWT (access + refresh tokens), bcryptjs         |
+| Email            | Nodemailer (Ethereal in dev, SMTP in prod)       |
+| WhatsApp / SMS   | Twilio                                          |
+| Containerization | Docker, Docker Compose                          |
 
 ---
 
@@ -112,15 +115,21 @@ CLOUDINARY_API_SECRET=your_api_secret
 
 ### 3.3 Run database migrations
 
-This creates all tables in the database:
+Knex applies all pending migration files from `backend/migrations/` in order, creating every table and schema change:
 
 ```bash
 npm run migrate
 ```
 
+To undo the last batch:
+
+```bash
+npm run migrate:rollback
+```
+
 ### 3.4 Run database seeds
 
-This inserts the default roles and the default admin user:
+Seeds insert the default roles and the default admin user (`01_roles_and_admin.ts`) and all lookup/master data (`02_master_data.ts`):
 
 ```bash
 npm run seed
@@ -180,36 +189,81 @@ The frontend will open at **http://localhost:4200**
 
 ```
 Job_Application/
+├── docker-compose.yml
+│
 ├── backend/
-│   ├── migrations/          # Knex database migrations
-│   ├── seeds/               # Seed data (roles + default admin)
-│   ├── src/
-│   │   ├── modules/
-│   │   │   ├── candidates/  # Candidate CRUD
-│   │   │   ├── recruiters/  # Recruiter management
-│   │   │   ├── edit-requests/
-│   │   │   ├── stats/
-│   │   │   └── uploads/
-│   │   ├── middleware/      # Auth middleware
-│   │   ├── services/        # Email service
-│   │   └── app.ts
+│   ├── knexfile.ts              # Knex configuration (development + production)
+│   ├── migrations/              # 59 Knex migration files (all DB schema changes)
+│   ├── seeds/
+│   │   ├── 01_roles_and_admin.ts  # Default roles and admin user
+│   │   └── 02_master_data.ts      # Lookup / master data
+│   ├── uploads/                 # Local file upload storage
+│   ├── Dockerfile
 │   ├── .env.example
-│   └── knexfile.ts
+│   └── src/
+│       ├── server.ts            # Entry point — starts Express and verifies DB
+│       ├── app.ts               # Express app setup, routes, global middleware
+│       ├── config/
+│       │   ├── db.ts            # Knex DB instance (shared across app)
+│       │   ├── env.ts           # Validated environment variables
+│       │   └── multer.ts        # File upload configuration
+│       ├── middleware/
+│       │   ├── authenticate.ts  # JWT authentication
+│       │   ├── authorize.ts     # Role-based authorization
+│       │   ├── errorHandler.ts  # Global Express error handler
+│       │   └── rateLimiter.ts   # express-rate-limit config
+│       ├── services/
+│       │   ├── audit.service.ts     # Audit log writes
+│       │   ├── email.service.ts     # Nodemailer / Ethereal email
+│       │   ├── otp.service.ts       # OTP generation & verification
+│       │   ├── token.service.ts     # JWT access & refresh token management
+│       │   └── whatsapp.service.ts  # Twilio WhatsApp integration
+│       ├── types/               # Shared TypeScript type definitions
+│       └── modules/             # Feature modules (router + controller + service)
+│           ├── auth/
+│           ├── users/
+│           ├── candidates/
+│           ├── recruiters/
+│           ├── shortlists/
+│           ├── edit-requests/
+│           ├── master/
+│           ├── stats/
+│           ├── uploads/
+│           ├── audit-logs/
+│           ├── contact-requests/
+│           ├── contact-submissions/
+│           ├── volunteers/
+│           ├── volunteer-support-requests/
+│           ├── agency-referrals/
+│           ├── agency-interest-requests/
+│           └── recruiter-access-requests/
 │
-├── frontend/
-│   ├── src/
-│   │   └── app/
-│   │       ├── core/
-│   │       │   ├── models/       # TypeScript interfaces
-│   │       │   └── services/     # API services
-│   │       ├── features/
-│   │       │   ├── admin/        # Admin pages
-│   │       │   ├── candidate/    # Candidate pages
-│   │       │   └── recruiter/    # Recruiter pages
-│   │       └── shared/           # Reusable components
-│   └── proxy.conf.json
-│
-└── docker-compose.yml
+└── frontend/
+    ├── proxy.conf.json          # Proxies /api → http://localhost:3000
+    ├── Dockerfile
+    ├── nginx.conf
+    └── src/
+        ├── main.ts              # Angular bootstrap entry
+        ├── index.html
+        ├── styles.scss
+        └── app/
+            ├── app.config.ts   # Angular providers & app config
+            ├── app.routes.ts   # Top-level route definitions
+            ├── core/
+            │   ├── constants/  # App-wide constants
+            │   ├── guards/     # Route guards (auth, role)
+            │   ├── interceptors/ # HTTP interceptors (JWT, error)
+            │   ├── models/     # TypeScript interfaces & DTOs
+            │   └── services/   # API service classes
+            ├── features/
+            │   ├── admin/      # Admin dashboard & management pages
+            │   ├── auth/       # Login, register, password reset
+            │   ├── candidate/  # Candidate profile & job pages
+            │   ├── landing/    # Public landing page
+            │   └── recruiter/  # Recruiter dashboard & search
+            └── shared/
+                ├── components/ # Reusable UI components
+                └── pipes/      # Custom Angular pipes
 ```
 
 ---
@@ -218,13 +272,14 @@ Job_Application/
 
 ### Backend
 
-| Command               | Description                        |
-|-----------------------|------------------------------------|
-| `npm run dev`         | Start dev server with hot reload   |
-| `npm run build`       | Compile TypeScript to JS           |
-| `npm run migrate`     | Run pending migrations             |
-| `npm run migrate:rollback` | Rollback last migration batch |
-| `npm run seed`        | Run seed files                     |
+| Command                    | Description                                      |
+|----------------------------|--------------------------------------------------|
+| `npm run dev`              | Start dev server with hot reload (nodemon)       |
+| `npm run build`            | Compile TypeScript → `dist/`                     |
+| `npm start`                | Run compiled JS from `dist/src/server.js`        |
+| `npm run migrate`          | Run all pending Knex migrations                  |
+| `npm run migrate:rollback` | Rollback the last migration batch                |
+| `npm run seed`             | Run all Knex seed files                          |
 
 ### Frontend
 

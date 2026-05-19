@@ -50,6 +50,8 @@ function handle401(
       }),
       catchError((err) => {
         isRefreshing = false;
+        refreshSubject.next(null); // unblock any queued requests
+        auth.handleSessionExpiry();
         return throwError(() => err);
       }),
     );
