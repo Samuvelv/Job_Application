@@ -5,6 +5,7 @@ import { Router } from '@angular/router';
 import { Observable, tap, catchError, throwError } from 'rxjs';
 import { environment } from '../../../environments/environment';
 import { AuthResponse, LoginPayload, LoginResponse, OtpChallengeResponse, User, UserRole } from '../models/user.model';
+import { ToastService } from './toast.service';
 
 const TOKEN_KEY = 'th_access_token';
 const USER_KEY  = 'th_user';
@@ -23,12 +24,42 @@ export class AuthService {
     this.candidateStatus.set(status);
   }
 
-  constructor(private http: HttpClient, private router: Router) {}
+  constructor(private http: HttpClient, private router: Router, private toast: ToastService) {}
+
+  // ── Session expiry guard — prevents duplicate alerts/redirects ───────────────
+  private sessionExpired = false;
+
+  /**
+   * Called by interceptors when the token (and refresh token) are both invalid.
+   * Clears all auth storage, shows a toast, and redirects to /login.
+   * The sessionExpired flag ensures this runs only once even when multiple
+   * in-flight requests fail simultaneously.
+   */
+  handleSessionExpiry(): void {
+    if (this.sessionExpired) return;
+    this.sessionExpired = true;
+
+    // Clear all auth-related storage
+    localStorage.removeItem(TOKEN_KEY);
+    localStorage.removeItem(USER_KEY);
+    sessionStorage.removeItem('auth:pendingEmail');
+
+    // Reset in-memory state
+    this.currentUser.set(null);
+    this.candidateStatus.set(null);
+
+    // Notify user
+    this.toast.warning('Your session has expired. Please login again.');
+
+    // Redirect to login
+    this.router.navigate(['/login']);
+  }
 
   // ── Login ────────────────────────────────────────────────────────────────────
   login(payload: LoginPayload): Observable<LoginResponse> {
     return this.http.post<LoginResponse>(`${this.apiUrl}/auth/login`, payload).pipe(
       tap((res) => {
+        this.sessionExpired = false; // reset expiry guard on fresh login
         if (!('requiresOtp' in res)) {
           localStorage.setItem(TOKEN_KEY, res.accessToken);
           localStorage.setItem(USER_KEY, JSON.stringify(res.user));
