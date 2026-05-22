@@ -224,13 +224,14 @@ import { SORT_OPTIONS, PROFILE_STATUS_OPTIONS, PROFILE_STATUS_WITH_COLOR } from 
                     <th>Login ID</th>
                     <th>Candidate</th>
                     <th>Job Title</th>
-                    <th>Industry</th>
+                    <th>Occupation</th>
                     <th>Location</th>
                     <th>Exp.</th>
                     <th>Status</th>
                     <th>Fee</th>
                     <th>CV Format</th>
                     <th style="width:48px;text-align:center">Video</th>
+                    <th style="width:80px;text-align:center">Profile</th>
                     <th>Actions</th>
                   </tr>
                 </thead>
@@ -265,7 +266,7 @@ import { SORT_OPTIONS, PROFILE_STATUS_OPTIONS, PROFILE_STATUS_WITH_COLOR } from 
                         </div>
                       </td>
                       <td class="small">{{ emp.job_title || '—' }}</td>
-                      <td class="small">{{ emp.industry || '—' }}</td>
+                      <td class="small">{{ emp.occupation || '—' }}</td>
                       <td class="small">
                         <div>{{ flagOf(emp.current_country) }} {{ emp.current_city || '' }}{{ emp.current_city && emp.current_country ? ', ' : '' }}{{ emp.current_country || '—' }}</div>
                         @if (firstTarget(emp.target_locations)) {
@@ -313,6 +314,14 @@ import { SORT_OPTIONS, PROFILE_STATUS_OPTIONS, PROFILE_STATUS_WITH_COLOR } from 
                         } @else {
                           <i class="bi bi-camera-video-off" style="color:var(--th-muted,#9ca3af)" title="No intro video"></i>
                         }
+                      </td>
+                      <td style="text-align:center">
+                        <span class="badge rounded-pill"
+                          [style.background]="completionBgColor(completionPercent(emp))"
+                          [style.color]="completionColor(completionPercent(emp))"
+                          style="font-size:.7rem;font-weight:700;letter-spacing:.01em">
+                          {{ completionPercent(emp) }}%
+                        </span>
                       </td>
                       <td>
                         <div class="tbl-actions">
@@ -418,6 +427,19 @@ import { SORT_OPTIONS, PROFILE_STATUS_OPTIONS, PROFILE_STATUS_WITH_COLOR } from 
                         <i class="bi bi-camera-video-off" style="color:var(--th-muted,#9ca3af)"></i> No video
                       }
                     </span>
+                  </div>
+                  <!-- Profile completion bar (mobile) -->
+                  <div class="cl-card__completion-header" style="margin-bottom:3px">
+                    <span>Profile Completion</span>
+                    <span class="cl-card__completion-pct" [style.color]="completionColor(completionPercent(emp))">
+                      {{ completionPercent(emp) }}%
+                    </span>
+                  </div>
+                  <div class="cl-card__bar" style="margin-bottom:.5rem">
+                    <div class="cl-card__bar-fill"
+                      [style.width.%]="completionPercent(emp)"
+                      [style.background]="completionColor(completionPercent(emp))">
+                    </div>
                   </div>
                   <div class="tbl-actions">
                     <a [routerLink]="['/admin/candidates', emp.id]"
@@ -892,6 +914,32 @@ export class CandidateListComponent implements OnInit {
   englishLabel(level: string | undefined): string {
     if (!level) return '';
     return this.englishLabels[level.toLowerCase()] ?? level;
+  }
+
+  completionPercent(c: Candidate): number {
+    let score = 15; // name always present
+    if (c.profile_photo_url)        score += 15;
+    if (c.job_title)                score += 10;
+    if (c.industry)                 score += 10;
+    if (c.current_country)          score += 10;
+    if (c.nationality)              score +=  5;
+    if (c.years_experience != null) score += 10;
+    if (c.english_level)            score += 10;
+    if (c.intro_video_url)          score += 10;
+    if (c.target_locations?.length) score +=  5;
+    return Math.min(score, 100);
+  }
+
+  completionColor(pct: number): string {
+    if (pct >= 80) return 'var(--th-emerald)';
+    if (pct >= 50) return 'var(--th-amber)';
+    return 'var(--th-rose)';
+  }
+
+  completionBgColor(pct: number): string {
+    if (pct >= 80) return 'rgba(16,185,129,.12)';
+    if (pct >= 50) return 'rgba(245,158,11,.12)';
+    return 'rgba(244,63,94,.12)';
   }
 
   pageRange(): number[] {

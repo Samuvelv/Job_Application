@@ -24,8 +24,13 @@ export async function issueRefreshToken(userId: string): Promise<string> {
   const raw = uuidv4() + uuidv4(); // 72-char random string
   const hash = crypto.createHash('sha256').update(raw).digest('hex');
 
-  // Parse duration like "7d" → ms
+  // Parse duration like "7d" → days
   const daysMatch = env.JWT_REFRESH_EXPIRES_IN.match(/^(\d+)d$/);
+  if (!daysMatch) {
+    console.warn(
+      `[token.service] JWT_REFRESH_EXPIRES_IN="${env.JWT_REFRESH_EXPIRES_IN}" is not in "Nd" format — defaulting to 7 days`,
+    );
+  }
   const days = daysMatch ? parseInt(daysMatch[1]) : 7;
   const expiresAt = new Date(Date.now() + days * 24 * 60 * 60 * 1000);
 

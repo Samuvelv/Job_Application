@@ -71,9 +71,9 @@ import { MasterDataService } from '../../../core/services/master-data.service';
 
       <!-- ── Stats row: industry · exp · english ── -->
       <div class="cl-card__stats">
-        @if (candidate.industry) {
+        @if (candidate.occupation) {
           <span class="cl-card__stat">
-            <i class="bi bi-building"></i> {{ candidate.industry }}
+            <i class="bi bi-building"></i> {{ candidate.occupation }}
           </span>
         }
         @if (candidate.years_experience != null) {

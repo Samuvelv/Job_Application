@@ -82,16 +82,32 @@ export async function login(
       );
     }
 
-    // For recruiters, check access expiry
+    // For recruiters, check access expiry at login time
     if (user.role === 'recruiter') {
       const recruiter = await db('recruiters').where({ user_id: user.id }).select('access_expires_at').first();
-      if (recruiter && new Date(recruiter.access_expires_at) < new Date()) {
+      const expiry = recruiter?.access_expires_at ? new Date(recruiter.access_expires_at) : null;
+      if (expiry && !isNaN(expiry.getTime()) && expiry < new Date()) {
         throw new AppError(403, 'Your access has expired. Please contact the administrator.');
       }
     }
   }
 
-  const accessToken  = signAccessToken({ sub: user.id as string, role: user.role as string });
+  // For recruiters, embed account-level access_expires_at into the JWT so that
+  // the authenticate middleware can enforce expiry on every request without a DB hit.
+  let recruiterAccessExpiresAt: string | undefined;
+  if (user.role === 'recruiter') {
+    const rec = await db('recruiters').where({ user_id: user.id }).select('access_expires_at').first();
+    if (rec?.access_expires_at) {
+      const d = new Date(rec.access_expires_at);
+      if (!isNaN(d.getTime())) recruiterAccessExpiresAt = d.toISOString();
+    }
+  }
+
+  const accessToken = signAccessToken({
+    sub: user.id as string,
+    role: user.role as string,
+    ...(recruiterAccessExpiresAt ? { accessExpiresAt: recruiterAccessExpiresAt } : {}),
+  });
   const refreshToken = await issueRefreshToken(user.id as string);
 
   return {
@@ -120,7 +136,21 @@ export async function refreshTokens(
 
   if (!user) throw new AppError(401, 'User not found');
 
-  const accessToken = signAccessToken({ sub: user.id, role: user.role });
+  // Re-embed recruiter access expiry so the per-request gate stays active after refresh
+  let recruiterAccessExpiresAt: string | undefined;
+  if (user.role === 'recruiter') {
+    const rec = await db('recruiters').where({ user_id: user.id }).select('access_expires_at').first();
+    if (rec?.access_expires_at) {
+      const d = new Date(rec.access_expires_at);
+      if (!isNaN(d.getTime())) recruiterAccessExpiresAt = d.toISOString();
+    }
+  }
+
+  const accessToken = signAccessToken({
+    sub: user.id,
+    role: user.role,
+    ...(recruiterAccessExpiresAt ? { accessExpiresAt: recruiterAccessExpiresAt } : {}),
+  });
   return { accessToken, refreshToken: result.newRaw };
 }
 
