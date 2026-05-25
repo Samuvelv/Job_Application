@@ -961,7 +961,7 @@ export class LandingComponent implements OnInit, OnDestroy {
   ];
 
   contactInfoDetails = [
-    { icon: 'bi-geo-alt-fill', label: 'Location', value: 'UK  |  Namakkal, Tamil Nadu, India' },
+    { icon: 'bi-geo-alt-fill', label: 'Location', value: 'UK and Tamil Nadu' },
     { icon: 'bi-clock-fill',   label: 'Hours',    value: 'Monday – Saturday · 10:00 AM – 6:00 PM IST' },
     { icon: 'bi-translate',    label: 'Support',  value: 'Tamil & English — both available' },
   ];
