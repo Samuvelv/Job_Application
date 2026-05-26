@@ -2,6 +2,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
+import { timeout } from 'rxjs/operators';
 import { environment } from '../../../environments/environment';
 import { Candidate, CandidateFilters } from '../models/candidate.model';
 
@@ -22,6 +23,14 @@ export interface PaginatedCandidates {
 @Injectable({ providedIn: 'root' })
 export class CandidateService {
   private readonly api = `${environment.apiUrl}/candidates`;
+
+  /**
+   * Maximum time (ms) to wait for a file upload response.
+   * 10 minutes covers a 200 MB video on a ~3 Mbps connection.
+   * If the server drops the connection silently, Angular emits a clean
+   * TimeoutError instead of hanging the spinner indefinitely.
+   */
+  private readonly UPLOAD_TIMEOUT_MS = 600_000;
 
   constructor(private http: HttpClient) {}
 
@@ -110,7 +119,7 @@ export class CandidateService {
     return this.http.post<{ url: string; filename: string }>(
       `${environment.apiUrl}/candidates/${candidateId}/files/${type}`,
       form,
-    );
+    ).pipe(timeout(this.UPLOAD_TIMEOUT_MS));
   }
 
   /** Upload a certificate file with full metadata */
@@ -176,7 +185,7 @@ export class CandidateService {
     return this.http.post<{ relativePath: string; url: string; message: string }>(
       `${environment.apiUrl}/candidates/me/stage-file/${type}`,
       form,
-    );
+    ).pipe(timeout(this.UPLOAD_TIMEOUT_MS));
   }
 
   uploadMyFile(
@@ -191,7 +200,7 @@ export class CandidateService {
     return this.http.post<{ url: string; filename: string; message: string }>(
       `${environment.apiUrl}/candidates/${candidateId}/files/${type}`,
       form,
-    );
+    ).pipe(timeout(this.UPLOAD_TIMEOUT_MS));
   }
 
   deleteMyFile(

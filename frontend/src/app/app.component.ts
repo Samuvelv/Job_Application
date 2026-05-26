@@ -8,6 +8,8 @@ import { SidebarService } from './core/services/sidebar.service';
 import { AuthService } from './core/services/auth.service';
 import { CommonModule } from '@angular/common';
 import { ConfirmDialogComponent } from './shared/components/confirm-dialog/confirm-dialog.component';
+import { CookieConsentBannerComponent } from './shared/components/cookie-consent-banner/cookie-consent-banner.component';
+import { CookiePreferencesModalComponent } from './shared/components/cookie-preferences-modal/cookie-preferences-modal.component';
 import { filter } from 'rxjs';
 
 const PUBLIC_ROUTES = ['/', '/login', '/unauthorized'];
@@ -22,6 +24,8 @@ const PUBLIC_ROUTES = ['/', '/login', '/unauthorized'];
     TopbarComponent,
     SidebarComponent,
     ConfirmDialogComponent,
+    CookieConsentBannerComponent,
+    CookiePreferencesModalComponent,
   ],
   template: `
     @if (showShell()) {
@@ -39,17 +43,24 @@ const PUBLIC_ROUTES = ['/', '/login', '/unauthorized'];
 
       <!-- Main content -->
       <div class="app-layout">
-        <main class="main-content" [class.sidebar-collapsed]="sidebar.isCollapsed()">
-          <router-outlet />
-        </main>
+        <div class="app-main-col" [class.sidebar-collapsed]="sidebar.isCollapsed()">
+          <main class="main-content">
+            <router-outlet />
+          </main>
+        </div>
       </div>
     } @else {
-      <!-- Public pages (login, unauthorized) -->
+      <!-- Public pages (login, landing, unauthorized) -->
       <router-outlet />
     }
 
+    <!-- Global overlays — rendered outside the shell so they appear on every page -->
     <app-toast-container />
     <app-confirm-dialog />
+    <!-- Cookie consent banner — shown to any visitor who has not yet given consent -->
+    <app-cookie-consent-banner />
+    <!-- Cookie preferences modal — opened from banner or footer "Manage Cookies" -->
+    <app-cookie-preferences-modal />
   `,
 })
 export class AppComponent {

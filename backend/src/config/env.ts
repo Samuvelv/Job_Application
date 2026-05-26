@@ -12,7 +12,10 @@ const envSchema = z.object({
   DB_PORT: z.string().default('5432'),
   DB_NAME: z.string(),
   DB_USER: z.string(),
-  DB_PASSWORD: z.string().default('Dhinesh@2002'),
+  // DB_PASSWORD must be set explicitly — no default is provided so a missing
+  // production value causes an immediate startup failure rather than silently
+  // connecting with a known-insecure fallback password.
+  DB_PASSWORD: z.string(),
 
   JWT_SECRET: z.string().min(32),
   JWT_ACCESS_EXPIRES_IN: z.string().default('2h'),
@@ -20,7 +23,10 @@ const envSchema = z.object({
   JWT_REFRESH_SECRET: z.string().min(32),
 
   // 2FA / OTP
-  OTP_TOKEN_SECRET: z.string().min(32).default('otp-dev-secret-please-change-in-production!!'),
+  // OTP_TOKEN_SECRET must be explicitly set in every environment — no default is
+  // provided so that a missing production value causes startup to fail loudly
+  // instead of silently using a known-insecure fallback.
+  OTP_TOKEN_SECRET: z.string().min(32),
   OTP_TOKEN_EXPIRES_IN: z.string().default('10m'),
   OTP_EXPIRES_MINUTES: z.string().default('5'),
   OTP_MAX_ATTEMPTS: z.string().default('5'),
