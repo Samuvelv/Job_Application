@@ -10,7 +10,6 @@ import { CommonModule } from '@angular/common';
 import { ConfirmDialogComponent } from './shared/components/confirm-dialog/confirm-dialog.component';
 import { CookieConsentBannerComponent } from './shared/components/cookie-consent-banner/cookie-consent-banner.component';
 import { CookiePreferencesModalComponent } from './shared/components/cookie-preferences-modal/cookie-preferences-modal.component';
-import { FooterComponent } from './shared/components/footer/footer.component';
 import { filter } from 'rxjs';
 
 const PUBLIC_ROUTES = ['/', '/login', '/unauthorized'];
@@ -27,7 +26,6 @@ const PUBLIC_ROUTES = ['/', '/login', '/unauthorized'];
     ConfirmDialogComponent,
     CookieConsentBannerComponent,
     CookiePreferencesModalComponent,
-    FooterComponent,
   ],
   template: `
     @if (showShell()) {
@@ -43,22 +41,17 @@ const PUBLIC_ROUTES = ['/', '/login', '/unauthorized'];
       <!-- Sidebar -->
       <app-sidebar />
 
-      <!-- Main content + Footer column -->
+      <!-- Main content -->
       <div class="app-layout">
         <div class="app-main-col" [class.sidebar-collapsed]="sidebar.isCollapsed()">
           <main class="main-content">
             <router-outlet />
           </main>
-          <!-- Footer — rendered inside the authenticated shell only -->
-          <app-footer />
         </div>
       </div>
     } @else {
-      <!-- Public pages — full-height column so footer pins to viewport bottom -->
-      <div class="public-layout">
-        <router-outlet />
-        <app-footer />
-      </div>
+      <!-- Public pages (login, landing, unauthorized) -->
+      <router-outlet />
     }
 
     <!-- Global overlays — rendered outside the shell so they appear on every page -->

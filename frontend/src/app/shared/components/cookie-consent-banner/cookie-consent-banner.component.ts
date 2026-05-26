@@ -8,6 +8,18 @@ import { CookieConsentService } from '../../../core/services/cookie-consent.serv
   standalone: true,
   imports: [CommonModule],
   template: `
+    @if (consent.consentGiven()) {
+      <!-- Floating cookie icon — persistent access point once consent is given -->
+      <button
+        class="ccb-fab"
+        type="button"
+        (click)="openCustomize()"
+        aria-label="Manage cookie preferences"
+        title="Manage Cookies">
+        <i class="bi bi-cookie" aria-hidden="true"></i>
+      </button>
+    }
+
     @if (!consent.consentGiven()) {
       <!-- Banner backdrop blur layer -->
       <div class="ccb-overlay" aria-hidden="true"></div>
@@ -62,6 +74,40 @@ import { CookieConsentService } from '../../../core/services/cookie-consent.serv
     }
   `,
   styles: [`
+    /* ── Floating cookie icon (shown after consent is given) ──────────────── */
+    .ccb-fab {
+      position: fixed;
+      bottom: 1.25rem;
+      right: 1.25rem;
+      z-index: 1038;
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      border: 1px solid var(--th-border, #e5e7eb);
+      background: var(--th-card-bg, #ffffff);
+      color: var(--th-primary, #5046e5);
+      font-size: 1rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.10);
+      transition: box-shadow 0.15s, opacity 0.15s;
+      opacity: 0.7;
+      padding: 0;
+    }
+
+    .ccb-fab:hover {
+      opacity: 1;
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+    }
+
+    .ccb-fab:focus-visible {
+      outline: 2px solid var(--th-primary, #5046e5);
+      outline-offset: 2px;
+      opacity: 1;
+    }
+
     /* ── Overlay ──────────────────────────────────────────────────────────────── */
     .ccb-overlay {
       position: fixed;
@@ -183,6 +229,16 @@ import { CookieConsentService } from '../../../core/services/cookie-consent.serv
     }
 
     /* ── Dark theme ─────────────────────────────────────────────────────────── */
+    :host-context([data-theme='dark']) .ccb-fab {
+      background: var(--th-card-bg, #1e2433);
+      border-color: var(--th-border, #2e3650);
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+    }
+
+    :host-context([data-theme='dark']) .ccb-fab:hover {
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
+    }
+
     :host-context([data-theme='dark']) .ccb__inner {
       background: var(--th-card-bg, #1e2433);
       border-top-color: var(--th-border, #2e3650);
