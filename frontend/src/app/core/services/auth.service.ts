@@ -2,13 +2,17 @@
 import { Injectable, signal } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Router } from '@angular/router';
-import { Observable, tap, catchError, throwError } from 'rxjs';
+import { Observable, tap } from 'rxjs';
 import { environment } from '../../../environments/environment';
 import { AuthResponse, LoginPayload, LoginResponse, OtpChallengeResponse, User, UserRole } from '../models/user.model';
 import { ToastService } from './toast.service';
+import { registerAuthForTabSync } from '../interceptors/jwt.interceptor';
 
 const TOKEN_KEY = 'th_access_token';
 const USER_KEY  = 'th_user';
+
+/** How many milliseconds before expiry to show the "session expiring soon" warning. */
+const EXPIRY_WARN_MS = 5 * 60 * 1000; // 5 minutes
 
 @Injectable({ providedIn: 'root' })
 export class AuthService {
@@ -24,10 +28,70 @@ export class AuthService {
     this.candidateStatus.set(status);
   }
 
-  constructor(private http: HttpClient, private router: Router, private toast: ToastService) {}
+  constructor(private http: HttpClient, private router: Router, private toast: ToastService) {
+    // Give the BroadcastChannel listener in jwt.interceptor.ts a reference to
+    // this service instance.  The listener runs outside Angular's DI context so
+    // it cannot call inject() — this setter bridge is the cleanest alternative.
+    registerAuthForTabSync(this);
+
+    // Restore the expiry warning timer when the page is hard-reloaded.
+    // The service is re-instantiated on every page load, so any previously
+    // scheduled timer is lost.  Re-scheduling from the stored token ensures
+    // the "session expiring soon" warning still fires for users who reload
+    // mid-session without performing any API call before the warning window.
+    const storedToken = this.getToken();
+    if (storedToken) {
+      this.scheduleExpiryWarning(storedToken);
+    }
+  }
 
   // ── Session expiry guard — prevents duplicate alerts/redirects ───────────────
   private sessionExpired = false;
+
+  // ── Proactive expiry warning timer ───────────────────────────────────────────
+  private expiryWarnTimer: ReturnType<typeof setTimeout> | null = null;
+
+  /**
+   * Schedules a one-time "session expiring soon" toast warning based on the
+   * JWT's exp claim.  Called after every successful login or token refresh.
+   * Any previously scheduled warning is cancelled first.
+   *
+   * The warning fires EXPIRY_WARN_MS (5 min) before the token expires, giving
+   * the user time to act.  The app will auto-refresh the token on the next API
+   * call anyway, but the warning is useful when the user is idle on a form.
+   */
+  scheduleExpiryWarning(accessToken: string): void {
+    this.cancelExpiryWarning();
+
+    try {
+      // Decode the JWT payload (base64url, middle segment) — no verification
+      // needed here; we only want the exp timestamp for UI scheduling.
+      const payloadBase64 = accessToken.split('.')[1];
+      if (!payloadBase64) return;
+      const payload = JSON.parse(atob(payloadBase64.replace(/-/g, '+').replace(/_/g, '/')));
+      const expMs = (payload.exp as number) * 1000;
+      const warnAt = expMs - EXPIRY_WARN_MS;
+      const delay = warnAt - Date.now();
+
+      if (delay <= 0) return; // already within the warning window or expired
+
+      this.expiryWarnTimer = setTimeout(() => {
+        // Only show the warning if the user is still logged in
+        if (this.isLoggedIn()) {
+          this.toast.warning('Your session will expire in 5 minutes. Any activity will extend it automatically.');
+        }
+      }, delay);
+    } catch {
+      // Non-fatal: malformed token — warning simply won't appear
+    }
+  }
+
+  private cancelExpiryWarning(): void {
+    if (this.expiryWarnTimer !== null) {
+      clearTimeout(this.expiryWarnTimer);
+      this.expiryWarnTimer = null;
+    }
+  }
 
   /**
    * Called by interceptors when the token (and refresh token) are both invalid.
@@ -38,6 +102,8 @@ export class AuthService {
   handleSessionExpiry(): void {
     if (this.sessionExpired) return;
     this.sessionExpired = true;
+
+    this.cancelExpiryWarning();
 
     // Clear all auth-related storage
     localStorage.removeItem(TOKEN_KEY);
@@ -59,13 +125,20 @@ export class AuthService {
 
   // ── Login ────────────────────────────────────────────────────────────────────
   login(payload: LoginPayload): Observable<LoginResponse> {
-    return this.http.post<LoginResponse>(`${this.apiUrl}/auth/login`, payload).pipe(
+    // withCredentials is required in cross-origin environments (e.g. local
+    // development where the frontend runs on :4200 and the backend on :3000)
+    // so that the browser stores the HttpOnly refresh token cookie from the
+    // Set-Cookie response header.  In production the nginx proxy makes this
+    // same-origin, but withCredentials is harmless there and keeps the
+    // behaviour consistent across environments.
+    return this.http.post<LoginResponse>(`${this.apiUrl}/auth/login`, payload, { withCredentials: true }).pipe(
       tap((res) => {
         this.sessionExpired = false; // reset expiry guard on fresh login
         if (!('requiresOtp' in res)) {
           localStorage.setItem(TOKEN_KEY, res.accessToken);
           localStorage.setItem(USER_KEY, JSON.stringify(res.user));
           this.currentUser.set(res.user);
+          this.scheduleExpiryWarning(res.accessToken);
         }
       }),
     );
@@ -80,6 +153,7 @@ export class AuthService {
           localStorage.setItem(TOKEN_KEY, res.accessToken);
           localStorage.setItem(USER_KEY, JSON.stringify(res.user));
           this.currentUser.set(res.user);
+          this.scheduleExpiryWarning(res.accessToken);
         }),
       );
   }
@@ -91,13 +165,17 @@ export class AuthService {
 
   // ── Logout ───────────────────────────────────────────────────────────────────
   logout(): void {
-    this.http.post(`${this.apiUrl}/auth/logout`, {}).subscribe({
+    // withCredentials is required so the browser sends the HttpOnly refresh token
+    // cookie to the backend, allowing it to revoke the token in the DB and clear
+    // the cookie via Set-Cookie in the response.
+    this.http.post(`${this.apiUrl}/auth/logout`, {}, { withCredentials: true }).subscribe({
       complete: () => this.clearSession(),
       error: () => this.clearSession(),
     });
   }
 
   private clearSession(): void {
+    this.cancelExpiryWarning();
     localStorage.removeItem(TOKEN_KEY);
     localStorage.removeItem(USER_KEY);
     this.currentUser.set(null);
@@ -106,14 +184,19 @@ export class AuthService {
   }
 
   // ── Refresh access token ──────────────────────────────────────────────────────
+  // NOTE: Do NOT add a catchError here. The jwtInterceptor is the sole owner of
+  // the refresh-failure path — it calls handleSessionExpiry() which shows the
+  // toast and redirects. Adding clearSession() here as well causes a double
+  // redirect: an immediate silent redirect followed by a second one 1500ms later
+  // with the toast shown on the wrong page.
   refreshToken(): Observable<{ accessToken: string }> {
     return this.http
       .post<{ accessToken: string }>(`${this.apiUrl}/auth/refresh`, {}, { withCredentials: true })
       .pipe(
-        tap((res) => localStorage.setItem(TOKEN_KEY, res.accessToken)),
-        catchError((err) => {
-          this.clearSession();
-          return throwError(() => err);
+        tap((res) => {
+          localStorage.setItem(TOKEN_KEY, res.accessToken);
+          // Re-arm the expiry warning for the newly issued access token
+          this.scheduleExpiryWarning(res.accessToken);
         }),
       );
   }
