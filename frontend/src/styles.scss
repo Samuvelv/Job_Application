@@ -570,24 +570,43 @@ body {
   }
 }
 
+// ── Public page layout (landing, login, unauthorized) ────────────────────────
+// Full-height column — router-outlet content fills space, footer pins to bottom
+.public-layout {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+
+  > :first-child { flex: 1; }
+}
+
 .app-layout {
   display: flex;
   padding-top: var(--th-topbar-height);
   min-height: 100vh;
 }
 
-.main-content {
+// ── Content + footer column (takes sidebar offset; stacks main above footer) ──
+.app-main-col {
   flex: 1;
-  padding: 1.5rem 1rem;
+  display: flex;
+  flex-direction: column;
+  min-width: 0; // prevents flex overflow on narrow viewports
   min-height: calc(100vh - var(--th-topbar-height));
-  max-width: 100%;
-  overflow-x: hidden;
-  transition: margin-left .25s cubic-bezier(.4,0,.2,1), width .25s cubic-bezier(.4,0,.2,1);
+  transition: margin-left .25s cubic-bezier(.4,0,.2,1);
 
   @media (min-width: 992px) {
     margin-left: var(--th-sidebar-width);
-    width: calc(100% - var(--th-sidebar-width));
-    max-width: calc(100% - var(--th-sidebar-width));
+  }
+}
+
+.main-content {
+  flex: 1;
+  padding: 1.5rem 1rem;
+  max-width: 100%;
+  overflow-x: hidden;
+
+  @media (min-width: 992px) {
     padding: 2rem 2.5rem;
   }
 
@@ -661,11 +680,9 @@ body {
     }
   }
 
-  // Shift main content when sidebar is collapsed
-  .main-content.sidebar-collapsed {
+  // Shift content column (main + footer) when sidebar is collapsed
+  .app-main-col.sidebar-collapsed {
     margin-left: var(--th-sidebar-collapsed-width);
-    width: calc(100% - var(--th-sidebar-collapsed-width));
-    max-width: calc(100% - var(--th-sidebar-collapsed-width));
   }
 }
 
