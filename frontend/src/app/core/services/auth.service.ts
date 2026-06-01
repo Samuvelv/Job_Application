@@ -1,6 +1,6 @@
 // src/app/core/services/auth.service.ts
-import { Injectable, signal } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
+import { Injectable, signal, inject } from '@angular/core';
+import { HttpClient, HttpBackend } from '@angular/common/http';
 import { Router } from '@angular/router';
 import { Observable, tap } from 'rxjs';
 import { environment } from '../../../environments/environment';
@@ -27,6 +27,8 @@ export class AuthService {
   setCandidateStatus(status: string): void {
     this.candidateStatus.set(status);
   }
+
+  private readonly httpBackend = inject(HttpBackend);
 
   constructor(private http: HttpClient, private router: Router, private toast: ToastService) {
     // Give the BroadcastChannel listener in jwt.interceptor.ts a reference to
@@ -165,6 +167,16 @@ export class AuthService {
 
   // ── Logout ───────────────────────────────────────────────────────────────────
   logout(): void {
+    // If the access token is already expired (or missing) we should avoid
+    // calling the server-side logout endpoint because it requires a valid
+    // access token and will return 401. In that case perform a client-side
+    // logout immediately.
+    const token = this.getToken();
+    if (!token || this.isTokenExpired(token)) {
+      this.clearSession();
+      return;
+    }
+
     // withCredentials is required so the browser sends the HttpOnly refresh token
     // cookie to the backend, allowing it to revoke the token in the DB and clear
     // the cookie via Set-Cookie in the response.
@@ -190,7 +202,11 @@ export class AuthService {
   // redirect: an immediate silent redirect followed by a second one 1500ms later
   // with the toast shown on the wrong page.
   refreshToken(): Observable<{ accessToken: string }> {
-    return this.http
+    // Use an HttpClient bound to the raw HttpBackend to bypass the global
+    // interceptors. This prevents the refresh request from being intercepted
+    // (which could otherwise try to refresh again on 401 and cause loops).
+    const rawHttp = new HttpClient(this.httpBackend);
+    return rawHttp
       .post<{ accessToken: string }>(`${this.apiUrl}/auth/refresh`, {}, { withCredentials: true })
       .pipe(
         tap((res) => {
@@ -244,6 +260,19 @@ export class AuthService {
       return raw ? (JSON.parse(raw) as User) : null;
     } catch {
       return null;
+    }
+  }
+
+  private isTokenExpired(token: string): boolean {
+    try {
+      const payloadBase64 = token.split('.')[1];
+      if (!payloadBase64) return true;
+      const payload = JSON.parse(atob(payloadBase64.replace(/-/g, '+').replace(/_/g, '/')));
+      const exp = payload.exp as number | undefined;
+      if (!exp) return true;
+      return Date.now() >= exp * 1000;
+    } catch {
+      return true;
     }
   }
 }

@@ -34,7 +34,12 @@ const resendOtpSchema = z.object({
 const COOKIE_OPTIONS = {
   httpOnly: true,
   secure: env.NODE_ENV === 'production',
-  sameSite: 'strict' as const,
+  // Use strict in production (same-origin setups). For local development
+  // where frontend and backend typically run on different ports, use 'lax'
+  // so the browser accepts the refresh cookie for XHR requests. If you need
+  // cross-site cookies in production (not recommended) you must use
+  // SameSite=None and secure=true behind HTTPS.
+  sameSite: env.NODE_ENV === 'production' ? ('strict' as const) : ('lax' as const),
   maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
 };
 
@@ -283,7 +288,10 @@ export async function refresh(req: Request, res: Response, next: NextFunction): 
   try {
     const raw = req.cookies?.refreshToken;
     if (!raw) {
-      res.status(401).json({ message: 'No refresh token' });
+      // Explicit machine-readable code helps the frontend distinguish a
+      // missing cookie (browser didn't accept it) from an invalid/expired
+      // refresh token stored in the DB.
+      res.status(401).json({ message: 'No refresh token', code: 'NO_REFRESH_TOKEN' });
       return;
     }
     const tokens = await authService.refreshTokens(raw);
