@@ -13,13 +13,14 @@ import { Candidate } from '../../../core/models/candidate.model';
 import { ContactRequest } from '../../../core/models/contact-request.model';
 import { ToastService } from '../../../core/services/toast.service';
 import { PageHeaderComponent } from '../../../shared/components/page-header/page-header.component';
+import { TranslateModule } from '@ngx-translate/core';
 import { CandidateProfileComponent } from '../../../shared/components/candidate-profile/candidate-profile.component';
 import { SearchableSelectComponent, SelectOption } from '../../../shared/components/searchable-select/searchable-select.component';
 
 @Component({
   selector: 'app-recruiter-candidate-profile',
   standalone: true,
-  imports: [CommonModule, RouterLink, FormsModule, PageHeaderComponent, CandidateProfileComponent, SearchableSelectComponent],
+  imports: [CommonModule, RouterLink, FormsModule, PageHeaderComponent, CandidateProfileComponent, SearchableSelectComponent, TranslateModule],
   styles: [`
     .interest-panel {
       background: var(--th-surface);
@@ -93,7 +94,7 @@ import { SearchableSelectComponent, SelectOption } from '../../../shared/compone
           @if (!isAgency) {
             @if (contactRequestStatus === 'approved') {
               <span class="contact-status-badge contact-status-badge--approved">
-                <i class="bi bi-unlock-fill"></i>Contact Unlocked
+                <i class="bi bi-unlock-fill"></i>{{ 'CONTACT_STATUS.unlocked' | translate }}
               </span>
             } @else if (contactRequestStatus === 'pending') {
               <span class="contact-status-badge contact-status-badge--pending">

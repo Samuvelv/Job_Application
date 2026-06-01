@@ -5,6 +5,7 @@ import {
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule, ControlValueAccessor, NG_VALUE_ACCESSOR } from '@angular/forms';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
 
 export interface ChipOption {
   value: string;
@@ -14,7 +15,7 @@ export interface ChipOption {
 @Component({
   selector: 'app-chip-multi-select',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, TranslateModule],
   providers: [{
     provide: NG_VALUE_ACCESSOR,
     useExisting: forwardRef(() => ChipMultiSelectComponent),
@@ -30,7 +31,7 @@ export interface ChipOption {
         }
         @for (val of selectedValues(); track val) {
           <span class="cms-chip" (click)="$event.stopPropagation()">
-            {{ labelFor(val) }}
+            {{ labelFor(val) | translate }}
             <button type="button" class="cms-chip-remove" (click)="remove(val); $event.stopPropagation()">
               <i class="bi bi-x"></i>
             </button>
@@ -75,7 +76,7 @@ export interface ChipOption {
                 <i class="bi me-2"
                    [class.bi-check-square-fill]="isSelected(opt.value)"
                    [class.bi-square]="!isSelected(opt.value)"></i>
-                {{ opt.label }}
+                {{ opt.label | translate }}
               </li>
             } @empty {
               <li class="ss-empty">No results found</li>
@@ -101,7 +102,7 @@ export class ChipMultiSelectComponent implements OnChanges, OnInit, ControlValue
   private onChange: (v: string[]) => void = () => {};
   private onTouched: () => void = () => {};
 
-  constructor(private elRef: ElementRef) {}
+  constructor(private elRef: ElementRef, private translate: TranslateService) {}
 
   ngOnInit() { this.filteredOpts.set(this.options); }
   ngOnChanges(changes: SimpleChanges) {
@@ -143,7 +144,9 @@ export class ChipMultiSelectComponent implements OnChanges, OnInit, ControlValue
 
   onQuery(q: string) {
     const lower = q.toLowerCase();
-    this.filteredOpts.set(this.options.filter((o) => o.label.toLowerCase().includes(lower)));
+    this.filteredOpts.set(this.options.filter(
+      (o) => this.translate.instant(o.label).toLowerCase().includes(lower)
+    ));
   }
 
   @HostListener('document:click', ['$event'])

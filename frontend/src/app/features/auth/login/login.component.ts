@@ -8,14 +8,29 @@ import {
   Validators,
 } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
+import { TranslateModule } from '@ngx-translate/core';
 import { AuthService } from '../../../core/services/auth.service';
+import { LanguageSelectorComponent } from '../../../shared/components/language-selector/language-selector.component';
 
 @Component({
   selector: 'app-login',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, RouterLink],
+  imports: [CommonModule, ReactiveFormsModule, RouterLink, TranslateModule, LanguageSelectorComponent],
+  styles: [`
+    .auth-lang-bar {
+      position: absolute;
+      top: 1.25rem;
+      right: 1.5rem;
+      z-index: 10;
+    }
+  `],
   template: `
     <div class="auth-wrapper">
+
+      <!-- Language selector — top-right, always visible -->
+      <div class="auth-lang-bar">
+        <app-language-selector></app-language-selector>
+      </div>
 
       <!-- Wave blobs -->
       <div class="auth-orb auth-orb--1"></div>
@@ -89,8 +104,8 @@ import { AuthService } from '../../../core/services/auth.service';
 
             <!-- Heading -->
             <div class="auth-card-heading">
-              <div class="auth-card-title">Welcome to NTL Career Nexus</div>
-              <div class="auth-card-sub">Sign in to your account</div>
+              <div class="auth-card-title">{{ 'AUTH.welcome_title' | translate }}</div>
+              <div class="auth-card-sub">{{ 'AUTH.sign_in_subtitle' | translate }}</div>
             </div>
 
             @if (errorMsg) {
@@ -106,7 +121,7 @@ import { AuthService } from '../../../core/services/auth.service';
 
               <!-- Email / Candidate ID -->
               <div class="auth-field">
-                <label for="email" class="form-label">Email Address / Candidate ID</label>
+                <label for="email" class="form-label">{{ 'AUTH.email_label' | translate }}</label>
                 <div style="position:relative">
                   <i class="bi bi-person-circle auth-field-icon"></i>
                   <input
@@ -115,21 +130,21 @@ import { AuthService } from '../../../core/services/auth.service';
                     class="auth-underline-field"
                     [class.is-invalid]="submitted && f['email'].errors"
                     formControlName="email"
-                    placeholder="you@example.com or 10001"
+                    [placeholder]="'AUTH.email_placeholder' | translate"
                     autocomplete="username"
                   />
                   <span class="auth-field-underline"></span>
                 </div>
                 @if (submitted && f['email'].errors) {
                   <div class="invalid-feedback">
-                    @if (f['email'].errors['required']) { Email address or Candidate ID is required. }
+                    @if (f['email'].errors['required']) { {{ 'AUTH.email_required' | translate }} }
                   </div>
                 }
               </div>
 
               <!-- Password -->
               <div class="auth-field">
-                <label for="password" class="form-label">Password</label>
+                <label for="password" class="form-label">{{ 'AUTH.password_label' | translate }}</label>
                 <div style="position:relative">
                   <i class="bi bi-lock auth-field-icon"></i>
                   <input
@@ -138,7 +153,7 @@ import { AuthService } from '../../../core/services/auth.service';
                     class="auth-underline-field"
                     [class.is-invalid]="submitted && f['password'].errors"
                     formControlName="password"
-                    placeholder="••••••••"
+                    [placeholder]="'AUTH.password_placeholder' | translate"
                     autocomplete="current-password"
                   />
                   <span class="auth-field-underline"></span>
@@ -147,22 +162,22 @@ import { AuthService } from '../../../core/services/auth.service';
                     class="auth-toggle-btn"
                     (click)="showPassword = !showPassword"
                     tabindex="-1"
-                    [title]="showPassword ? 'Hide password' : 'Show password'"
+                    [title]="(showPassword ? 'AUTH.hide_password' : 'AUTH.show_password') | translate"
                   >
                     <i [class]="showPassword ? 'bi bi-eye-slash' : 'bi bi-eye'"></i>
                   </button>
                 </div>
                 @if (submitted && f['password'].errors) {
                   <div class="invalid-feedback">
-                    @if (f['password'].errors['required']) { Password is required. }
-                    @if (f['password'].errors['minlength']) { Minimum 6 characters. }
+                    @if (f['password'].errors['required']) { {{ 'AUTH.password_required' | translate }} }
+                    @if (f['password'].errors['minlength']) { {{ 'AUTH.password_minlength' | translate }} }
                   </div>
                 }
               </div>
 
               <!-- Forgot password -->
               <div class="auth-forgot">
-                <a href="#" class="auth-forgot__link" (click)="showForgotPopup = true; $event.preventDefault()">Forgot password?</a>
+                <a href="#" class="auth-forgot__link" (click)="showForgotPopup = true; $event.preventDefault()">{{ 'AUTH.forgot_password' | translate }}</a>
               </div>
 
               <!-- Sign In button -->
@@ -173,9 +188,9 @@ import { AuthService } from '../../../core/services/auth.service';
               >
                 @if (loading) {
                   <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
-                  Signing in&hellip;
+                  {{ 'AUTH.signing_in' | translate }}
                 } @else {
-                  <i class="bi bi-box-arrow-in-right me-2"></i>Sign In
+                  <i class="bi bi-box-arrow-in-right me-2"></i>{{ 'AUTH.sign_in' | translate }}
                 }
               </button>
 
@@ -184,14 +199,14 @@ import { AuthService } from '../../../core/services/auth.service';
             <!-- Divider -->
             <div class="auth-divider">
               <span></span>
-              <p>Not registered yet?</p>
+              <p>{{ 'AUTH.not_registered' | translate }}</p>
               <span></span>
             </div>
 
             <!-- Not registered section -->
             <div class="auth-register-note">
               <p class="auth-register-note__text">
-                Registration is managed by our team. Contact us via WhatsApp or the form below to apply.
+                {{ 'AUTH.register_note' | translate }}
               </p>
               <div class="auth-register-note__btns">
                 <a
@@ -200,20 +215,20 @@ import { AuthService } from '../../../core/services/auth.service';
                   target="_blank"
                   rel="noopener noreferrer"
                 >
-                  <i class="bi bi-whatsapp"></i> WhatsApp
+                  <i class="bi bi-whatsapp"></i> {{ 'AUTH.whatsapp' | translate }}
                 </a>
                 <a
                   class="auth-register-note__btn auth-register-note__btn--contact"
                   href="#contact"
                 >
-                  <i class="bi bi-envelope-fill"></i> Contact Us
+                  <i class="bi bi-envelope-fill"></i> {{ 'AUTH.contact_us' | translate }}
                 </a>
               </div>
             </div>
 
             <!-- Footer -->
             <p class="auth-footer-note mt-3 mb-0">
-              <i class="bi bi-shield-lock-fill me-1"></i>Access is managed by your administrator.
+              <i class="bi bi-shield-lock-fill me-1"></i>{{ 'AUTH.access_note' | translate }}
             </p>
 
           </div><!-- /auth-card credentials -->
@@ -235,15 +250,15 @@ import { AuthService } from '../../../core/services/auth.service';
 
             <!-- Heading -->
             <div class="auth-card-heading">
-              <div class="auth-card-title">Two-Factor Verification</div>
-              <div class="auth-card-sub">Enter the 6-digit code to complete sign-in</div>
+              <div class="auth-card-title">{{ 'AUTH.otp_title' | translate }}</div>
+              <div class="auth-card-sub">{{ 'AUTH.otp_subtitle' | translate }}</div>
             </div>
 
             <!-- Dev-mode banner -->
             @if (devOtp) {
               <div class="auth-alert mb-3" style="background:rgba(251,191,36,0.12);border-color:rgba(251,191,36,0.4)" role="alert">
                 <i class="bi bi-bug-fill" style="color:#fbbf24;flex-shrink:0"></i>
-                <span class="flex-grow-1"><strong style="color:#fbbf24">DEV MODE</strong> &mdash; OTP: <strong style="letter-spacing:2px">{{ devOtp }}</strong></span>
+                <span class="flex-grow-1"><strong style="color:#fbbf24">{{ 'AUTH.otp_dev_mode' | translate }}</strong> &mdash; OTP: <strong style="letter-spacing:2px">{{ devOtp }}</strong></span>
               </div>
             }
 
@@ -258,7 +273,7 @@ import { AuthService } from '../../../core/services/auth.service';
 
             <!-- OTP input -->
             <div class="auth-field">
-              <label for="otpInput" class="form-label">Verification Code</label>
+              <label for="otpInput" class="form-label">{{ 'AUTH.otp_label' | translate }}</label>
               <div style="position:relative">
                 <i class="bi bi-shield-lock auth-field-icon"></i>
                 <input
@@ -282,14 +297,14 @@ import { AuthService } from '../../../core/services/auth.service';
             <!-- Expiry countdown -->
             @if (otpSecondsLeft > 0) {
               <p class="text-center mb-2" style="font-size:0.8rem;color:rgba(165,180,252,0.55)">
-                <i class="bi bi-clock me-1"></i>Code expires in
+                <i class="bi bi-clock me-1"></i>{{ 'AUTH.otp_expires_in' | translate }}
                 <strong style="color:{{ otpSecondsLeft <= 60 ? '#f87171' : 'rgba(165,180,252,0.8)' }}">
                   {{ formatCountdown(otpSecondsLeft) }}
                 </strong>
               </p>
             } @else {
               <p class="text-center mb-2" style="font-size:0.8rem;color:#f87171">
-                <i class="bi bi-exclamation-circle me-1"></i>Code expired. Please resend or go back.
+                <i class="bi bi-exclamation-circle me-1"></i>{{ 'AUTH.otp_expired' | translate }}
               </p>
             }
 
@@ -302,9 +317,9 @@ import { AuthService } from '../../../core/services/auth.service';
             >
               @if (otpLoading) {
                 <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
-                Verifying&hellip;
+                {{ 'AUTH.verifying' | translate }}
               } @else {
-                <i class="bi bi-shield-check me-2"></i>Verify Code
+                <i class="bi bi-shield-check me-2"></i>{{ 'AUTH.verify_code' | translate }}
               }
             </button>
 
@@ -318,9 +333,9 @@ import { AuthService } from '../../../core/services/auth.service';
                 (click)="onResendOtp()"
               >
                 @if (resendCooldown > 0) {
-                  <i class="bi bi-arrow-clockwise me-1"></i>Resend in {{ resendCooldown }}s
+                  <i class="bi bi-arrow-clockwise me-1"></i>{{ 'AUTH.resend_in' | translate: { s: resendCooldown } }}
                 } @else {
-                  <i class="bi bi-arrow-clockwise me-1"></i>Resend code
+                  <i class="bi bi-arrow-clockwise me-1"></i>{{ 'AUTH.resend_code' | translate }}
                 }
               </button>
               <button
@@ -329,13 +344,13 @@ import { AuthService } from '../../../core/services/auth.service';
                 style="color:rgba(165,180,252,0.5);text-decoration:none"
                 (click)="backToCredentials()"
               >
-                <i class="bi bi-arrow-left me-1"></i>Back
+                <i class="bi bi-arrow-left me-1"></i>{{ 'AUTH.back' | translate }}
               </button>
             </div>
 
             <!-- Footer -->
             <p class="auth-footer-note mt-4 mb-0">
-              <i class="bi bi-shield-lock-fill me-1"></i>Admin accounts require two-factor authentication.
+              <i class="bi bi-shield-lock-fill me-1"></i>{{ 'AUTH.otp_2fa_note' | translate }}
             </p>
 
           </div><!-- /auth-card otp -->
@@ -350,13 +365,10 @@ import { AuthService } from '../../../core/services/auth.service';
             <div class="auth-popup__icon">
               <i class="bi bi-shield-lock-fill"></i>
             </div>
-            <h4 class="auth-popup__title">Password Reset</h4>
-            <p class="auth-popup__msg">
-              Password resets are managed by our admin team only.<br>
-              Please contact us and we'll get it sorted for you.
-            </p>
+            <h4 class="auth-popup__title">{{ 'AUTH.forgot_title' | translate }}</h4>
+            <p class="auth-popup__msg">{{ 'AUTH.forgot_msg' | translate }}</p>
             <button class="auth-popup__btn" (click)="onForgotOk()">
-              Okay, Contact Admin
+              {{ 'AUTH.forgot_ok' | translate }}
             </button>
           </div>
         </div>

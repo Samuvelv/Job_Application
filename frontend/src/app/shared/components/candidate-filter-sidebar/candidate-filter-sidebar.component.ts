@@ -10,56 +10,93 @@ import { TagInputComponent } from '../tag-input/tag-input.component';
 import { ChipMultiSelectComponent, ChipOption } from '../chip-multi-select/chip-multi-select.component';
 import { SearchableSelectComponent, SelectOption } from '../searchable-select/searchable-select.component';
 import { REGISTRATION_FEE_STATUS_OPTIONS, CV_FORMAT_OPTIONS, SOURCE_OPTIONS, PROFILE_STATUS_OPTIONS } from '../../../core/constants/candidate-options';
+import { TranslateModule } from '@ngx-translate/core';
 
 export type FilterApplyEvent = CandidateFilters;
 
 // ── Option lists (mirrors candidate-register form) ────────────────────────────
 
 const INDUSTRY_OPTIONS: ChipOption[] = [
-  'Technology', 'Healthcare', 'Finance', 'Education', 'Engineering',
-  'Marketing', 'Sales', 'Legal', 'Manufacturing', 'Retail',
-  'Media & Entertainment', 'Hospitality', 'Construction', 'Transportation',
-  'Agriculture', 'Government', 'Non-Profit', 'Other',
-].map(v => ({ value: v, label: v }));
+  { value: 'Technology',         label: 'FILTER_OPTIONS.ind_technology'    },
+  { value: 'Healthcare',         label: 'FILTER_OPTIONS.ind_healthcare'    },
+  { value: 'Finance',            label: 'FILTER_OPTIONS.ind_finance'       },
+  { value: 'Education',          label: 'FILTER_OPTIONS.ind_education'     },
+  { value: 'Engineering',        label: 'FILTER_OPTIONS.ind_engineering'   },
+  { value: 'Marketing',          label: 'FILTER_OPTIONS.ind_marketing'     },
+  { value: 'Sales',              label: 'FILTER_OPTIONS.ind_sales'         },
+  { value: 'Legal',              label: 'FILTER_OPTIONS.ind_legal'         },
+  { value: 'Manufacturing',      label: 'FILTER_OPTIONS.ind_manufacturing' },
+  { value: 'Retail',             label: 'FILTER_OPTIONS.ind_retail'        },
+  { value: 'Media & Entertainment', label: 'FILTER_OPTIONS.ind_media'      },
+  { value: 'Hospitality',        label: 'FILTER_OPTIONS.ind_hospitality'   },
+  { value: 'Construction',       label: 'FILTER_OPTIONS.ind_construction'  },
+  { value: 'Transportation',     label: 'FILTER_OPTIONS.ind_transportation'},
+  { value: 'Agriculture',        label: 'FILTER_OPTIONS.ind_agriculture'   },
+  { value: 'Government',         label: 'FILTER_OPTIONS.ind_government'    },
+  { value: 'Non-Profit',         label: 'FILTER_OPTIONS.ind_nonprofit'     },
+  { value: 'Other',              label: 'FILTER_OPTIONS.ind_other'         },
+];
 
 const EDUCATION_LEVEL_OPTIONS: ChipOption[] = [
-  { value: 'Diploma',   label: 'Diploma' },
-  { value: 'Bachelors', label: "Bachelor's" },
-  { value: 'Masters',   label: "Master's" },
-  { value: 'PhD',       label: 'PhD / Doctorate' },
-  { value: 'Certificate', label: 'Certificate' },
-  { value: 'High School', label: 'High School' },
+  { value: 'Diploma',     label: 'FILTER_OPTIONS.edu_diploma'    },
+  { value: 'Bachelors',   label: 'FILTER_OPTIONS.edu_bachelors'  },
+  { value: 'Masters',     label: 'FILTER_OPTIONS.edu_masters'    },
+  { value: 'PhD',         label: 'FILTER_OPTIONS.edu_phd'        },
+  { value: 'Certificate', label: 'FILTER_OPTIONS.edu_certificate'},
+  { value: 'High School', label: 'FILTER_OPTIONS.edu_highschool' },
 ];
 
 const FIELD_OF_STUDY_OPTIONS: SelectOption[] = [
-  'Engineering', 'Information Technology', 'Healthcare & Medicine',
-  'Business & Management', 'Law', 'Science', 'Arts & Humanities',
-  'Education', 'Finance & Accounting', 'Social Sciences', 'Other',
-].map(v => ({ value: v, label: v }));
+  { value: 'Engineering',           label: 'FILTER_OPTIONS.fos_engineering' },
+  { value: 'Information Technology',label: 'FILTER_OPTIONS.fos_it'          },
+  { value: 'Healthcare & Medicine', label: 'FILTER_OPTIONS.fos_healthcare'  },
+  { value: 'Business & Management', label: 'FILTER_OPTIONS.fos_business'    },
+  { value: 'Law',                   label: 'FILTER_OPTIONS.fos_law'         },
+  { value: 'Science',               label: 'FILTER_OPTIONS.fos_science'     },
+  { value: 'Arts & Humanities',     label: 'FILTER_OPTIONS.fos_arts'        },
+  { value: 'Education',             label: 'FILTER_OPTIONS.fos_education'   },
+  { value: 'Finance & Accounting',  label: 'FILTER_OPTIONS.fos_finance'     },
+  { value: 'Social Sciences',       label: 'FILTER_OPTIONS.fos_social'      },
+  { value: 'Other',                 label: 'FILTER_OPTIONS.fos_other'       },
+];
 
 const LANGUAGE_OPTIONS: ChipOption[] = [
-  'English', 'French', 'Spanish', 'Arabic', 'Tamil', 'Hindi',
-  'Mandarin', 'German', 'Portuguese', 'Japanese', 'Italian',
-  'Russian', 'Korean', 'Turkish', 'Malay', 'Bengali', 'Other',
-].map(v => ({ value: v, label: v }));
+  { value: 'English',    label: 'FILTER_OPTIONS.lang_english'    },
+  { value: 'French',     label: 'FILTER_OPTIONS.lang_french'     },
+  { value: 'Spanish',    label: 'FILTER_OPTIONS.lang_spanish'    },
+  { value: 'Arabic',     label: 'FILTER_OPTIONS.lang_arabic'     },
+  { value: 'Tamil',      label: 'FILTER_OPTIONS.lang_tamil'      },
+  { value: 'Hindi',      label: 'FILTER_OPTIONS.lang_hindi'      },
+  { value: 'Mandarin',   label: 'FILTER_OPTIONS.lang_mandarin'   },
+  { value: 'German',     label: 'FILTER_OPTIONS.lang_german'     },
+  { value: 'Portuguese', label: 'FILTER_OPTIONS.lang_portuguese' },
+  { value: 'Japanese',   label: 'FILTER_OPTIONS.lang_japanese'   },
+  { value: 'Italian',    label: 'FILTER_OPTIONS.lang_italian'    },
+  { value: 'Russian',    label: 'FILTER_OPTIONS.lang_russian'    },
+  { value: 'Korean',     label: 'FILTER_OPTIONS.lang_korean'     },
+  { value: 'Turkish',    label: 'FILTER_OPTIONS.lang_turkish'    },
+  { value: 'Malay',      label: 'FILTER_OPTIONS.lang_malay'      },
+  { value: 'Bengali',    label: 'FILTER_OPTIONS.lang_bengali'    },
+  { value: 'Other',      label: 'FILTER_OPTIONS.lang_other'      },
+];
 
 const GENDER_OPTIONS: SelectOption[] = [
-  { value: 'male',              label: 'Male' },
-  { value: 'female',            label: 'Female' },
-  { value: 'non-binary',        label: 'Non-binary' },
-  { value: 'prefer_not_to_say', label: 'Prefer not to say' },
+  { value: 'male',              label: 'FILTER_OPTIONS.gen_male'       },
+  { value: 'female',            label: 'FILTER_OPTIONS.gen_female'     },
+  { value: 'non-binary',        label: 'FILTER_OPTIONS.gen_non_binary' },
+  { value: 'prefer_not_to_say', label: 'FILTER_OPTIONS.gen_prefer_not' },
 ];
 
 const VISA_OPTIONS: SelectOption[] = [
-  { value: 'has_visa',          label: 'Has Visa / Work Permit' },
-  { value: 'needs_sponsorship', label: 'Needs Sponsorship' },
-  { value: 'citizen',           label: 'Citizen / Permanent Resident' },
+  { value: 'has_visa',          label: 'FILTER_OPTIONS.visa_has'     },
+  { value: 'needs_sponsorship', label: 'FILTER_OPTIONS.visa_needs'   },
+  { value: 'citizen',           label: 'FILTER_OPTIONS.visa_citizen' },
 ];
 
 const AVAILABILITY_OPTIONS: SelectOption[] = [
-  { value: 'immediate', label: 'Immediately' },
-  { value: '1_month',   label: 'Within 1 Month' },
-  { value: '3_months',  label: 'Within 3 Months' },
+  { value: 'immediate', label: 'FILTER_OPTIONS.avail_immediate' },
+  { value: '1_month',   label: 'FILTER_OPTIONS.avail_1month'    },
+  { value: '3_months',  label: 'FILTER_OPTIONS.avail_3months'   },
 ];
 
 
@@ -68,7 +105,7 @@ const AVAILABILITY_OPTIONS: SelectOption[] = [
 @Component({
   selector: 'app-candidate-filter-sidebar',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, TagInputComponent, ChipMultiSelectComponent, SearchableSelectComponent],
+  imports: [CommonModule, ReactiveFormsModule, TagInputComponent, ChipMultiSelectComponent, SearchableSelectComponent, TranslateModule],
   template: `
     <!-- ── Backdrop ──────────────────────────────────────────────────────────── -->
     <div class="cfs-backdrop" [class.cfs-backdrop--visible]="sidebarOpen()"></div>
@@ -81,7 +118,7 @@ const AVAILABILITY_OPTIONS: SelectOption[] = [
       <div class="cfs-sidebar__header">
         <div class="cfs-sidebar__title">
           <i class="bi bi-sliders2"></i>
-          Advanced Filters
+          {{ 'FILTER.title' | translate }}
           @if (activeCount > 0) {
             <span class="cfs-sidebar__count">{{ activeCount }}</span>
           }
@@ -89,7 +126,7 @@ const AVAILABILITY_OPTIONS: SelectOption[] = [
         <div class="d-flex align-items-center gap-2">
           @if (activeCount > 0) {
             <button type="button" class="cfs-sidebar__clear-all" (click)="clearAll()">
-              Clear all
+              {{ 'FILTER.clear_all' | translate }}
             </button>
           }
           <button type="button" class="cfs-sidebar__close" aria-label="Close" (click)="closeSidebar()">
@@ -103,7 +140,7 @@ const AVAILABILITY_OPTIONS: SelectOption[] = [
         <!-- 1. Industry — ChipMultiSelect -->
         <div class="cfs-section">
           <div class="cfs-section__label">
-            Industry
+            {{ 'FILTER.industry' | translate }}
             @if (form.get('industryList')?.value?.length) {
               <span class="cfs-section__active-dot"></span>
             }
@@ -112,7 +149,7 @@ const AVAILABILITY_OPTIONS: SelectOption[] = [
             <app-chip-multi-select
               formControlName="industryList"
               [options]="INDUSTRY_OPTIONS"
-              placeholder="Select industries…">
+              [placeholder]="'FILTER.select_industries' | translate">
             </app-chip-multi-select>
           </div>
         </div>
@@ -120,7 +157,7 @@ const AVAILABILITY_OPTIONS: SelectOption[] = [
         <!-- 2. Work Experience (range) -->
         <div class="cfs-section">
           <div class="cfs-section__label">
-            Work Experience (Years)
+            {{ 'FILTER.work_experience' | translate }}
             @if (form.get('yearsExpMin')?.value || form.get('yearsExpMax')?.value) {
               <span class="cfs-section__active-dot"></span>
             }
@@ -128,10 +165,10 @@ const AVAILABILITY_OPTIONS: SelectOption[] = [
           <div class="cfs-section__body open">
             <div class="cfs-range-row">
               <input type="number" class="form-control form-control-sm" formControlName="yearsExpMin"
-                placeholder="Min" min="0" max="25">
+                [placeholder]="'FILTER.years_range_min' | translate" min="0" max="25">
               <span>–</span>
               <input type="number" class="form-control form-control-sm" formControlName="yearsExpMax"
-                placeholder="Max" min="0" max="25">
+                [placeholder]="'FILTER.years_range_max' | translate" min="0" max="25">
             </div>
             <div class="cfs-range-labels mt-1"><span>0 yrs</span><span>25 yrs</span></div>
           </div>
@@ -140,16 +177,16 @@ const AVAILABILITY_OPTIONS: SelectOption[] = [
         <!-- 3. Skills — TagInput -->
         <div class="cfs-section">
           <div class="cfs-section__label">
-            Skills
+            {{ 'FILTER.skills' | translate }}
             @if (form.get('skillTags')?.value?.length) {
               <span class="cfs-section__active-dot"></span>
             }
           </div>
           <div class="cfs-section__body open">
-            <app-tag-input formControlName="skillTags" placeholder="Type skill, press Enter…">
+            <app-tag-input formControlName="skillTags" [placeholder]="'FILTER.skills_hint' | translate">
             </app-tag-input>
             <div class="mt-1" style="font-size:.7rem;color:var(--th-text-secondary)">
-              Press Enter or comma to add
+              {{ 'FILTER.skills_hint' | translate }}
             </div>
           </div>
         </div>
@@ -157,82 +194,82 @@ const AVAILABILITY_OPTIONS: SelectOption[] = [
         <!-- 4. Current Location -->
         <div class="cfs-section">
           <div class="cfs-section__label">
-            Current Location
+            {{ 'FILTER.current_location' | translate }}
             @if (form.get('currentCountry')?.value || form.get('currentCity')?.value) {
               <span class="cfs-section__active-dot"></span>
             }
           </div>
           <div class="cfs-section__body open">
-            <label class="cfs-field-label">Country</label>
+            <label class="cfs-field-label">{{ 'FILTER.country' | translate }}</label>
             <input type="text" class="form-control form-control-sm mb-2"
-              formControlName="currentCountry" placeholder="e.g. Australia">
-            <label class="cfs-field-label">City</label>
+              formControlName="currentCountry" [placeholder]="'FILTER.country_placeholder' | translate">
+            <label class="cfs-field-label">{{ 'FILTER.city' | translate }}</label>
             <input type="text" class="form-control form-control-sm"
-              formControlName="currentCity" placeholder="e.g. Sydney">
+              formControlName="currentCity" [placeholder]="'FILTER.city_placeholder' | translate">
           </div>
         </div>
 
         <!-- 5. Nationality / Origin -->
         <div class="cfs-section">
           <div class="cfs-section__label">
-            Nationality / Origin
+            {{ 'FILTER.nationality' | translate }}
             @if (form.get('nationality')?.value) {
               <span class="cfs-section__active-dot"></span>
             }
           </div>
           <div class="cfs-section__body open">
             <input type="text" class="form-control form-control-sm"
-              formControlName="nationality" placeholder="e.g. Indian, British">
+              formControlName="nationality" [placeholder]="'FILTER.nationality_placeholder' | translate">
           </div>
         </div>
 
         <!-- 6. Target Country -->
         <div class="cfs-section">
           <div class="cfs-section__label">
-            Target Country (Work Location)
+            {{ 'FILTER.target_country' | translate }}
             @if (form.get('targetCountry')?.value) {
               <span class="cfs-section__active-dot"></span>
             }
           </div>
           <div class="cfs-section__body open">
             <input type="text" class="form-control form-control-sm"
-              formControlName="targetCountry" placeholder="Where they want to work">
+              formControlName="targetCountry" [placeholder]="'FILTER.target_placeholder' | translate">
           </div>
         </div>
 
         <!-- 7. Education -->
         <div class="cfs-section">
           <div class="cfs-section__label">
-            Education
+            {{ 'FILTER.education' | translate }}
             @if (form.get('educationLevelList')?.value?.length || form.get('fieldOfStudy')?.value || form.get('university')?.value) {
               <span class="cfs-section__active-dot"></span>
             }
           </div>
           <div class="cfs-section__body open">
-            <label class="cfs-field-label">Education Level</label>
+            <label class="cfs-field-label">{{ 'FILTER.edu_level' | translate }}</label>
             <app-chip-multi-select
               formControlName="educationLevelList"
               [options]="EDUCATION_LEVEL_OPTIONS"
-              placeholder="Select levels…"
+              [placeholder]="'FILTER.select_levels' | translate"
               class="mb-2 d-block">
             </app-chip-multi-select>
-            <label class="cfs-field-label">Field of Study</label>
+            <label class="cfs-field-label">{{ 'FILTER.field_of_study' | translate }}</label>
             <app-searchable-select
               formControlName="fieldOfStudy"
               [options]="FIELD_OF_STUDY_OPTIONS"
-              placeholder="Select field…"
+              [placeholder]="'FILTER.select_field' | translate"
               class="mb-2 d-block">
             </app-searchable-select>
-            <label class="cfs-field-label">University / College</label>
+            <label class="cfs-field-label">{{ 'FILTER.university' | translate }}</label>
             <input type="text" class="form-control form-control-sm"
-              formControlName="university" placeholder="Search institution…">
+              formControlName="university" [placeholder]="'FILTER.university_placeholder' | translate">
           </div>
         </div>
 
         <!-- 8. Language — ChipMultiSelect -->
         <div class="cfs-section">
           <div class="cfs-section__label">
-            Language
+            {{ 'FILTER.language' | translate }}
             @if (form.get('languageList')?.value?.length) {
               <span class="cfs-section__active-dot"></span>
             }
@@ -241,7 +278,7 @@ const AVAILABILITY_OPTIONS: SelectOption[] = [
             <app-chip-multi-select
               formControlName="languageList"
               [options]="LANGUAGE_OPTIONS"
-              placeholder="Select languages…">
+              [placeholder]="'FILTER.select_languages' | translate">
             </app-chip-multi-select>
           </div>
         </div>
@@ -249,7 +286,7 @@ const AVAILABILITY_OPTIONS: SelectOption[] = [
         <!-- 9. Age Range -->
         <div class="cfs-section">
           <div class="cfs-section__label">
-            Age Range
+            {{ 'FILTER.age_range' | translate }}
             @if (form.get('ageMin')?.value || form.get('ageMax')?.value) {
               <span class="cfs-section__active-dot"></span>
             }
@@ -257,10 +294,10 @@ const AVAILABILITY_OPTIONS: SelectOption[] = [
           <div class="cfs-section__body open">
             <div class="cfs-range-row">
               <input type="number" class="form-control form-control-sm"
-                formControlName="ageMin" placeholder="Min" min="18" max="70">
+                formControlName="ageMin" [placeholder]="'FILTER.years_range_min' | translate" min="18" max="70">
               <span>–</span>
               <input type="number" class="form-control form-control-sm"
-                formControlName="ageMax" placeholder="Max" min="18" max="70">
+                formControlName="ageMax" [placeholder]="'FILTER.years_range_max' | translate" min="18" max="70">
             </div>
             <div class="cfs-range-labels mt-1"><span>18</span><span>70</span></div>
           </div>
@@ -269,7 +306,7 @@ const AVAILABILITY_OPTIONS: SelectOption[] = [
         <!-- 11. Visa Status -->
         <div class="cfs-section">
           <div class="cfs-section__label">
-            Visa Status
+            {{ 'FILTER.visa_status' | translate }}
             @if (form.get('visaStatus')?.value) {
               <span class="cfs-section__active-dot"></span>
             }
@@ -278,7 +315,7 @@ const AVAILABILITY_OPTIONS: SelectOption[] = [
             <app-searchable-select
               formControlName="visaStatus"
               [options]="VISA_OPTIONS"
-              placeholder="Any visa status">
+              [placeholder]="'FILTER.any_visa' | translate">
             </app-searchable-select>
           </div>
         </div>
@@ -286,7 +323,7 @@ const AVAILABILITY_OPTIONS: SelectOption[] = [
         <!-- 12. Availability -->
         <div class="cfs-section">
           <div class="cfs-section__label">
-            Availability
+            {{ 'FILTER.availability' | translate }}
             @if (form.get('availability')?.value) {
               <span class="cfs-section__active-dot"></span>
             }
@@ -295,7 +332,7 @@ const AVAILABILITY_OPTIONS: SelectOption[] = [
             <app-searchable-select
               formControlName="availability"
               [options]="AVAILABILITY_OPTIONS"
-              placeholder="Any availability">
+              [placeholder]="'FILTER.any_availability' | translate">
             </app-searchable-select>
           </div>
         </div>
@@ -303,8 +340,8 @@ const AVAILABILITY_OPTIONS: SelectOption[] = [
         <!-- 13. Gender -->
         <div class="cfs-section">
           <div class="cfs-section__label">
-            Gender
-            <span style="font-size:.7rem;font-weight:400;color:var(--th-text-secondary)"> (optional)</span>
+            {{ 'FILTER.gender' | translate }}
+            <span style="font-size:.7rem;font-weight:400;color:var(--th-text-secondary)"> {{ 'FILTER.optional' | translate }}</span>
             @if (form.get('gender')?.value) {
               <span class="cfs-section__active-dot"></span>
             }
@@ -313,7 +350,7 @@ const AVAILABILITY_OPTIONS: SelectOption[] = [
             <app-searchable-select
               formControlName="gender"
               [options]="GENDER_OPTIONS"
-              placeholder="Any gender">
+              [placeholder]="'FILTER.any_gender' | translate">
             </app-searchable-select>
           </div>
         </div>
@@ -321,14 +358,14 @@ const AVAILABILITY_OPTIONS: SelectOption[] = [
         <!-- 14. Has Video — Toggle -->
         <div class="cfs-section">
           <div class="cfs-section__label">
-            Has Introduction Video
+            {{ 'FILTER.has_video' | translate }}
             @if (form.get('hasVideo')?.value) {
               <span class="cfs-section__active-dot"></span>
             }
           </div>
           <div class="cfs-section__body open">
             <div class="cfs-toggle-row">
-              <span class="cfs-toggle-label">Only show profiles with video</span>
+              <span class="cfs-toggle-label">{{ 'FILTER.video_hint' | translate }}</span>
               <label class="cfs-toggle">
                 <input type="checkbox" formControlName="hasVideo">
                 <span class="cfs-toggle__track"></span>
@@ -336,8 +373,8 @@ const AVAILABILITY_OPTIONS: SelectOption[] = [
             </div>
             <div class="cfs-toggle-row mt-2">
               <span class="cfs-toggle-label">
-                Has CV Uploaded
-                <span class="cfs-field-hint">Only show profiles with CV uploaded</span>
+                {{ 'FILTER.has_cv' | translate }}
+                <span class="cfs-field-hint">{{ 'FILTER.cv_hint' | translate }}</span>
               </span>
               <label class="cfs-toggle">
                 <input type="checkbox" formControlName="hasCV">
@@ -351,7 +388,7 @@ const AVAILABILITY_OPTIONS: SelectOption[] = [
         @if (showProfileStatus) {
           <div class="cfs-section">
             <div class="cfs-section__label">
-              Profile Status
+              {{ 'FILTER.profile_status' | translate }}
               @if (form.get('profileStatus')?.value) {
                 <span class="cfs-section__active-dot"></span>
               }
@@ -360,14 +397,14 @@ const AVAILABILITY_OPTIONS: SelectOption[] = [
               <app-searchable-select
                 formControlName="profileStatus"
                 [options]="PROFILE_STATUS_OPTIONS"
-                placeholder="All statuses">
+                [placeholder]="'FILTER.all_statuses' | translate">
               </app-searchable-select>
             </div>
           </div>
 
           <div class="cfs-section">
             <div class="cfs-section__label">
-              Registration Fee
+              {{ 'FILTER.reg_fee' | translate }}
               @if (form.get('registrationFeeStatus')?.value) {
                 <span class="cfs-section__active-dot"></span>
               }
@@ -376,14 +413,14 @@ const AVAILABILITY_OPTIONS: SelectOption[] = [
               <app-searchable-select
                 formControlName="registrationFeeStatus"
                 [options]="REGISTRATION_FEE_STATUS_OPTIONS"
-                placeholder="All payment statuses">
+                [placeholder]="'FILTER.all_payment' | translate">
               </app-searchable-select>
             </div>
           </div>
 
           <div class="cfs-section">
             <div class="cfs-section__label">
-              CV Format
+              {{ 'FILTER.cv_format' | translate }}
               @if (form.get('cvFormat')?.value) {
                 <span class="cfs-section__active-dot"></span>
               }
@@ -392,14 +429,14 @@ const AVAILABILITY_OPTIONS: SelectOption[] = [
               <app-searchable-select
                 formControlName="cvFormat"
                 [options]="CV_FORMAT_OPTIONS"
-                placeholder="All formats">
+                [placeholder]="'FILTER.all_formats' | translate">
               </app-searchable-select>
             </div>
           </div>
 
           <div class="cfs-section">
             <div class="cfs-section__label">
-              Source / How They Found Us
+              {{ 'FILTER.source' | translate }}
               @if (form.get('sourceList')?.value?.length) {
                 <span class="cfs-section__active-dot"></span>
               }
@@ -408,7 +445,7 @@ const AVAILABILITY_OPTIONS: SelectOption[] = [
               <app-chip-multi-select
                 formControlName="sourceList"
                 [options]="SOURCE_OPTIONS"
-                placeholder="Select sources…">
+                [placeholder]="'FILTER.select_sources' | translate">
               </app-chip-multi-select>
             </div>
           </div>
@@ -417,7 +454,7 @@ const AVAILABILITY_OPTIONS: SelectOption[] = [
         <!-- Apply button (sticky footer) -->
         <div class="cfs-apply-footer">
           <button type="submit" class="filter-search-btn w-100">
-            <i class="bi bi-search"></i> Apply Filters
+            <i class="bi bi-search"></i> {{ 'FILTER.apply' | translate }}
           </button>
         </div>
 

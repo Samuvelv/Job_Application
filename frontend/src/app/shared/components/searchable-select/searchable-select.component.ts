@@ -5,6 +5,7 @@ import {
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule, ControlValueAccessor, NG_VALUE_ACCESSOR } from '@angular/forms';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
 
 export interface SelectOption {
   value: string | number;
@@ -15,7 +16,7 @@ export interface SelectOption {
 @Component({
   selector: 'app-searchable-select',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, TranslateModule],
   providers: [{
     provide: NG_VALUE_ACCESSOR,
     useExisting: forwardRef(() => SearchableSelectComponent),
@@ -68,7 +69,7 @@ export interface SelectOption {
                 [class.ss-selected]="opt.value === selectedValue()"
                 (click)="select(opt.value)"
               >
-                <span class="ss-opt-label">{{ opt.label }}</span>
+                <span class="ss-opt-label">{{ opt.label | translate }}</span>
                 @if (opt.sublabel) {
                   <span class="ss-opt-sub">{{ opt.sublabel }}</span>
                 }
@@ -99,13 +100,14 @@ export class SearchableSelectComponent implements OnChanges, OnInit, ControlValu
   displayLabel = computed(() => {
     const v = this.selectedValue();
     if (v === null || v === '') return '';
-    return this.options.find((o) => String(o.value) === String(v))?.label ?? '';
+    const raw = this.options.find((o) => String(o.value) === String(v))?.label ?? '';
+    return raw ? this.translate.instant(raw) : '';
   });
 
   private onChange: (v: any) => void = () => {};
   private onTouched: () => void = () => {};
 
-  constructor(private elRef: ElementRef) {}
+  constructor(private elRef: ElementRef, private translate: TranslateService) {}
 
   ngOnInit() { this.filteredOpts.set(this.options); }
 
@@ -129,7 +131,8 @@ export class SearchableSelectComponent implements OnChanges, OnInit, ControlValu
     const lower = q.toLowerCase();
     this.filteredOpts.set(
       this.options.filter(
-        (o) => o.label.toLowerCase().includes(lower) || (o.sublabel ?? '').toLowerCase().includes(lower),
+        (o) => this.translate.instant(o.label).toLowerCase().includes(lower) ||
+               (o.sublabel ?? '').toLowerCase().includes(lower),
       ),
     );
   }
