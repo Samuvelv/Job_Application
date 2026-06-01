@@ -10,6 +10,7 @@ import {
 } from '@angular/forms';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { ThemeService } from '../../core/services/theme.service';
+import { LanguageSelectorComponent } from '../../shared/components/language-selector/language-selector.component';
 import { ToastService } from '../../core/services/toast.service';
 import { StatsService } from '../../core/services/stats.service';
 import { ContactSubmissionService } from '../../core/services/contact-submission.service';
@@ -69,7 +70,7 @@ function makeOptionalPhoneValidator(dialCtrl: string, numCtrl: string): Validato
 @Component({
   selector: 'app-landing',
   standalone: true,
-  imports: [CommonModule, RouterLink, ReactiveFormsModule, SearchableSelectComponent, TranslateModule],
+  imports: [CommonModule, RouterLink, ReactiveFormsModule, SearchableSelectComponent, TranslateModule, LanguageSelectorComponent],
   template: `
 <!-- ══════════════════════════════════════════════
      NAVBAR
@@ -91,11 +92,12 @@ function makeOptionalPhoneValidator(dialCtrl: string, numCtrl: string): Validato
     </nav>
 
     <!-- Actions -->
-    <div class="lp-nav__actions">
-      <button class="lp-nav__theme-btn" (click)="theme.toggle()" [title]="theme.isDark() ? ('LANDING.light_mode' | translate) : ('LANDING.dark_mode' | translate)">
-        <i class="bi" [class.bi-sun-fill]="theme.isDark()" [class.bi-moon-fill]="!theme.isDark()"></i>
-      </button>
-      <a class="lp-nav__signin" routerLink="/login">{{ 'LANDING.sign_in' | translate }}</a>
+      <div class="lp-nav__actions">
+        <app-language-selector></app-language-selector>
+        <button class="lp-nav__theme-btn" (click)="theme.toggle()" [title]="theme.isDark() ? ('LANDING.light_mode' | translate) : ('LANDING.dark_mode' | translate)">
+          <i class="bi" [class.bi-sun-fill]="theme.isDark()" [class.bi-moon-fill]="!theme.isDark()"></i>
+        </button>
+        <a class="lp-nav__signin" routerLink="/login">{{ 'LANDING.sign_in' | translate }}</a>
       <div class="lp-nav__register-wrap" (click)="$event.stopPropagation()">
         <button class="lp-btn-primary lp-btn--sm lp-nav__register-btn"
                 [class.lp-nav__register-btn--open]="registerOpen()"
