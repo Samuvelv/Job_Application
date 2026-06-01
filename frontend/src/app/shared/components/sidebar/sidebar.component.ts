@@ -2,12 +2,13 @@
 import { Component, computed, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink, RouterLinkActive } from '@angular/router';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { AuthService } from '../../../core/services/auth.service';
 import { SidebarService } from '../../../core/services/sidebar.service';
 import { NotificationService } from '../../../core/services/notification.service';
 
 interface NavItem {
-  label:      string;
+  labelKey:   string;
   icon:       string;
   route:      string;
   badge?:     () => number;
@@ -17,7 +18,7 @@ interface NavItem {
 @Component({
   selector: 'app-sidebar',
   standalone: true,
-  imports: [CommonModule, RouterLink, RouterLinkActive],
+  imports: [CommonModule, RouterLink, RouterLinkActive, TranslateModule],
   template: `
     <nav class="app-sidebar"
          [class.open]="sidebar.isOpen()"
@@ -30,7 +31,7 @@ interface NavItem {
             <a class="sidebar-link"
                [routerLink]="entry.route"
                routerLinkActive="active"
-               [title]="sidebar.isCollapsed() ? entry.label : ''"
+               [title]="sidebar.isCollapsed() ? (entry.labelKey | translate) : ''"
                (click)="sidebar.close()">
               <div class="sidebar-link__icon-wrapper">
                 <i class="bi {{ entry.icon }}" [style.color]="entry.iconColor || null"></i>
@@ -38,7 +39,7 @@ interface NavItem {
                   <span class="sidebar-link__badge">{{ entry.badge() }}</span>
                 }
               </div>
-              <span class="sidebar-link-label">{{ entry.label }}</span>
+              <span class="sidebar-link-label">{{ entry.labelKey | translate }}</span>
             </a>
           </li>
         }
@@ -48,11 +49,11 @@ interface NavItem {
       <div class="sidebar-collapse-wrap">
         <button class="sidebar-collapse-btn"
                 (click)="sidebar.toggleCollapse()"
-                [title]="sidebar.isCollapsed() ? 'Expand sidebar' : 'Collapse sidebar'">
+                [title]="(sidebar.isCollapsed() ? 'NAV.expand_sidebar' : 'NAV.collapse_sidebar') | translate">
           <i class="bi"
              [class.bi-chevron-double-left]="!sidebar.isCollapsed()"
              [class.bi-chevron-double-right]="sidebar.isCollapsed()"></i>
-          <span class="sidebar-link-label">Collapse</span>
+          <span class="sidebar-link-label">{{ 'NAV.collapse' | translate }}</span>
         </button>
       </div>
 
@@ -66,34 +67,34 @@ export class SidebarComponent implements OnDestroy {
     switch (this.role()) {
       case 'admin':
         return [
-          { label: 'Dashboard',         icon: 'bi-grid-1x2-fill',    route: '/admin/dashboard' },
-          { label: 'Candidates',         icon: 'bi-people-fill',       route: '/admin/candidates' },
-          { label: 'Recruiters',        icon: 'bi-person-badge-fill', route: '/admin/recruiters' },
-          { label: 'Edit Requests',     icon: 'bi-pencil-square',     route: '/admin/edit-requests',       badge: () => this.notifications.totalEditRequestsPending() },
-          { label: 'Contact Requests',  icon: 'bi-envelope-fill',     route: '/admin/contact-submissions', badge: () => this.notifications.pendingContactRequests() },
-          { label: 'Interest Requests', icon: 'bi-briefcase-fill',    route: '/admin/interest-requests',   badge: () => this.notifications.pendingInterestRequests() },
-          { label: 'Volunteers',        icon: 'bi-mortarboard-fill',  route: '/admin/volunteers', iconColor: '#f59e0b' },
-          { label: 'Master Data',       icon: 'bi-database',          route: '/admin/master' },
-          { label: 'Audit Logs',        icon: 'bi-journal-text',      route: '/admin/audit-logs' },
+          { labelKey: 'NAV.dashboard',         icon: 'bi-grid-1x2-fill',    route: '/admin/dashboard' },
+          { labelKey: 'NAV.candidates',         icon: 'bi-people-fill',       route: '/admin/candidates' },
+          { labelKey: 'NAV.recruiters',         icon: 'bi-person-badge-fill', route: '/admin/recruiters' },
+          { labelKey: 'NAV.edit_requests',      icon: 'bi-pencil-square',     route: '/admin/edit-requests',       badge: () => this.notifications.totalEditRequestsPending() },
+          { labelKey: 'NAV.contact_requests',   icon: 'bi-envelope-fill',     route: '/admin/contact-submissions', badge: () => this.notifications.pendingContactRequests() },
+          { labelKey: 'NAV.interest_requests',  icon: 'bi-briefcase-fill',    route: '/admin/interest-requests',   badge: () => this.notifications.pendingInterestRequests() },
+          { labelKey: 'NAV.volunteers',         icon: 'bi-mortarboard-fill',  route: '/admin/volunteers', iconColor: '#f59e0b' },
+          { labelKey: 'NAV.master_data',        icon: 'bi-database',          route: '/admin/master' },
+          { labelKey: 'NAV.audit_logs',         icon: 'bi-journal-text',      route: '/admin/audit-logs' },
         ];
       case 'candidate': {
         const placed = this.auth.candidateStatus() === 'placed';
         const items: NavItem[] = [
-          { label: 'Dashboard',  icon: 'bi-grid-1x2-fill', route: '/candidate/dashboard' },
-          { label: 'My Profile', icon: 'bi-person-circle', route: '/candidate/profile' },
+          { labelKey: 'NAV.dashboard',   icon: 'bi-grid-1x2-fill', route: '/candidate/dashboard' },
+          { labelKey: 'NAV.my_profile',  icon: 'bi-person-circle', route: '/candidate/profile' },
         ];
         if (!placed) {
-          items.push({ label: 'Request Edit', icon: 'bi-pencil',      route: '/candidate/edit-request' });
-          items.push({ label: 'Volunteers',   icon: 'bi-people-fill', route: '/candidate/volunteers' });
+          items.push({ labelKey: 'NAV.request_edit', icon: 'bi-pencil',      route: '/candidate/edit-request' });
+          items.push({ labelKey: 'NAV.volunteers',   icon: 'bi-people-fill', route: '/candidate/volunteers' });
         }
         return items;
       }
       case 'recruiter':
         return [
-          { label: 'Dashboard',        icon: 'bi-grid-1x2-fill',     route: '/recruiter/dashboard' },
-          { label: 'Search Talent',    icon: 'bi-search',             route: '/recruiter/candidates' },
-          { label: 'My Shortlist',     icon: 'bi-bookmark-star-fill', route: '/recruiter/shortlist' },
-          { label: 'Interest Requests',icon: 'bi-briefcase-fill',     route: '/recruiter/interest-requests' },
+          { labelKey: 'NAV.dashboard',        icon: 'bi-grid-1x2-fill',     route: '/recruiter/dashboard' },
+          { labelKey: 'NAV.search_talent',    icon: 'bi-search',             route: '/recruiter/candidates' },
+          { labelKey: 'NAV.my_shortlist',     icon: 'bi-bookmark-star-fill', route: '/recruiter/shortlist' },
+          { labelKey: 'NAV.interest_requests',icon: 'bi-briefcase-fill',     route: '/recruiter/interest-requests' },
         ];
       default:
         return [];

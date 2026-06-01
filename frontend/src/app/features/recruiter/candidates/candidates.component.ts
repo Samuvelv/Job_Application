@@ -4,6 +4,7 @@ import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, FormControl, FormGroup, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
 import { catchError, forkJoin, of } from 'rxjs';
+import { TranslateModule } from '@ngx-translate/core';
 import { CandidateService, PaginatedCandidates } from '../../../core/services/candidate.service';
 import { RecruiterService } from '../../../core/services/recruiter.service';
 import { InterestRequestService, InterestRequest } from '../../../core/services/interest-request.service';
@@ -19,14 +20,15 @@ import { RecruiterCandidateCardComponent } from '../../../shared/components/recr
   standalone: true,
   imports: [
     CommonModule, ReactiveFormsModule,
+    TranslateModule,
     PageHeaderComponent, EmptyStateComponent,
     CandidateFilterSidebarComponent,
     RecruiterCandidateCardComponent,
   ],
   template: `
     <app-page-header
-      title="Search Talent"
-      [subtitle]="pagination.total + ' candidates available'"
+      [title]="'RECRUITER_CANDIDATES.title' | translate"
+      [subtitle]="('RECRUITER_CANDIDATES.subtitle' | translate: { count: pagination.total })"
           icon="bi-person-lines-fill"
     />
 
@@ -36,25 +38,25 @@ import { RecruiterCandidateCardComponent } from '../../../shared/components/recr
         <i class="bi bi-search"></i>
         <input type="text" class="form-control form-control-sm"
           [formControl]="searchCtrl"
-          placeholder="Search name, job title, skills…"
+          [placeholder]="'RECRUITER_CANDIDATES.search_placeholder' | translate"
           (keydown.enter)="doSearch()">
       </div>
       <div class="cfs-topbar__actions">
         <button type="button" class="filter-search-btn" (click)="doSearch()">
-          <i class="bi bi-search"></i> Search
+          <i class="bi bi-search"></i> {{ 'COMMON.search' | translate }}
         </button>
         <button type="button" class="cfs-toggle-sidebar-btn"
           [class.active]="sidebarVisible"
           (click)="toggleSidebar()">
           <i class="bi bi-sliders2"></i>
-          <span class="d-none d-sm-inline">Filters</span>
+          <span class="d-none d-sm-inline">{{ 'COMMON.filters' | translate }}</span>
           @if (sidebarActiveCount > 0) {
             <span class="cfs-filter-badge">{{ sidebarActiveCount }}</span>
           }
         </button>
         @if (hasActiveFilters) {
           <button type="button" class="filter-clear-btn" (click)="clearAll()">
-            <i class="bi bi-x-lg"></i> Clear
+            <i class="bi bi-x-lg"></i> {{ 'COMMON.clear' | translate }}
           </button>
         }
       </div>
@@ -74,13 +76,13 @@ import { RecruiterCandidateCardComponent } from '../../../shared/components/recr
       @if (loading) {
         <div class="loading-state">
           <div class="spinner-border"></div>
-          <div class="loading-state__text">Searching candidates…</div>
+          <div class="loading-state__text">{{ 'RECRUITER_CANDIDATES.loading_results' | translate }}</div>
         </div>
       } @else if (candidates.length === 0) {
         <app-empty-state
       icon="bi-person-lines-fill"
-          title="No candidates match your filters"
-          subtitle="Try adjusting your search criteria."
+          [title]="'RECRUITER_CANDIDATES.no_candidates' | translate"
+          [subtitle]="'RECRUITER_CANDIDATES.no_candidates_sub' | translate"
         />
       } @else {
         <div class="cl-grid">
@@ -126,46 +128,46 @@ import { RecruiterCandidateCardComponent } from '../../../shared/components/recr
             <div class="modal-header">
               <h5 class="modal-title">
                 <i class="bi bi-send-fill me-2 text-primary"></i>
-                Request Interest — {{ modalCandidate.first_name }} {{ modalCandidate.last_name }}
+                {{ 'INTEREST_REQUESTS.request_modal_title' | translate }} — {{ modalCandidate.first_name }} {{ modalCandidate.last_name }}
               </h5>
               <button type="button" class="btn-close" (click)="closeModal()"></button>
             </div>
             <form [formGroup]="requestForm" (ngSubmit)="submitRequest()">
               <div class="modal-body">
                 <div class="mb-3">
-                  <label class="form-label fw-semibold">Sector <span class="text-danger">*</span></label>
+                  <label class="form-label fw-semibold">{{ 'INTEREST_REQUESTS.sector' | translate }} <span class="text-danger">*</span></label>
                   <input type="text" class="form-control" formControlName="sector"
-                    placeholder="e.g. Information Technology">
+                    [placeholder]="'INTEREST_REQUESTS.sector_placeholder' | translate">
                   @if (requestForm.get('sector')?.invalid && requestForm.get('sector')?.touched) {
-                    <div class="text-danger small mt-1">Sector is required.</div>
+                    <div class="text-danger small mt-1">{{ 'INTEREST_REQUESTS.sector_required' | translate }}</div>
                   }
                 </div>
                 <div class="mb-3">
-                  <label class="form-label fw-semibold">Country <span class="text-danger">*</span></label>
+                  <label class="form-label fw-semibold">{{ 'COMMON.country' | translate }} <span class="text-danger">*</span></label>
                   <input type="text" class="form-control" formControlName="country"
-                    placeholder="e.g. United Kingdom">
+                    [placeholder]="'INTEREST_REQUESTS.country_placeholder' | translate">
                   @if (requestForm.get('country')?.invalid && requestForm.get('country')?.touched) {
-                    <div class="text-danger small mt-1">Country is required.</div>
+                    <div class="text-danger small mt-1">{{ 'INTEREST_REQUESTS.country_required' | translate }}</div>
                   }
                 </div>
                 <div class="mb-3">
-                  <label class="form-label fw-semibold">Message <span class="text-danger">*</span></label>
+                  <label class="form-label fw-semibold">{{ 'COMMON.message' | translate }} <span class="text-danger">*</span></label>
                   <textarea class="form-control" rows="4" formControlName="message"
-                    placeholder="Describe why you are interested in this candidate…"></textarea>
+                    [placeholder]="'INTEREST_REQUESTS.message_placeholder' | translate"></textarea>
                   @if (requestForm.get('message')?.invalid && requestForm.get('message')?.touched) {
-                    <div class="text-danger small mt-1">Message is required (min 10 characters).</div>
+                    <div class="text-danger small mt-1">{{ 'INTEREST_REQUESTS.message_required' | translate }}</div>
                   }
                 </div>
               </div>
               <div class="modal-footer">
                 <button type="button" class="btn btn-outline-secondary btn-sm"
-                  (click)="closeModal()" [disabled]="submitting">Cancel</button>
+                  (click)="closeModal()" [disabled]="submitting">{{ 'COMMON.cancel' | translate }}</button>
                 <button type="submit" class="btn btn-primary btn-sm"
                   [disabled]="requestForm.invalid || submitting">
                   @if (submitting) {
                     <span class="spinner-border spinner-border-sm me-1"></span>
                   }
-                  Submit Request
+                  {{ 'INTEREST_REQUESTS.submit_request' | translate }}
                 </button>
               </div>
             </form>

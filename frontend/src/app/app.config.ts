@@ -1,11 +1,23 @@
 // src/app/app.config.ts
-import { ApplicationConfig } from '@angular/core';
+import { ApplicationConfig, APP_INITIALIZER } from '@angular/core';
 import { provideRouter, withComponentInputBinding } from '@angular/router';
-import { provideHttpClient, withInterceptors } from '@angular/common/http';
+import { provideHttpClient, withInterceptors, HttpClient } from '@angular/common/http';
+import { TranslateModule, TranslateLoader, TranslateService } from '@ngx-translate/core';
+import { TranslateHttpLoader } from '@ngx-translate/http-loader';
+import { importProvidersFrom } from '@angular/core';
 
 import { routes } from './app.routes';
 import { jwtInterceptor } from './core/interceptors/jwt.interceptor';
 import { errorInterceptor } from './core/interceptors/error.interceptor';
+import { LanguageService } from './core/services/language.service';
+
+export function HttpLoaderFactory(http: HttpClient): TranslateHttpLoader {
+  return new TranslateHttpLoader(http, './assets/i18n/', '.json');
+}
+
+export function initLanguage(langSvc: LanguageService): () => Promise<void> {
+  return () => langSvc.init();
+}
 
 export const appConfig: ApplicationConfig = {
   providers: [
@@ -23,5 +35,21 @@ export const appConfig: ApplicationConfig = {
       // reportProgress for progress bars, and handles large payloads correctly.
       withInterceptors([jwtInterceptor, errorInterceptor]),
     ),
+    importProvidersFrom(
+      TranslateModule.forRoot({
+        defaultLanguage: 'en',
+        loader: {
+          provide:    TranslateLoader,
+          useFactory: HttpLoaderFactory,
+          deps:       [HttpClient],
+        },
+      }),
+    ),
+    {
+      provide:    APP_INITIALIZER,
+      useFactory: initLanguage,
+      deps:       [LanguageService],
+      multi:      true,
+    },
   ],
 };

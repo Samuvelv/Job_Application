@@ -3,82 +3,82 @@ import { SelectOption } from '../../shared/components/searchable-select/searchab
 export interface SortOption { value: string; label: string; }
 
 export const PROFILE_STATUS_OPTIONS: SelectOption[] = [
-  { value: 'active',       label: 'Active'       },
-  { value: 'inactive',     label: 'Inactive'     },
-  { value: 'pending_edit', label: 'Pending Edit' },
-  { value: 'placed',       label: 'Placed'       },
+  { value: 'active',       label: 'OPTIONS.profile_status_active'      },
+  { value: 'inactive',     label: 'OPTIONS.profile_status_inactive'    },
+  { value: 'pending_edit', label: 'OPTIONS.profile_status_pending_edit'},
+  { value: 'placed',       label: 'OPTIONS.profile_status_placed'      },
 ];
 
 export const PROFILE_STATUS_WITH_COLOR: { value: string; label: string; color: string }[] = [
-  { value: 'active',       label: 'Active',       color: 'var(--th-success)' },
-  { value: 'inactive',     label: 'Inactive',     color: 'var(--th-muted)'   },
-  { value: 'pending_edit', label: 'Pending Edit', color: 'var(--th-warning)' },
-  { value: 'placed',       label: 'Placed',       color: 'var(--th-info)'    },
+  { value: 'active',       label: 'OPTIONS.profile_status_active',       color: 'var(--th-success)' },
+  { value: 'inactive',     label: 'OPTIONS.profile_status_inactive',     color: 'var(--th-muted)'   },
+  { value: 'pending_edit', label: 'OPTIONS.profile_status_pending_edit', color: 'var(--th-warning)' },
+  { value: 'placed',       label: 'OPTIONS.profile_status_placed',       color: 'var(--th-info)'    },
 ];
 
 export const SORT_OPTIONS: SortOption[] = [
-  { value: 'newest',       label: 'Newest First'             },
-  { value: 'oldest',       label: 'Oldest First'             },
-  { value: 'completion',   label: 'Profile Completion ↓' },
-  { value: 'updated',      label: 'Last Updated'             },
-  { value: 'alphabetical', label: 'Alphabetical A–Z'   },
+  { value: 'newest',       label: 'OPTIONS.sort_newest'      },
+  { value: 'oldest',       label: 'OPTIONS.sort_oldest'      },
+  { value: 'completion',   label: 'OPTIONS.sort_completion'  },
+  { value: 'updated',      label: 'OPTIONS.sort_updated'     },
+  { value: 'alphabetical', label: 'OPTIONS.sort_alphabetical'},
 ];
 
 export const REGISTRATION_FEE_STATUS_OPTIONS: SelectOption[] = [
-  { value: 'paid',            label: 'Paid'            },
-  { value: 'pending_payment', label: 'Pending Payment' },
-  { value: 'waived',          label: 'Waived'          },
+  { value: 'paid',            label: 'OPTIONS.fee_paid'    },
+  { value: 'pending_payment', label: 'OPTIONS.fee_pending' },
+  { value: 'waived',          label: 'OPTIONS.fee_waived'  },
 ];
 
 export const CV_FORMAT_OPTIONS: SelectOption[] = [
-  { value: 'uk_format',         label: 'UK Format'         },
-  { value: 'european_format',   label: 'European Format'   },
-  { value: 'canadian_format',   label: 'Canadian Format'   },
-  { value: 'australian_format', label: 'Australian Format' },
-  { value: 'gulf_format',       label: 'Gulf Format'       },
-  { value: 'asian_format',      label: 'Asian Format'      },
-  { value: 'others',            label: 'CV Format - Others' },
-  { value: 'not_yet_created',   label: 'Not Yet Created'   },
+  { value: 'uk_format',         label: 'OPTIONS.cv_uk'          },
+  { value: 'european_format',   label: 'OPTIONS.cv_european'    },
+  { value: 'canadian_format',   label: 'OPTIONS.cv_canadian'    },
+  { value: 'australian_format', label: 'OPTIONS.cv_australian'  },
+  { value: 'gulf_format',       label: 'OPTIONS.cv_gulf'        },
+  { value: 'asian_format',      label: 'OPTIONS.cv_asian'       },
+  { value: 'others',            label: 'OPTIONS.cv_others'      },
+  { value: 'not_yet_created',   label: 'OPTIONS.cv_not_created' },
 ];
 
 export const SOURCE_OPTIONS: SelectOption[] = [
-  { value: 'Instagram',       label: 'Instagram'       },
-  { value: 'YouTube',         label: 'YouTube'         },
-  { value: 'WhatsApp',        label: 'WhatsApp'        },
-  { value: 'Friend Referral', label: 'Friend Referral' },
-  { value: 'Other',           label: 'Other'           },
+  { value: 'Instagram',       label: 'OPTIONS.source_instagram' },
+  { value: 'YouTube',         label: 'OPTIONS.source_youtube'   },
+  { value: 'WhatsApp',        label: 'OPTIONS.source_whatsapp'  },
+  { value: 'Friend Referral', label: 'OPTIONS.source_referral'  },
+  { value: 'Other',           label: 'OPTIONS.source_other'     },
 ];
 
 export const EMPLOYMENT_STATUS_OPTIONS: SelectOption[] = [
-  { value: 'Currently Employed',   label: 'Currently Employed'   },
-  { value: 'Currently Unemployed', label: 'Currently Unemployed' },
-  { value: 'Self Employed',        label: 'Self Employed'        },
-  { value: 'Student',              label: 'Student'              },
-  { value: 'Career Break',         label: 'Career Break'         },
+  { value: 'Currently Employed',   label: 'OPTIONS.emp_employed'   },
+  { value: 'Currently Unemployed', label: 'OPTIONS.emp_unemployed' },
+  { value: 'Self Employed',        label: 'OPTIONS.emp_self'       },
+  { value: 'Student',              label: 'OPTIONS.emp_student'    },
+  { value: 'Career Break',         label: 'OPTIONS.emp_break'      },
 ];
 
 export const VISA_STATUS_OPTIONS: SelectOption[] = [
-  { value: 'No visa — need full sponsorship',      label: 'No visa — need full sponsorship'      },
-  { value: 'Have valid visa in current country',   label: 'Have valid visa in current country'   },
-  { value: 'Have UK/EU visa already',              label: 'Have UK/EU visa already'              },
-  { value: 'Asylum seeker',                        label: 'Asylum seeker'                        },
-  { value: 'other',                                label: 'Other — specify'                      },
+  { value: 'No visa — need full sponsorship',    label: 'OPTIONS.visa_need_sponsorship' },
+  { value: 'Have valid visa in current country', label: 'OPTIONS.visa_have_valid'       },
+  { value: 'Have UK/EU visa already',            label: 'OPTIONS.visa_have_ukeu'        },
+  { value: 'Asylum seeker',                      label: 'OPTIONS.visa_asylum'           },
+  { value: 'other',                              label: 'OPTIONS.visa_other'            },
 ];
 
 export const REASON_FOR_LEAVING_OPTIONS: SelectOption[] = [
-  { value: 'Career Growth',      label: 'Career Growth'      },
-  { value: 'Better Opportunity', label: 'Better Opportunity' },
-  { value: 'Relocation',         label: 'Relocation'         },
-  { value: 'Contract Ended',     label: 'Contract Ended'     },
-  { value: 'Redundancy',         label: 'Redundancy'         },
-  { value: 'Personal Reasons',   label: 'Personal Reasons'   },
-  { value: 'Other',              label: 'Other'              },
+  { value: 'Career Growth',      label: 'OPTIONS.reason_career_growth'       },
+  { value: 'Better Opportunity', label: 'OPTIONS.reason_better_opportunity'  },
+  { value: 'Relocation',         label: 'OPTIONS.reason_relocation'          },
+  { value: 'Contract Ended',     label: 'OPTIONS.reason_contract_ended'      },
+  { value: 'Redundancy',         label: 'OPTIONS.reason_redundancy'          },
+  { value: 'Personal Reasons',   label: 'OPTIONS.reason_personal'            },
+  { value: 'Other',              label: 'OPTIONS.reason_other'               },
 ];
 
 export const RECRUITER_SORT_OPTIONS: SortOption[] = [
-  { value: 'newest',       label: 'Newest First'     },
-  { value: 'oldest',       label: 'Oldest First'     },
-  { value: 'most_active',  label: 'Most Active'      },
-  { value: 'alphabetical', label: 'Alphabetical A–Z' },
-  { value: 'last_active',  label: 'Last Active'      },
+  { value: 'newest',       label: 'OPTIONS.rec_sort_newest'      },
+  { value: 'oldest',       label: 'OPTIONS.rec_sort_oldest'      },
+  { value: 'most_active',  label: 'OPTIONS.rec_sort_most_active' },
+  { value: 'alphabetical', label: 'OPTIONS.rec_sort_alphabetical'},
+  { value: 'last_active',  label: 'OPTIONS.rec_sort_last_active' },
 ];

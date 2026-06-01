@@ -2,6 +2,7 @@
 import { Component, signal, OnInit, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
+import { TranslateModule } from '@ngx-translate/core';
 import { forkJoin, of } from 'rxjs';
 import { catchError } from 'rxjs/operators';
 import { AuthService } from '../../../core/services/auth.service';
@@ -12,7 +13,7 @@ import { Recruiter } from '../../../core/models/recruiter.model';
 @Component({
   selector: 'app-recruiter-dashboard',
   standalone: true,
-  imports: [CommonModule, RouterLink],
+  imports: [CommonModule, RouterLink, TranslateModule],
   styles: [`
     /* ── Hero ─────────────────────────────────────────────────────────── */
     .rd-hero {
@@ -252,16 +253,16 @@ import { Recruiter } from '../../../core/models/recruiter.model';
             <i class="bi bi-shield-lock-fill" style="font-size:1.75rem;color:#ef4444;"></i>
           </div>
           <!-- Message -->
-          <h5 style="font-weight:700;font-size:1.15rem;color:var(--th-text);margin-bottom:.5rem;">Access Expired</h5>
+          <h5 style="font-weight:700;font-size:1.15rem;color:var(--th-text);margin-bottom:.5rem;">{{ 'RECRUITER_DASHBOARD.access_expired_title' | translate }}</h5>
           <p style="font-size:.875rem;color:var(--th-text-muted);line-height:1.6;margin-bottom:1.75rem;">
-            Your recruiter access has expired. Please contact the administrator to renew your subscription, then log in again.
+            {{ 'RECRUITER_DASHBOARD.access_expired_msg' | translate }}
           </p>
           <!-- Logout button -->
           <button (click)="auth.logout()"
             style="display:inline-flex;align-items:center;justify-content:center;gap:.5rem;width:100%;padding:.7rem 1.5rem;border-radius:.75rem;border:none;background:#ef4444;color:#fff;font-size:.9rem;font-weight:600;cursor:pointer;transition:background .2s;"
             onmouseover="this.style.background='#dc2626'"
             onmouseout="this.style.background='#ef4444'">
-            <i class="bi bi-box-arrow-right"></i> Log Out
+            <i class="bi bi-box-arrow-right"></i> {{ 'RECRUITER_DASHBOARD.log_out' | translate }}
           </button>
         </div>
       </div>
@@ -269,7 +270,7 @@ import { Recruiter } from '../../../core/models/recruiter.model';
 
     <!-- ── Hero ──────────────────────────────────────────────────────────── -->
     <div class="rd-hero">
-      <div class="rd-hero__eyebrow">Recruiter Portal</div>
+      <div class="rd-hero__eyebrow">{{ 'RECRUITER_DASHBOARD.portal_label' | translate }}</div>
       <h1 class="rd-hero__name">Good {{ timeOfDay() }}, {{ contactName() || '…' }}</h1>
 
       <div class="rd-hero__chips">
@@ -280,9 +281,9 @@ import { Recruiter } from '../../../core/models/recruiter.model';
           <span class="rd-hero__chip" [class.rd-hero__chip--warn]="isExpired()">
             <i class="bi bi-clock"></i>
             @if (isExpired()) {
-              Access expired
+              {{ 'RECRUITER_DASHBOARD.access_expired_chip' | translate }}
             } @else {
-              Access expires {{ profile()!.access_expires_at | date:'d MMM yyyy' }}
+              {{ 'RECRUITER_DASHBOARD.access_expires' | translate }} {{ profile()!.access_expires_at | date:'d MMM yyyy' }}
             }
           </span>
         }
@@ -295,10 +296,10 @@ import { Recruiter } from '../../../core/models/recruiter.model';
 
       <div class="rd-hero__actions">
         <a routerLink="/recruiter/candidates" class="rd-hero__btn rd-hero__btn--solid">
-          <i class="bi bi-search"></i>Search Talent
+          <i class="bi bi-search"></i>{{ 'NAV.search_talent' | translate }}
         </a>
         <a routerLink="/recruiter/shortlist" class="rd-hero__btn rd-hero__btn--ghost">
-          <i class="bi bi-bookmark-star-fill"></i>My Shortlist
+          <i class="bi bi-bookmark-star-fill"></i>{{ 'NAV.my_shortlist' | translate }}
         </a>
       </div>
     </div>
@@ -317,7 +318,7 @@ import { Recruiter } from '../../../core/models/recruiter.model';
             <span class="skeleton" style="width:96px;height:12px;display:block"></span>
           } @else {
             <div class="rd-stat__value">{{ stats()?.shortlistCount ?? 0 }}</div>
-            <div class="rd-stat__label">Saved in Shortlist</div>
+            <div class="rd-stat__label">{{ 'RECRUITER_DASHBOARD.saved_in_shortlist' | translate }}</div>
           }
         </div>
         <i class="bi bi-chevron-right rd-stat__arrow"></i>
@@ -334,7 +335,7 @@ import { Recruiter } from '../../../core/models/recruiter.model';
             <span class="skeleton" style="width:120px;height:12px;display:block"></span>
           } @else {
             <div class="rd-stat__value">{{ stats()?.candidatesAvailable ?? 0 }}</div>
-            <div class="rd-stat__label">Candidates Available</div>
+            <div class="rd-stat__label">{{ 'RECRUITER_DASHBOARD.candidates_available' | translate }}</div>
           }
         </div>
         <i class="bi bi-chevron-right rd-stat__arrow"></i>
@@ -343,7 +344,7 @@ import { Recruiter } from '../../../core/models/recruiter.model';
     </div>
 
     <!-- ── Quick links ─────────────────────────────────────────────────────── -->
-    <div class="rd-section-label">Quick Access</div>
+    <div class="rd-section-label">{{ 'RECRUITER_DASHBOARD.quick_access' | translate }}</div>
     <div class="rd-links">
 
       <!-- Search Talent -->
@@ -351,12 +352,12 @@ import { Recruiter } from '../../../core/models/recruiter.model';
         <div class="rd-link-card__icon rd-link-card__icon--cyan">
           <i class="bi bi-search"></i>
         </div>
-        <div class="rd-link-card__title">Search Talent</div>
+        <div class="rd-link-card__title">{{ 'RECRUITER_DASHBOARD.search_talent_title' | translate }}</div>
         <div class="rd-link-card__desc">
-          Filter candidates by skills, location, industry and experience to find your ideal hire.
+          {{ 'RECRUITER_DASHBOARD.search_talent_desc' | translate }}
         </div>
         <span class="rd-link-card__cta">
-          Browse candidates <i class="bi bi-arrow-right"></i>
+          {{ 'RECRUITER_DASHBOARD.browse_candidates' | translate }} <i class="bi bi-arrow-right"></i>
         </span>
       </a>
 
@@ -365,12 +366,12 @@ import { Recruiter } from '../../../core/models/recruiter.model';
         <div class="rd-link-card__icon rd-link-card__icon--purple">
           <i class="bi bi-bookmark-star-fill"></i>
         </div>
-        <div class="rd-link-card__title">My Shortlist</div>
+        <div class="rd-link-card__title">{{ 'RECRUITER_DASHBOARD.my_shortlist_title' | translate }}</div>
         <div class="rd-link-card__desc">
-          Review and manage the candidates you've saved. Compare profiles and make hiring decisions.
+          {{ 'RECRUITER_DASHBOARD.my_shortlist_desc' | translate }}
         </div>
         <span class="rd-link-card__cta">
-          View shortlist <i class="bi bi-arrow-right"></i>
+          {{ 'RECRUITER_DASHBOARD.view_shortlist' | translate }} <i class="bi bi-arrow-right"></i>
         </span>
       </a>
 
@@ -379,12 +380,12 @@ import { Recruiter } from '../../../core/models/recruiter.model';
         <div class="rd-link-card__icon rd-link-card__icon--teal">
           <i class="bi bi-briefcase-fill"></i>
         </div>
-        <div class="rd-link-card__title">Interest Requests</div>
+        <div class="rd-link-card__title">{{ 'RECRUITER_DASHBOARD.interest_requests_title' | translate }}</div>
         <div class="rd-link-card__desc">
-          Track the status of agency interest requests you've submitted and follow up on decisions.
+          {{ 'RECRUITER_DASHBOARD.interest_requests_desc' | translate }}
         </div>
         <span class="rd-link-card__cta">
-          View requests <i class="bi bi-arrow-right"></i>
+          {{ 'RECRUITER_DASHBOARD.view_requests' | translate }} <i class="bi bi-arrow-right"></i>
         </span>
       </a>
 

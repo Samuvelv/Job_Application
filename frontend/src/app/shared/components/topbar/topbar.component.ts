@@ -2,21 +2,23 @@
 import { Component, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
+import { TranslateModule } from '@ngx-translate/core';
 import { AuthService } from '../../../core/services/auth.service';
 import { ThemeService } from '../../../core/services/theme.service';
 import { SidebarService } from '../../../core/services/sidebar.service';
+import { LanguageSelectorComponent } from '../language-selector/language-selector.component';
 
 @Component({
   selector: 'app-topbar',
   standalone: true,
-  imports: [CommonModule, RouterLink],
+  imports: [CommonModule, RouterLink, TranslateModule, LanguageSelectorComponent],
   template: `
     <header class="app-topbar">
       <!-- Left: hamburger + brand -->
       <div class="d-flex align-items-center gap-2">
         <button class="topbar-icon-btn d-lg-none"
                 (click)="sidebar.toggle()"
-                aria-label="Toggle sidebar">
+                [attr.aria-label]="'TOPBAR.toggle_sidebar' | translate">
           <i class="bi bi-list fs-5"></i>
         </button>
         <a [routerLink]="dashboardRoute()" class="topbar-brand">
@@ -24,10 +26,16 @@ import { SidebarService } from '../../../core/services/sidebar.service';
         </a>
       </div>
 
-      <!-- Right: dark mode + avatar dropdown -->
+      <!-- Right: language selector + dark mode + avatar dropdown -->
       <div class="d-flex align-items-center gap-2">
+
+        <!-- Language selector -->
+        <app-language-selector></app-language-selector>
+
         <!-- Dark mode toggle -->
-        <button class="topbar-icon-btn" (click)="theme.toggle()" [attr.aria-label]="theme.isDark() ? 'Switch to light mode' : 'Switch to dark mode'">
+        <button class="topbar-icon-btn"
+                (click)="theme.toggle()"
+                [attr.aria-label]="(theme.isDark() ? 'TOPBAR.switch_to_light' : 'TOPBAR.switch_to_dark') | translate">
           <i class="bi" [class.bi-moon-fill]="!theme.isDark()" [class.bi-sun-fill]="theme.isDark()"></i>
         </button>
 
@@ -46,7 +54,7 @@ import { SidebarService } from '../../../core/services/sidebar.service';
             <li><hr class="dropdown-divider my-1"></li>
             <li>
               <button class="dropdown-item d-flex align-items-center gap-2 text-danger" (click)="logout()">
-                <i class="bi bi-box-arrow-right"></i> Sign out
+                <i class="bi bi-box-arrow-right"></i> {{ 'TOPBAR.sign_out' | translate }}
               </button>
             </li>
           </ul>

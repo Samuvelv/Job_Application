@@ -8,7 +8,9 @@ import {
   ReactiveFormsModule, FormBuilder, FormGroup, Validators,
   AbstractControl, ValidationErrors, ValidatorFn,
 } from '@angular/forms';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { ThemeService } from '../../core/services/theme.service';
+import { LanguageSelectorComponent } from '../../shared/components/language-selector/language-selector.component';
 import { ToastService } from '../../core/services/toast.service';
 import { StatsService } from '../../core/services/stats.service';
 import { ContactSubmissionService } from '../../core/services/contact-submission.service';
@@ -68,7 +70,7 @@ function makeOptionalPhoneValidator(dialCtrl: string, numCtrl: string): Validato
 @Component({
   selector: 'app-landing',
   standalone: true,
-  imports: [CommonModule, RouterLink, ReactiveFormsModule, SearchableSelectComponent],
+  imports: [CommonModule, RouterLink, ReactiveFormsModule, SearchableSelectComponent, TranslateModule, LanguageSelectorComponent],
   template: `
 <!-- ══════════════════════════════════════════════
      NAVBAR
@@ -84,38 +86,39 @@ function makeOptionalPhoneValidator(dialCtrl: string, numCtrl: string): Validato
 
     <!-- Desktop links -->
     <nav class="lp-nav__links">
-      <a href="#features">Features</a>
-      <a href="#how-it-works">How It Works</a>
-      <a href="#contact">Contact</a>
+      <a href="#features">{{ 'LANDING.nav_features' | translate }}</a>
+      <a href="#how-it-works">{{ 'LANDING.nav_how_it_works' | translate }}</a>
+      <a href="#contact">{{ 'LANDING.nav_contact' | translate }}</a>
     </nav>
 
     <!-- Actions -->
-    <div class="lp-nav__actions">
-      <button class="lp-nav__theme-btn" (click)="theme.toggle()" [title]="theme.isDark() ? 'Switch to light' : 'Switch to dark'">
-        <i class="bi" [class.bi-sun-fill]="theme.isDark()" [class.bi-moon-fill]="!theme.isDark()"></i>
-      </button>
-      <a class="lp-nav__signin" routerLink="/login">Sign In</a>
+      <div class="lp-nav__actions">
+        <app-language-selector></app-language-selector>
+        <button class="lp-nav__theme-btn" (click)="theme.toggle()" [title]="theme.isDark() ? ('LANDING.light_mode' | translate) : ('LANDING.dark_mode' | translate)">
+          <i class="bi" [class.bi-sun-fill]="theme.isDark()" [class.bi-moon-fill]="!theme.isDark()"></i>
+        </button>
+        <a class="lp-nav__signin" routerLink="/login">{{ 'LANDING.sign_in' | translate }}</a>
       <div class="lp-nav__register-wrap" (click)="$event.stopPropagation()">
         <button class="lp-btn-primary lp-btn--sm lp-nav__register-btn"
                 [class.lp-nav__register-btn--open]="registerOpen()"
                 (click)="registerOpen.set(!registerOpen())">
-          Register
+          {{ 'LANDING.register' | translate }}
           <i class="bi bi-chevron-down lp-nav__register-chevron"></i>
         </button>
 
         @if (registerOpen()) {
-          <div class="lp-reg-drop" role="menu" aria-label="Register options">
+          <div class="lp-reg-drop" role="menu" [attr.aria-label]="'LANDING.register' | translate">
             <a class="lp-reg-drop__option" role="menuitem"
                routerLink="/login" [queryParams]="{role:'candidate'}"
                (click)="registerOpen.set(false)">
               <i class="bi bi-person-fill lp-reg-drop__icon lp-reg-drop__icon--candidate"></i>
-              <span class="lp-reg-drop__title">I am a Candidate</span>
+              <span class="lp-reg-drop__title">{{ 'LANDING.i_am_candidate' | translate }}</span>
             </a>
             <a class="lp-reg-drop__option" role="menuitem"
                routerLink="/login" [queryParams]="{role:'recruiter'}"
                (click)="registerOpen.set(false)">
               <i class="bi bi-briefcase-fill lp-reg-drop__icon lp-reg-drop__icon--recruiter"></i>
-              <span class="lp-reg-drop__title">I am a Recruiter</span>
+              <span class="lp-reg-drop__title">{{ 'LANDING.i_am_recruiter' | translate }}</span>
             </a>
           </div>
         }
@@ -131,20 +134,20 @@ function makeOptionalPhoneValidator(dialCtrl: string, numCtrl: string): Validato
   <!-- Mobile drawer -->
   @if (mobileOpen()) {
     <div class="lp-nav__mobile-drawer">
-      <a href="#features"     (click)="mobileOpen.set(false)">Features</a>
-      <a href="#how-it-works" (click)="mobileOpen.set(false)">How It Works</a>
-      <a href="#contact"      (click)="mobileOpen.set(false)">Contact</a>
+      <a href="#features"     (click)="mobileOpen.set(false)">{{ 'LANDING.nav_features' | translate }}</a>
+      <a href="#how-it-works" (click)="mobileOpen.set(false)">{{ 'LANDING.nav_how_it_works' | translate }}</a>
+      <a href="#contact"      (click)="mobileOpen.set(false)">{{ 'LANDING.nav_contact' | translate }}</a>
       <div class="lp-nav__mobile-actions">
         <button class="lp-nav__theme-btn" (click)="theme.toggle()">
           <i class="bi" [class.bi-sun-fill]="theme.isDark()" [class.bi-moon-fill]="!theme.isDark()"></i>
-          {{ theme.isDark() ? 'Light Mode' : 'Dark Mode' }}
+          {{ theme.isDark() ? ('LANDING.light_mode' | translate) : ('LANDING.dark_mode' | translate) }}
         </button>
-        <a class="lp-btn-outline" routerLink="/login" (click)="mobileOpen.set(false)">Sign In</a>
+        <a class="lp-btn-outline" routerLink="/login" (click)="mobileOpen.set(false)">{{ 'LANDING.sign_in' | translate }}</a>
         <a class="lp-btn-primary" routerLink="/login" [queryParams]="{role:'candidate'}" (click)="mobileOpen.set(false)">
-          <i class="bi bi-person-fill me-1"></i> Register as Candidate
+          <i class="bi bi-person-fill me-1"></i> {{ 'LANDING.register_as_candidate' | translate }}
         </a>
         <a class="lp-btn-primary" routerLink="/login" [queryParams]="{role:'recruiter'}" (click)="mobileOpen.set(false)">
-          <i class="bi bi-building me-1"></i> Register as Recruiter
+          <i class="bi bi-building me-1"></i> {{ 'LANDING.register_as_recruiter' | translate }}
         </a>
       </div>
     </div>
@@ -168,26 +171,19 @@ function makeOptionalPhoneValidator(dialCtrl: string, numCtrl: string): Validato
 
     <!-- Left: copy -->
     <div class="lp-hero__copy">
-      <!-- <div class="lp-hero__badge">
-        <span class="lp-hero__badge-dot"></span>
-        The Smart Hiring Platform
-      </div> -->
-
       <h1 class="lp-hero__headline">
-        <span class="lp-hero__headline-line1">Find Your <span class="lp-hero__headline-gradient">Sponsored Job Abroad</span></span>
-        <span class="lp-hero__headline-line2"><span class="lp-hero__headline-gradient">We Handle Everything</span> For You</span>
+        <span class="lp-hero__headline-line1">{{ 'LANDING.hero_line1' | translate }} <span class="lp-hero__headline-gradient">{{ 'LANDING.hero_gradient1' | translate }}</span></span>
+        <span class="lp-hero__headline-line2"><span class="lp-hero__headline-gradient">{{ 'LANDING.hero_line2' | translate }}</span> {{ 'LANDING.hero_gradient2' | translate }}</span>
       </h1>
 
-      <p class="lp-hero__sub">
-        Register once. Our team personally matches your profile to visa-sponsored employers across Europe, UK, Canada, Australia and more. One-time registration fee. No hidden charges. Zero stress.
-      </p>
+      <p class="lp-hero__sub">{{ 'LANDING.hero_sub' | translate }}</p>
 
       <div class="lp-hero__ctas">
         <a class="lp-btn-primary lp-btn--lg" routerLink="/login">
-          <i class="bi bi-search me-2"></i>Find a Job
+          <i class="bi bi-search me-2"></i>{{ 'LANDING.find_a_job' | translate }}
         </a>
         <a class="lp-btn-outline lp-btn--lg" routerLink="/login">
-          <i class="bi bi-building me-2"></i>Hire Talent
+          <i class="bi bi-building me-2"></i>{{ 'LANDING.hire_talent' | translate }}
         </a>
       </div>
 
@@ -195,7 +191,7 @@ function makeOptionalPhoneValidator(dialCtrl: string, numCtrl: string): Validato
       <div class="lp-countries">
         <div class="lp-countries__header">
           <span class="lp-countries__dot"></span>
-          <p class="lp-countries__label">We connect candidates to sponsor-licensed employers in</p>
+          <p class="lp-countries__label">{{ 'LANDING.countries_label' | translate }}</p>
           <span class="lp-countries__dot"></span>
         </div>
         <div class="lp-countries__track-wrap">
@@ -243,32 +239,13 @@ function makeOptionalPhoneValidator(dialCtrl: string, numCtrl: string): Validato
           </div>
         </div>
       </div>
-      
+
       <div class="lp-hero__trust-badge">
         <span class="lp-hero__trust-lock">
           <i class="bi bi-shield-lock-fill"></i>
         </span>
-        <span class="lp-hero__trust-text">Verified candidates &amp; employers only — <strong>fully secure platform</strong></span>
+        <span class="lp-hero__trust-text">{{ 'LANDING.trust_badge' | translate }}</span>
       </div>
-
-      <!-- Floating mini stats -->
-      <!-- @if (!statsError()) {
-        <div class="lp-hero__mini-stats">
-          @for (m of miniStats(); track m.label) {
-            <div class="lp-hero__mini-stat">
-              @if (statsLoading()) {
-                <span class="lp-hero__mini-stat-num">—</span>
-              } @else {
-                <span class="lp-hero__mini-stat-num">{{ m.num }}</span>
-              }
-              <span class="lp-hero__mini-stat-label">{{ m.label }}</span>
-            </div>
-            @if (!$last) {
-              <div class="lp-hero__mini-stat-sep"></div>
-            }
-          }
-        </div>
-      } -->
     </div>
 
   </div>
@@ -282,42 +259,15 @@ function makeOptionalPhoneValidator(dialCtrl: string, numCtrl: string): Validato
 </section>
 
 <!-- ══════════════════════════════════════════════
-     STATS BAR
-══════════════════════════════════════════════ -->
-<!-- @if (!statsError()) {
-  <section class="lp-stats">
-    <div class="lp-container lp-stats__grid">
-      @if (statsLoading()) {
-        @for (i of [1,2,3]; track i) {
-          <div class="lp-stats__item">
-            <div class="lp-stats__icon lp-skeleton" style="width:2rem;height:2rem;border-radius:50%;"></div>
-            <div class="lp-stats__num  lp-skeleton" style="width:4rem;height:1.5rem;border-radius:4px;margin:0 auto;"></div>
-            <div class="lp-stats__label lp-skeleton" style="width:6rem;height:1rem;border-radius:4px;margin:0 auto;"></div>
-          </div>
-        }
-      } @else {
-        @for (s of stats(); track s.label) {
-          <div class="lp-stats__item">
-            <div class="lp-stats__icon"><i class="bi {{ s.icon }}"></i></div>
-            <div class="lp-stats__num">{{ s.value }}</div>
-            <div class="lp-stats__label">{{ s.label }}</div>
-          </div>
-        }
-      }
-    </div>
-  </section>
-} -->
-
-<!-- ══════════════════════════════════════════════
      TRUST STATEMENTS
 ══════════════════════════════════════════════ -->
 <section class="lp-trust">
   <div class="lp-container">
 
     <div class="lp-section-header">
-      <div class="lp-section-eyebrow">Our Commitment</div>
-      <h2 class="lp-section-title">Why Professionals Trust NTL Career Nexus</h2>
-      <p class="lp-section-sub">We focus on verified talent, trusted employers, and genuine international opportunities.</p>
+      <div class="lp-section-eyebrow">{{ 'LANDING.trust_commitment' | translate }}</div>
+      <h2 class="lp-section-title">{{ 'LANDING.trust_title' | translate }}</h2>
+      <p class="lp-section-sub">{{ 'LANDING.trust_sub' | translate }}</p>
     </div>
 
     <div class="lp-trust__grid">
@@ -326,24 +276,24 @@ function makeOptionalPhoneValidator(dialCtrl: string, numCtrl: string): Validato
         <div class="lp-trust__icon-wrap lp-trust__icon-wrap--indigo">
           <i class="bi bi-patch-check-fill"></i>
         </div>
-        <h3 class="lp-trust__title">Every candidate personally verified by our team</h3>
-        <p class="lp-trust__desc">No fake profiles. Each candidate is reviewed, documents checked, and identity confirmed before being listed.</p>
+        <h3 class="lp-trust__title">{{ 'LANDING.trust_card1_title' | translate }}</h3>
+        <p class="lp-trust__desc">{{ 'LANDING.trust_card1_desc' | translate }}</p>
       </div>
 
       <div class="lp-trust__card lp-trust__card--emerald">
         <div class="lp-trust__icon-wrap lp-trust__icon-wrap--emerald">
           <i class="bi bi-building-check"></i>
         </div>
-        <h3 class="lp-trust__title">Only sponsor-licensed employers on our platform</h3>
-        <p class="lp-trust__desc">Every recruiter holds a valid sponsor licence. We verify this before granting access — zero exceptions.</p>
+        <h3 class="lp-trust__title">{{ 'LANDING.trust_card2_title' | translate }}</h3>
+        <p class="lp-trust__desc">{{ 'LANDING.trust_card2_desc' | translate }}</p>
       </div>
 
       <div class="lp-trust__card lp-trust__card--teal">
         <div class="lp-trust__icon-wrap lp-trust__icon-wrap--teal">
           <i class="bi bi-globe2"></i>
         </div>
-        <h3 class="lp-trust__title">Candidates placed across Europe, UK, Canada &amp; Australia</h3>
-        <p class="lp-trust__desc">Our team has a track record of successful international placements with visa sponsorship — real results, real people.</p>
+        <h3 class="lp-trust__title">{{ 'LANDING.trust_card3_title' | translate }}</h3>
+        <p class="lp-trust__desc">{{ 'LANDING.trust_card3_desc' | translate }}</p>
       </div>
 
     </div>
@@ -356,23 +306,23 @@ function makeOptionalPhoneValidator(dialCtrl: string, numCtrl: string): Validato
 <section class="lp-features" id="features">
   <div class="lp-container">
     <div class="lp-section-header">
-      <div class="lp-section-eyebrow">Features</div>
-      <h2 class="lp-section-title">Everything you need to hire — or be hired</h2>
-      <p class="lp-section-sub">Powerful tools for candidates and recruiters, all in one place.</p>
+      <div class="lp-section-eyebrow">{{ 'LANDING.features_eyebrow' | translate }}</div>
+      <h2 class="lp-section-title">{{ 'LANDING.features_title' | translate }}</h2>
+      <p class="lp-section-sub">{{ 'LANDING.features_sub' | translate }}</p>
     </div>
 
     <div class="lp-features__grid">
-      @for (f of features; track f.title) {
+      @for (f of features; track f.titleKey) {
         <div class="lp-feature-card" [class.lp-feature-card--recruiter]="f.forRecruiter">
           <div class="lp-feature-card__icon-wrap" [style.background]="f.gradient">
             <i class="bi {{ f.icon }}"></i>
           </div>
-          <div class="lp-feature-card__tag">{{ f.forRecruiter ? 'For Recruiters' : 'For Candidates' }}</div>
-          <h3 class="lp-feature-card__title">{{ f.title }}</h3>
-          <p class="lp-feature-card__desc">{{ f.desc }}</p>
+          <div class="lp-feature-card__tag">{{ (f.forRecruiter ? 'LANDING.for_recruiters' : 'LANDING.for_candidates') | translate }}</div>
+          <h3 class="lp-feature-card__title">{{ f.titleKey | translate }}</h3>
+          <p class="lp-feature-card__desc">{{ f.descKey | translate }}</p>
           <ul class="lp-feature-card__chips">
-            @for (chip of f.chips; track chip) {
-              <li>{{ chip }}</li>
+            @for (chip of f.chipKeys; track chip) {
+              <li>{{ chip | translate }}</li>
             }
           </ul>
         </div>
@@ -387,16 +337,16 @@ function makeOptionalPhoneValidator(dialCtrl: string, numCtrl: string): Validato
 <section class="lp-why" id="why-us">
   <div class="lp-container">
     <div class="lp-section-header">
-      <div class="lp-section-eyebrow">Why Us</div>
-      <h2 class="lp-section-title">Why NTL Career Nexus is Different</h2>
+      <div class="lp-section-eyebrow">{{ 'LANDING.why_us_eyebrow' | translate }}</div>
+      <h2 class="lp-section-title">{{ 'LANDING.why_us_title' | translate }}</h2>
     </div>
 
     <div class="lp-features__grid">
-      @for (w of whyDifferent; track w.title) {
+      @for (w of whyDifferent; track w.titleKey) {
         <div class="lp-why__card" [style.--card-shadow]="w.shadow">
           <div class="lp-why__icon" [style.background]="w.color"><i class="bi {{ w.icon }}"></i></div>
-          <h3 class="lp-why__title">{{ w.title }}</h3>
-          <p class="lp-why__desc">{{ w.desc }}</p>
+          <h3 class="lp-why__title">{{ w.titleKey | translate }}</h3>
+          <p class="lp-why__desc">{{ w.descKey | translate }}</p>
         </div>
       }
     </div>
@@ -409,41 +359,41 @@ function makeOptionalPhoneValidator(dialCtrl: string, numCtrl: string): Validato
 <section class="lp-hiw" id="how-it-works">
   <div class="lp-container">
     <div class="lp-section-header">
-      <div class="lp-section-eyebrow">Process</div>
-      <h2 class="lp-section-title">How It Works — 3 Simple Steps</h2>
-      <p class="lp-section-sub">Register once and let our team do the heavy lifting — from profile building to employer introductions.</p>
+      <div class="lp-section-eyebrow">{{ 'LANDING.hiw_eyebrow' | translate }}</div>
+      <h2 class="lp-section-title">{{ 'LANDING.hiw_title' | translate }}</h2>
+      <p class="lp-section-sub">{{ 'LANDING.hiw_sub' | translate }}</p>
     </div>
 
     <!-- Tab toggle -->
     <div class="lp-hiw__tabs">
       <button class="lp-hiw__tab" [class.active]="activeTab() === 'candidate'"
         (click)="activeTab.set('candidate')">
-        <i class="bi bi-person-fill me-2"></i>I'm a Candidate
+        <i class="bi bi-person-fill me-2"></i>{{ 'LANDING.im_a_candidate' | translate }}
       </button>
       <button class="lp-hiw__tab" [class.active]="activeTab() === 'recruiter'"
         (click)="activeTab.set('recruiter')">
-        <i class="bi bi-building me-2"></i>I'm a Recruiter
+        <i class="bi bi-building me-2"></i>{{ 'LANDING.im_a_recruiter' | translate }}
       </button>
     </div>
 
     <!-- Steps -->
     <div class="lp-hiw__steps">
       @if (activeTab() === 'candidate') {
-        @for (step of candidateSteps; track step.title) {
+        @for (step of candidateSteps; track step.titleKey) {
           <div class="lp-hiw__step" [style.--card-shadow]="step.shadow">
             <div class="lp-hiw__step-num">{{ $index + 1 }}</div>
             <div class="lp-hiw__step-icon" [style.background]="step.color"><i class="bi {{ step.icon }}"></i></div>
-            <h4 class="lp-hiw__step-title">{{ step.title }}</h4>
-            <p class="lp-hiw__step-desc">{{ step.desc }}</p>
+            <h4 class="lp-hiw__step-title">{{ step.titleKey | translate }}</h4>
+            <p class="lp-hiw__step-desc">{{ step.descKey | translate }}</p>
           </div>
         }
       } @else {
-        @for (step of recruiterSteps; track step.title) {
+        @for (step of recruiterSteps; track step.titleKey) {
           <div class="lp-hiw__step" [style.--card-shadow]="step.shadow">
             <div class="lp-hiw__step-num">{{ $index + 1 }}</div>
             <div class="lp-hiw__step-icon" [style.background]="step.color"><i class="bi {{ step.icon }}"></i></div>
-            <h4 class="lp-hiw__step-title">{{ step.title }}</h4>
-            <p class="lp-hiw__step-desc">{{ step.desc }}</p>
+            <h4 class="lp-hiw__step-title">{{ step.titleKey | translate }}</h4>
+            <p class="lp-hiw__step-desc">{{ step.descKey | translate }}</p>
           </div>
         }
       }
@@ -454,7 +404,7 @@ function makeOptionalPhoneValidator(dialCtrl: string, numCtrl: string): Validato
 
     <div class="lp-hiw__cta">
       <a class="lp-btn-primary lp-btn--lg" routerLink="/login">
-        Register Now — Get Started Today <i class="bi bi-arrow-right ms-2"></i>
+        {{ 'LANDING.register_now' | translate }} <i class="bi bi-arrow-right ms-2"></i>
       </a>
     </div>
   </div>
@@ -466,8 +416,8 @@ function makeOptionalPhoneValidator(dialCtrl: string, numCtrl: string): Validato
 <section class="lp-testimonials">
   <div class="lp-container">
     <div class="lp-section-header">
-      <div class="lp-section-eyebrow">Success Stories</div>
-      <h2 class="lp-section-title">What our community says</h2>
+      <div class="lp-section-eyebrow">{{ 'LANDING.testimonials_eyebrow' | translate }}</div>
+      <h2 class="lp-section-title">{{ 'LANDING.testimonials_title' | translate }}</h2>
     </div>
 
     <div class="lp-tc__wrapper">
@@ -476,29 +426,29 @@ function makeOptionalPhoneValidator(dialCtrl: string, numCtrl: string): Validato
       <button class="lp-tc__arrow lp-tc__arrow--prev"
               (click)="prevTestimonial()"
               [disabled]="tcIndex() === 0"
-              aria-label="Previous testimonial">
+              [attr.aria-label]="'LANDING.prev_testimonial' | translate">
         <i class="bi bi-chevron-left"></i>
       </button>
 
       <!-- Scrollable track -->
       <div class="lp-tc__track" #tcTrack (scroll)="onTrackScroll($event)">
-        @for (t of testimonials; track t.name) {
+        @for (t of testimonials; track t.nameKey) {
           <div class="lp-testimonial-card">
             <div class="lp-testimonial-card__stars">
               <i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i>
               <i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i>
               <i class="bi bi-star-fill"></i>
             </div>
-            <p class="lp-testimonial-card__quote">"{{ t.quote }}"</p>
+            <p class="lp-testimonial-card__quote">"{{ t.quoteKey | translate }}"</p>
             <div class="lp-testimonial-card__author">
               <div class="lp-testimonial-card__avatar" [style.background]="t.color">
                 {{ t.initials }}
               </div>
               <div>
-                <div class="lp-testimonial-card__name">{{ t.name }}</div>
-                <div class="lp-testimonial-card__role">{{ t.role }}</div>
+                <div class="lp-testimonial-card__name">{{ t.nameKey | translate }}</div>
+                <div class="lp-testimonial-card__role">{{ t.roleKey | translate }}</div>
+            </div>
           </div>
-        </div>
           </div>
         }
       </div>
@@ -507,7 +457,7 @@ function makeOptionalPhoneValidator(dialCtrl: string, numCtrl: string): Validato
       <button class="lp-tc__arrow lp-tc__arrow--next"
               (click)="nextTestimonial()"
               [disabled]="tcIndex() === maxTcIndex"
-              aria-label="Next testimonial">
+              [attr.aria-label]="'LANDING.next_testimonial' | translate">
         <i class="bi bi-chevron-right"></i>
       </button>
 
@@ -519,7 +469,7 @@ function makeOptionalPhoneValidator(dialCtrl: string, numCtrl: string): Validato
         <button class="lp-tc__dot"
                 [class.active]="tcIndex() === $index"
                 (click)="goToTestimonial($index)"
-                [attr.aria-label]="'Go to slide ' + ($index + 1)">
+                [attr.aria-label]="('LANDING.go_to_slide' | translate: { n: $index + 1 })">
         </button>
       }
     </div>
@@ -533,9 +483,9 @@ function makeOptionalPhoneValidator(dialCtrl: string, numCtrl: string): Validato
 <section class="lp-contact" id="contact">
   <div class="lp-container">
     <div class="lp-section-header">
-      <div class="lp-section-eyebrow">Contact Us</div>
-      <h2 class="lp-section-title">Let's start a conversation</h2>
-      <p class="lp-section-sub">Have questions or need help? We'd love to hear from you.</p>
+      <div class="lp-section-eyebrow">{{ 'LANDING.contact_eyebrow' | translate }}</div>
+      <h2 class="lp-section-title">{{ 'LANDING.contact_title' | translate }}</h2>
+      <p class="lp-section-sub">{{ 'LANDING.contact_sub' | translate }}</p>
     </div>
 
     <div class="lp-contact__inner">
@@ -545,13 +495,13 @@ function makeOptionalPhoneValidator(dialCtrl: string, numCtrl: string): Validato
         <div class="lp-contact__info-card">
           <!-- Contact channels -->
           <div class="lp-contact__info-items">
-            @for (item of contactInfoChannels; track item.label) {
+            @for (item of contactInfoChannels; track item.labelKey) {
               <div class="lp-contact__info-item">
                 <div class="lp-contact__info-icon">
                   <i class="bi {{ item.icon }}"></i>
                 </div>
                 <div>
-                  <div class="lp-contact__info-label">{{ item.label }}</div>
+                  <div class="lp-contact__info-label">{{ item.labelKey | translate }}</div>
                   @if (item.href) {
                     <a class="lp-contact__info-value lp-contact__info-link" [href]="item.href" target="_blank" rel="noopener noreferrer">{{ item.value }}</a>
                   } @else {
@@ -566,14 +516,14 @@ function makeOptionalPhoneValidator(dialCtrl: string, numCtrl: string): Validato
 
           <!-- Location & hours -->
           <div class="lp-contact__info-items">
-            @for (item of contactInfoDetails; track item.label) {
+            @for (item of contactInfoDetails; track item.labelKey) {
               <div class="lp-contact__info-item">
                 <div class="lp-contact__info-icon">
                   <i class="bi {{ item.icon }}"></i>
                 </div>
                 <div>
-                  <div class="lp-contact__info-label">{{ item.label }}</div>
-                  <div class="lp-contact__info-value">{{ item.value }}</div>
+                  <div class="lp-contact__info-label">{{ item.labelKey | translate }}</div>
+                  <div class="lp-contact__info-value">{{ item.valueKey | translate }}</div>
                 </div>
               </div>
             }
@@ -581,10 +531,7 @@ function makeOptionalPhoneValidator(dialCtrl: string, numCtrl: string): Validato
 
           <div class="lp-contact__divider"></div>
 
-          <p class="lp-contact__tagline">
-            We help you find your sponsored job abroad — personally, professionally, step by step.
-            Reach out in Tamil or English, we're here for you.
-          </p>
+          <p class="lp-contact__tagline">{{ 'LANDING.contact_tagline' | translate }}</p>
 
           <div class="lp-contact__social">
             <a class="lp-contact__social-btn" href="https://wa.me/919360454326" target="_blank" title="WhatsApp">
@@ -603,26 +550,26 @@ function makeOptionalPhoneValidator(dialCtrl: string, numCtrl: string): Validato
 
           <div class="lp-contact__form-row">
             <div class="lp-contact__form-group">
-              <label>Full Name</label>
-              <input formControlName="name" type="text" placeholder="Your full name"
+              <label>{{ 'LANDING.contact_full_name' | translate }}</label>
+              <input formControlName="name" type="text" [placeholder]="'LANDING.contact_name_placeholder' | translate"
                 [class.is-invalid]="contactInvalid('name')">
               @if (contactInvalid('name')) {
-                <span class="lp-contact__form-error">Name is required.</span>
+                <span class="lp-contact__form-error">{{ 'LANDING.contact_name_required' | translate }}</span>
               }
             </div>
             <div class="lp-contact__form-group">
-              <label>Email Address</label>
-              <input formControlName="email" type="email" placeholder="you@example.com"
+              <label>{{ 'LANDING.contact_email_label' | translate }}</label>
+              <input formControlName="email" type="email" [placeholder]="'LANDING.contact_email_placeholder' | translate"
                 [class.is-invalid]="contactInvalid('email')">
               @if (contactInvalid('email')) {
-                <span class="lp-contact__form-error">Enter a valid email.</span>
+                <span class="lp-contact__form-error">{{ 'LANDING.contact_email_invalid' | translate }}</span>
               }
             </div>
           </div>
 
           <div class="lp-contact__form-row">
             <div class="lp-contact__form-group">
-              <label>Phone <span style="font-weight:400;color:var(--th-muted)">(Optional)</span></label>
+              <label>{{ 'LANDING.contact_phone_label' | translate }} <span style="font-weight:400;color:var(--th-muted)">{{ 'LANDING.contact_phone_optional' | translate }}</span></label>
               <div class="phone-input-group">
                 <app-searchable-select
                   formControlName="dial_code"
@@ -637,28 +584,28 @@ function makeOptionalPhoneValidator(dialCtrl: string, numCtrl: string): Validato
               </div>
               @if (contactInvalid('phone')) {
                 <span class="lp-contact__form-error">
-                  {{ contactForm.get('phone')?.errors?.['phoneInvalid'] || 'Invalid phone number.' }}
+                  {{ contactForm.get('phone')?.errors?.['phoneInvalid'] || ('LANDING.contact_phone_invalid' | translate) }}
                 </span>
               }
             </div>
             <div class="lp-contact__form-group">
-              <label>Subject</label>
+              <label>{{ 'LANDING.contact_subject' | translate }}</label>
               <app-searchable-select
                 formControlName="subject"
                 [options]="subjectOptions"
-                placeholder="Select a subject…"
+                [placeholder]="'LANDING.contact_subject_placeholder' | translate"
                 [allowClear]="true">
               </app-searchable-select>
             </div>
           </div>
 
           <div class="lp-contact__form-group">
-            <label>Message</label>
-            <textarea formControlName="message" rows="5" placeholder="Tell us how we can help…"
+            <label>{{ 'LANDING.contact_message' | translate }}</label>
+            <textarea formControlName="message" rows="5" [placeholder]="'LANDING.contact_message_placeholder' | translate"
               maxlength="1000"
               [class.is-invalid]="contactInvalid('message')"></textarea>
             @if (contactInvalid('message')) {
-              <span class="lp-contact__form-error">Message is required.</span>
+              <span class="lp-contact__form-error">{{ 'LANDING.contact_message_required' | translate }}</span>
             }
             <div class="lp-contact__char-count-row">
               <span class="lp-contact__char-count"
@@ -671,9 +618,9 @@ function makeOptionalPhoneValidator(dialCtrl: string, numCtrl: string): Validato
 
           <button type="submit" class="lp-btn-primary lp-btn--full" [disabled]="contactSending">
             @if (contactSending) {
-              <span class="spinner-border spinner-border-sm me-2"></span>Sending…
+              <span class="spinner-border spinner-border-sm me-2"></span>{{ 'COMMON.sending' | translate }}
             } @else {
-              <i class="bi bi-send-fill me-2"></i>Send Message
+              <i class="bi bi-send-fill me-2"></i>{{ 'COMMON.send_message' | translate }}
             }
           </button>
 
@@ -696,56 +643,49 @@ function makeOptionalPhoneValidator(dialCtrl: string, numCtrl: string): Validato
         <span class="lp-nav__logo-icon"><i class="bi bi-briefcase-fill"></i></span>
         <span class="lp-nav__logo-text">NTL Career <span>Nexus</span></span>
       </a>
-      <p class="lp-footer__tagline">
-        Connecting Global Talent to Sponsored Opportunities
-      </p>
-      <!-- <div class="lp-footer__social">
-        <a class="lp-footer__social-btn" href="https://wa.me/919360454326" target="_blank" title="WhatsApp"><i class="bi bi-whatsapp"></i></a>
-        <a class="lp-footer__social-btn" href="https://www.youtube.com/@namakal2london" target="_blank" title="YouTube"><i class="bi bi-youtube"></i></a>
-        <a class="lp-footer__social-btn" href="mailto:hello@ntlcareernexus.com" title="Email"><i class="bi bi-envelope-fill"></i></a>
-      </div> -->
-      <p class="lp-footer__copy">© {{ year }} NTL Career Nexus. All rights reserved.</p>
+      <p class="lp-footer__tagline">{{ 'LANDING.footer_tagline' | translate }}</p>
+      <p class="lp-footer__copy">© {{ year }} NTL Career Nexus. {{ 'LANDING.footer_all_rights' | translate }}</p>
     </div>
 
     <!-- Quick links -->
     <div class="lp-footer__links">
       <div class="lp-footer__links-group">
-        <div class="lp-footer__links-heading">Platform</div>
-        <a href="#features">Features</a>
-        <a href="#how-it-works">How It Works</a>
-        <a href="#contact">Contact</a>
-        <a routerLink="/login">Sign In</a>
+        <div class="lp-footer__links-heading">{{ 'LANDING.footer_platform' | translate }}</div>
+        <a href="#features">{{ 'LANDING.nav_features' | translate }}</a>
+        <a href="#how-it-works">{{ 'LANDING.nav_how_it_works' | translate }}</a>
+        <a href="#contact">{{ 'LANDING.nav_contact' | translate }}</a>
+        <a routerLink="/login">{{ 'LANDING.sign_in' | translate }}</a>
       </div>
       <div class="lp-footer__links-group">
-        <div class="lp-footer__links-heading">For Candidates</div>
-        <a routerLink="/login">How to Register</a>
-        <a routerLink="/login">How Visa Sponsorship Works</a>
-        <a href="#how-it-works">Target Countries</a>
-        <a routerLink="/login">View Volunteers</a>
+        <div class="lp-footer__links-heading">{{ 'LANDING.footer_for_candidates' | translate }}</div>
+        <a routerLink="/login">{{ 'LANDING.footer_how_to_register' | translate }}</a>
+        <a routerLink="/login">{{ 'LANDING.footer_visa_sponsorship' | translate }}</a>
+        <a href="#how-it-works">{{ 'LANDING.footer_target_countries' | translate }}</a>
+        <a routerLink="/login">{{ 'LANDING.footer_view_volunteers' | translate }}</a>
       </div>
       <div class="lp-footer__links-group">
-        <div class="lp-footer__links-heading">For Recruiters</div>
-        <a routerLink="/login">Register as Recruiter</a>
-        <a routerLink="/login">Search Candidates</a>
-        <a href="#how-it-works">How It Works</a>
+        <div class="lp-footer__links-heading">{{ 'LANDING.footer_for_recruiters' | translate }}</div>
+        <a routerLink="/login">{{ 'LANDING.footer_register_recruiter' | translate }}</a>
+        <a routerLink="/login">{{ 'LANDING.footer_search_candidates' | translate }}</a>
+        <a href="#how-it-works">{{ 'LANDING.footer_how_it_works' | translate }}</a>
       </div>
     </div>
 
     <!-- CTA block -->
     <div class="lp-footer__cta-block">
-      <div class="lp-footer__cta-heading">Ready to get started?</div>
-      <p class="lp-footer__cta-sub">Join NTL Career Nexus and find your next big opportunity.</p>
-      <a class="lp-btn-primary" routerLink="/login">Sign In <i class="bi bi-arrow-right ms-2"></i></a>
+      <div class="lp-footer__cta-heading">{{ 'LANDING.footer_ready' | translate }}</div>
+      <p class="lp-footer__cta-sub">{{ 'LANDING.footer_ready_sub' | translate }}</p>
+      <a class="lp-btn-primary" routerLink="/login">{{ 'LANDING.sign_in' | translate }} <i class="bi bi-arrow-right ms-2"></i></a>
     </div>
 
   </div>
 
   <div class="lp-footer__bottom">
     <div class="lp-container lp-footer__bottom-inner">
-      <span>Made with <i class="bi bi-heart-fill" style="color:#f43f5e"></i> by NTL Career Nexus</span>
+      <span>{{ 'LANDING.footer_made_with' | translate }} <i class="bi bi-heart-fill" style="color:#f43f5e"></i> {{ 'LANDING.footer_made_by' | translate }}</span>
       <div class="lp-footer__bottom-links">
-        <a href="#">Privacy Policy</a>
-        <a href="#">Terms of Service</a>
+        <a href="#">{{ 'LANDING.footer_privacy' | translate }}</a>
+        <a href="#">{{ 'LANDING.footer_terms' | translate }}</a>
       </div>
     </div>
   </div>
@@ -765,10 +705,10 @@ export class LandingComponent implements OnInit, OnDestroy {
   );
 
   subjectOptions: SelectOption[] = [
-    { value: 'general', label: 'General Enquiry' },
-    { value: 'job',     label: 'Looking for a Job' },
-    { value: 'hire',    label: 'Looking to Hire' },
-    { value: 'other',   label: 'Other' },
+    { value: 'general', label: 'LANDING.subject_general' },
+    { value: 'job',     label: 'LANDING.subject_job' },
+    { value: 'hire',    label: 'LANDING.subject_hire' },
+    { value: 'other',   label: 'LANDING.subject_other' },
   ];
 
   scrolled      = false;
@@ -836,61 +776,55 @@ export class LandingComponent implements OnInit, OnDestroy {
 
   contactForm!: FormGroup;
 
-  // ── Mock data ──────────────────────────────────────────────────────────────
-
-  mockCandidates = [
-    { initials: 'SJ', name: 'Sarah Johnson',  role: 'UX Designer',         match: '96%', color: 'var(--th-gradient-pink)' },
-    { initials: 'MC', name: 'Michael Chen',   role: 'Backend Engineer',    match: '91%', color: 'var(--th-gradient-teal)' },
-    { initials: 'PR', name: 'Priya Ramesh',   role: 'Product Manager',     match: '88%', color: 'var(--th-gradient-orange)' },
-  ];
+  // ── Data arrays (using translation keys) ──────────────────────────────────
 
   features = [
     {
       icon: 'bi-person-lines-fill',
       gradient: 'var(--th-gradient-primary)',
-      title: 'Visa Sponsor Job Matching',
-      desc: 'We personally match your profile to employers who hold a valid sponsor licence across Europe, UK, Canada and Australia.',
-      chips: ['Sponsor-Licensed Employers Only', 'Personal Team Review', 'Right Country for Your Profile'],
+      titleKey: 'FEATURES.f1_title',
+      descKey:  'FEATURES.f1_desc',
+      chipKeys: ['FEATURES.f1_chip1', 'FEATURES.f1_chip2', 'FEATURES.f1_chip3'],
       forRecruiter: false,
     },
     {
       icon: 'bi-search-heart',
       gradient: 'var(--th-gradient-purple)',
-      title: 'We Build Your Profile',
-      desc: 'Our team builds your professional profile and creates your CV in the correct format for your target country — whether it is Europe, UK, Canada, Australia, Gulf or Asia.',
-      chips: ['UK & European CV Format', 'Canadian & Australian Format', 'Gulf & Asian CV Format', 'Professional Profile', 'Team Support'],
+      titleKey: 'FEATURES.f2_title',
+      descKey:  'FEATURES.f2_desc',
+      chipKeys: ['FEATURES.f2_chip1', 'FEATURES.f2_chip2', 'FEATURES.f2_chip3', 'FEATURES.f2_chip4', 'FEATURES.f2_chip5'],
       forRecruiter: false,
     },
     {
       icon: 'bi-shield-check',
       gradient: 'var(--th-gradient-teal)',
-      title: 'Visa Guidance Included',
-      desc: 'We guide you through every step — documents needed, visa process, interview preparation — in Tamil and English.',
-      chips: ['Document Checklist', 'Interview Preparation', 'Tamil & English Support'],
+      titleKey: 'FEATURES.f3_title',
+      descKey:  'FEATURES.f3_desc',
+      chipKeys: ['FEATURES.f3_chip1', 'FEATURES.f3_chip2', 'FEATURES.f3_chip3'],
       forRecruiter: false,
     },
     {
       icon: 'bi-funnel-fill',
       gradient: 'var(--th-gradient-orange)',
-      title: 'Pre-Screened Candidates',
-      desc: 'Every candidate on our platform has been personally verified by our team. No fake profiles, no time wasting.',
-      chips: ['Identity Verified', 'Documents Checked', 'Ready to Interview'],
+      titleKey: 'FEATURES.f4_title',
+      descKey:  'FEATURES.f4_desc',
+      chipKeys: ['FEATURES.f4_chip1', 'FEATURES.f4_chip2', 'FEATURES.f4_chip3'],
       forRecruiter: true,
     },
     {
       icon: 'bi-bookmark-star-fill',
       gradient: 'var(--th-gradient-rose)',
-      title: 'Advanced Search & Filters',
-      desc: 'Filter by nationality, sector, experience, target country, English level and more to find exactly the right candidate.',
-      chips: ['20+ Filters', 'Video Profiles', 'Instant Results'],
+      titleKey: 'FEATURES.f5_title',
+      descKey:  'FEATURES.f5_desc',
+      chipKeys: ['FEATURES.f5_chip1', 'FEATURES.f5_chip2', 'FEATURES.f5_chip3'],
       forRecruiter: true,
     },
     {
       icon: 'bi-envelope-check-fill',
       gradient: 'var(--th-gradient-success)',
-      title: 'Direct Introduction by Our Team',
-      desc: 'Found the right candidate? Our team personally facilitates the introduction — professional, smooth, and verified.',
-      chips: ['Admin Facilitated', 'Verified Contact', 'Full Audit Trail'],
+      titleKey: 'FEATURES.f6_title',
+      descKey:  'FEATURES.f6_desc',
+      chipKeys: ['FEATURES.f6_chip1', 'FEATURES.f6_chip2', 'FEATURES.f6_chip3'],
       forRecruiter: true,
     },
   ];
@@ -900,70 +834,54 @@ export class LandingComponent implements OnInit, OnDestroy {
       icon: 'bi-shield-check',
       color: 'var(--th-gradient-primary)',
       shadow: 'rgba(80,70,229,.28)',
-      title: 'Closed & Verified Platform',
-      desc: 'Not a public job board. Every candidate and recruiter is personally approved by our admin team before getting access.',
+      titleKey: 'WHY.w1_title',
+      descKey:  'WHY.w1_desc',
     },
     {
       icon: 'bi-people-fill',
       color: 'var(--th-gradient-teal)',
       shadow: 'rgba(20,184,166,.28)',
-      title: 'We Do The Work For You',
-      desc: 'You don\'t apply blindly to hundreds of jobs. Our team personally matches and forwards your profile to the right employer.',
+      titleKey: 'WHY.w2_title',
+      descKey:  'WHY.w2_desc',
     },
     {
       icon: 'bi-globe2',
       color: 'var(--th-gradient-orange)',
       shadow: 'rgba(249,115,22,.28)',
-      title: 'Visa Sponsorship Focus Only',
-      desc: 'We only work with employers who hold a valid sponsor licence. Every opportunity on our platform is real, legal, and verified.',
+      titleKey: 'WHY.w3_title',
+      descKey:  'WHY.w3_desc',
     },
   ];
 
   candidateSteps = [
-    { icon: 'bi-person-plus-fill', color: 'var(--th-gradient-primary)', shadow: 'rgba(80,70,229,.28)',   title: 'Register & Pay',                      desc: 'Admins create your profile and grant you access to the platform. Our team will contact you within 24 hours to begin your onboarding.' },
-    { icon: 'bi-people-fill',      color: 'var(--th-gradient-teal)',    shadow: 'rgba(20,184,166,.28)',  title: 'We Build & Match Your Profile',       desc: 'Our team personally reviews your background, builds your professional profile, and matches you to visa-sponsored employers in your chosen country.' },
-    { icon: 'bi-send-fill',        color: 'var(--th-gradient-pink)',    shadow: 'rgba(236,72,153,.28)',  title: 'We Make the Introduction',            desc: 'We forward your profile directly to matched employers, arrange the interview introduction, and guide you through the visa process step by step.' },
+    { icon: 'bi-person-plus-fill', color: 'var(--th-gradient-primary)', shadow: 'rgba(80,70,229,.28)',  titleKey: 'STEPS.candidate1_title', descKey: 'STEPS.candidate1_desc' },
+    { icon: 'bi-people-fill',      color: 'var(--th-gradient-teal)',    shadow: 'rgba(20,184,166,.28)', titleKey: 'STEPS.candidate2_title', descKey: 'STEPS.candidate2_desc' },
+    { icon: 'bi-send-fill',        color: 'var(--th-gradient-pink)',    shadow: 'rgba(236,72,153,.28)', titleKey: 'STEPS.candidate3_title', descKey: 'STEPS.candidate3_desc' },
   ];
 
   recruiterSteps = [
-    { icon: 'bi-building-add',           color: 'var(--th-gradient-primary)', shadow: 'rgba(80,70,229,.28)',  title: 'Set Up Your Account',      desc: 'Admins create your recruiter profile and grant you access to the talent pool immediately.' },
-    { icon: 'bi-funnel',                 color: 'var(--th-gradient-orange)',  shadow: 'rgba(249,115,22,.28)', title: 'Search & Shortlist',       desc: 'Use powerful filters to find candidates that match your requirements. Save the best to your shortlist.' },
-    { icon: 'bi-envelope-arrow-up-fill', color: 'var(--th-gradient-teal)',   shadow: 'rgba(20,184,166,.28)', title: 'Request & Hire',           desc: 'Request contact info for your top candidates. Once approved, reach out directly and make the hire.' },
+    { icon: 'bi-building-add',           color: 'var(--th-gradient-primary)', shadow: 'rgba(80,70,229,.28)',  titleKey: 'STEPS.recruiter1_title', descKey: 'STEPS.recruiter1_desc' },
+    { icon: 'bi-funnel',                 color: 'var(--th-gradient-orange)',  shadow: 'rgba(249,115,22,.28)', titleKey: 'STEPS.recruiter2_title', descKey: 'STEPS.recruiter2_desc' },
+    { icon: 'bi-envelope-arrow-up-fill', color: 'var(--th-gradient-teal)',   shadow: 'rgba(20,184,166,.28)', titleKey: 'STEPS.recruiter3_title', descKey: 'STEPS.recruiter3_desc' },
   ];
 
   testimonials = [
-    {
-      quote: 'NTL Career Nexus made finding the right frontend role incredibly simple. Within two weeks I had three interview requests from companies I genuinely wanted to work for.',
-      name: 'Anjali Sharma', role: 'Frontend Developer, Hired via NTL Career Nexus',
-      initials: 'AS', color: 'var(--th-gradient-pink)',
-    },
-    {
-      quote: 'The contact-request system is brilliant. Candidates feel safe and I get verified access without any friction. Best hiring tool we\'ve used this year.',
-      name: 'David Park', role: 'Head of Engineering, TechCorp',
-      initials: 'DP', color: 'var(--th-gradient-teal)',
-    },
-    {
-      quote: 'I was skeptical about yet another jobs platform, but NTL Career Nexus\'s profile system is genuinely detailed. Recruiters could see my full skill set without a back-and-forth.',
-      name: 'Ravi Kumar', role: 'Full-Stack Engineer, Placed in 3 weeks',
-      initials: 'RK', color: 'var(--th-gradient-orange)',
-    },
-    {
-      quote: 'Managing our hiring pipeline through NTL Career Nexus has cut our time-to-hire in half. The shortlist and contact workflow is exactly what we needed.',
-      name: 'Sophie Martin', role: 'HR Manager, StartupX',
-      initials: 'SM', color: 'var(--th-gradient-purple)',
-    },
+    { quoteKey: 'TESTIMONIALS.t1_quote', nameKey: 'TESTIMONIALS.t1_name', roleKey: 'TESTIMONIALS.t1_role', initials: 'AS', color: 'var(--th-gradient-pink)'   },
+    { quoteKey: 'TESTIMONIALS.t2_quote', nameKey: 'TESTIMONIALS.t2_name', roleKey: 'TESTIMONIALS.t2_role', initials: 'DP', color: 'var(--th-gradient-teal)'   },
+    { quoteKey: 'TESTIMONIALS.t3_quote', nameKey: 'TESTIMONIALS.t3_name', roleKey: 'TESTIMONIALS.t3_role', initials: 'RK', color: 'var(--th-gradient-orange)' },
+    { quoteKey: 'TESTIMONIALS.t4_quote', nameKey: 'TESTIMONIALS.t4_name', roleKey: 'TESTIMONIALS.t4_role', initials: 'SM', color: 'var(--th-gradient-purple)' },
   ];
 
   contactInfoChannels = [
-    { icon: 'bi-whatsapp',       label: 'WhatsApp', value: '+91 93604 54326',        href: 'https://wa.me/919360454326?text=Hi%2C%20I%20would%20like%20to%20know%20more%20about%20NTL%20Career%20Nexus' },
-    { icon: 'bi-telephone-fill', label: 'Call Us',  value: '+91 82485 38157',        href: 'tel:+918248538157' },
-    { icon: 'bi-envelope-fill',  label: 'Email',    value: 'hello@ntlcareernexus.com', href: 'mailto:hello@ntlcareernexus.com' },
+    { icon: 'bi-whatsapp',       labelKey: 'LANDING.contact_channel_whatsapp', value: '+91 93604 54326',        href: 'https://wa.me/919360454326?text=Hi%2C%20I%20would%20like%20to%20know%20more%20about%20NTL%20Career%20Nexus' },
+    { icon: 'bi-telephone-fill', labelKey: 'LANDING.contact_channel_call',     value: '+91 82485 38157',        href: 'tel:+918248538157' },
+    { icon: 'bi-envelope-fill',  labelKey: 'LANDING.contact_channel_email',    value: 'hello@ntlcareernexus.com', href: 'mailto:hello@ntlcareernexus.com' },
   ];
 
   contactInfoDetails = [
-    { icon: 'bi-geo-alt-fill', label: 'Location', value: 'UK and Tamil Nadu' },
-    { icon: 'bi-clock-fill',   label: 'Hours',    value: 'Monday – Saturday · 10:00 AM – 6:00 PM IST' },
-    { icon: 'bi-translate',    label: 'Support',  value: 'Tamil & English — both available' },
+    { icon: 'bi-geo-alt-fill', labelKey: 'LANDING.contact_detail_location', valueKey: 'LANDING.contact_location_value' },
+    { icon: 'bi-clock-fill',   labelKey: 'LANDING.contact_detail_hours',    valueKey: 'LANDING.contact_hours_value'    },
+    { icon: 'bi-translate',    labelKey: 'LANDING.contact_detail_support',  valueKey: 'LANDING.contact_support_value'  },
   ];
 
   // ── Lifecycle ──────────────────────────────────────────────────────────────

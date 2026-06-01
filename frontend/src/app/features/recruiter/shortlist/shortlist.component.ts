@@ -3,6 +3,7 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { ReactiveFormsModule, FormBuilder, FormGroup } from '@angular/forms';
+import { TranslateModule } from '@ngx-translate/core';
 import { RecruiterService } from '../../../core/services/recruiter.service';
 import { ShortlistEntry } from '../../../core/models/recruiter.model';
 import { ToastService } from '../../../core/services/toast.service';
@@ -12,15 +13,15 @@ import { EmptyStateComponent } from '../../../shared/components/empty-state/empt
 @Component({
   selector: 'app-shortlist',
   standalone: true,
-  imports: [CommonModule, RouterLink, ReactiveFormsModule, PageHeaderComponent, EmptyStateComponent],
+  imports: [CommonModule, RouterLink, ReactiveFormsModule, TranslateModule, PageHeaderComponent, EmptyStateComponent],
   template: `
     <app-page-header
-      title="My Shortlist"
-      [subtitle]="entries.length + ' candidate(s) shortlisted'"
+      [title]="'SHORTLIST.title' | translate"
+      [subtitle]="('SHORTLIST.subtitle' | translate: { count: entries.length })"
       icon="bi-bookmark-star"
     >
       <a routerLink="/recruiter/candidates" class="btn btn-outline-primary btn-sm">
-        <i class="bi bi-search me-1"></i>Browse Candidates
+        <i class="bi bi-search me-1"></i>{{ 'SHORTLIST.browse_btn' | translate }}
       </a>
     </app-page-header>
 
@@ -33,17 +34,17 @@ import { EmptyStateComponent } from '../../../shared/components/empty-state/empt
               <i class="bi bi-search"></i>
               <input type="text" class="form-control form-control-sm"
                 formControlName="search"
-                placeholder="Search name, job title…"
+                [placeholder]="'SHORTLIST.search_placeholder' | translate"
                 (keydown.enter)="applyFilters()">
             </div>
             <div class="filter-card__actions">
               <button type="submit" class="filter-search-btn">
-                <i class="bi bi-search"></i> Search
+                <i class="bi bi-search"></i> {{ 'COMMON.perform_search' | translate }}
               </button>
               <button type="button" class="filter-card__adv-toggle"
                 [class.is-open]="advOpen"
                 (click)="advOpen = !advOpen">
-                <i class="bi bi-sliders2"></i> Advanced
+                <i class="bi bi-sliders2"></i> {{ 'COMMON.advanced' | translate }}
                 @if (activeAdvCount > 0) {
                   <span class="filter-card__badge">{{ activeAdvCount }}</span>
                 }
@@ -51,7 +52,7 @@ import { EmptyStateComponent } from '../../../shared/components/empty-state/empt
               </button>
               @if (hasAnyFilter) {
                 <button type="button" class="filter-clear-btn" (click)="clearFilters()">
-                  <i class="bi bi-x-lg"></i> Clear
+                  <i class="bi bi-x-lg"></i> {{ 'COMMON.clear' | translate }}
                 </button>
               }
             </div>
@@ -61,28 +62,28 @@ import { EmptyStateComponent } from '../../../shared/components/empty-state/empt
             <div class="filter-card__advanced-inner">
               <div class="row g-2">
                 <div class="col-sm-6 col-md-4 col-lg-3">
-                  <label class="filter-card__section-label">Industry</label>
+                  <label class="filter-card__section-label">{{ 'SHORTLIST.industry_label' | translate }}</label>
                   <input type="text" class="form-control form-control-sm"
                     formControlName="industry" placeholder="e.g. Technology">
                 </div>
                 <div class="col-sm-6 col-md-4 col-lg-3">
-                  <label class="filter-card__section-label">Country</label>
+                  <label class="filter-card__section-label">{{ 'SHORTLIST.country_label' | translate }}</label>
                   <input type="text" class="form-control form-control-sm"
                     formControlName="currentCountry" placeholder="e.g. Australia">
                 </div>
                 <div class="col-sm-6 col-md-4 col-lg-3">
-                  <label class="filter-card__section-label">Min. Experience (yrs)</label>
+                  <label class="filter-card__section-label">{{ 'SHORTLIST.min_experience' | translate }}</label>
                   <input type="number" class="form-control form-control-sm"
                     formControlName="yearsExperience" placeholder="e.g. 3" min="0">
                 </div>
               </div>
               <div class="mt-3 d-flex gap-2">
                 <button type="submit" class="filter-search-btn">
-                  <i class="bi bi-search"></i> Apply Filters
+                  <i class="bi bi-search"></i> {{ 'COMMON.apply_filters' | translate }}
                 </button>
                 @if (hasAnyFilter) {
                   <button type="button" class="filter-clear-btn" (click)="clearFilters()">
-                    <i class="bi bi-x-lg"></i> Clear All
+                    <i class="bi bi-x-lg"></i> {{ 'COMMON.clear_all' | translate }}
                   </button>
                 }
               </div>
@@ -95,21 +96,21 @@ import { EmptyStateComponent } from '../../../shared/components/empty-state/empt
     @if (loading) {
       <div class="loading-state">
         <div class="spinner-border"></div>
-        <div class="loading-state__text">Loading shortlist…</div>
+        <div class="loading-state__text">{{ 'SHORTLIST.loading' | translate }}</div>
       </div>
     } @else if (allEntries.length === 0) {
       <app-empty-state
         icon="bi-bookmark"
-        title="Your shortlist is empty"
-        subtitle="Browse candidates and add them to your shortlist."
-        actionLabel="Browse Talent"
+        [title]="'SHORTLIST.empty_title' | translate"
+        [subtitle]="'SHORTLIST.empty_sub' | translate"
+        [actionLabel]="'SHORTLIST.browse_talent' | translate"
         actionRoute="/recruiter/candidates"
       />
     } @else if (entries.length === 0) {
       <app-empty-state
         icon="bi-search"
-        title="No results match your filters"
-        subtitle="Try adjusting your search criteria."
+        [title]="'SHORTLIST.no_results' | translate"
+        [subtitle]="'SHORTLIST.no_results_sub' | translate"
       />
     } @else {
       <div class="cl-grid">
@@ -138,7 +139,7 @@ import { EmptyStateComponent } from '../../../shared/components/empty-state/empt
               background:rgba(245,158,11,.13);color:#f59e0b;
               border:1px solid rgba(245,158,11,.4);
               pointer-events:none;z-index:1;">
-              <i class="bi bi-bookmark-star-fill"></i> Shortlisted
+              <i class="bi bi-bookmark-star-fill"></i> {{ 'SHORTLIST.shortlisted_badge' | translate }}
             </span>
 
             <!-- Hero -->
@@ -177,7 +178,7 @@ import { EmptyStateComponent } from '../../../shared/components/empty-state/empt
                     <i class="bi bi-clock-history" style="font-size:.72rem;color:var(--th-primary);opacity:.8;"></i>Exp.
                     <span style="margin-left:auto;">:</span>
                   </span>
-                  <span style="font-size:.8rem;font-weight:500;color:var(--th-text);padding-left:.5rem;">{{ entry.years_experience }} {{ entry.years_experience === 1 ? 'year' : 'years' }}</span>
+                  <span style="font-size:.8rem;font-weight:500;color:var(--th-text);padding-left:.5rem;">{{ entry.years_experience === 1 ? ('SHORTLIST.exp_year' | translate: { n: entry.years_experience }) : ('SHORTLIST.exp_years' | translate: { n: entry.years_experience }) }}</span>
                 </div>
               }
 
@@ -215,20 +216,20 @@ import { EmptyStateComponent } from '../../../shared/components/empty-state/empt
               <a [routerLink]="['/recruiter/candidates', entry.candidate_id]"
                 [queryParams]="{ returnTo: 'shortlist' }"
                 class="cl-card__action cl-card__action--view">
-                <i class="bi bi-eye"></i><span>View</span>
+                <i class="bi bi-eye"></i><span>{{ 'COMMON.view' | translate }}</span>
               </a>
 
               <button class="cl-card__action cl-card__action--danger"
                 style="width:auto;padding:.3rem .55rem;"
                 (click)="remove(entry)"
                 [disabled]="removing === entry.candidate_id"
-                title="Remove from shortlist">
+                [title]="'SHORTLIST.remove' | translate">
                 @if (removing === entry.candidate_id) {
                   <span class="spinner-border spinner-border-sm" style="width:.75rem;height:.75rem;border-width:2px;"></span>
-                  <span>Removing…</span>
+                  <span>{{ 'SHORTLIST.removing' | translate }}</span>
                 } @else {
                   <i class="bi bi-bookmark-x"></i>
-                  <span>Remove</span>
+                  <span>{{ 'SHORTLIST.remove' | translate }}</span>
                 }
               </button>
             </div>

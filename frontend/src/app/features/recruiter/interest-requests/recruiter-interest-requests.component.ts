@@ -2,6 +2,7 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
+import { TranslateModule } from '@ngx-translate/core';
 import { forkJoin, of } from 'rxjs';
 import { catchError } from 'rxjs/operators';
 import { InterestRequestService, InterestRequest } from '../../../core/services/interest-request.service';
@@ -13,7 +14,7 @@ import { PageHeaderComponent } from '../../../shared/components/page-header/page
 @Component({
   selector: 'app-recruiter-interest-requests',
   standalone: true,
-  imports: [CommonModule, RouterLink, EmptyStateComponent, PageHeaderComponent],
+  imports: [CommonModule, RouterLink, TranslateModule, EmptyStateComponent, PageHeaderComponent],
   styles: [`
     .ir-card {
       background: var(--th-surface);
@@ -146,24 +147,23 @@ import { PageHeaderComponent } from '../../../shared/components/page-header/page
   `],
   template: `
     <app-page-header
-      title="My Interest Requests"
-      subtitle="Track the status of your agency interest requests submitted to candidates." />
+      [title]="'INTEREST_REQUESTS.title' | translate"
+      [subtitle]="'INTEREST_REQUESTS.recruiter_subtitle' | translate" />
 
     <!-- Loading -->
     @if (loading) {
       <div class="text-center py-5">
         <div class="spinner-border" style="color:var(--th-primary)"></div>
-        <div class="mt-2 text-muted small">Loading your requests…</div>
+        <div class="mt-2 text-muted small">{{ 'INTEREST_REQUESTS.loading' | translate }}</div>
       </div>
 
     <!-- Non-agency notice -->
     } @else if (!isAgency) {
       <div class="agency-only-notice">
         <i class="bi bi-briefcase text-muted"></i>
-        <h5>Recruitment Agencies Only</h5>
+        <h5>{{ 'INTEREST_REQUESTS.agency_only_title' | translate }}</h5>
         <p class="mb-0 small">
-          Interest requests are only available to recruitment agency accounts.<br>
-          Your account is registered as a direct employer.
+          {{ 'INTEREST_REQUESTS.agency_only_desc' | translate }}
         </p>
       </div>
 
@@ -178,17 +178,17 @@ import { PageHeaderComponent } from '../../../shared/components/page-header/page
           </span>
           @if (countByStatus('pending') > 0) {
             <span class="summary-pill summary-pill--pending">
-              <i class="bi bi-hourglass-split"></i> {{ countByStatus('pending') }} pending
+              <i class="bi bi-hourglass-split"></i> {{ countByStatus('pending') }} {{ 'COMMON.pending' | translate }}
             </span>
           }
           @if (countByStatus('approved') > 0) {
             <span class="summary-pill summary-pill--approved">
-              <i class="bi bi-check-circle-fill"></i> {{ countByStatus('approved') }} approved
+              <i class="bi bi-check-circle-fill"></i> {{ countByStatus('approved') }} {{ 'COMMON.approved' | translate }}
             </span>
           }
           @if (countByStatus('rejected') > 0) {
             <span class="summary-pill summary-pill--rejected">
-              <i class="bi bi-x-circle-fill"></i> {{ countByStatus('rejected') }} rejected
+              <i class="bi bi-x-circle-fill"></i> {{ countByStatus('rejected') }} {{ 'COMMON.rejected' | translate }}
             </span>
           }
         </div>
@@ -254,7 +254,9 @@ import { PageHeaderComponent } from '../../../shared/components/page-header/page
                   [class.bi-hourglass-split]="r.status === 'pending'"
                   [class.bi-check-circle-fill]="r.status === 'approved'"
                   [class.bi-x-circle-fill]="r.status === 'rejected'"></i>
-                {{ r.status | titlecase }}
+                @if (r.status === 'pending') { {{ 'COMMON.pending' | translate }} }
+                @else if (r.status === 'approved') { {{ 'COMMON.approved' | translate }} }
+                @else if (r.status === 'rejected') { {{ 'COMMON.rejected' | translate }} }
               </span>
 
               <div class="d-flex gap-2">

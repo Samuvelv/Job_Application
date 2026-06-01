@@ -13089,3 +13089,42 @@ html { scroll-behavior: smooth; }
   line-height: 1.4;
   border-radius: var(--th-radius-sm, 4px);
 }
+
+// ══════════════════════════════════════════════════════════════════════════════
+//  RTL SUPPORT — Arabic and other right-to-left languages
+// ══════════════════════════════════════════════════════════════════════════════
+[dir='rtl'] {
+  // Flip flex row directions where needed
+  .d-flex        { flex-direction: row-reverse; }
+  .app-topbar    { flex-direction: row-reverse; }
+  .app-sidebar   { right: 0; left: auto; }
+
+  // Sidebar nav links — flip icon/text order
+  .sidebar-link  { flex-direction: row-reverse; }
+  .sidebar-link-label { text-align: right; }
+
+  // Forms — align right
+  .form-label,
+  .form-control,
+  textarea.form-control { text-align: right; direction: rtl; }
+
+  // Dropdown menus — flip to left side
+  .dropdown-menu-end { right: auto !important; left: 0 !important; }
+
+  // Page headers — right-align
+  .page-header__title,
+  .page-header__subtitle { text-align: right; }
+
+  // Language selector dropdown — open to left
+  .lang-dropdown { right: auto; left: 0; }
+
+  // Bootstrap utility overrides for RTL
+  .ms-1, .ms-2 { margin-right: 0.25rem !important; margin-left: 0 !important; }
+  .me-1, .me-2 { margin-left: 0.25rem !important; margin-right: 0 !important; }
+  .ms-auto      { margin-left: 0 !important; margin-right: auto !important; }
+  .me-auto      { margin-right: 0 !important; margin-left: auto !important; }
+
+  // Text alignment
+  .text-start { text-align: right !important; }
+  .text-end   { text-align: left !important; }
+}

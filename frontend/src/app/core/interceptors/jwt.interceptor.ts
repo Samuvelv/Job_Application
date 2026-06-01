@@ -67,6 +67,13 @@ export const jwtInterceptor: HttpInterceptorFn = (
 
   return next(authReq).pipe(
     catchError((err) => {
+      // If the failing request was the refresh endpoint itself, do not
+      // attempt to refresh again here — let the refresh call's owner handle
+      // the failure (and avoid infinite recursion).
+      if (req.url.includes('/auth/refresh')) {
+        return throwError(() => err);
+      }
+
       if (err.status === 401 && err.error?.code === 'TOKEN_EXPIRED') {
         return handle401(req, next, auth);
       }

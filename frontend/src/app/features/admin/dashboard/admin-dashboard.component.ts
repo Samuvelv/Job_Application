@@ -2,6 +2,7 @@
 import { Component, signal, OnInit, computed, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
+import { TranslateModule } from '@ngx-translate/core';
 import { AuthService } from '../../../core/services/auth.service';
 import { StatsService, AdminStats } from '../../../core/services/stats.service';
 import { NotificationService } from '../../../core/services/notification.service';
@@ -11,26 +12,26 @@ import { ContactSubmission } from '../../../core/models/contact-submission.model
 @Component({
   selector: 'app-admin-dashboard',
   standalone: true,
-  imports: [CommonModule, RouterLink],
+  imports: [CommonModule, RouterLink, TranslateModule],
   template: `
 
     <!-- ── Hero ─────────────────────────────────────────────────────────── -->
     <div class="adm-hero">
-      <div class="adm-hero__eyebrow">NTL Career Nexus &mdash; Admin Portal</div>
+      <div class="adm-hero__eyebrow">{{ 'ADMIN.portal_label' | translate }}</div>
       <h1 class="adm-hero__title">Good {{ timeOfDay() }}{{ adminName() ? ', ' + adminName() : '' }}</h1>
       <div class="adm-hero__meta">
         <span class="adm-hero__chip"><i class="bi bi-calendar3"></i>{{ today() }}</span>
-        <span class="adm-hero__chip adm-hero__chip--shield"><i class="bi bi-shield-fill-check"></i>Administrator</span>
+        <span class="adm-hero__chip adm-hero__chip--shield"><i class="bi bi-shield-fill-check"></i>{{ 'ADMIN.administrator' | translate }}</span>
       </div>
       <div class="adm-hero__actions">
         <a routerLink="/admin/candidates/register" class="adm-hero__btn adm-hero__btn--solid">
-          <i class="bi bi-person-plus-fill"></i>Add Candidate
+          <i class="bi bi-person-plus-fill"></i>{{ 'ADMIN.add_candidate' | translate }}
         </a>
         <a routerLink="/admin/recruiters/create" class="adm-hero__btn">
-          <i class="bi bi-person-badge"></i>New Recruiter
+          <i class="bi bi-person-badge"></i>{{ 'ADMIN.new_recruiter' | translate }}
         </a>
         <a routerLink="/admin/edit-requests" class="adm-hero__btn">
-          <i class="bi bi-pencil-square"></i>Edit Requests
+          <i class="bi bi-pencil-square"></i>{{ 'ADMIN.edit_requests_btn' | translate }}
           @if ((stats()?.pendingEdits ?? 0) > 0) {
             <span class="adm-hero__pill">{{ stats()?.pendingEdits }}</span>
           }
@@ -44,9 +45,9 @@ import { ContactSubmission } from '../../../core/models/contact-submission.model
         <span class="adm-alert__icon"><i class="bi bi-exclamation-triangle-fill"></i></span>
         <span class="adm-alert__text">
           <strong>{{ stats()?.pendingEdits }} edit request{{ (stats()?.pendingEdits ?? 0) > 1 ? 's' : '' }}</strong>
-          waiting for your review
+          {{ 'ADMIN.waiting_review' | translate }}
         </span>
-        <span class="adm-alert__cta">Review now <i class="bi bi-arrow-right"></i></span>
+        <span class="adm-alert__cta">{{ 'ADMIN.review_now' | translate }} <i class="bi bi-arrow-right"></i></span>
       </a>
     }
 
@@ -55,7 +56,7 @@ import { ContactSubmission } from '../../../core/models/contact-submission.model
          Style: Solid accent-header cards
     ════════════════════════════════════════════════════════════════════ -->
     <div class="adm-section-label">
-      <i class="bi bi-lightning-charge-fill"></i> Today's Activity
+      <i class="bi bi-lightning-charge-fill"></i> {{ 'ADMIN.todays_activity' | translate }}
     </div>
 
     <div class="dash-stat-grid dash-stat-grid--3 mb-4">
@@ -64,14 +65,14 @@ import { ContactSubmission } from '../../../core/models/contact-submission.model
       <div class="kpi-hcard kpi-hcard--indigo">
         <div class="kpi-hcard__header">
           <i class="bi bi-person-plus-fill"></i>
-          <span class="kpi-hcard__header-label">Registrations</span>
+          <span class="kpi-hcard__header-label">{{ 'ADMIN.registrations' | translate }}</span>
         </div>
         <div class="kpi-hcard__body">
           <div class="kpi-hcard__value">
             @if (loading()) { <span class="kpi-hcard__skeleton"></span> }
             @else { {{ stats()?.registrationsToday ?? 0 }} }
           </div>
-          <div class="kpi-hcard__title">New Registrations Today</div>
+          <div class="kpi-hcard__title">{{ 'ADMIN.new_registrations_today' | translate }}</div>
         </div>
       </div>
 
@@ -79,14 +80,14 @@ import { ContactSubmission } from '../../../core/models/contact-submission.model
       <div class="kpi-hcard kpi-hcard--emerald">
         <div class="kpi-hcard__header">
           <i class="bi bi-send-fill"></i>
-          <span class="kpi-hcard__header-label">Forwarded</span>
+          <span class="kpi-hcard__header-label">{{ 'ADMIN.forwarded' | translate }}</span>
         </div>
         <div class="kpi-hcard__body">
           <div class="kpi-hcard__value">
             @if (loading()) { <span class="kpi-hcard__skeleton"></span> }
             @else { {{ stats()?.profilesForwardedToday ?? 0 }} }
           </div>
-          <div class="kpi-hcard__title">Profiles Forwarded Today</div>
+          <div class="kpi-hcard__title">{{ 'ADMIN.profiles_forwarded_today' | translate }}</div>
         </div>
       </div>
 
@@ -94,14 +95,14 @@ import { ContactSubmission } from '../../../core/models/contact-submission.model
       <div class="kpi-hcard kpi-hcard--cyan">
         <div class="kpi-hcard__header">
           <i class="bi bi-calendar-check-fill"></i>
-          <span class="kpi-hcard__header-label">Interviews</span>
+          <span class="kpi-hcard__header-label">{{ 'ADMIN.interviews' | translate }}</span>
         </div>
         <div class="kpi-hcard__body">
           <div class="kpi-hcard__value">
             @if (loading()) { <span class="kpi-hcard__skeleton"></span> }
             @else { {{ stats()?.interviewsArrangedToday ?? 0 }} }
           </div>
-          <div class="kpi-hcard__title">Interviews Arranged Today</div>
+          <div class="kpi-hcard__title">{{ 'ADMIN.interviews_arranged_today' | translate }}</div>
         </div>
       </div>
 
@@ -112,7 +113,7 @@ import { ContactSubmission } from '../../../core/models/contact-submission.model
          Style: Single horizontal strip with dividers
     ════════════════════════════════════════════════════════════════════ -->
     <div class="adm-section-label">
-      <i class="bi bi-grid-fill"></i> Platform Overview
+      <i class="bi bi-grid-fill"></i> {{ 'ADMIN.platform_overview' | translate }}
     </div>
 
     <div class="overview-strip mb-4">
@@ -126,7 +127,7 @@ import { ContactSubmission } from '../../../core/models/contact-submission.model
             @if (loading()) { <span class="overview-strip__skeleton"></span> }
             @else { {{ stats()?.candidates ?? 0 }} }
           </div>
-          <div class="overview-strip__label">Total Candidates</div>
+          <div class="overview-strip__label">{{ 'ADMIN.total_candidates' | translate }}</div>
         </div>
       </a>
 
@@ -141,7 +142,7 @@ import { ContactSubmission } from '../../../core/models/contact-submission.model
             @if (loading()) { <span class="overview-strip__skeleton"></span> }
             @else { {{ stats()?.activeCandidates ?? 0 }} }
           </div>
-          <div class="overview-strip__label">Active Candidates</div>
+          <div class="overview-strip__label">{{ 'ADMIN.active_candidates' | translate }}</div>
         </div>
       </a>
 
@@ -156,7 +157,7 @@ import { ContactSubmission } from '../../../core/models/contact-submission.model
             @if (loading()) { <span class="overview-strip__skeleton"></span> }
             @else { {{ stats()?.recruiters ?? 0 }} }
           </div>
-          <div class="overview-strip__label">Total Recruiters</div>
+          <div class="overview-strip__label">{{ 'ADMIN.total_recruiters' | translate }}</div>
         </div>
       </a>
 
@@ -171,7 +172,7 @@ import { ContactSubmission } from '../../../core/models/contact-submission.model
             @if (loading()) { <span class="overview-strip__skeleton"></span> }
             @else { {{ stats()?.countriesActive ?? 0 }} }
           </div>
-          <div class="overview-strip__label">Countries Active</div>
+          <div class="overview-strip__label">{{ 'ADMIN.countries_active' | translate }}</div>
         </div>
       </div>
 
@@ -186,7 +187,7 @@ import { ContactSubmission } from '../../../core/models/contact-submission.model
             @if (loading()) { <span class="overview-strip__skeleton"></span> }
             @else { {{ stats()?.placementsMade ?? 0 }} }
           </div>
-          <div class="overview-strip__label">Placements Made</div>
+          <div class="overview-strip__label">{{ 'ADMIN.placements_made' | translate }}</div>
         </div>
       </div>
 
@@ -207,7 +208,7 @@ import { ContactSubmission } from '../../../core/models/contact-submission.model
             @if (loading()) { <span class="overview-strip__skeleton"></span> }
             @else { {{ stats()?.pendingEdits ?? 0 }} }
           </div>
-          <div class="overview-strip__label">Pending Edits</div>
+          <div class="overview-strip__label">{{ 'ADMIN.pending_edits' | translate }}</div>
         </div>
       </a>
 
@@ -218,7 +219,7 @@ import { ContactSubmission } from '../../../core/models/contact-submission.model
          Style: Dark gradient feature cards
     ════════════════════════════════════════════════════════════════════ -->
     <div class="adm-section-label">
-      <i class="bi bi-heart-fill"></i> Community
+      <i class="bi bi-heart-fill"></i> {{ 'ADMIN.community' | translate }}
     </div>
 
     <div class="dash-stat-grid dash-stat-grid--3 mb-4">
@@ -231,7 +232,7 @@ import { ContactSubmission } from '../../../core/models/contact-submission.model
           @if (loading()) { <span class="dark-stat-card__skeleton"></span> }
           @else { {{ stats()?.totalVolunteers ?? 0 }} }
         </div>
-        <div class="dark-stat-card__label">Total Volunteers</div>
+        <div class="dark-stat-card__label">{{ 'ADMIN.total_volunteers' | translate }}</div>
         <div class="dark-stat-card__badge">
           <i class="bi bi-people-fill"></i> Registered
         </div>
@@ -245,9 +246,9 @@ import { ContactSubmission } from '../../../core/models/contact-submission.model
           @if (loading()) { <span class="dark-stat-card__skeleton"></span> }
           @else { {{ stats()?.activeVolunteers ?? 0 }} }
         </div>
-        <div class="dark-stat-card__label">Active Volunteers</div>
+        <div class="dark-stat-card__label">{{ 'ADMIN.active_volunteers' | translate }}</div>
         <div class="dark-stat-card__badge">
-          <i class="bi bi-circle-fill" style="font-size:.4rem"></i> Ready to help
+          <i class="bi bi-circle-fill" style="font-size:.4rem"></i> {{ 'ADMIN.ready_to_help' | translate }}
         </div>
       </div>
 
@@ -259,9 +260,9 @@ import { ContactSubmission } from '../../../core/models/contact-submission.model
           @if (loading()) { <span class="dark-stat-card__skeleton"></span> }
           @else { {{ stats()?.candidatesHelpedThisMonth ?? 0 }} }
         </div>
-        <div class="dark-stat-card__label">Candidates Helped This Month</div>
+        <div class="dark-stat-card__label">{{ 'ADMIN.candidates_helped_this_month' | translate }}</div>
         <div class="dark-stat-card__badge">
-          <i class="bi bi-arrow-up-right"></i> Via volunteers
+          <i class="bi bi-arrow-up-right"></i> {{ 'ADMIN.via_volunteers' | translate }}
         </div>
       </div>
 
@@ -269,7 +270,7 @@ import { ContactSubmission } from '../../../core/models/contact-submission.model
 
     <!-- ── Quick Actions ─────────────────────────────────────────────────── -->
     <div class="adm-section-label">
-      <i class="bi bi-lightning-charge-fill"></i> Quick Actions
+      <i class="bi bi-lightning-charge-fill"></i> {{ 'ADMIN.quick_actions' | translate }}
     </div>
 
     <div class="d-flex flex-column gap-2">
@@ -277,11 +278,11 @@ import { ContactSubmission } from '../../../core/models/contact-submission.model
       <a routerLink="/admin/candidates" class="nav-link-card nav-link-card--primary">
         <div class="nav-link-card__icon"><i class="bi bi-people-fill"></i></div>
         <div class="nav-link-card__body">
-          <div class="nav-link-card__title">Manage Candidates</div>
-          <div class="nav-link-card__desc">View, search and manage all candidate profiles</div>
+          <div class="nav-link-card__title">{{ 'ADMIN.manage_candidates' | translate }}</div>
+          <div class="nav-link-card__desc">{{ 'ADMIN.manage_candidates_desc' | translate }}</div>
         </div>
         <span class="nav-link-card__badge" style="background:var(--th-primary-soft);color:var(--th-primary)">
-          {{ stats()?.candidates ?? 0 }} total
+          {{ stats()?.candidates ?? 0 }} {{ 'COMMON.total' | translate }}
         </span>
         <i class="bi bi-chevron-right nav-link-card__arrow"></i>
       </a>
@@ -289,11 +290,11 @@ import { ContactSubmission } from '../../../core/models/contact-submission.model
       <a routerLink="/admin/recruiters" class="nav-link-card nav-link-card--success">
         <div class="nav-link-card__icon"><i class="bi bi-person-badge-fill"></i></div>
         <div class="nav-link-card__body">
-          <div class="nav-link-card__title">Manage Recruiters</div>
-          <div class="nav-link-card__desc">Create and control recruiter accounts</div>
+          <div class="nav-link-card__title">{{ 'ADMIN.manage_recruiters' | translate }}</div>
+          <div class="nav-link-card__desc">{{ 'ADMIN.manage_recruiters_desc' | translate }}</div>
         </div>
         <span class="nav-link-card__badge" style="background:var(--th-emerald-soft);color:var(--th-emerald)">
-          {{ stats()?.recruiters ?? 0 }} active
+          {{ stats()?.recruiters ?? 0 }} {{ 'COMMON.active_label' | translate }}
         </span>
         <i class="bi bi-chevron-right nav-link-card__arrow"></i>
       </a>
@@ -301,12 +302,12 @@ import { ContactSubmission } from '../../../core/models/contact-submission.model
       <a routerLink="/admin/edit-requests" class="nav-link-card nav-link-card--warning">
         <div class="nav-link-card__icon"><i class="bi bi-pencil-square"></i></div>
         <div class="nav-link-card__body">
-          <div class="nav-link-card__title">Review Edit Requests</div>
-          <div class="nav-link-card__desc">Approve or reject pending profile change requests</div>
+          <div class="nav-link-card__title">{{ 'ADMIN.review_edit_requests' | translate }}</div>
+          <div class="nav-link-card__desc">{{ 'ADMIN.review_edit_requests_desc' | translate }}</div>
         </div>
         @if ((stats()?.pendingEdits ?? 0) > 0) {
           <span class="nav-link-card__badge" style="background:var(--th-amber-soft);color:var(--th-amber)">
-            {{ stats()?.pendingEdits }} pending
+            {{ stats()?.pendingEdits }} {{ 'COMMON.pending_label' | translate }}
           </span>
         }
         <i class="bi bi-chevron-right nav-link-card__arrow"></i>
@@ -315,11 +316,11 @@ import { ContactSubmission } from '../../../core/models/contact-submission.model
       <a routerLink="/admin/audit-logs" class="nav-link-card nav-link-card--info">
         <div class="nav-link-card__icon"><i class="bi bi-journal-text"></i></div>
         <div class="nav-link-card__body">
-          <div class="nav-link-card__title">Audit Logs</div>
-          <div class="nav-link-card__desc">Track all user actions and system events</div>
+          <div class="nav-link-card__title">{{ 'ADMIN.audit_logs_title' | translate }}</div>
+          <div class="nav-link-card__desc">{{ 'ADMIN.audit_logs_desc' | translate }}</div>
         </div>
         <span class="nav-link-card__badge" style="background:var(--th-cyan-soft);color:var(--th-cyan)">
-          {{ stats()?.auditLogsToday ?? 0 }} today
+          {{ stats()?.auditLogsToday ?? 0 }} {{ 'ADMIN.audit_logs_today' | translate }}
         </span>
         <i class="bi bi-chevron-right nav-link-card__arrow"></i>
       </a>
@@ -327,11 +328,11 @@ import { ContactSubmission } from '../../../core/models/contact-submission.model
       <a routerLink="/admin/volunteers" class="nav-link-card nav-link-card--purple">
         <div class="nav-link-card__icon"><i class="bi bi-hand-thumbs-up-fill"></i></div>
         <div class="nav-link-card__body">
-          <div class="nav-link-card__title">Manage Volunteers</div>
-          <div class="nav-link-card__desc">View and manage volunteer profiles</div>
+          <div class="nav-link-card__title">{{ 'ADMIN.manage_volunteers' | translate }}</div>
+          <div class="nav-link-card__desc">{{ 'ADMIN.manage_volunteers_desc' | translate }}</div>
         </div>
         <span class="nav-link-card__badge" style="background:var(--th-violet-soft);color:var(--th-violet)">
-          {{ stats()?.activeVolunteers ?? 0 }} active
+          {{ stats()?.activeVolunteers ?? 0 }} {{ 'COMMON.active_label' | translate }}
         </span>
         <i class="bi bi-chevron-right nav-link-card__arrow"></i>
       </a>
@@ -339,12 +340,12 @@ import { ContactSubmission } from '../../../core/models/contact-submission.model
       <a routerLink="/admin/contact-submissions" class="nav-link-card nav-link-card--primary">
         <div class="nav-link-card__icon"><i class="bi bi-envelope-fill"></i></div>
         <div class="nav-link-card__body">
-          <div class="nav-link-card__title">Contact Requests</div>
-          <div class="nav-link-card__desc">Review messages and enquiries submitted via the website contact form</div>
+          <div class="nav-link-card__title">{{ 'ADMIN.contact_requests' | translate }}</div>
+          <div class="nav-link-card__desc">{{ 'ADMIN.contact_requests_desc' | translate }}</div>
         </div>
         @if (unreadCount() > 0) {
           <span class="nav-link-card__badge" style="background:var(--th-primary-soft);color:var(--th-primary)">
-            {{ unreadCount() }} unread
+            {{ unreadCount() }} {{ 'COMMON.unread' | translate }}
           </span>
         }
         <i class="bi bi-chevron-right nav-link-card__arrow"></i>
