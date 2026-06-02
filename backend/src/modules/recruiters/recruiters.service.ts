@@ -79,9 +79,10 @@ export async function createRecruiter(dto: CreateRecruiterDto, createdByAdminId:
       job_types:        dto.job_types ?? null,
       account_status:   dto.account_status ?? 'active',
       access_start_date: dto.access_start_date ? new Date(dto.access_start_date) : null,
-      free_account:     dto.free_account ?? false,
-      admin_notes:      dto.admin_notes ?? null,
-      created_by:       createdByAdminId,
+      free_account:        dto.free_account ?? false,
+      admin_notes:         dto.admin_notes ?? null,
+      enable_translation:  dto.enable_translation ?? false,
+      created_by:          createdByAdminId,
       plain_password:   dto.password,
       access_expires_at: new Date(dto.access_expires_at),
     });
@@ -207,6 +208,7 @@ export async function listRecruiters(filters: RecruiterFilterDto) {
       'r.access_start_date',
       'r.free_account',
       'r.admin_notes',
+      'r.enable_translation',
       'r.access_expires_at',
       'r.plain_password',
       'u.is_active',
@@ -341,6 +343,7 @@ export async function updateRecruiter(id: string, dto: UpdateRecruiterDto) {
   if (dto.hires_per_year     !== undefined) patch['hires_per_year']    = dto.hires_per_year ?? null;
   if (dto.admin_notes        !== undefined) patch['admin_notes']       = dto.admin_notes ?? null;
   if (dto.access_expires_at  !== undefined) patch['access_expires_at'] = new Date(dto.access_expires_at);
+  if (dto.enable_translation !== undefined) patch['enable_translation'] = dto.enable_translation;
 
   // Handle email change
   if (dto.email !== undefined) {
@@ -404,6 +407,7 @@ export async function getRecruiterById(id: string) {
       'r.access_start_date',
       'r.free_account',
       'r.admin_notes',
+      'r.enable_translation',
       'r.access_expires_at',
       'r.plain_password',
       'u.is_active',

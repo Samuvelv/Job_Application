@@ -871,6 +871,22 @@ function websiteValidator(): ValidatorFn {
                     </div>
                   </div>
 
+                  <div class="col-md-6">
+                    <label class="form-label fw-semibold d-block">Enable Translation</label>
+                    <div class="d-flex align-items-center gap-3 mt-1">
+                      <div class="form-check form-switch mb-0">
+                        <input class="form-check-input" type="checkbox" role="switch"
+                          formControlName="enable_translation" id="editEnableTranslationToggle"
+                          style="width:2.5rem;height:1.25rem">
+                        <label class="form-check-label ms-2 fw-semibold" for="editEnableTranslationToggle"
+                          [style.color]="editForm.get('enable_translation')?.value ? 'var(--bs-success)' : 'var(--bs-secondary)'">
+                          {{ editForm.get('enable_translation')?.value ? 'Translation Enabled' : 'Translation Disabled' }}
+                        </label>
+                      </div>
+                    </div>
+                    <div class="form-text text-muted mt-1">Allow this recruiter to translate candidate profiles.</div>
+                  </div>
+
                 </div>
 
                 <!-- ══ Section 7: Credentials ══ -->
@@ -1451,7 +1467,8 @@ export class RecruiterListComponent implements OnInit {
       job_types:            [rec.job_types             ?? []],
       // Section 6: Account
       is_active_str:  [rec.is_active ? 'active' : 'inactive'],
-      free_account:   [rec.free_account ?? false],
+      free_account:       [rec.free_account ?? false],
+      enable_translation: [rec.enable_translation ?? false],
       admin_notes:    [rec.admin_notes  ?? ''],
       duration_value: [null as number | null],
       duration_unit:  [null],
@@ -1575,8 +1592,9 @@ export class RecruiterListComponent implements OnInit {
       hires_per_year:       val.hires_per_year || null,
       job_types:            val.job_types?.length ? val.job_types : null,
       is_active:    val.is_active_str !== 'inactive',
-      free_account: val.free_account ?? false,
-      admin_notes:  val.admin_notes  || null,
+      free_account:        val.free_account ?? false,
+      enable_translation:  val.enable_translation ?? false,
+      admin_notes:         val.admin_notes  || null,
     };
 
     if (val.new_password) payload['new_password'] = val.new_password;

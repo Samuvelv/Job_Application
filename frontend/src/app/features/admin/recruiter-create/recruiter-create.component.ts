@@ -566,6 +566,22 @@ function emailValidator(): ValidatorFn {
               </div>
             </div>
 
+            <div class="col-md-6">
+              <label class="form-label fw-semibold d-block">Enable Translation</label>
+              <div class="d-flex align-items-center gap-3 mt-1">
+                <div class="form-check form-switch mb-0">
+                  <input class="form-check-input" type="checkbox" role="switch"
+                    formControlName="enable_translation" id="enableTranslationToggle"
+                    style="width:2.5rem;height:1.25rem">
+                  <label class="form-check-label ms-2 fw-semibold" for="enableTranslationToggle"
+                    [style.color]="form.get('enable_translation')?.value ? 'var(--bs-success)' : 'var(--bs-secondary)'">
+                    {{ form.get('enable_translation')?.value ? 'Translation Enabled' : 'Translation Disabled' }}
+                  </label>
+                </div>
+              </div>
+              <div class="form-text text-muted mt-1">Allow this recruiter to translate candidate profiles.</div>
+            </div>
+
           </div>
 
           <!-- ── Section 7: Admin Notes ──────────────────────────────── -->
@@ -938,6 +954,7 @@ export class RecruiterCreateComponent implements OnInit {
       duration_value:     [null as number | null],
       duration_unit:      [null],
       free_account:       [false],
+      enable_translation: [false],
       // Section 7: Notes
       admin_notes: [''],
       // Section 8: Verification checklist (not sent to backend)
@@ -1136,6 +1153,7 @@ export class RecruiterCreateComponent implements OnInit {
       is_active:                 v.account_status === 'active',
       access_start_date:         v.access_start_date || undefined,
       free_account:              v.free_account ?? false,
+      enable_translation:        v.enable_translation ?? false,
       admin_notes:               v.admin_notes || undefined,
       password:                  v.password,
       access_expires_at:         accessExpiresAt,
