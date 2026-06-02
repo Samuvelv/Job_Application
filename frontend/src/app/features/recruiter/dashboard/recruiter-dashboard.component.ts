@@ -1,8 +1,8 @@
 // src/app/features/recruiter/dashboard/recruiter-dashboard.component.ts
-import { Component, signal, OnInit, computed } from '@angular/core';
+import { Component, signal, OnInit, computed, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
-import { TranslateModule } from '@ngx-translate/core';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { forkJoin, of } from 'rxjs';
 import { catchError } from 'rxjs/operators';
 import { AuthService } from '../../../core/services/auth.service';
@@ -271,7 +271,7 @@ import { Recruiter } from '../../../core/models/recruiter.model';
     <!-- ── Hero ──────────────────────────────────────────────────────────── -->
     <div class="rd-hero">
       <div class="rd-hero__eyebrow">{{ 'RECRUITER_DASHBOARD.portal_label' | translate }}</div>
-      <h1 class="rd-hero__name">Good {{ timeOfDay() }}, {{ contactName() || '…' }}</h1>
+      <h1 class="rd-hero__name">{{ greeting() }}, {{ contactName() || '…' }}</h1>
 
       <div class="rd-hero__chips">
         <span class="rd-hero__chip">
@@ -399,6 +399,8 @@ export class RecruiterDashboardComponent implements OnInit {
 
   contactName = computed(() => this.profile()?.contact_name ?? '');
 
+  private translate = inject(TranslateService);
+
   constructor(
     public auth: AuthService,
     private statsService: StatsService,
@@ -421,11 +423,21 @@ export class RecruiterDashboardComponent implements OnInit {
     return !!exp && new Date(exp) < new Date();
   }
 
+  greeting(): string {
+    const h = new Date().getHours();
+    const periodKey = h < 12 ? 'COMMON.morning' : h < 17 ? 'COMMON.afternoon' : 'COMMON.evening';
+    const greetKey  = h < 12 ? 'COMMON.good_morning' : h < 17 ? 'COMMON.good_afternoon' : 'COMMON.good_evening';
+    // Use specific greeting key if available, otherwise fall back to "Good {period}"
+    const specific = this.translate.instant(greetKey);
+    if (specific !== greetKey) return specific;
+    return this.translate.instant('COMMON.good') + ' ' + this.translate.instant(periodKey);
+  }
+
   timeOfDay(): string {
     const h = new Date().getHours();
-    if (h < 12) return 'morning';
-    if (h < 17) return 'afternoon';
-    return 'evening';
+    if (h < 12) return this.translate.instant('COMMON.morning');
+    if (h < 17) return this.translate.instant('COMMON.afternoon');
+    return this.translate.instant('COMMON.evening');
   }
 
   today(): string {

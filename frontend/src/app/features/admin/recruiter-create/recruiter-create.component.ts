@@ -1,14 +1,17 @@
 // src/app/features/admin/recruiter-create/recruiter-create.component.ts
-import { Component, OnInit, computed, signal } from '@angular/core';
+import { Component, OnInit, OnDestroy, computed, signal, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, FormGroup, Validators, AbstractControl, ValidationErrors, ValidatorFn } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
+import { Subscription, debounceTime } from 'rxjs';
 import { RecruiterService } from '../../../core/services/recruiter.service';
 import { PageHeaderComponent } from '../../../shared/components/page-header/page-header.component';
 import { MasterDataService } from '../../../core/services/master-data.service';
+import { AuthService } from '../../../core/services/auth.service';
 import { SearchableSelectComponent, SelectOption } from '../../../shared/components/searchable-select/searchable-select.component';
 import { ChipMultiSelectComponent, ChipOption } from '../../../shared/components/chip-multi-select/chip-multi-select.component';
 import { ToastService } from '../../../core/services/toast.service';
+import { HasUnsavedChanges } from '../../../core/guards/unsaved-changes.guard';
 
 // ── Duration validator ─────────────────────────────────────────────────────
 function durationRequiredValidator(g: AbstractControl): ValidationErrors | null {
@@ -138,6 +141,13 @@ function emailValidator(): ValidatorFn {
           </div>
         </div>
       } @else {
+        @if (draftRestored) {
+          <div class="alert alert-info alert-dismissible d-flex align-items-center gap-2" role="alert">
+            <i class="bi bi-floppy2-fill"></i>
+            <span>A saved draft has been restored. You can continue where you left off.</span>
+            <button type="button" class="btn-close" (click)="dismissDraftBanner()"></button>
+          </div>
+        }
         <form [formGroup]="form" (ngSubmit)="submit()">
 
           <!-- ── Section 1: Contact Details ─────────────────────────── -->
@@ -566,6 +576,22 @@ function emailValidator(): ValidatorFn {
               </div>
             </div>
 
+            <div class="col-md-6">
+              <label class="form-label fw-semibold d-block">Enable Translation</label>
+              <div class="d-flex align-items-center gap-3 mt-1">
+                <div class="form-check form-switch mb-0">
+                  <input class="form-check-input" type="checkbox" role="switch"
+                    formControlName="enable_translation" id="enableTranslationToggle"
+                    style="width:2.5rem;height:1.25rem">
+                  <label class="form-check-label ms-2 fw-semibold" for="enableTranslationToggle"
+                    [style.color]="form.get('enable_translation')?.value ? 'var(--bs-success)' : 'var(--bs-secondary)'">
+                    {{ form.get('enable_translation')?.value ? 'Translation Enabled' : 'Translation Disabled' }}
+                  </label>
+                </div>
+              </div>
+              <div class="form-text text-muted mt-1">Allow this recruiter to translate candidate profiles.</div>
+            </div>
+
           </div>
 
           <!-- ── Section 7: Admin Notes ──────────────────────────────── -->
@@ -773,17 +799,20 @@ function emailValidator(): ValidatorFn {
     </div>
   `,
 })
-export class RecruiterCreateComponent implements OnInit {
+export class RecruiterCreateComponent implements OnInit, OnDestroy, HasUnsavedChanges {
   form!: FormGroup;
-  submitting = false;
-  submitted  = false;
-  error = '';
-  success = false;
+  submitting    = false;
+  submitted     = false;
+  error         = '';
+  success       = false;
   createdRecruiterNumber = '';
   createdContactName     = '';
   createdCompanyName     = '';
   createdWhatsApp        = false;
-  showPw = false;
+  showPw        = false;
+  draftSaved    = false;
+  draftRestored = false;
+  private draftSub?: Subscription;
 
   // ── Computed signals from master data ──────────────────────────────────────
   countryOpts = computed<SelectOption[]>(() =>
@@ -898,6 +927,7 @@ export class RecruiterCreateComponent implements OnInit {
     private recruiterService: RecruiterService,
     private router: Router,
     private master: MasterDataService,
+    private auth: AuthService,
     private toast: ToastService,
   ) {
     this.form = this.fb.group({
@@ -938,6 +968,7 @@ export class RecruiterCreateComponent implements OnInit {
       duration_value:     [null as number | null],
       duration_unit:      [null],
       free_account:       [false],
+      enable_translation: [false],
       // Section 7: Notes
       admin_notes: [''],
       // Section 8: Verification checklist (not sent to backend)
@@ -1008,7 +1039,68 @@ export class RecruiterCreateComponent implements OnInit {
         this.form.patchValue({ whatsapp_dial_code: raw.phone_dial_code }, { emitEvent: false });
       }
     });
+
+    this.restoreDraft();
+
+    this.draftSub = this.form.valueChanges.pipe(debounceTime(800)).subscribe(() => {
+      this.saveDraft();
+    });
   }
+
+  ngOnDestroy(): void {
+    this.draftSub?.unsubscribe();
+    if (this.isDirty()) this.saveDraft();
+  }
+
+  @HostListener('window:beforeunload', ['$event'])
+  onBeforeUnload(event: BeforeUnloadEvent): void {
+    if (this.isDirty()) {
+      this.saveDraft();
+      event.preventDefault();
+    }
+  }
+
+  isDirty(): boolean {
+    return this.form?.dirty ?? false;
+  }
+
+  // ── Draft helpers ──────────────────────────────────────────────────────────
+  private get _draftKey(): string {
+    return `th_recruiter_draft_${this.auth.currentUser()?.id ?? 'anon'}`;
+  }
+
+  private saveDraft(): void {
+    try {
+      const raw = this.form.getRawValue();
+      localStorage.setItem(this._draftKey, JSON.stringify(raw));
+      this.draftSaved = true;
+      setTimeout(() => (this.draftSaved = false), 3000);
+    } catch { /* storage full */ }
+  }
+
+  private restoreDraft(): void {
+    try {
+      const stored = localStorage.getItem(this._draftKey);
+      if (!stored) return;
+      const draft = JSON.parse(stored);
+      // Only restore non-sensitive scalar fields; skip verification checkboxes and password
+      const skip = new Set([
+        'password',
+        'verify_de_website','verify_de_licence','verify_de_linkedin','verify_de_briefed',
+        'verify_ra_website','verify_ra_ch','verify_ra_rec','verify_ra_sponsor','verify_ra_linkedin','verify_ra_briefed',
+      ]);
+      const patch: Record<string, unknown> = {};
+      for (const [k, v] of Object.entries(draft)) {
+        if (!skip.has(k) && v !== undefined && v !== null && v !== '') patch[k] = v;
+      }
+      this.form.patchValue(patch, { emitEvent: false });
+      this.draftRestored = true;
+    } catch { /* corrupted */ }
+  }
+
+  private clearDraft(): void { localStorage.removeItem(this._draftKey); }
+
+  dismissDraftBanner(): void { this.draftRestored = false; }
 
   onCompanyCountryChange(countryName: string | null): void {
     this.form.patchValue({ company_city: null }, { emitEvent: false });
@@ -1136,6 +1228,7 @@ export class RecruiterCreateComponent implements OnInit {
       is_active:                 v.account_status === 'active',
       access_start_date:         v.access_start_date || undefined,
       free_account:              v.free_account ?? false,
+      enable_translation:        v.enable_translation ?? false,
       admin_notes:               v.admin_notes || undefined,
       password:                  v.password,
       access_expires_at:         accessExpiresAt,
@@ -1147,6 +1240,7 @@ export class RecruiterCreateComponent implements OnInit {
         this.createdCompanyName     = (res.recruiter as any)?.company_name ?? '';
         this.createdWhatsApp        = !!(res.recruiter as any)?.whatsapp_number;
         this.success = true;
+        this.clearDraft();
 
         const name    = this.createdContactName;
         const company = this.createdCompanyName ? ` from ${this.createdCompanyName}` : '';

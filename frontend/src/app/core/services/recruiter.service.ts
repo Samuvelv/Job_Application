@@ -57,6 +57,7 @@ export class RecruiterService {
     access_start_date?: string;
     free_account?: boolean;
     admin_notes?: string;
+    enable_translation?: boolean;
     password: string;
     access_expires_at: string;
   }): Observable<{ recruiter: Recruiter }> {
@@ -94,6 +95,7 @@ export class RecruiterService {
     free_account?: boolean;
     access_start_date?: string | null;
     admin_notes?: string | null;
+    enable_translation?: boolean;
     new_password?: string;
     access_expires_at?: string;
     is_active?: boolean;

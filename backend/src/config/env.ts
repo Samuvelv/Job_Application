@@ -52,6 +52,12 @@ const envSchema = z.object({
   // Local dev  : ./uploads  (relative to project root, auto-resolved below)
   // VPS prod   : /var/www/ntlcareernexus/uploads
   UPLOADS_PATH: z.string().default('uploads'),
+
+  // ── OpenAI — candidate profile translation (recruiter only) ──────────────
+  // OPENAI_API_KEY must be set to enable the /api/v1/translate endpoint.
+  // Leave blank to disable translation (endpoint will return 503).
+  OPENAI_API_KEY: z.string().optional(),
+  OPENAI_MODEL:   z.string().default('gpt-4o-mini'),
 });
 
 const parsed = envSchema.safeParse(process.env);

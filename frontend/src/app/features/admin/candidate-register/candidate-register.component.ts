@@ -1,5 +1,5 @@
 // src/app/features/admin/candidate-register/candidate-register.component.ts
-import { Component, OnInit, OnDestroy, computed } from '@angular/core';
+import { Component, OnInit, OnDestroy, computed, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import {
   ReactiveFormsModule, FormBuilder, FormGroup,
@@ -8,13 +8,18 @@ import {
 import { Router, RouterLink } from '@angular/router';
 import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 import { Subscription, debounceTime } from 'rxjs';
+import { CdkDragDrop, DragDropModule } from '@angular/cdk/drag-drop';
 import { CandidateService } from '../../../core/services/candidate.service';
 import { MasterDataService } from '../../../core/services/master-data.service';
+import { AuthService } from '../../../core/services/auth.service';
 import { SearchableSelectComponent, SelectOption } from '../../../shared/components/searchable-select/searchable-select.component';
 import { ChipMultiSelectComponent, ChipOption } from '../../../shared/components/chip-multi-select/chip-multi-select.component';
 import { REGISTRATION_FEE_STATUS_OPTIONS, CV_FORMAT_OPTIONS, SOURCE_OPTIONS, EMPLOYMENT_STATUS_OPTIONS, VISA_STATUS_OPTIONS, REASON_FOR_LEAVING_OPTIONS } from '../../../core/constants/candidate-options';
+import { HasUnsavedChanges } from '../../../core/guards/unsaved-changes.guard';
 
-const DRAFT_KEY = 'th_register_draft';
+function draftKey(userId: string): string {
+  return `th_register_draft_${userId}`;
+}
 
 // ── Phone rules map ────────────────────────────────────────────────────────
 interface PhoneRule { minLen: number; maxLen: number; pattern?: RegExp; hint: string; }
@@ -165,6 +170,62 @@ function eduEndYearGroupValidator(g: AbstractControl): ValidationErrors | null {
   return null;
 }
 
+// ── Experience month/year helpers ─────────────────────────────────────────
+function parseMonthFromDate(dateStr?: string | null): number {
+  if (!dateStr) return 1;
+  const m = dateStr.match(/^\d{4}-(\d{2})/);
+  return m ? parseInt(m[1], 10) : 1;
+}
+function parseYearFromDate(dateStr?: string | null): number | null {
+  if (!dateStr) return null;
+  const m = dateStr.match(/^(\d{4})-\d{2}/);
+  return m ? parseInt(m[1], 10) : null;
+}
+
+// ── Experience year validator (mirrors eduYearValidator) ───────────────────
+function expYearValidator(minYear: number, maxYear: number): ValidatorFn {
+  return (ctrl: AbstractControl): ValidationErrors | null => {
+    const v = ctrl.value;
+    if (v === null || v === '' || v === undefined) return null;
+    const n = Number(v);
+    if (!Number.isInteger(n))                    return { expYearInvalid: 'Must be a whole number.' };
+    if (String(v).replace('-', '').length !== 4) return { expYearInvalid: 'Must be a 4-digit year.' };
+    if (n < minYear)                             return { expYearInvalid: `Year must be ${minYear} or later.` };
+    if (n > maxYear)                             return { expYearInvalid: `Year must be ${maxYear} or earlier.` };
+    return null;
+  };
+}
+
+// ── Experience end-date group validator ────────────────────────────────────
+function expEndDateGroupValidator(g: AbstractControl): ValidationErrors | null {
+  if (g.get('currently_working')?.value) {
+    const endCtrl = g.get('end_year');
+    if (endCtrl?.errors?.['endBeforeStart']) {
+      const { endBeforeStart: _, ...rest } = endCtrl.errors;
+      endCtrl.setErrors(Object.keys(rest).length ? rest : null);
+    }
+    return null;
+  }
+  const start      = Number(g.get('start_year')?.value);
+  const end        = Number(g.get('end_year')?.value);
+  const startMonth = Number(g.get('start_month')?.value);
+  const endMonth   = Number(g.get('end_month')?.value);
+  const endCtrl    = g.get('end_year');
+  if (!endCtrl) return null;
+  if (!g.get('start_year')?.value || !g.get('end_year')?.value) {
+    const cur = endCtrl.errors;
+    if (cur?.['endBeforeStart']) { const { endBeforeStart: _, ...rest } = cur; endCtrl.setErrors(Object.keys(rest).length ? rest : null); }
+    return null;
+  }
+  if (end < start || (end === start && endMonth < startMonth)) {
+    endCtrl.setErrors({ ...(endCtrl.errors || {}), endBeforeStart: true });
+    return { endBeforeStart: true };
+  }
+  const cur = endCtrl.errors;
+  if (cur?.['endBeforeStart']) { const { endBeforeStart: _, ...rest } = cur; endCtrl.setErrors(Object.keys(rest).length ? rest : null); }
+  return null;
+}
+
 // ── Postal code rules ──────────────────────────────────────────────────────
 interface PostalRule { pattern: RegExp; hint: string; }
 const POSTAL_CODE_RULES: Record<string, PostalRule> = {
@@ -236,10 +297,10 @@ function makePostalCodeGroupValidator(countryCtrl: string, postalCtrl: string): 
 @Component({
   selector: 'app-candidate-register',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, RouterLink, SearchableSelectComponent, ChipMultiSelectComponent],
+  imports: [CommonModule, ReactiveFormsModule, RouterLink, SearchableSelectComponent, ChipMultiSelectComponent, DragDropModule],
   templateUrl: './candidate-register.component.html',
 })
-export class CandidateRegisterComponent implements OnInit, OnDestroy {
+export class CandidateRegisterComponent implements OnInit, OnDestroy, HasUnsavedChanges {
   currentStep = 1;
   totalSteps  = 5;
   loading     = false;
@@ -248,7 +309,8 @@ export class CandidateRegisterComponent implements OnInit, OnDestroy {
   successMsg  = '';
   createdCandidateNumber = '';
   createdLoginId = 0;
-  draftSaved  = false;
+  draftSaved    = false;
+  draftRestored = false;
 
   pendingPhoto?:  File;
   pendingResume?: File;
@@ -368,6 +430,7 @@ export class CandidateRegisterComponent implements OnInit, OnDestroy {
     private router: Router,
     public master: MasterDataService,
     private sanitizer: DomSanitizer,
+    private auth: AuthService,
   ) {}
 
   get safePreviewUrl(): SafeResourceUrl | undefined {
@@ -485,7 +548,21 @@ export class CandidateRegisterComponent implements OnInit, OnDestroy {
 
   ngOnDestroy(): void {
     this.draftSub?.unsubscribe();
+    // Flush any pending draft on navigation/destroy
+    if (this.isDirty()) this.saveDraft();
     this._objectUrls.forEach(u => URL.revokeObjectURL(u));
+  }
+
+  @HostListener('window:beforeunload', ['$event'])
+  onBeforeUnload(event: BeforeUnloadEvent): void {
+    if (this.isDirty()) {
+      this.saveDraft();
+      event.preventDefault();
+    }
+  }
+
+  isDirty(): boolean {
+    return this.form?.dirty ?? false;
   }
 
   // ── Job Title → auto-fill Occupation ────────────────────────────────────────
@@ -506,10 +583,36 @@ export class CandidateRegisterComponent implements OnInit, OnDestroy {
   }
 
   // ── Draft helpers ──────────────────────────────────────────────────────────
+  private get _draftKey(): string {
+    return draftKey(this.auth.currentUser()?.id ?? 'anon');
+  }
+
   private saveDraft(): void {
     try {
-      const simple = { ...this.form.getRawValue() };
-      localStorage.setItem(DRAFT_KEY, JSON.stringify(simple));
+      const raw = this.form.getRawValue();
+      const data = {
+        scalars: {
+          first_name: raw.first_name, last_name: raw.last_name, date_of_birth: raw.date_of_birth,
+          gender: raw.gender, marital_status: raw.marital_status, dial_code: raw.dial_code,
+          phone: raw.phone, whatsapp_dial_code: raw.whatsapp_dial_code, whatsapp_number: raw.whatsapp_number,
+          whatsapp_same_as_phone: raw.whatsapp_same_as_phone,
+          bio: raw.bio, hobbies: raw.hobbies, employment_status: raw.employment_status,
+          job_title: raw.job_title, occupation: raw.occupation, industry: raw.industry,
+          years_experience: raw.years_experience, linkedin_url: raw.linkedin_url,
+          notice_period_id: raw.notice_period_id, current_country: raw.current_country,
+          current_city: raw.current_city, nationality: raw.nationality, postal_code: raw.postal_code,
+          has_passport: raw.has_passport, target_locations: raw.target_locations,
+          email: raw.email, password: raw.password, registration_fee_status: raw.registration_fee_status,
+          cv_format: raw.cv_format, source: raw.source, visa_status_select: raw.visa_status_select,
+          visa_status_other: raw.visa_status_other,
+        },
+        skills:     raw.skills,
+        languages:  raw.languages,
+        experience: raw.experience,
+        education:  raw.education,
+        isExperienceBased: this.isExperienceBased,
+      };
+      localStorage.setItem(this._draftKey, JSON.stringify(data));
       this.draftSaved = true;
       setTimeout(() => (this.draftSaved = false), 3000);
     } catch { /* storage full */ }
@@ -517,25 +620,85 @@ export class CandidateRegisterComponent implements OnInit, OnDestroy {
 
   private restoreDraft(): void {
     try {
-      const raw = localStorage.getItem(DRAFT_KEY);
+      const raw = localStorage.getItem(this._draftKey);
       if (!raw) return;
       const draft = JSON.parse(raw);
-      const scalarKeys = [
-        'first_name','last_name','date_of_birth','gender','marital_status','dial_code','phone','whatsapp_dial_code','whatsapp_number','bio',
-        'job_title','occupation','industry','years_experience','linkedin_url',
-        'notice_period_id',
-        'current_country','current_city','nationality','postal_code','has_passport','target_locations',
-        'email','password','hobbies','registration_fee_status','cv_format','source',
-        'visa_status_select','visa_status_other','employment_status',
-      ];      const patch: Record<string, unknown> = {};
-      for (const k of scalarKeys) {
-        if (draft[k] !== undefined && draft[k] !== null && draft[k] !== '') patch[k] = draft[k];
+
+      // Restore scalar fields
+      if (draft.scalars) {
+        this.form.patchValue(draft.scalars, { emitEvent: false });
       }
-      this.form.patchValue(patch, { emitEvent: false });
+
+      // Restore isExperienceBased
+      if (draft.isExperienceBased) {
+        this.isExperienceBased = true;
+      }
+
+      // Restore skills
+      if (Array.isArray(draft.skills) && draft.skills.length) {
+        while (this.skills.length) this.skills.removeAt(0);
+        for (const s of draft.skills) {
+          this.skills.push(this.fb.group(
+            { skill_name: [s.skill_name ?? ''], proficiency: [s.proficiency ?? ''] },
+            { validators: skillGroupValidator }
+          ));
+        }
+      }
+
+      // Restore languages
+      if (Array.isArray(draft.languages) && draft.languages.length) {
+        while (this.languages.length) this.languages.removeAt(0);
+        for (const l of draft.languages) {
+          this.languages.push(this.fb.group(
+            { language: [l.language ?? ''], proficiency: [l.proficiency ?? ''] },
+            { validators: langGroupValidator }
+          ));
+        }
+      }
+
+      // Restore experience
+      if (Array.isArray(draft.experience) && draft.experience.length) {
+        const yr = new Date().getFullYear();
+        for (const e of draft.experience) {
+          this.experience.push(this.fb.group({
+            company_name:              [e.company_name ?? ''],
+            job_title:                 [e.job_title ?? ''],
+            start_month:               [e.start_month ?? 1],
+            start_year:                [e.start_year ?? null, [Validators.required, expYearValidator(1950, yr)]],
+            end_month:                 [e.end_month ?? 1],
+            end_year:                  [e.end_year ?? null, expYearValidator(1950, yr + 2)],
+            description:               [e.description ?? ''],
+            location:                  [e.location ?? ''],
+            reason_for_leaving_select: [e.reason_for_leaving_select ?? ''],
+            reason_for_leaving_other:  [e.reason_for_leaving_other ?? ''],
+            currently_working:         [e.currently_working ?? false],
+          }, { validators: expEndDateGroupValidator }));
+        }
+      }
+
+      // Restore education
+      if (Array.isArray(draft.education) && draft.education.length) {
+        for (const ed of draft.education) {
+          this.education.push(this.fb.group({
+            institution:    [ed.institution ?? ''],
+            degree:         [ed.degree ?? ''],
+            field_of_study: [ed.field_of_study ?? ''],
+            start_year:     [ed.start_year ?? null, eduYearValidator(1950, this.currentYear)],
+            start_month:    [ed.start_month ?? 1],
+            end_year:       [ed.end_year ?? null, eduYearValidator(1950, this.currentYear + 6)],
+            end_month:      [ed.end_month ?? 1],
+            location:       [ed.location ?? ''],
+          }, { validators: eduEndYearGroupValidator }));
+        }
+      }
+
+      this.draftRestored = true;
     } catch { /* corrupted draft */ }
   }
 
-  private clearDraft(): void { localStorage.removeItem(DRAFT_KEY); }
+  dismissDraftBanner(): void { this.draftRestored = false; }
+
+  private clearDraft(): void { localStorage.removeItem(this._draftKey); }
 
   // ── FormArray helpers ──────────────────────────────────────────────────────
   get skills():     FormArray { return this.form.get('skills')     as FormArray; }
@@ -554,13 +717,20 @@ export class CandidateRegisterComponent implements OnInit, OnDestroy {
   removeLanguage(i: number): void { this.languages.removeAt(i); }
 
   addExperience(): void {
+    const yr = new Date().getFullYear();
     this.experience.push(this.fb.group({
-      company_name: ['', Validators.required], job_title: ['', Validators.required], start_date: ['', Validators.required],
-      end_date: [''], description: [''], location: ['', Validators.required],
+      company_name:              ['', Validators.required],
+      job_title:                 ['', Validators.required],
+      start_month:               [1  as number | null],
+      start_year:                [null as number | null, [Validators.required, expYearValidator(1950, yr)]],
+      end_month:                 [1  as number | null],
+      end_year:                  [null as number | null, expYearValidator(1950, yr + 2)],
+      description:               [''],
+      location:                  ['', Validators.required],
       reason_for_leaving_select: [''],
       reason_for_leaving_other:  [''],
-      currently_working: [false],
-    }));
+      currently_working:         [false],
+    }, { validators: expEndDateGroupValidator }));
   }
   removeExperience(i: number): void { this.experience.removeAt(i); }
 
@@ -586,6 +756,23 @@ export class CandidateRegisterComponent implements OnInit, OnDestroy {
     }
   }
   removeEducation(i: number): void { this.education.removeAt(i); }
+
+  // ── Drag-and-drop reorder ─────────────────────────────────────────────────
+  dropExperience(event: CdkDragDrop<AbstractControl[]>): void {
+    if (event.previousIndex === event.currentIndex) return;
+    const fa = this.experience;
+    const ctrl = fa.at(event.previousIndex);
+    fa.removeAt(event.previousIndex);
+    fa.insert(event.currentIndex, ctrl);
+  }
+
+  dropEducation(event: CdkDragDrop<AbstractControl[]>): void {
+    if (event.previousIndex === event.currentIndex) return;
+    const fa = this.education;
+    const ctrl = fa.at(event.previousIndex);
+    fa.removeAt(event.previousIndex);
+    fa.insert(event.currentIndex, ctrl);
+  }
 
   ctrl(name: string): AbstractControl { return this.form.get(name)!; }
 
@@ -673,7 +860,7 @@ export class CandidateRegisterComponent implements OnInit, OnDestroy {
         break;
       case 3:
         this.experience.controls.forEach(g => {
-          ['company_name','job_title','start_date','location'].forEach(f => mark(g.get(f)!));
+          ['company_name','job_title','start_year','location'].forEach(f => mark(g.get(f)!));
           g.updateValueAndValidity();
         });
         if (!this.isExperienceBased) {
@@ -854,17 +1041,30 @@ export class CandidateRegisterComponent implements OnInit, OnDestroy {
     const languages   = raw.languages.filter((l: any) => l.language?.trim());
     const experience  = raw.experience
       .filter((e: any) => e.company_name?.trim() || e.job_title?.trim())
-      .map((e: any) => {
-        const { reason_for_leaving_select: sel, reason_for_leaving_other: other, currently_working: cw, ...rest } = e;
+      .map((e: any, idx: number) => {
+        const {
+          reason_for_leaving_select: sel,
+          reason_for_leaving_other:  other,
+          currently_working:         cw,
+          start_month, start_year,
+          end_month,   end_year,
+          ...rest
+        } = e;
+        const toDateStr = (yr: number | null, mo: number | null): string | null =>
+          (yr && mo) ? `${yr}-${String(mo).padStart(2, '0')}-01` : null;
         return {
           ...rest,
-          end_date: cw ? null : (rest.end_date || null),
+          start_date: toDateStr(start_year, start_month),
+          end_date:   cw ? null : toDateStr(end_year, end_month),
           reason_for_leaving: sel === 'Other'
             ? (other?.trim() ? `Other: ${other.trim()}` : 'Other')
             : (sel || undefined),
+          display_order: idx,
         };
       });
-    const education   = raw.education.filter((e: any) => e.institution?.trim() || e.degree?.trim());
+    const education   = raw.education
+      .filter((e: any) => e.institution?.trim() || e.degree?.trim())
+      .map((e: any, idx: number) => ({ ...e, display_order: idx }));
 
     const phone = raw.phone ? `${raw.dial_code || ''}${raw.phone}`.trim() : undefined;
     const whatsapp = raw.whatsapp_number ? `${raw.whatsapp_dial_code || ''}${raw.whatsapp_number}`.trim() : undefined;

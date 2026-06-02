@@ -34,6 +34,7 @@ export const CreateRecruiterSchema = z.object({
   access_expires_at:         z.string().datetime({ message: 'access_expires_at must be a valid ISO datetime' }),
   free_account:              z.boolean().optional(),
   admin_notes:               z.string().optional(),
+  enable_translation:        z.boolean().optional(),
 });
 
 export const UpdateRecruiterSchema = z.object({
@@ -66,6 +67,7 @@ export const UpdateRecruiterSchema = z.object({
   free_account:              z.boolean().optional(),
   admin_notes:               z.string().optional().nullable(),
   new_password:              z.string().min(8, 'Password must be at least 8 characters').max(100).optional(),
+  enable_translation:        z.boolean().optional(),
 });
 
 export const RecruiterFilterSchema = z.object({

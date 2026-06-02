@@ -1,5 +1,6 @@
 // src/app/features/admin/admin.routes.ts
 import { Routes } from '@angular/router';
+import { unsavedChangesGuard } from '../../core/guards/unsaved-changes.guard';
 
 export const adminRoutes: Routes = [
   {
@@ -21,6 +22,7 @@ export const adminRoutes: Routes = [
     path: 'candidates/register',
     loadComponent: () =>
       import('./candidate-register/candidate-register.component').then((m) => m.CandidateRegisterComponent),
+    canDeactivate: [unsavedChangesGuard],
   },
   {
     path: 'candidates/:id/edit',
@@ -41,6 +43,7 @@ export const adminRoutes: Routes = [
     path: 'recruiters/create',
     loadComponent: () =>
       import('./recruiter-create/recruiter-create.component').then((m) => m.RecruiterCreateComponent),
+    canDeactivate: [unsavedChangesGuard],
   },
   {
     path: 'recruiters/:id',

@@ -174,7 +174,7 @@ import { PageHeaderComponent } from '../../../shared/components/page-header/page
       @if (requests.length > 0) {
         <div class="summary-bar">
           <span class="summary-pill">
-            <i class="bi bi-list-ul"></i> {{ requests.length }} total
+            <i class="bi bi-list-ul"></i> {{ requests.length }} {{ 'INTEREST_REQUESTS.total_label' | translate }}
           </span>
           @if (countByStatus('pending') > 0) {
             <span class="summary-pill summary-pill--pending">
@@ -194,12 +194,12 @@ import { PageHeaderComponent } from '../../../shared/components/page-header/page
         </div>
       }
 
-      <!-- Empty state -->
-      @if (requests.length === 0) {
-        <app-empty-state
-          icon="bi-briefcase"
-          title="No interest requests yet"
-          message="Browse candidates and submit an interest request from their profile page." />
+        <!-- Empty state -->
+        @if (requests.length === 0) {
+          <app-empty-state
+            icon="bi-briefcase"
+            [title]="'INTEREST_REQUESTS.no_requests_yet' | translate"
+            [message]="'INTEREST_REQUESTS.no_requests_browse' | translate" />
 
       <!-- Request cards -->
       } @else {
@@ -224,14 +224,14 @@ import { PageHeaderComponent } from '../../../shared/components/page-header/page
             <!-- Fields row -->
             <div class="ir-card__fields">
               <div class="ir-card__field">
-                <strong>Sector:</strong> {{ r.sector }}
+                <strong>{{ 'INTEREST_REQUESTS.sector_field_label' | translate }}:</strong> {{ r.sector }}
               </div>
               <div class="ir-card__field">
-                <strong>Country:</strong> {{ r.country }}
+                <strong>{{ 'INTEREST_REQUESTS.country_field_label' | translate }}:</strong> {{ r.country }}
               </div>
               @if (r.reviewed_at) {
                 <div class="ir-card__field">
-                  <strong>Reviewed:</strong> {{ r.reviewed_at | date:'dd MMM yyyy' }}
+                  <strong>{{ 'INTEREST_REQUESTS.reviewed_label' | translate }}:</strong> {{ r.reviewed_at | date:'dd MMM yyyy' }}
                 </div>
               }
             </div>
@@ -243,7 +243,7 @@ import { PageHeaderComponent } from '../../../shared/components/page-header/page
             @if (r.admin_note) {
               <div class="ir-card__admin-note">
                 <i class="bi bi-chat-left-text me-1"></i>
-                <strong>Admin note:</strong> {{ r.admin_note }}
+                <strong>{{ 'INTEREST_REQUESTS.admin_note' | translate }}</strong> {{ r.admin_note }}
               </div>
             }
 
@@ -264,12 +264,12 @@ import { PageHeaderComponent } from '../../../shared/components/page-header/page
                 @if (r.status === 'rejected') {
                   <a [routerLink]="['/recruiter/candidates', r.candidate_id]"
                      class="btn btn-sm btn-outline-primary">
-                    <i class="bi bi-arrow-repeat me-1"></i>Re-submit
+                    <i class="bi bi-arrow-repeat me-1"></i>{{ 'INTEREST_REQUESTS.re_submit' | translate }}
                   </a>
                 }
                 <a [routerLink]="['/recruiter/candidates', r.candidate_id]"
                    class="btn btn-sm btn-outline-secondary">
-                  <i class="bi bi-eye me-1"></i>View Candidate
+                  <i class="bi bi-eye me-1"></i>{{ 'INTEREST_REQUESTS.view_candidate' | translate }}
                 </a>
               </div>
             </div>

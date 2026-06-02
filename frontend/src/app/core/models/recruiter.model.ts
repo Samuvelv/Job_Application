@@ -33,6 +33,7 @@ export interface Recruiter {
   access_start_date?: string;
   free_account?: boolean;
   admin_notes?: string;
+  enable_translation?: boolean;
   access_expires_at: string;
   is_active: boolean;
   plain_password?: string;
