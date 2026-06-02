@@ -165,7 +165,7 @@ import { EmptyStateComponent } from '../../../shared/components/empty-state/empt
               @if (entry.industry) {
                 <div style="display:flex;align-items:center;gap:0;padding:.42rem .7rem;border-bottom:1px solid var(--th-border);">
                   <span style="display:inline-flex;align-items:center;gap:.3rem;font-size:.66rem;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--th-text-muted);min-width:6.2rem;flex-shrink:0;">
-                    <i class="bi bi-building" style="font-size:.72rem;color:var(--th-primary);opacity:.8;"></i>Industry
+                    <i class="bi bi-building" style="font-size:.72rem;color:var(--th-primary);opacity:.8;"></i>{{ 'SHORTLIST.industry_label' | translate }}
                     <span style="margin-left:auto;">:</span>
                   </span>
                   <span style="font-size:.8rem;font-weight:500;color:var(--th-text);padding-left:.5rem;">{{ entry.industry }}</span>
@@ -175,7 +175,7 @@ import { EmptyStateComponent } from '../../../shared/components/empty-state/empt
               @if (entry.years_experience != null) {
                 <div style="display:flex;align-items:center;gap:0;padding:.42rem .7rem;border-bottom:1px solid var(--th-border);">
                   <span style="display:inline-flex;align-items:center;gap:.3rem;font-size:.66rem;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--th-text-muted);min-width:6.2rem;flex-shrink:0;">
-                    <i class="bi bi-clock-history" style="font-size:.72rem;color:var(--th-primary);opacity:.8;"></i>Exp.
+                    <i class="bi bi-clock-history" style="font-size:.72rem;color:var(--th-primary);opacity:.8;"></i>{{ 'CANDIDATE_CARD.exp' | translate }}
                     <span style="margin-left:auto;">:</span>
                   </span>
                   <span style="font-size:.8rem;font-weight:500;color:var(--th-text);padding-left:.5rem;">{{ entry.years_experience === 1 ? ('SHORTLIST.exp_year' | translate: { n: entry.years_experience }) : ('SHORTLIST.exp_years' | translate: { n: entry.years_experience }) }}</span>
@@ -185,7 +185,7 @@ import { EmptyStateComponent } from '../../../shared/components/empty-state/empt
               @if (entry.current_country) {
                 <div style="display:flex;align-items:center;gap:0;padding:.42rem .7rem;border-bottom:1px solid var(--th-border);">
                   <span style="display:inline-flex;align-items:center;gap:.3rem;font-size:.66rem;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--th-text-muted);min-width:6.2rem;flex-shrink:0;">
-                    <i class="bi bi-geo-alt-fill" style="font-size:.72rem;color:var(--th-primary);opacity:.8;"></i>Location
+                    <i class="bi bi-geo-alt-fill" style="font-size:.72rem;color:var(--th-primary);opacity:.8;"></i>{{ 'COMMON.location' | translate }}
                     <span style="margin-left:auto;">:</span>
                   </span>
                   <span style="font-size:.8rem;font-weight:500;color:var(--th-text);padding-left:.5rem;">{{ entry.current_city ? entry.current_city + ', ' : '' }}{{ entry.current_country }}</span>
@@ -195,7 +195,7 @@ import { EmptyStateComponent } from '../../../shared/components/empty-state/empt
               @if (entry.target_locations?.[0]) {
                 <div style="display:flex;align-items:center;gap:0;padding:.42rem .7rem;">
                   <span style="display:inline-flex;align-items:center;gap:.3rem;font-size:.66rem;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--th-text-muted);min-width:6.2rem;flex-shrink:0;">
-                    <i class="bi bi-send-fill" style="font-size:.72rem;color:var(--th-primary);opacity:.8;"></i>Target
+                    <i class="bi bi-send-fill" style="font-size:.72rem;color:var(--th-primary);opacity:.8;"></i>{{ 'CANDIDATE_CARD.target' | translate }}
                     <span style="margin-left:auto;">:</span>
                   </span>
                   <span style="font-size:.8rem;font-weight:500;color:var(--th-text);padding-left:.5rem;">{{ entry.target_locations![0] }}</span>

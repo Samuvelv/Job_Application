@@ -13,7 +13,7 @@ import { Candidate } from '../../../core/models/candidate.model';
 import { ContactRequest } from '../../../core/models/contact-request.model';
 import { ToastService } from '../../../core/services/toast.service';
 import { PageHeaderComponent } from '../../../shared/components/page-header/page-header.component';
-import { TranslateModule } from '@ngx-translate/core';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { CandidateProfileComponent } from '../../../shared/components/candidate-profile/candidate-profile.component';
 import { SearchableSelectComponent, SelectOption } from '../../../shared/components/searchable-select/searchable-select.component';
 
@@ -84,7 +84,7 @@ import { SearchableSelectComponent, SelectOption } from '../../../shared/compone
     <!-- Back button + action bar -->
     <div class="d-flex align-items-center gap-3 mb-3 flex-wrap">
       <a [routerLink]="backLink" class="btn btn-sm btn-outline-secondary">
-        <i class="bi bi-arrow-left me-1"></i>{{ backLabel }}
+        <i class="bi bi-arrow-left me-1"></i>{{ backLabel | translate }}
       </a>
 
       @if (candidate) {
@@ -98,23 +98,23 @@ import { SearchableSelectComponent, SelectOption } from '../../../shared/compone
               </span>
             } @else if (contactRequestStatus === 'pending') {
               <span class="contact-status-badge contact-status-badge--pending">
-                <i class="bi bi-hourglass-split"></i>Request Pending
+                <i class="bi bi-hourglass-split"></i>{{ 'CONTACT_STATUS.pending_badge' | translate }}
               </span>
             } @else if (contactRequestStatus === 'rejected') {
               <div class="d-flex align-items-center gap-2 flex-wrap">
                 <span class="contact-status-badge contact-status-badge--rejected">
-                  <i class="bi bi-x-circle-fill"></i>Request Rejected
+                  <i class="bi bi-x-circle-fill"></i>{{ 'CONTACT_STATUS.rejected_badge' | translate }}
                 </span>
                 @if (!showReasonForm) {
                   <button class="btn btn-sm btn-outline-primary" (click)="showReasonForm = true; requestReason = ''; reasonTouched = false">
-                    <i class="bi bi-arrow-repeat me-1"></i>Re-request
+                    <i class="bi bi-arrow-repeat me-1"></i>{{ 'CONTACT_STATUS.re_request' | translate }}
                   </button>
                 }
               </div>
               @if (showReasonForm) {
                 <div class="reason-form" (click)="$event.stopPropagation()">
                   <div class="reason-form__label">
-                    <i class="bi bi-chat-left-text me-1"></i>Reason for Request <span style="color:var(--th-danger,#f43f5e)">*</span>
+                    <i class="bi bi-chat-left-text me-1"></i>{{ 'CONTACT_STATUS.reason_for_request' | translate }} <span style="color:var(--th-danger,#f43f5e)">*</span>
                   </div>
                   <textarea class="reason-form__textarea" rows="3" maxlength="1000"
                     [(ngModel)]="requestReason"
@@ -123,19 +123,19 @@ import { SearchableSelectComponent, SelectOption } from '../../../shared/compone
                     placeholder="Briefly describe why you need this candidate's contact information…"></textarea>
                   @if (reasonTouched && !requestReason.trim()) {
                     <div style="font-size:.75rem;color:var(--th-danger,#f43f5e);margin-top:.25rem;">
-                      <i class="bi bi-exclamation-circle me-1"></i>Please provide a reason before submitting.
+                      <i class="bi bi-exclamation-circle me-1"></i>{{ 'CONTACT_STATUS.reason_required' | translate }}
                     </div>
                   }
                   <div class="d-flex gap-2 mt-2">
                     <button class="btn btn-sm btn-primary" (click)="requestContactInfo()" [disabled]="requesting || !requestReason.trim()">
                       @if (requesting) {
-                        <span class="spinner-border spinner-border-sm me-1"></span>Submitting…
+                        <span class="spinner-border spinner-border-sm me-1"></span>{{ 'CONTACT_STATUS.submitting' | translate }}
                       } @else {
-                        <i class="bi bi-send me-1"></i>Submit Request
+                        <i class="bi bi-send me-1"></i>{{ 'CONTACT_STATUS.submit_request' | translate }}
                       }
                     </button>
                     <button class="btn btn-sm btn-outline-secondary" (click)="showReasonForm = false; reasonTouched = false" [disabled]="requesting">
-                      Cancel
+                      {{ 'COMMON.cancel' | translate }}
                     </button>
                   </div>
                 </div>
@@ -143,18 +143,18 @@ import { SearchableSelectComponent, SelectOption } from '../../../shared/compone
             } @else if (contactRequestStatus === 'revoked') {
               <div class="d-flex align-items-center gap-2 flex-wrap">
                 <span class="contact-status-badge contact-status-badge--revoked">
-                  <i class="bi bi-shield-x-fill"></i>Access Revoked
+                  <i class="bi bi-shield-x-fill"></i>{{ 'CONTACT_STATUS.revoked_badge' | translate }}
                 </span>
                 @if (!showReasonForm) {
                   <button class="btn btn-sm btn-outline-primary" (click)="showReasonForm = true; requestReason = ''; reasonTouched = false">
-                    <i class="bi bi-arrow-repeat me-1"></i>Request Again
+                    <i class="bi bi-arrow-repeat me-1"></i>{{ 'CONTACT_STATUS.request_again' | translate }}
                   </button>
                 }
               </div>
               @if (showReasonForm) {
                 <div class="reason-form" (click)="$event.stopPropagation()">
                   <div class="reason-form__label">
-                    <i class="bi bi-chat-left-text me-1"></i>Reason for Request <span style="color:var(--th-danger,#f43f5e)">*</span>
+                    <i class="bi bi-chat-left-text me-1"></i>{{ 'CONTACT_STATUS.reason_for_request' | translate }} <span style="color:var(--th-danger,#f43f5e)">*</span>
                   </div>
                   <textarea class="reason-form__textarea" rows="3" maxlength="1000"
                     [(ngModel)]="requestReason"
@@ -163,19 +163,19 @@ import { SearchableSelectComponent, SelectOption } from '../../../shared/compone
                     placeholder="Briefly describe why you need this candidate's contact information…"></textarea>
                   @if (reasonTouched && !requestReason.trim()) {
                     <div style="font-size:.75rem;color:var(--th-danger,#f43f5e);margin-top:.25rem;">
-                      <i class="bi bi-exclamation-circle me-1"></i>Please provide a reason before submitting.
+                      <i class="bi bi-exclamation-circle me-1"></i>{{ 'CONTACT_STATUS.reason_required' | translate }}
                     </div>
                   }
                   <div class="d-flex gap-2 mt-2">
                     <button class="btn btn-sm btn-primary" (click)="requestContactInfo()" [disabled]="requesting || !requestReason.trim()">
                       @if (requesting) {
-                        <span class="spinner-border spinner-border-sm me-1"></span>Submitting…
+                        <span class="spinner-border spinner-border-sm me-1"></span>{{ 'CONTACT_STATUS.submitting' | translate }}
                       } @else {
-                        <i class="bi bi-send me-1"></i>Submit Request
+                        <i class="bi bi-send me-1"></i>{{ 'CONTACT_STATUS.submit_request' | translate }}
                       }
                     </button>
                     <button class="btn btn-sm btn-outline-secondary" (click)="showReasonForm = false; reasonTouched = false" [disabled]="requesting">
-                      Cancel
+                      {{ 'COMMON.cancel' | translate }}
                     </button>
                   </div>
                 </div>
@@ -184,7 +184,7 @@ import { SearchableSelectComponent, SelectOption } from '../../../shared/compone
               @if (showReasonForm) {
                 <div class="reason-form" (click)="$event.stopPropagation()">
                   <div class="reason-form__label">
-                    <i class="bi bi-chat-left-text me-1"></i>Reason for Request <span style="color:var(--th-danger,#f43f5e)">*</span>
+                    <i class="bi bi-chat-left-text me-1"></i>{{ 'CONTACT_STATUS.reason_for_request' | translate }} <span style="color:var(--th-danger,#f43f5e)">*</span>
                   </div>
                   <textarea class="reason-form__textarea" rows="3" maxlength="1000"
                     [(ngModel)]="requestReason"
@@ -193,25 +193,25 @@ import { SearchableSelectComponent, SelectOption } from '../../../shared/compone
                     placeholder="Briefly describe why you need this candidate's contact information…"></textarea>
                   @if (reasonTouched && !requestReason.trim()) {
                     <div style="font-size:.75rem;color:var(--th-danger,#f43f5e);margin-top:.25rem;">
-                      <i class="bi bi-exclamation-circle me-1"></i>Please provide a reason before submitting.
+                      <i class="bi bi-exclamation-circle me-1"></i>{{ 'CONTACT_STATUS.reason_required' | translate }}
                     </div>
                   }
                   <div class="d-flex gap-2 mt-2">
                     <button class="btn btn-sm btn-primary" (click)="requestContactInfo()" [disabled]="requesting || !requestReason.trim()">
                       @if (requesting) {
-                        <span class="spinner-border spinner-border-sm me-1"></span>Submitting…
+                        <span class="spinner-border spinner-border-sm me-1"></span>{{ 'CONTACT_STATUS.submitting' | translate }}
                       } @else {
-                        <i class="bi bi-send me-1"></i>Submit Request
+                        <i class="bi bi-send me-1"></i>{{ 'CONTACT_STATUS.submit_request' | translate }}
                       }
                     </button>
                     <button class="btn btn-sm btn-outline-secondary" (click)="showReasonForm = false; reasonTouched = false" [disabled]="requesting">
-                      Cancel
+                      {{ 'COMMON.cancel' | translate }}
                     </button>
                   </div>
                 </div>
               } @else {
                 <button class="btn btn-sm btn-primary" (click)="showReasonForm = true">
-                  <i class="bi bi-person-lines-fill me-1"></i>Request Contact Info
+                  <i class="bi bi-person-lines-fill me-1"></i>{{ 'CONTACT_STATUS.request_contact' | translate }}
                 </button>
               }
             }
@@ -221,14 +221,14 @@ import { SearchableSelectComponent, SelectOption } from '../../../shared/compone
           @if (shortlisted) {
             <span class="badge rounded-pill px-3 py-2"
               style="background:var(--th-emerald-soft);color:var(--th-emerald);font-size:.8rem;">
-              <i class="bi bi-bookmark-star-fill me-1"></i>Shortlisted
+              <i class="bi bi-bookmark-star-fill me-1"></i>{{ 'SHORTLIST.shortlisted_badge' | translate }}
             </span>
           } @else {
             <button class="btn btn-outline-primary btn-sm" (click)="addToShortlist()" [disabled]="shortlisting">
               @if (shortlisting) {
-                <span class="spinner-border spinner-border-sm me-1"></span>Adding…
+                <span class="spinner-border spinner-border-sm me-1"></span>{{ 'COMMON.loading' | translate }}
               } @else {
-                <i class="bi bi-bookmark-plus me-1"></i>Add to Shortlist
+                <i class="bi bi-bookmark-plus me-1"></i>{{ 'CANDIDATE_CARD.add_to_shortlist' | translate }}
               }
             </button>
           }
@@ -240,7 +240,7 @@ import { SearchableSelectComponent, SelectOption } from '../../../shared/compone
     @if (!isAgency && contactRequestStatus === 'rejected' && contactRequest?.admin_note) {
       <div class="alert alert-warning small py-2 mb-3">
         <i class="bi bi-chat-left-text me-1"></i>
-        <strong>Admin note:</strong> {{ contactRequest!.admin_note }}
+        <strong>{{ 'CONTACT_STATUS.admin_note' | translate }}</strong> {{ contactRequest!.admin_note }}
       </div>
     }
 
@@ -248,20 +248,20 @@ import { SearchableSelectComponent, SelectOption } from '../../../shared/compone
     @if (!isAgency && contactRequestStatus === 'revoked') {
       <div class="alert alert-secondary small py-2 mb-3">
         <i class="bi bi-shield-x me-1"></i>
-        <strong>Access revoked by admin.</strong>
+        <strong>{{ 'CONTACT_STATUS.access_revoked_note' | translate }}</strong>
         @if (contactRequest?.revocation_reason) {
-          Reason: {{ contactRequest!.revocation_reason }}
+          {{ 'CONTACT_STATUS.reason_label' | translate }} {{ contactRequest!.revocation_reason }}
         }
-        You may submit a new request to regain access.
+        {{ 'CONTACT_STATUS.resubmit_note' | translate }}
       </div>
     }
 
     <!-- Agency: interest request panel -->
     @if (isAgency && candidate) {
       <div class="interest-panel">
-        <div class="interest-panel__title"><i class="bi bi-briefcase-fill me-2" style="color:var(--th-primary)"></i>Submit an Interest Request</div>
+        <div class="interest-panel__title"><i class="bi bi-briefcase-fill me-2" style="color:var(--th-primary)"></i>{{ 'INTEREST_REQUESTS.submit_interest_title' | translate }}</div>
         <div class="interest-panel__sub">
-          As a recruitment agency, you cannot contact candidates directly. Submit an interest request and our admin team will facilitate the introduction after verifying your sponsor licence.
+          {{ 'INTEREST_REQUESTS.agency_intro' | translate }}
         </div>
 
         @if (interestRequest) {
@@ -273,27 +273,27 @@ import { SearchableSelectComponent, SelectOption } from '../../../shared/compone
                 [class.bi-check-circle-fill]="interestRequest.status === 'approved'"
                 [class.bi-x-circle-fill]="interestRequest.status === 'rejected'"
                 [class.bi-slash-circle-fill]="interestRequest.status === 'revoked'"></i>
-              {{ interestRequest.status === 'pending'  ? 'Request Pending — awaiting admin review' :
-                 interestRequest.status === 'approved' ? 'Request Approved — we will be in touch' :
-                 interestRequest.status === 'revoked'  ? 'Request Revoked — you may submit a new request' :
-                 'Request Not Approved' }}
+              {{ interestRequest.status === 'pending'  ? ('INTEREST_REQUESTS.status_pending'      | translate) :
+                 interestRequest.status === 'approved' ? ('INTEREST_REQUESTS.status_approved'     | translate) :
+                 interestRequest.status === 'revoked'  ? ('INTEREST_REQUESTS.status_revoked'      | translate) :
+                 ('INTEREST_REQUESTS.status_not_approved' | translate) }}
             </span>
           </div>
           @if (interestRequest.admin_note) {
             <div class="mt-2 small" style="color:var(--th-muted);">
-              <i class="bi bi-chat-left-text me-1"></i><strong>Admin note:</strong> {{ interestRequest.admin_note }}
+              <i class="bi bi-chat-left-text me-1"></i><strong>{{ 'INTEREST_REQUESTS.admin_note' | translate }}</strong> {{ interestRequest.admin_note }}
             </div>
           }
           @if (interestRequest.status === 'rejected' || interestRequest.status === 'revoked') {
             <button class="btn btn-sm btn-outline-primary mt-3" (click)="resetInterestForm()">
-              <i class="bi bi-arrow-repeat me-1"></i>Submit Another Request
+              <i class="bi bi-arrow-repeat me-1"></i>{{ 'INTEREST_REQUESTS.submit_another' | translate }}
             </button>
           }
         } @else {
           <!-- Interest request form -->
           <div class="row g-3">
             <div class="col-md-6">
-              <div class="interest-panel__label">Sector *</div>
+              <div class="interest-panel__label">{{ 'INTEREST_REQUESTS.sector_field_label' | translate }} *</div>
               <app-searchable-select
                 [ngModel]="interestForm.sector"
                 (ngModelChange)="interestForm.sector = $event"
@@ -303,7 +303,7 @@ import { SearchableSelectComponent, SelectOption } from '../../../shared/compone
               </app-searchable-select>
             </div>
             <div class="col-md-6">
-              <div class="interest-panel__label">Target Country *</div>
+              <div class="interest-panel__label">{{ 'INTEREST_REQUESTS.target_country_label' | translate }} *</div>
               <app-searchable-select
                 [ngModel]="interestForm.country"
                 (ngModelChange)="interestForm.country = $event"
@@ -313,7 +313,7 @@ import { SearchableSelectComponent, SelectOption } from '../../../shared/compone
               </app-searchable-select>
             </div>
             <div class="col-12">
-              <div class="interest-panel__label">Message to Admin *</div>
+              <div class="interest-panel__label">{{ 'INTEREST_REQUESTS.message_to_admin_label' | translate }} *</div>
               <textarea class="interest-panel__textarea" rows="4" [(ngModel)]="interestForm.message"
                 placeholder="Describe the role, why this candidate is a good fit, and any relevant details…"
                 maxlength="2000"></textarea>
@@ -322,9 +322,9 @@ import { SearchableSelectComponent, SelectOption } from '../../../shared/compone
             <div class="col-12">
               <button class="btn btn-primary btn-sm" (click)="submitInterestRequest()" [disabled]="submittingInterest">
                 @if (submittingInterest) {
-                  <span class="spinner-border spinner-border-sm me-1"></span>Submitting…
+                  <span class="spinner-border spinner-border-sm me-1"></span>{{ 'COMMON.submitting' | translate }}
                 } @else {
-                  <i class="bi bi-send me-1"></i>Submit Interest Request
+                  <i class="bi bi-send me-1"></i>{{ 'INTEREST_REQUESTS.submit_request' | translate }}
                 }
               </button>
             </div>
@@ -337,7 +337,7 @@ import { SearchableSelectComponent, SelectOption } from '../../../shared/compone
     @if (loading) {
       <div class="loading-state">
         <div class="spinner-border"></div>
-        <div class="loading-state__text">Loading profile…</div>
+        <div class="loading-state__text">{{ 'COMMON.loading' | translate }}</div>
       </div>
     } @else if (error) {
       <div class="alert alert-danger">{{ error }}</div>
@@ -396,7 +396,7 @@ export class RecruiterCandidateProfileComponent implements OnInit {
   ) {}
 
   backLink = '/recruiter/candidates';
-  backLabel = 'Back to Candidates';
+  backLabel = 'CANDIDATE_PROFILE.back_to_candidates';
 
   ngOnInit(): void {
     this.master.loadAll();
@@ -405,7 +405,7 @@ export class RecruiterCandidateProfileComponent implements OnInit {
     const returnTo = this.route.snapshot.queryParamMap.get('returnTo');
     if (returnTo === 'shortlist') {
       this.backLink  = '/recruiter/shortlist';
-      this.backLabel = 'Back to Shortlist';
+      this.backLabel = 'CANDIDATE_PROFILE.back_to_shortlist';
     }
 
     forkJoin({
