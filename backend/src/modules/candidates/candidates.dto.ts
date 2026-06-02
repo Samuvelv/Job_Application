@@ -25,6 +25,7 @@ export const ExperienceSchema = z.object({
   description:        z.string().optional(),
   location:           z.string().max(150).optional(),
   reason_for_leaving: z.string().max(200).optional(),
+  display_order:      z.number().int().min(0).optional(),
 });
 
 export const EducationSchema = z.object({
@@ -36,6 +37,7 @@ export const EducationSchema = z.object({
   end_year:       z.number().int().min(1900).max(2100).optional(),
   end_month:      z.number().int().min(1).max(12).optional(),
   location:       z.string().max(150).optional(),
+  display_order:  z.number().int().min(0).optional(),
 });
 
 export const CertificateSchema = z.object({

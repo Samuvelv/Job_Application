@@ -8,6 +8,7 @@ import {
 import { Router, RouterLink } from '@angular/router';
 import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 import { Subscription, debounceTime } from 'rxjs';
+import { CdkDragDrop, DragDropModule } from '@angular/cdk/drag-drop';
 import { CandidateService } from '../../../core/services/candidate.service';
 import { MasterDataService } from '../../../core/services/master-data.service';
 import { SearchableSelectComponent, SelectOption } from '../../../shared/components/searchable-select/searchable-select.component';
@@ -292,7 +293,7 @@ function makePostalCodeGroupValidator(countryCtrl: string, postalCtrl: string): 
 @Component({
   selector: 'app-candidate-register',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, RouterLink, SearchableSelectComponent, ChipMultiSelectComponent],
+  imports: [CommonModule, ReactiveFormsModule, RouterLink, SearchableSelectComponent, ChipMultiSelectComponent, DragDropModule],
   templateUrl: './candidate-register.component.html',
 })
 export class CandidateRegisterComponent implements OnInit, OnDestroy {
@@ -650,6 +651,23 @@ export class CandidateRegisterComponent implements OnInit, OnDestroy {
   }
   removeEducation(i: number): void { this.education.removeAt(i); }
 
+  // ── Drag-and-drop reorder ─────────────────────────────────────────────────
+  dropExperience(event: CdkDragDrop<AbstractControl[]>): void {
+    if (event.previousIndex === event.currentIndex) return;
+    const fa = this.experience;
+    const ctrl = fa.at(event.previousIndex);
+    fa.removeAt(event.previousIndex);
+    fa.insert(event.currentIndex, ctrl);
+  }
+
+  dropEducation(event: CdkDragDrop<AbstractControl[]>): void {
+    if (event.previousIndex === event.currentIndex) return;
+    const fa = this.education;
+    const ctrl = fa.at(event.previousIndex);
+    fa.removeAt(event.previousIndex);
+    fa.insert(event.currentIndex, ctrl);
+  }
+
   ctrl(name: string): AbstractControl { return this.form.get(name)!; }
 
   get hasFilledSkill(): boolean {
@@ -917,7 +935,7 @@ export class CandidateRegisterComponent implements OnInit, OnDestroy {
     const languages   = raw.languages.filter((l: any) => l.language?.trim());
     const experience  = raw.experience
       .filter((e: any) => e.company_name?.trim() || e.job_title?.trim())
-      .map((e: any) => {
+      .map((e: any, idx: number) => {
         const {
           reason_for_leaving_select: sel,
           reason_for_leaving_other:  other,
@@ -935,9 +953,12 @@ export class CandidateRegisterComponent implements OnInit, OnDestroy {
           reason_for_leaving: sel === 'Other'
             ? (other?.trim() ? `Other: ${other.trim()}` : 'Other')
             : (sel || undefined),
+          display_order: idx,
         };
       });
-    const education   = raw.education.filter((e: any) => e.institution?.trim() || e.degree?.trim());
+    const education   = raw.education
+      .filter((e: any) => e.institution?.trim() || e.degree?.trim())
+      .map((e: any, idx: number) => ({ ...e, display_order: idx }));
 
     const phone = raw.phone ? `${raw.dial_code || ''}${raw.phone}`.trim() : undefined;
     const whatsapp = raw.whatsapp_number ? `${raw.whatsapp_dial_code || ''}${raw.whatsapp_number}`.trim() : undefined;

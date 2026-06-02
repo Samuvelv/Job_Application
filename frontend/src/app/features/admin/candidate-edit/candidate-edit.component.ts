@@ -8,6 +8,7 @@ import {
 } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
+import { CdkDragDrop, DragDropModule } from '@angular/cdk/drag-drop';
 import { CandidateService } from '../../../core/services/candidate.service';
 import { ToastService } from '../../../core/services/toast.service';
 import { MasterDataService } from '../../../core/services/master-data.service';
@@ -266,7 +267,7 @@ function makePostalCodeGroupValidator(countryCtrl: string, postalCtrl: string): 
 @Component({
   selector: 'app-candidate-edit',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, RouterLink, SearchableSelectComponent, ChipMultiSelectComponent],
+  imports: [CommonModule, ReactiveFormsModule, RouterLink, SearchableSelectComponent, ChipMultiSelectComponent, DragDropModule],
   templateUrl: './candidate-edit.component.html',
 })
 export class CandidateEditComponent implements OnInit, OnDestroy {
@@ -589,6 +590,23 @@ export class CandidateEditComponent implements OnInit, OnDestroy {
   }
   removeEducation(i: number): void { this.education.removeAt(i); }
 
+  // ── Drag-and-drop reorder ─────────────────────────────────────────────────
+  dropExperience(event: CdkDragDrop<AbstractControl[]>): void {
+    if (event.previousIndex === event.currentIndex) return;
+    const fa = this.experience;
+    const ctrl = fa.at(event.previousIndex);
+    fa.removeAt(event.previousIndex);
+    fa.insert(event.currentIndex, ctrl);
+  }
+
+  dropEducation(event: CdkDragDrop<AbstractControl[]>): void {
+    if (event.previousIndex === event.currentIndex) return;
+    const fa = this.education;
+    const ctrl = fa.at(event.previousIndex);
+    fa.removeAt(event.previousIndex);
+    fa.insert(event.currentIndex, ctrl);
+  }
+
   // ── Preview handlers ───────────────────────────────────────────────────────
   openPreview(type: 'image' | 'video' | 'pdf', url: string | undefined, name: string): void {
     this.previewType = type;
@@ -871,7 +889,7 @@ export class CandidateEditComponent implements OnInit, OnDestroy {
                 currently_working: [!e.end_date],
               }, { validators: expEndDateGroupValidator });
             })
-          : [(() => { const yr = new Date().getFullYear(); return this.fb.group({ company_name: ['', Validators.required], job_title: ['', Validators.required], start_month: [1 as number | null], start_year: [null as number | null, [Validators.required, expYearValidator(1950, yr)]], end_month: [1 as number | null], end_year: [null as number | null, expYearValidator(1950, yr + 2)], description: [''], location: ['', Validators.required], reason_for_leaving_select: [''], reason_for_leaving_other: [''], currently_working: [false] }, { validators: expEndDateGroupValidator }); })()]
+          : []
       ),
       education: this.fb.array(
         this.isExperienceBased
@@ -883,7 +901,7 @@ export class CandidateEditComponent implements OnInit, OnDestroy {
                 start_month: [e.start_month ?? 1], end_year: [e.end_year ?? null, eduYearValidator(1950, yr + 6)],
                 end_month: [e.end_month ?? 1], location: [e.location ?? '', Validators.required],
               }, { validators: eduEndYearGroupValidator }); })
-            : [(() => { const yr = new Date().getFullYear(); return this.fb.group({ institution: ['', Validators.required], degree: ['', Validators.required], field_of_study: ['', Validators.required], start_year: [null as number | null, eduYearValidator(1950, yr)], start_month: [1 as number | null], end_year: [null as number | null, eduYearValidator(1950, yr + 6)], end_month: [1 as number | null], location: ['', Validators.required] }, { validators: eduEndYearGroupValidator }); })()]
+            : []
       ),
 
       // Credentials (optional)
@@ -937,7 +955,11 @@ export class CandidateEditComponent implements OnInit, OnDestroy {
     const raw = this.form.getRawValue();
     const phone = raw.phone ? `${raw.dial_code || ''}${raw.phone}`.trim() : undefined;
     const whatsapp = raw.whatsapp_number ? `${raw.whatsapp_dial_code || ''}${raw.whatsapp_number}`.trim() : undefined;
-    const education = this.isExperienceBased ? [] : raw.education.filter((e: any) => e.institution?.trim() || e.degree?.trim());
+    const education = this.isExperienceBased
+      ? []
+      : raw.education
+          .filter((e: any) => e.institution?.trim() || e.degree?.trim())
+          .map((e: any, idx: number) => ({ ...e, display_order: idx }));
 
     const payload = {
       email:         raw.email?.trim() || undefined,
@@ -974,7 +996,7 @@ export class CandidateEditComponent implements OnInit, OnDestroy {
       languages: raw.languages.filter((l: any) => l.language?.trim()),
       experience: raw.experience
         .filter((e: any) => e.company_name?.trim() || e.job_title?.trim())
-        .map((e: any) => {
+        .map((e: any, idx: number) => {
           const {
             reason_for_leaving_select: sel,
             reason_for_leaving_other:  other,
@@ -992,6 +1014,7 @@ export class CandidateEditComponent implements OnInit, OnDestroy {
             reason_for_leaving: sel === 'Other'
               ? (other?.trim() ? `Other: ${other.trim()}` : 'Other')
               : (sel || undefined),
+            display_order: idx,
           };
         }),
       education,

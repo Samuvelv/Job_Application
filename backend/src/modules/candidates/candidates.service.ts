@@ -19,8 +19,8 @@ async function fetchRelations(candidateId: string) {
   const [skills, languages, experience, education, certificates, referrals] = await Promise.all([
     db('candidate_skills').where({ candidate_id: candidateId }),
     db('candidate_languages').where({ candidate_id: candidateId }),
-    db('candidate_experience').where({ candidate_id: candidateId }).orderBy('start_date', 'desc'),
-    db('candidate_education').where({ candidate_id: candidateId }).orderBy('start_year', 'desc'),
+    db('candidate_experience').where({ candidate_id: candidateId }).orderBy('display_order', 'asc').orderBy('start_date', 'desc'),
+    db('candidate_education').where({ candidate_id: candidateId }).orderBy('display_order', 'asc').orderBy('start_year', 'desc'),
     db('candidate_certificates').where({ candidate_id: candidateId }),
     db('candidate_agency_referrals').where({ candidate_id: candidateId }).orderBy('referral_date', 'desc'),
   ]);
@@ -110,7 +110,7 @@ export async function createCandidate(dto: CreateCandidateDto, createdByAdminId:
     }
     if (dto.experience?.length) {
       await trx('candidate_experience').insert(
-        dto.experience.map((e) => ({
+        dto.experience.map((e, idx) => ({
           candidate_id:       candidateId,
           company_name:       e.company_name       || null,
           job_title:          e.job_title          || null,
@@ -119,12 +119,13 @@ export async function createCandidate(dto: CreateCandidateDto, createdByAdminId:
           description:        e.description        || null,
           location:           e.location           || null,
           reason_for_leaving: e.reason_for_leaving || null,
+          display_order:      e.display_order      ?? idx,
         })),
       );
     }
     if (dto.education?.length) {
       await trx('candidate_education').insert(
-        dto.education.map((e) => ({
+        dto.education.map((e, idx) => ({
           candidate_id: candidateId,
           institution:  e.institution  || null,
           degree:       e.degree       || null,
@@ -134,6 +135,7 @@ export async function createCandidate(dto: CreateCandidateDto, createdByAdminId:
           end_year:     e.end_year     || null,
           end_month:    e.end_month    || null,
           location:     e.location     || null,
+          display_order: e.display_order ?? idx,
         })),
       );
     }
@@ -463,7 +465,7 @@ export async function updateCandidate(id: string, dto: UpdateCandidateDto) {
       await trx('candidate_experience').where({ candidate_id: id }).delete();
       if (experience.length)
         await trx('candidate_experience').insert(
-          experience.map((e) => ({
+          experience.map((e, idx) => ({
             candidate_id:       id,
             company_name:       e.company_name       || null,
             job_title:          e.job_title          || null,
@@ -474,6 +476,7 @@ export async function updateCandidate(id: string, dto: UpdateCandidateDto) {
             description:        e.description        || null,
             location:           e.location           || null,
             reason_for_leaving: e.reason_for_leaving || null,
+            display_order:      e.display_order      ?? idx,
           })),
         );
     }
@@ -481,7 +484,7 @@ export async function updateCandidate(id: string, dto: UpdateCandidateDto) {
       await trx('candidate_education').where({ candidate_id: id }).delete();
       if (education.length)
         await trx('candidate_education').insert(
-          education.map((e) => ({
+          education.map((e, idx) => ({
             candidate_id:   id,
             institution:    e.institution    || null,
             degree:         e.degree         || null,
@@ -491,6 +494,7 @@ export async function updateCandidate(id: string, dto: UpdateCandidateDto) {
             end_year:       e.end_year       || null,
             end_month:      e.end_month      || null,
             location:       e.location       || null,
+            display_order:  e.display_order  ?? idx,
           })),
         );
     }
