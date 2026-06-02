@@ -1,5 +1,5 @@
 // src/app/features/recruiter/candidates/candidate-profile.component.ts
-import { Component, OnInit, computed, inject } from '@angular/core';
+import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, RouterLink, Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
@@ -16,6 +16,11 @@ import { PageHeaderComponent } from '../../../shared/components/page-header/page
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { CandidateProfileComponent } from '../../../shared/components/candidate-profile/candidate-profile.component';
 import { SearchableSelectComponent, SelectOption } from '../../../shared/components/searchable-select/searchable-select.component';
+import {
+  CandidateTranslationService,
+  TRANSLATE_LANGUAGES,
+  TranslateLanguage,
+} from '../../../core/services/candidate-translation.service';
 
 @Component({
   selector: 'app-recruiter-candidate-profile',
@@ -79,6 +84,87 @@ import { SearchableSelectComponent, SelectOption } from '../../../shared/compone
       border-color: var(--th-primary);
       box-shadow: 0 0 0 3px color-mix(in srgb, var(--th-primary) 15%, transparent);
     }
+
+    /* ── Translation bar ──────────────────────────────────────────────────── */
+    .translate-bar {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+    .translate-select {
+      height: 30px;
+      padding: 0 10px;
+      border-radius: 6px;
+      border: 1px solid var(--th-border-strong);
+      background: var(--th-surface-2);
+      color: var(--th-text);
+      font-size: 13px;
+      cursor: pointer;
+      min-width: 148px;
+    }
+    .translate-select:focus {
+      outline: none;
+      border-color: var(--th-primary);
+      box-shadow: 0 0 0 3px color-mix(in srgb, var(--th-primary) 15%, transparent);
+    }
+    .translate-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      height: 30px;
+      padding: 0 12px;
+      border-radius: 6px;
+      border: 1px solid var(--th-primary);
+      background: transparent;
+      color: var(--th-primary);
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background .15s, color .15s;
+      white-space: nowrap;
+    }
+    .translate-btn:hover:not(:disabled) {
+      background: var(--th-primary);
+      color: #fff;
+    }
+    .translate-btn:disabled {
+      opacity: .6;
+      cursor: not-allowed;
+    }
+    .translated-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      padding: 3px 10px;
+      border-radius: 999px;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: .04em;
+      text-transform: uppercase;
+      background: color-mix(in srgb, var(--th-primary) 12%, transparent);
+      color: var(--th-primary);
+      border: 1px solid color-mix(in srgb, var(--th-primary) 30%, transparent);
+    }
+    .show-original-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      height: 26px;
+      padding: 0 10px;
+      border-radius: 6px;
+      border: 1px solid var(--th-border-strong);
+      background: transparent;
+      color: var(--th-muted);
+      font-size: 12px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: border-color .15s, color .15s;
+    }
+    .show-original-btn:hover {
+      border-color: var(--th-text);
+      color: var(--th-text);
+    }
   `],
   template: `
     <!-- Back button + action bar -->
@@ -89,6 +175,39 @@ import { SearchableSelectComponent, SelectOption } from '../../../shared/compone
 
       @if (candidate) {
         <div class="ms-auto d-flex align-items-center gap-2 flex-wrap">
+
+          <!-- ── Translation bar ─────────────────────────────────────────── -->
+          <div class="translate-bar">
+            @if (!translated()) {
+              <!-- Language selector + Translate button -->
+              <select class="translate-select" [(ngModel)]="selectedLangCode" [disabled]="translating()">
+                @for (lang of translateLanguages; track lang.code) {
+                  <option [value]="lang.code">{{ lang.flag }} {{ lang.label }}</option>
+                }
+              </select>
+              <button
+                class="translate-btn"
+                (click)="translateProfile()"
+                [disabled]="translating()">
+                @if (translating()) {
+                  <span class="spinner-border spinner-border-sm" style="width:.75rem;height:.75rem;border-width:2px;"></span>
+                  Translating…
+                } @else {
+                  <i class="bi bi-translate"></i> Translate
+                }
+              </button>
+            } @else {
+              <!-- Translated state: badge + show original -->
+              <span class="translated-badge">
+                <i class="bi bi-translate"></i>
+                Translated · {{ activeLangLabel() }}
+              </span>
+              <button class="show-original-btn" (click)="showOriginal()">
+                <i class="bi bi-arrow-counterclockwise"></i> Show Original
+              </button>
+            }
+          </div>
+          <!-- ── End translation bar ─────────────────────────────────────── -->
 
           <!-- Direct employer: contact request button -->
           @if (!isAgency) {
@@ -343,7 +462,7 @@ import { SearchableSelectComponent, SelectOption } from '../../../shared/compone
       <div class="alert alert-danger">{{ error }}</div>
     } @else if (candidate) {
       <app-candidate-profile
-        [candidate]="candidate"
+        [candidate]="displayCandidate()"
         [contactLocked]="contactLocked"
         [showAdminInfo]="false" />
     }
@@ -371,6 +490,33 @@ export class RecruiterCandidateProfileComponent implements OnInit {
 
   private candidateId = '';
 
+  // ── Translation state ────────────────────────────────────────────────────────
+  /** All available translation languages (excludes English — no point translating to source) */
+  readonly translateLanguages: TranslateLanguage[] = TRANSLATE_LANGUAGES;
+
+  /** Currently selected language code in the dropdown */
+  selectedLangCode = 'fr';
+
+  /** Translated candidate object — null means show original */
+  private translatedCandidate = signal<Candidate | null>(null);
+
+  /** Whether a translation API call is in progress */
+  translating = signal(false);
+
+  /** Whether the profile is currently showing a translation */
+  translated = signal(false);
+
+  /** The candidate object shown in the profile — translated version if active, else original */
+  displayCandidate = computed<Candidate>(() =>
+    this.translatedCandidate() ?? this.candidate!
+  );
+
+  /** Label of the currently active translation language (shown in the badge) */
+  activeLangLabel = computed<string>(() => {
+    const lang = this.translateLanguages.find(l => l.code === this.selectedLangCode);
+    return lang ? `${lang.flag} ${lang.label}` : '';
+  });
+
   // ── Master data (inject before computed fields so this.master is available) ─
   private master = inject(MasterDataService);
 
@@ -393,6 +539,7 @@ export class RecruiterCandidateProfileComponent implements OnInit {
     private contactRequestService: ContactRequestService,
     private interestRequestService: InterestRequestService,
     private toast: ToastService,
+    private translationService: CandidateTranslationService,
   ) {}
 
   backLink = '/recruiter/candidates';
@@ -418,7 +565,7 @@ export class RecruiterCandidateProfileComponent implements OnInit {
       this.loading = false;
 
       if (profile) {
-        this.candidate    = profile.candidate;
+        this.candidate     = profile.candidate;
         this.contactLocked = !!(profile.candidate as any).contact_locked;
       } else {
         this.error = 'Failed to load candidate profile.';
@@ -441,8 +588,6 @@ export class RecruiterCandidateProfileComponent implements OnInit {
       }
 
       if (this.isAgency && myInterests) {
-        // There may be multiple historical records for the same candidate.
-        // Priority: pending (actionable) > approved (active) > latest by created_at.
         const forCandidate = myInterests.requests.filter(
           (r: InterestRequest) => r.candidate_id === this.candidateId
         );
@@ -456,6 +601,37 @@ export class RecruiterCandidateProfileComponent implements OnInit {
       }
     });
   }
+
+  // ── Translation actions ──────────────────────────────────────────────────────
+
+  translateProfile(): void {
+    if (!this.candidate || this.translating()) return;
+
+    const lang = this.translateLanguages.find(l => l.code === this.selectedLangCode);
+    if (!lang) return;
+
+    this.translating.set(true);
+
+    this.translationService.translate(this.candidate, lang).subscribe({
+      next: (translated) => {
+        this.translatedCandidate.set(translated);
+        this.translated.set(true);
+        this.translating.set(false);
+      },
+      error: (err) => {
+        this.translating.set(false);
+        const msg = err?.error?.message ?? 'Translation failed. Please try again.';
+        this.toast.error(msg);
+      },
+    });
+  }
+
+  showOriginal(): void {
+    this.translatedCandidate.set(null);
+    this.translated.set(false);
+  }
+
+  // ── Contact / shortlist actions ──────────────────────────────────────────────
 
   requestContactInfo(): void {
     this.reasonTouched = true;
@@ -509,7 +685,7 @@ export class RecruiterCandidateProfileComponent implements OnInit {
     this.recruiterService.addToShortlist(this.candidate.id).subscribe({
       next: () => {
         this.shortlisting = false;
-        this.shortlisted = true;
+        this.shortlisted  = true;
         this.toast.success(`${this.candidate!.first_name} ${this.candidate!.last_name} added to shortlist`);
       },
       error: (err) => {
