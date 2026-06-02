@@ -151,6 +151,65 @@ function eduEndYearGroupValidator(g: AbstractControl): ValidationErrors | null {
   return null;
 }
 
+// ── Experience month/year helpers ─────────────────────────────────────────
+/** Extract 1-based month integer from a YYYY-MM-DD string (avoids UTC-shift bugs). */
+function parseMonthFromDate(dateStr?: string | null): number {
+  if (!dateStr) return 1;
+  const m = dateStr.match(/^\d{4}-(\d{2})/);
+  return m ? parseInt(m[1], 10) : 1;
+}
+/** Extract 4-digit year integer from a YYYY-MM-DD string. */
+function parseYearFromDate(dateStr?: string | null): number | null {
+  if (!dateStr) return null;
+  const m = dateStr.match(/^(\d{4})-\d{2}/);
+  return m ? parseInt(m[1], 10) : null;
+}
+
+// ── Experience year validator (mirrors eduYearValidator) ───────────────────
+function expYearValidator(minYear: number, maxYear: number): ValidatorFn {
+  return (ctrl: AbstractControl): ValidationErrors | null => {
+    const v = ctrl.value;
+    if (v === null || v === '' || v === undefined) return null;
+    const n = Number(v);
+    if (!Number.isInteger(n))                          return { expYearInvalid: 'Must be a whole number.' };
+    if (String(v).replace('-', '').length !== 4)       return { expYearInvalid: 'Must be a 4-digit year.' };
+    if (n < minYear)                                   return { expYearInvalid: `Year must be ${minYear} or later.` };
+    if (n > maxYear)                                   return { expYearInvalid: `Year must be ${maxYear} or earlier.` };
+    return null;
+  };
+}
+
+// ── Experience end-date group validator (mirrors eduEndYearGroupValidator) ─
+// Skips the end-before-start check when currently_working is true.
+function expEndDateGroupValidator(g: AbstractControl): ValidationErrors | null {
+  if (g.get('currently_working')?.value) {
+    const endCtrl = g.get('end_year');
+    if (endCtrl?.errors?.['endBeforeStart']) {
+      const { endBeforeStart: _, ...rest } = endCtrl.errors;
+      endCtrl.setErrors(Object.keys(rest).length ? rest : null);
+    }
+    return null;
+  }
+  const start      = Number(g.get('start_year')?.value);
+  const end        = Number(g.get('end_year')?.value);
+  const startMonth = Number(g.get('start_month')?.value);
+  const endMonth   = Number(g.get('end_month')?.value);
+  const endCtrl    = g.get('end_year');
+  if (!endCtrl) return null;
+  if (!g.get('start_year')?.value || !g.get('end_year')?.value) {
+    const cur = endCtrl.errors;
+    if (cur?.['endBeforeStart']) { const { endBeforeStart: _, ...rest } = cur; endCtrl.setErrors(Object.keys(rest).length ? rest : null); }
+    return null;
+  }
+  if (end < start || (end === start && endMonth < startMonth)) {
+    endCtrl.setErrors({ ...(endCtrl.errors || {}), endBeforeStart: true });
+    return { endBeforeStart: true };
+  }
+  const cur = endCtrl.errors;
+  if (cur?.['endBeforeStart']) { const { endBeforeStart: _, ...rest } = cur; endCtrl.setErrors(Object.keys(rest).length ? rest : null); }
+  return null;
+}
+
 // ── Postal code rules ──────────────────────────────────────────────────────
 interface PostalRule { pattern: RegExp; hint: string; }
 const POSTAL_CODE_RULES: Record<string, PostalRule> = {
@@ -490,13 +549,21 @@ export class CandidateEditComponent implements OnInit, OnDestroy {
   addLanguage(): void    { this.languages.push(this.fb.group({ language: ['', Validators.required], proficiency: [''] }, { validators: langGroupValidator })); }
   removeLanguage(i: number): void { this.languages.removeAt(i); }
 
-  addExperience(): void {    this.experience.push(this.fb.group({
-      company_name: ['', Validators.required], job_title: ['', Validators.required], start_date: ['', Validators.required],
-      end_date: [''], description: [''], location: ['', Validators.required],
+  addExperience(): void {
+    const yr = new Date().getFullYear();
+    this.experience.push(this.fb.group({
+      company_name:              ['', Validators.required],
+      job_title:                 ['', Validators.required],
+      start_month:               [1  as number | null],
+      start_year:                [null as number | null, [Validators.required, expYearValidator(1950, yr)]],
+      end_month:                 [1  as number | null],
+      end_year:                  [null as number | null, expYearValidator(1950, yr + 2)],
+      description:               [''],
+      location:                  ['', Validators.required],
       reason_for_leaving_select: [''],
       reason_for_leaving_other:  [''],
-      currently_working: [false],
-    }));
+      currently_working:         [false],
+    }, { validators: expEndDateGroupValidator }));
   }
   removeExperience(i: number): void { this.experience.removeAt(i); }
 
@@ -794,14 +861,17 @@ export class CandidateEditComponent implements OnInit, OnDestroy {
               }
               return this.fb.group({
                 company_name: [e.company_name ?? '', Validators.required], job_title: [e.job_title ?? '', Validators.required],
-                start_date: [e.start_date ?? '', Validators.required], end_date: [e.end_date ?? ''],
+                start_month: [parseMonthFromDate(e.start_date)],
+                start_year:  [parseYearFromDate(e.start_date),  [Validators.required, expYearValidator(1950, new Date().getFullYear())]],
+                end_month:   [parseMonthFromDate(e.end_date)],
+                end_year:    [parseYearFromDate(e.end_date),     expYearValidator(1950, new Date().getFullYear() + 2)],
                 description: [e.description ?? ''], location: [e.location ?? '', Validators.required],
                 reason_for_leaving_select: [rflSel],
                 reason_for_leaving_other:  [rflOther],
                 currently_working: [!e.end_date],
-              });
+              }, { validators: expEndDateGroupValidator });
             })
-          : [this.fb.group({ company_name: ['', Validators.required], job_title: ['', Validators.required], start_date: ['', Validators.required], end_date: [''], description: [''], location: ['', Validators.required], reason_for_leaving_select: [''], reason_for_leaving_other: [''], currently_working: [false] })]
+          : [(() => { const yr = new Date().getFullYear(); return this.fb.group({ company_name: ['', Validators.required], job_title: ['', Validators.required], start_month: [1 as number | null], start_year: [null as number | null, [Validators.required, expYearValidator(1950, yr)]], end_month: [1 as number | null], end_year: [null as number | null, expYearValidator(1950, yr + 2)], description: [''], location: ['', Validators.required], reason_for_leaving_select: [''], reason_for_leaving_other: [''], currently_working: [false] }, { validators: expEndDateGroupValidator }); })()]
       ),
       education: this.fb.array(
         this.isExperienceBased
@@ -905,10 +975,20 @@ export class CandidateEditComponent implements OnInit, OnDestroy {
       experience: raw.experience
         .filter((e: any) => e.company_name?.trim() || e.job_title?.trim())
         .map((e: any) => {
-          const { reason_for_leaving_select: sel, reason_for_leaving_other: other, currently_working: cw, ...rest } = e;
+          const {
+            reason_for_leaving_select: sel,
+            reason_for_leaving_other:  other,
+            currently_working:         cw,
+            start_month, start_year,
+            end_month,   end_year,
+            ...rest
+          } = e;
+          const toDateStr = (yr: number | null, mo: number | null): string | null =>
+            (yr && mo) ? `${yr}-${String(mo).padStart(2, '0')}-01` : null;
           return {
             ...rest,
-            end_date: cw ? null : (rest.end_date || null),
+            start_date: toDateStr(start_year, start_month),
+            end_date:   cw ? null : toDateStr(end_year, end_month),
             reason_for_leaving: sel === 'Other'
               ? (other?.trim() ? `Other: ${other.trim()}` : 'Other')
               : (sel || undefined),

@@ -604,26 +604,73 @@
                   <div class="invalid-feedback">Job title is required.</div>
                 }
               </div>
-              <div class="col-md-3">
-                <label class="form-label form-label-sm">Start Date <span class="text-danger">*</span></label>
-                <input type="date" class="form-control form-control-sm" formControlName="start_date"
-                  [class.is-invalid]="experience.at($index).get('start_date')!.invalid && experience.at($index).get('start_date')!.touched">
-                @if (experience.at($index).get('start_date')!.invalid && experience.at($index).get('start_date')!.touched) {
-                  <div class="invalid-feedback">Start date is required.</div>
-                }
-              </div>
-              <div class="col-md-3">
-                <label class="form-label form-label-sm">End Date</label>
-                @if (!experience.at($index).get('currently_working')?.value) {
-                  <input type="date" class="form-control form-control-sm" formControlName="end_date">
-                } @else {
-                  <div class="form-control form-control-sm bg-success-subtle text-success fw-semibold d-flex align-items-center gap-1">
-                    <i class="bi bi-circle-fill" style="font-size:.45rem"></i> Present
+              <div class="col-12">
+                <label class="form-label form-label-sm">Duration</label>
+                <div class="d-flex align-items-start gap-2">
+
+                  <!-- START: Month + Year -->
+                  <div class="flex-grow-1">
+                    <div class="d-flex gap-1">
+                      <div style="width:110px;flex-shrink:0">
+                        <app-searchable-select
+                          formControlName="start_month"
+                          [options]="MONTHS"
+                          placeholder="Month"
+                          [allowClear]="false">
+                        </app-searchable-select>
+                      </div>
+                      <input type="number" class="form-control form-control-sm"
+                        formControlName="start_year"
+                        placeholder="YYYY"
+                        min="1950" [max]="currentYear"
+                        [class.is-invalid]="experience.at($index).get('start_year')!.invalid && experience.at($index).get('start_year')!.touched">
+                    </div>
+                    <div class="form-text" style="font-size:.7rem">Start <span class="text-danger">*</span></div>
+                    @if (experience.at($index).get('start_year')!.hasError('required') && experience.at($index).get('start_year')!.touched) {
+                      <div class="invalid-feedback d-block">Start year is required.</div>
+                    } @else if (experience.at($index).get('start_year')!.errors?.['expYearInvalid'] && experience.at($index).get('start_year')!.touched) {
+                      <div class="invalid-feedback d-block">{{ experience.at($index).get('start_year')!.errors?.['expYearInvalid'] }}</div>
+                    }
                   </div>
-                }
-                <div class="form-check mt-1">
-                  <input type="checkbox" class="form-check-input" formControlName="currently_working" id="cw_{{$index}}">
-                  <label class="form-check-label small text-muted" for="cw_{{$index}}">I currently work here</label>
+
+                  <span class="text-muted fw-bold mt-1">–</span>
+
+                  <!-- END: Month + Year (or Present badge) -->
+                  <div class="flex-grow-1">
+                    @if (!experience.at($index).get('currently_working')?.value) {
+                      <div class="d-flex gap-1">
+                        <div style="width:110px;flex-shrink:0">
+                          <app-searchable-select
+                            formControlName="end_month"
+                            [options]="MONTHS"
+                            placeholder="Month"
+                            [allowClear]="false">
+                          </app-searchable-select>
+                        </div>
+                        <input type="number" class="form-control form-control-sm"
+                          formControlName="end_year"
+                          placeholder="YYYY"
+                          min="1950" [max]="currentYear + 2"
+                          [class.is-invalid]="experience.at($index).get('end_year')!.invalid && experience.at($index).get('end_year')!.touched">
+                      </div>
+                    } @else {
+                      <div class="form-control form-control-sm bg-success-subtle text-success fw-semibold d-flex align-items-center gap-1">
+                        <i class="bi bi-circle-fill" style="font-size:.45rem"></i> Present
+                      </div>
+                    }
+                    <div class="form-text" style="font-size:.7rem">End</div>
+                    @if (experience.at($index).get('end_year')!.errors?.['expYearInvalid'] && experience.at($index).get('end_year')!.touched) {
+                      <div class="invalid-feedback d-block">{{ experience.at($index).get('end_year')!.errors?.['expYearInvalid'] }}</div>
+                    }
+                    @if (experience.at($index).get('end_year')!.errors?.['endBeforeStart'] && experience.at($index).get('end_year')!.touched) {
+                      <div class="invalid-feedback d-block">End date cannot be before start date.</div>
+                    }
+                    <div class="form-check mt-1">
+                      <input type="checkbox" class="form-check-input" formControlName="currently_working" id="cw_{{$index}}">
+                      <label class="form-check-label small text-muted" for="cw_{{$index}}">I currently work here</label>
+                    </div>
+                  </div>
+
                 </div>
               </div>
               <div class="col-md-6">
