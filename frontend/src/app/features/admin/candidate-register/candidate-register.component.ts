@@ -1,5 +1,5 @@
 // src/app/features/admin/candidate-register/candidate-register.component.ts
-import { Component, OnInit, OnDestroy, computed } from '@angular/core';
+import { Component, OnInit, OnDestroy, computed, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import {
   ReactiveFormsModule, FormBuilder, FormGroup,
@@ -11,11 +11,15 @@ import { Subscription, debounceTime } from 'rxjs';
 import { CdkDragDrop, DragDropModule } from '@angular/cdk/drag-drop';
 import { CandidateService } from '../../../core/services/candidate.service';
 import { MasterDataService } from '../../../core/services/master-data.service';
+import { AuthService } from '../../../core/services/auth.service';
 import { SearchableSelectComponent, SelectOption } from '../../../shared/components/searchable-select/searchable-select.component';
 import { ChipMultiSelectComponent, ChipOption } from '../../../shared/components/chip-multi-select/chip-multi-select.component';
 import { REGISTRATION_FEE_STATUS_OPTIONS, CV_FORMAT_OPTIONS, SOURCE_OPTIONS, EMPLOYMENT_STATUS_OPTIONS, VISA_STATUS_OPTIONS, REASON_FOR_LEAVING_OPTIONS } from '../../../core/constants/candidate-options';
+import { HasUnsavedChanges } from '../../../core/guards/unsaved-changes.guard';
 
-const DRAFT_KEY = 'th_register_draft';
+function draftKey(userId: string): string {
+  return `th_register_draft_${userId}`;
+}
 
 // ── Phone rules map ────────────────────────────────────────────────────────
 interface PhoneRule { minLen: number; maxLen: number; pattern?: RegExp; hint: string; }
@@ -296,7 +300,7 @@ function makePostalCodeGroupValidator(countryCtrl: string, postalCtrl: string): 
   imports: [CommonModule, ReactiveFormsModule, RouterLink, SearchableSelectComponent, ChipMultiSelectComponent, DragDropModule],
   templateUrl: './candidate-register.component.html',
 })
-export class CandidateRegisterComponent implements OnInit, OnDestroy {
+export class CandidateRegisterComponent implements OnInit, OnDestroy, HasUnsavedChanges {
   currentStep = 1;
   totalSteps  = 5;
   loading     = false;
@@ -305,7 +309,8 @@ export class CandidateRegisterComponent implements OnInit, OnDestroy {
   successMsg  = '';
   createdCandidateNumber = '';
   createdLoginId = 0;
-  draftSaved  = false;
+  draftSaved    = false;
+  draftRestored = false;
 
   pendingPhoto?:  File;
   pendingResume?: File;
@@ -425,6 +430,7 @@ export class CandidateRegisterComponent implements OnInit, OnDestroy {
     private router: Router,
     public master: MasterDataService,
     private sanitizer: DomSanitizer,
+    private auth: AuthService,
   ) {}
 
   get safePreviewUrl(): SafeResourceUrl | undefined {
@@ -542,7 +548,21 @@ export class CandidateRegisterComponent implements OnInit, OnDestroy {
 
   ngOnDestroy(): void {
     this.draftSub?.unsubscribe();
+    // Flush any pending draft on navigation/destroy
+    if (this.isDirty()) this.saveDraft();
     this._objectUrls.forEach(u => URL.revokeObjectURL(u));
+  }
+
+  @HostListener('window:beforeunload', ['$event'])
+  onBeforeUnload(event: BeforeUnloadEvent): void {
+    if (this.isDirty()) {
+      this.saveDraft();
+      event.preventDefault();
+    }
+  }
+
+  isDirty(): boolean {
+    return this.form?.dirty ?? false;
   }
 
   // ── Job Title → auto-fill Occupation ────────────────────────────────────────
@@ -563,10 +583,36 @@ export class CandidateRegisterComponent implements OnInit, OnDestroy {
   }
 
   // ── Draft helpers ──────────────────────────────────────────────────────────
+  private get _draftKey(): string {
+    return draftKey(this.auth.currentUser()?.id ?? 'anon');
+  }
+
   private saveDraft(): void {
     try {
-      const simple = { ...this.form.getRawValue() };
-      localStorage.setItem(DRAFT_KEY, JSON.stringify(simple));
+      const raw = this.form.getRawValue();
+      const data = {
+        scalars: {
+          first_name: raw.first_name, last_name: raw.last_name, date_of_birth: raw.date_of_birth,
+          gender: raw.gender, marital_status: raw.marital_status, dial_code: raw.dial_code,
+          phone: raw.phone, whatsapp_dial_code: raw.whatsapp_dial_code, whatsapp_number: raw.whatsapp_number,
+          whatsapp_same_as_phone: raw.whatsapp_same_as_phone,
+          bio: raw.bio, hobbies: raw.hobbies, employment_status: raw.employment_status,
+          job_title: raw.job_title, occupation: raw.occupation, industry: raw.industry,
+          years_experience: raw.years_experience, linkedin_url: raw.linkedin_url,
+          notice_period_id: raw.notice_period_id, current_country: raw.current_country,
+          current_city: raw.current_city, nationality: raw.nationality, postal_code: raw.postal_code,
+          has_passport: raw.has_passport, target_locations: raw.target_locations,
+          email: raw.email, password: raw.password, registration_fee_status: raw.registration_fee_status,
+          cv_format: raw.cv_format, source: raw.source, visa_status_select: raw.visa_status_select,
+          visa_status_other: raw.visa_status_other,
+        },
+        skills:     raw.skills,
+        languages:  raw.languages,
+        experience: raw.experience,
+        education:  raw.education,
+        isExperienceBased: this.isExperienceBased,
+      };
+      localStorage.setItem(this._draftKey, JSON.stringify(data));
       this.draftSaved = true;
       setTimeout(() => (this.draftSaved = false), 3000);
     } catch { /* storage full */ }
@@ -574,25 +620,85 @@ export class CandidateRegisterComponent implements OnInit, OnDestroy {
 
   private restoreDraft(): void {
     try {
-      const raw = localStorage.getItem(DRAFT_KEY);
+      const raw = localStorage.getItem(this._draftKey);
       if (!raw) return;
       const draft = JSON.parse(raw);
-      const scalarKeys = [
-        'first_name','last_name','date_of_birth','gender','marital_status','dial_code','phone','whatsapp_dial_code','whatsapp_number','bio',
-        'job_title','occupation','industry','years_experience','linkedin_url',
-        'notice_period_id',
-        'current_country','current_city','nationality','postal_code','has_passport','target_locations',
-        'email','password','hobbies','registration_fee_status','cv_format','source',
-        'visa_status_select','visa_status_other','employment_status',
-      ];      const patch: Record<string, unknown> = {};
-      for (const k of scalarKeys) {
-        if (draft[k] !== undefined && draft[k] !== null && draft[k] !== '') patch[k] = draft[k];
+
+      // Restore scalar fields
+      if (draft.scalars) {
+        this.form.patchValue(draft.scalars, { emitEvent: false });
       }
-      this.form.patchValue(patch, { emitEvent: false });
+
+      // Restore isExperienceBased
+      if (draft.isExperienceBased) {
+        this.isExperienceBased = true;
+      }
+
+      // Restore skills
+      if (Array.isArray(draft.skills) && draft.skills.length) {
+        while (this.skills.length) this.skills.removeAt(0);
+        for (const s of draft.skills) {
+          this.skills.push(this.fb.group(
+            { skill_name: [s.skill_name ?? ''], proficiency: [s.proficiency ?? ''] },
+            { validators: skillGroupValidator }
+          ));
+        }
+      }
+
+      // Restore languages
+      if (Array.isArray(draft.languages) && draft.languages.length) {
+        while (this.languages.length) this.languages.removeAt(0);
+        for (const l of draft.languages) {
+          this.languages.push(this.fb.group(
+            { language: [l.language ?? ''], proficiency: [l.proficiency ?? ''] },
+            { validators: langGroupValidator }
+          ));
+        }
+      }
+
+      // Restore experience
+      if (Array.isArray(draft.experience) && draft.experience.length) {
+        const yr = new Date().getFullYear();
+        for (const e of draft.experience) {
+          this.experience.push(this.fb.group({
+            company_name:              [e.company_name ?? ''],
+            job_title:                 [e.job_title ?? ''],
+            start_month:               [e.start_month ?? 1],
+            start_year:                [e.start_year ?? null, [Validators.required, expYearValidator(1950, yr)]],
+            end_month:                 [e.end_month ?? 1],
+            end_year:                  [e.end_year ?? null, expYearValidator(1950, yr + 2)],
+            description:               [e.description ?? ''],
+            location:                  [e.location ?? ''],
+            reason_for_leaving_select: [e.reason_for_leaving_select ?? ''],
+            reason_for_leaving_other:  [e.reason_for_leaving_other ?? ''],
+            currently_working:         [e.currently_working ?? false],
+          }, { validators: expEndDateGroupValidator }));
+        }
+      }
+
+      // Restore education
+      if (Array.isArray(draft.education) && draft.education.length) {
+        for (const ed of draft.education) {
+          this.education.push(this.fb.group({
+            institution:    [ed.institution ?? ''],
+            degree:         [ed.degree ?? ''],
+            field_of_study: [ed.field_of_study ?? ''],
+            start_year:     [ed.start_year ?? null, eduYearValidator(1950, this.currentYear)],
+            start_month:    [ed.start_month ?? 1],
+            end_year:       [ed.end_year ?? null, eduYearValidator(1950, this.currentYear + 6)],
+            end_month:      [ed.end_month ?? 1],
+            location:       [ed.location ?? ''],
+          }, { validators: eduEndYearGroupValidator }));
+        }
+      }
+
+      this.draftRestored = true;
     } catch { /* corrupted draft */ }
   }
 
-  private clearDraft(): void { localStorage.removeItem(DRAFT_KEY); }
+  dismissDraftBanner(): void { this.draftRestored = false; }
+
+  private clearDraft(): void { localStorage.removeItem(this._draftKey); }
 
   // ── FormArray helpers ──────────────────────────────────────────────────────
   get skills():     FormArray { return this.form.get('skills')     as FormArray; }
