@@ -1,7 +1,7 @@
 // src/app/features/admin/master/master-form-modal.component.ts
 // Reusable modal form for create/edit of any master data record.
 // Driven entirely by MasterTableConfig — no per-table code needed.
-import { Component, Input, Output, EventEmitter, OnInit, OnChanges } from '@angular/core';
+import { Component, Input, Output, EventEmitter, OnInit, OnChanges, SimpleChanges } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, FormGroup, Validators, AbstractControl } from '@angular/forms';
 import { MasterTableConfig, MasterFieldDef } from './master-table.config';
@@ -157,6 +157,16 @@ export class MasterFormModalComponent implements OnInit, OnChanges {
   saving      = false;
   serverError = '';
 
+  /**
+   * Memoized options cache keyed by field.key.
+   * Prevents getSelectOptionsForSearchable() from returning a new array reference
+   * on every change-detection cycle, which would cause SearchableSelectComponent's
+   * ngOnChanges to reset the active search filter on every keystroke.
+   */
+  private _optionsCache = new Map<string, SelectOption[]>();
+  /** Tracks the last raw-data length per source so we only invalidate when data changes. */
+  private _optionsCacheSize = new Map<string, number>();
+
   get isEdit(): boolean { return !!this.record; }
 
   constructor(
@@ -168,9 +178,13 @@ export class MasterFormModalComponent implements OnInit, OnChanges {
 
   ngOnInit(): void { this.buildForm(); }
 
-  ngOnChanges(): void {
+  ngOnChanges(changes: SimpleChanges): void {
     if (this.visible) {
       this.serverError = '';
+      // Clear options cache when the modal opens so any invalidated master data
+      // (after create/edit) is re-fetched from the signal on next render.
+      this._optionsCache.clear();
+      this._optionsCacheSize.clear();
       this.buildForm();
     }
   }
@@ -205,8 +219,24 @@ export class MasterFormModalComponent implements OnInit, OnChanges {
     return [];
   }
 
+  /**
+   * Returns a stable SelectOption[] reference for the given field.
+   * The cached array is only rebuilt when the underlying data length changes,
+   * preventing Angular's change-detection from triggering SearchableSelectComponent's
+   * ngOnChanges on every CD cycle and wiping the user's active search filter.
+   */
   getSelectOptionsForSearchable(field: MasterFieldDef): SelectOption[] {
-    return this.getSelectOptions(field).map((o) => ({ value: o.id, label: o.label }));
+    const raw  = this.getSelectOptions(field);
+    const prev = this._optionsCacheSize.get(field.key);
+
+    if (prev !== raw.length || !this._optionsCache.has(field.key)) {
+      // Data has changed (or first load) — rebuild and cache
+      const built = raw.map((o) => ({ value: o.id, label: o.label }));
+      this._optionsCache.set(field.key, built);
+      this._optionsCacheSize.set(field.key, raw.length);
+    }
+
+    return this._optionsCache.get(field.key)!;
   }
 
   onSave(): void {

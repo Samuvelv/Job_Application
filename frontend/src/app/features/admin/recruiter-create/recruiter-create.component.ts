@@ -812,6 +812,7 @@ export class RecruiterCreateComponent implements OnInit, OnDestroy, HasUnsavedCh
   showPw        = false;
   draftSaved    = false;
   draftRestored = false;
+  private _submitSuccess = false;
   private draftSub?: Subscription;
 
   // ── Computed signals from master data ──────────────────────────────────────
@@ -1049,12 +1050,13 @@ export class RecruiterCreateComponent implements OnInit, OnDestroy, HasUnsavedCh
 
   ngOnDestroy(): void {
     this.draftSub?.unsubscribe();
-    if (this.isDirty()) this.saveDraft();
+    // Flush any pending draft on navigation/destroy — skip if form was successfully submitted
+    if (!this._submitSuccess && this.isDirty()) this.saveDraft();
   }
 
   @HostListener('window:beforeunload', ['$event'])
   onBeforeUnload(event: BeforeUnloadEvent): void {
-    if (this.isDirty()) {
+    if (!this._submitSuccess && this.isDirty()) {
       this.saveDraft();
       event.preventDefault();
     }
@@ -1241,6 +1243,10 @@ export class RecruiterCreateComponent implements OnInit, OnDestroy, HasUnsavedCh
         this.createdWhatsApp        = !!(res.recruiter as any)?.whatsapp_number;
         this.success = true;
         this.clearDraft();
+        this.form.markAsPristine();   // Clear dirty state so the route guard allows navigation
+        this._submitSuccess = true;   // Prevent ngOnDestroy/beforeunload from re-saving draft
+        this.draftSub?.unsubscribe(); // Stop auto-save during the redirect delay
+        this.draftRestored = false;   // Dismiss the draft-restored banner if visible
 
         const name    = this.createdContactName;
         const company = this.createdCompanyName ? ` from ${this.createdCompanyName}` : '';

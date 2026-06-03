@@ -5099,16 +5099,59 @@ body {
     margin-bottom: .5rem;
   }
 
+  // ── Variant: warning (amber) — used by the unsaved-changes nav guard ──────
   &--warning::before { display: none; }
   &--warning .confirm-dialog__icon {
     background: var(--th-warning-soft);
     color: var(--th-warning);
   }
 
+  // ── Variant: info (blue) ──────────────────────────────────────────────────
   &--info::before { display: none; }
   &--info .confirm-dialog__icon {
     background: var(--th-info-soft);
     color: var(--th-info);
+  }
+
+  // ── Variant: success (green) ──────────────────────────────────────────────
+  &--success::before { display: none; }
+  &--success .confirm-dialog__icon {
+    background: var(--th-success-soft, #dcfce7);
+    color: var(--th-success, #16a34a);
+  }
+
+  // ── Variant: primary (indigo) ─────────────────────────────────────────────
+  &--primary::before { display: none; }
+  &--primary .confirm-dialog__icon {
+    background: var(--th-primary-soft, #eef2ff);
+    color: var(--th-primary, #5046e5);
+  }
+
+  // ── Icon — remove old bottom margin, use flex gap in header instead ───────
+  &__icon { flex-shrink: 0; margin-bottom: 0; }
+}
+
+// ── Confirm dialog responsive — bottom sheet on mobile ──────────────────────
+@media (max-width: 576px) {
+  .confirm-dialog-panel {
+    margin: 0 !important;
+    max-width: 100% !important;
+    width: 100% !important;
+  }
+
+  .confirm-dialog-modal .modal-dialog {
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    min-height: 100%;
+    margin: 0;
+  }
+
+  .confirm-dialog.modal-content {
+    border-bottom-left-radius:  0 !important;
+    border-bottom-right-radius: 0 !important;
+    border-top-left-radius:  var(--th-radius-2xl, 20px) !important;
+    border-top-right-radius: var(--th-radius-2xl, 20px) !important;
   }
 }
 
