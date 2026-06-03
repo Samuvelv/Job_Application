@@ -1,5 +1,13 @@
 // src/app/shared/components/confirm-dialog/confirm-dialog.component.ts
-import { Component, signal, OnInit } from '@angular/core';
+import {
+  Component,
+  signal,
+  OnInit,
+  ElementRef,
+  HostListener,
+  AfterViewInit,
+  inject,
+} from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ConfirmDialogService, ConfirmOptions, ConfirmResult } from '../../../core/services/confirm-dialog.service';
@@ -10,23 +18,52 @@ import { ConfirmDialogService, ConfirmOptions, ConfirmResult } from '../../../co
   imports: [CommonModule, FormsModule],
   template: `
     @if (visible()) {
-      <!-- Backdrop -->
-      <div class="modal-backdrop fade show" style="z-index:1050"></div>
+      <!-- Backdrop — click to dismiss (Stay / cancel) -->
+      <div
+        class="modal-backdrop-animated"
+        aria-hidden="true"
+        (click)="resolve(false)"
+      ></div>
 
-      <!-- Dialog -->
-      <div class="modal d-block" tabindex="-1" style="z-index:1055" role="dialog">
-        <div class="modal-dialog modal-dialog-centered">
-          <div class="modal-content confirm-dialog">
+      <!-- Dialog wrapper — keyboard trap root -->
+      <div
+        class="modal d-block confirm-dialog-modal"
+        tabindex="-1"
+        role="dialog"
+        aria-modal="true"
+        [attr.aria-labelledby]="dialogTitleId"
+        [attr.aria-describedby]="dialogBodyId"
+      >
+        <div class="modal-dialog modal-dialog-centered confirm-dialog-panel">
+          <div
+            class="modal-content confirm-dialog confirm-dialog--{{ variant() }}"
+            (click)="$event.stopPropagation()"
+          >
+
+            <!-- Header -->
             <div class="modal-header border-0 pb-0">
-              <div>
-                <div class="confirm-dialog__icon">
+              <div class="d-flex align-items-center gap-3">
+                <!-- Variant icon circle -->
+                <div class="confirm-dialog__icon" aria-hidden="true">
                   <i class="bi" [ngClass]="icon()"></i>
                 </div>
-                <h5 class="modal-title fw-semibold">{{ title() }}</h5>
+                <h5
+                  class="modal-title fw-bold mb-0"
+                  [id]="dialogTitleId"
+                >{{ title() }}</h5>
               </div>
+              <!-- Close × button — resolves as cancel (Stay) -->
+              <button
+                type="button"
+                class="btn-close"
+                aria-label="Close dialog"
+                (click)="resolve(false)"
+              ></button>
             </div>
-            <div class="modal-body pt-2">
-              <p class="text-muted mb-3">{{ message() }}</p>
+
+            <!-- Body -->
+            <div class="modal-body pt-2" [id]="dialogBodyId">
+              <p class="text-muted mb-3" style="line-height:1.65">{{ message() }}</p>
 
               @if (showDurationField()) {
                 <div class="mb-3">
@@ -78,23 +115,80 @@ import { ConfirmDialogService, ConfirmOptions, ConfirmResult } from '../../../co
                 </div>
               }
             </div>
+
+            <!-- Footer -->
             <div class="modal-footer border-0 pt-0 gap-2">
-              <button class="btn btn-outline-secondary btn-sm"
-                      (click)="resolve(false)">
+              <!-- Cancel — "Stay on Page" in the nav-guard context -->
+              <button
+                type="button"
+                class="btn btn-sm"
+                [ngClass]="cancelClass()"
+                (click)="resolve(false)"
+              >
                 {{ cancelLabel() }}
               </button>
-              <button class="btn btn-sm"
-                      [class]="confirmClass()"
-                      (click)="resolve(true)">
+              <!-- Confirm action button -->
+              <button
+                #confirmBtn
+                type="button"
+                class="btn btn-sm"
+                [ngClass]="confirmClass()"
+                (click)="resolve(true)"
+              >
                 {{ confirmLabel() }}
               </button>
             </div>
+
           </div>
         </div>
       </div>
     }
   `,
   styles: [`
+    /* ── Animated backdrop ──────────────────────────────────────────────────── */
+    .modal-backdrop-animated {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.55);
+      backdrop-filter: blur(3px);
+      -webkit-backdrop-filter: blur(3px);
+      z-index: 1050;
+      animation: backdrop-fade-in 0.2s ease forwards;
+    }
+
+    /* ── Modal positioning ──────────────────────────────────────────────────── */
+    .confirm-dialog-modal {
+      z-index: 1055;
+    }
+
+    .confirm-dialog-panel {
+      max-width: 480px;
+    }
+
+    /* ── Entry animation on the card ────────────────────────────────────────── */
+    .confirm-dialog {
+      animation: dialog-scale-in 0.22s cubic-bezier(0.34, 1.26, 0.64, 1) forwards;
+    }
+
+    @keyframes backdrop-fade-in {
+      from { opacity: 0; }
+      to   { opacity: 1; }
+    }
+
+    @keyframes dialog-scale-in {
+      from { opacity: 0; transform: scale(0.93) translateY(12px); }
+      to   { opacity: 1; transform: scale(1)    translateY(0);    }
+    }
+
+    /* Respect reduced-motion preferences */
+    @media (prefers-reduced-motion: reduce) {
+      .modal-backdrop-animated,
+      .confirm-dialog {
+        animation: none;
+      }
+    }
+
+    /* ── Form controls ──────────────────────────────────────────────────────── */
     .note-field-container {
       margin-bottom: 1rem;
     }
@@ -107,25 +201,30 @@ import { ConfirmDialogService, ConfirmOptions, ConfirmResult } from '../../../co
       color: var(--th-text, #111827);
     }
 
-    .form-control, .form-select {
+    .form-control,
+    .form-select {
       border-color: var(--th-border, #e5e7eb);
       font-size: 0.875rem;
       font-family: inherit;
     }
 
-    .form-control:focus, .form-select:focus {
-      border-color: #5046e5;
-      box-shadow: 0 0 0 0.2rem rgba(80, 70, 229, 0.25);
+    .form-control:focus,
+    .form-select:focus {
+      border-color: var(--th-primary, #5046e5);
+      box-shadow: 0 0 0 0.2rem rgba(80, 70, 229, 0.2);
     }
   `],
 })
-export class ConfirmDialogComponent implements OnInit {
+export class ConfirmDialogComponent implements OnInit, AfterViewInit {
+  // ── Signals ─────────────────────────────────────────────────────────────────
   visible          = signal(false);
   title            = signal('Are you sure?');
   message          = signal('This action cannot be undone.');
   confirmLabel     = signal('Confirm');
   cancelLabel      = signal('Cancel');
   confirmClass     = signal('btn-danger');
+  cancelClass      = signal('btn-outline-secondary');
+  variant          = signal<string>('danger');
   showNoteField    = signal(false);
   noteLabel        = signal('Admin Notes (Optional)');
   notePlaceholder  = signal('Add any additional notes...');
@@ -133,41 +232,94 @@ export class ConfirmDialogComponent implements OnInit {
   durationLabel    = signal('Extend Access Duration');
   icon             = signal('bi-exclamation-triangle-fill');
 
+  // ── Local state ─────────────────────────────────────────────────────────────
   noteText      = '';
   durationValue: number | null = null;
   durationUnit  = '';
   expiryPreview = '';
   durationError = '';
 
+  /** Unique IDs for ARIA attributes */
+  readonly dialogTitleId = `confirm-dialog-title-${Math.random().toString(36).slice(2)}`;
+  readonly dialogBodyId  = `confirm-dialog-body-${Math.random().toString(36).slice(2)}`;
+
   private resolveFn!: (value: ConfirmResult) => void;
 
-  constructor(private dialogService: ConfirmDialogService) {}
+  private readonly dialogService = inject(ConfirmDialogService);
+  private readonly el            = inject(ElementRef);
 
+  // ── Lifecycle ────────────────────────────────────────────────────────────────
   ngOnInit(): void {
     this.dialogService.register(this);
   }
 
+  ngAfterViewInit(): void { /* intentionally empty — focus handled in open() */ }
+
+  // ── ESC key — dismiss as cancel ─────────────────────────────────────────────
+  @HostListener('document:keydown.escape', ['$event'])
+  onEscape(event: KeyboardEvent): void {
+    if (this.visible()) {
+      event.preventDefault();
+      this.resolve(false);
+    }
+  }
+
+  // ── Tab key — focus trap within the modal ───────────────────────────────────
+  @HostListener('document:keydown.tab', ['$event'])
+  onTab(event: KeyboardEvent): void {
+    if (!this.visible()) return;
+
+    const focusable = this.getFocusableElements();
+    if (focusable.length === 0) return;
+
+    const first = focusable[0];
+    const last  = focusable[focusable.length - 1];
+
+    if (event.shiftKey) {
+      if (document.activeElement === first) {
+        event.preventDefault();
+        last.focus();
+      }
+    } else {
+      if (document.activeElement === last) {
+        event.preventDefault();
+        first.focus();
+      }
+    }
+  }
+
+  // ── Public API (called by ConfirmDialogService) ──────────────────────────────
   open(options: ConfirmOptions = {}): Promise<ConfirmResult> {
     this.title.set(options.title ?? 'Are you sure?');
     this.message.set(options.message ?? 'This action cannot be undone.');
     this.confirmLabel.set(options.confirmLabel ?? 'Confirm');
     this.cancelLabel.set(options.cancelLabel ?? 'Cancel');
     this.confirmClass.set(options.confirmClass ?? 'btn-danger');
+    this.cancelClass.set(options.cancelClass ?? 'btn-outline-secondary');
+    this.variant.set(options.variant ?? 'danger');
     this.showNoteField.set(options.showNoteField ?? false);
     this.noteLabel.set(options.noteLabel ?? 'Admin Notes (Optional)');
     this.notePlaceholder.set(options.notePlaceholder ?? 'Add any additional notes...');
     this.showDurationField.set(options.showDurationField ?? false);
     this.durationLabel.set(options.durationLabel ?? 'Extend Access Duration');
     this.icon.set(options.icon ?? 'bi-exclamation-triangle-fill');
+
+    // Reset transient state
     this.noteText      = '';
     this.durationValue = null;
     this.durationUnit  = '';
     this.expiryPreview = '';
     this.durationError = '';
+
     this.visible.set(true);
+
+    // Move focus into the modal on the next tick (after @if renders)
+    setTimeout(() => this.focusFirstElement(), 0);
+
     return new Promise<ConfirmResult>(resolve => { this.resolveFn = resolve; });
   }
 
+  // ── Duration preview helper ──────────────────────────────────────────────────
   updateExpiryPreview(): void {
     this.durationError = '';
     if (!this.durationValue || !this.durationUnit || this.durationValue < 1) {
@@ -193,6 +345,7 @@ export class ConfirmDialogComponent implements OnInit {
     return dt;
   }
 
+  // ── Resolution ───────────────────────────────────────────────────────────────
   resolve(value: boolean): void {
     if (value && this.showDurationField()) {
       if (!this.durationValue || this.durationValue < 1) {
@@ -207,10 +360,34 @@ export class ConfirmDialogComponent implements OnInit {
     this.visible.set(false);
     const result: ConfirmResult = {
       confirmed: value,
-      notes: this.showNoteField() && this.noteText ? this.noteText : undefined,
-      durationValue: this.showDurationField() ? (this.durationValue || null) : null,
-      durationUnit:  this.showDurationField() ? (this.durationUnit  || null) : null,
+      notes:         this.showNoteField()    && this.noteText     ? this.noteText                    : undefined,
+      durationValue: this.showDurationField() ? (this.durationValue || null)                         : null,
+      durationUnit:  this.showDurationField() ? (this.durationUnit  || null)                         : null,
     };
     this.resolveFn?.(result);
+  }
+
+  // ── Focus helpers ────────────────────────────────────────────────────────────
+  private focusFirstElement(): void {
+    const elements = this.getFocusableElements();
+    if (elements.length > 0) elements[0].focus();
+  }
+
+  private getFocusableElements(): HTMLElement[] {
+    const selector = [
+      'button:not([disabled])',
+      'input:not([disabled])',
+      'select:not([disabled])',
+      'textarea:not([disabled])',
+      'a[href]',
+      '[tabindex]:not([tabindex="-1"])',
+    ].join(', ');
+
+    const panel = this.el.nativeElement.querySelector('.confirm-dialog-panel') as HTMLElement | null;
+    if (!panel) return [];
+
+    const nodes = panel.querySelectorAll(selector);
+    return Array.from(nodes)
+      .filter((node): node is HTMLElement => node instanceof HTMLElement && node.offsetParent !== null);
   }
 }

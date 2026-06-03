@@ -356,16 +356,19 @@ body {
   }
 }
 
-[data-theme='dark'] .sidebar-link .bi-grid-1x2-fill      { color: #67e8f9; }
-[data-theme='dark'] .sidebar-link .bi-people-fill        { color: #86efac; }
-[data-theme='dark'] .sidebar-link .bi-person-circle      { color: #86efac; }
-[data-theme='dark'] .sidebar-link .bi-person-badge-fill  { color: #fbbf24; }
-[data-theme='dark'] .sidebar-link .bi-pencil-square      { color: #f9a8d4; }
-[data-theme='dark'] .sidebar-link .bi-pencil             { color: #f9a8d4; }
-[data-theme='dark'] .sidebar-link .bi-journal-text       { color: #a5b4fc; }
-[data-theme='dark'] .sidebar-link .bi-search             { color: #67e8f9; }
-[data-theme='dark'] .sidebar-link .bi-bookmark-star-fill { color: #fbbf24; }
-[data-theme='dark'] .sidebar-link .bi-envelope-fill      { color: #7dd3fc; }
+[data-theme='dark'] .sidebar-link .bi-grid-1x2-fill      { color: #67e8f9; }  // cyan-300
+[data-theme='dark'] .sidebar-link .bi-people-fill        { color: #86efac; }  // green-300
+[data-theme='dark'] .sidebar-link .bi-person-circle      { color: #86efac; }  // green-300
+[data-theme='dark'] .sidebar-link .bi-person-badge-fill  { color: #fbbf24; }  // amber-400
+[data-theme='dark'] .sidebar-link .bi-pencil-square      { color: #f9a8d4; }  // pink-300
+[data-theme='dark'] .sidebar-link .bi-pencil             { color: #f9a8d4; }  // pink-300
+[data-theme='dark'] .sidebar-link .bi-journal-text       { color: #a5b4fc; }  // indigo-300
+[data-theme='dark'] .sidebar-link .bi-search             { color: #67e8f9; }  // cyan-300
+[data-theme='dark'] .sidebar-link .bi-bookmark-star-fill { color: #fbbf24; }  // amber-400
+[data-theme='dark'] .sidebar-link .bi-envelope-fill      { color: #7dd3fc; }  // sky-300
+[data-theme='dark'] .sidebar-link .bi-briefcase-fill     { color: #fb923c; }  // orange-400 — Interest Requests
+[data-theme='dark'] .sidebar-link .bi-database-fill      { color: #c4b5fd; }  // violet-300 — Master Data
+[data-theme='dark'] .sidebar-link .bi-mortarboard-fill   { color: #fcd34d; }  // amber-300  — Volunteers
 
 [data-theme='dark'] .sidebar-link.active .bi-grid-1x2-fill,
 [data-theme='dark'] .sidebar-link.active .bi-people-fill,
@@ -376,7 +379,10 @@ body {
 [data-theme='dark'] .sidebar-link.active .bi-journal-text,
 [data-theme='dark'] .sidebar-link.active .bi-search,
 [data-theme='dark'] .sidebar-link.active .bi-bookmark-star-fill,
-[data-theme='dark'] .sidebar-link.active .bi-envelope-fill { color: #a5b4fc; filter: none; }
+[data-theme='dark'] .sidebar-link.active .bi-envelope-fill,
+[data-theme='dark'] .sidebar-link.active .bi-briefcase-fill,
+[data-theme='dark'] .sidebar-link.active .bi-database-fill,
+[data-theme='dark'] .sidebar-link.active .bi-mortarboard-fill { color: #a5b4fc; filter: none; }
 
 [data-theme='dark'] .sidebar-section-label { color: rgba(255,255,255,.32); }
 
@@ -515,16 +521,19 @@ body {
 }
 
 // Per-icon accent colors (light sidebar)
-.sidebar-link .bi-grid-1x2-fill       { color: #06b6d4; }
-.sidebar-link .bi-people-fill         { color: #10b981; }
-.sidebar-link .bi-person-circle       { color: #10b981; }
-.sidebar-link .bi-person-badge-fill   { color: #f59e0b; }
-.sidebar-link .bi-pencil-square       { color: #ec4899; }
-.sidebar-link .bi-pencil              { color: #ec4899; }
-.sidebar-link .bi-journal-text        { color: #6366f1; }
-.sidebar-link .bi-search              { color: #06b6d4; }
-.sidebar-link .bi-bookmark-star-fill  { color: #f59e0b; }
-.sidebar-link .bi-envelope-fill       { color: #0ea5e9; }
+.sidebar-link .bi-grid-1x2-fill       { color: #06b6d4; }  // cyan    — Dashboard
+.sidebar-link .bi-people-fill         { color: #10b981; }  // emerald — Candidates
+.sidebar-link .bi-person-circle       { color: #10b981; }  // emerald — My Profile
+.sidebar-link .bi-person-badge-fill   { color: #f59e0b; }  // amber   — Recruiters
+.sidebar-link .bi-pencil-square       { color: #ec4899; }  // pink    — Change Requests (admin)
+.sidebar-link .bi-pencil              { color: #ec4899; }  // pink    — Request Edit (candidate)
+.sidebar-link .bi-journal-text        { color: #6366f1; }  // indigo  — Audit Logs
+.sidebar-link .bi-search              { color: #06b6d4; }  // cyan    — Search Talent
+.sidebar-link .bi-bookmark-star-fill  { color: #f59e0b; }  // amber   — My Shortlist
+.sidebar-link .bi-envelope-fill       { color: #0ea5e9; }  // sky     — Contact Requests
+.sidebar-link .bi-briefcase-fill      { color: #f97316; }  // orange  — Interest Requests
+.sidebar-link .bi-database-fill       { color: #8b5cf6; }  // violet  — Master Data
+.sidebar-link .bi-mortarboard-fill    { color: #f59e0b; }  // amber   — Volunteers
 
 // Active state: use primary color for all icons
 .sidebar-link.active .bi-grid-1x2-fill,
@@ -536,7 +545,10 @@ body {
 .sidebar-link.active .bi-journal-text,
 .sidebar-link.active .bi-search,
 .sidebar-link.active .bi-bookmark-star-fill,
-.sidebar-link.active .bi-envelope-fill { color: var(--th-primary); filter: none; }
+.sidebar-link.active .bi-envelope-fill,
+.sidebar-link.active .bi-briefcase-fill,
+.sidebar-link.active .bi-database-fill,
+.sidebar-link.active .bi-mortarboard-fill { color: var(--th-primary); filter: none; }
 
 // Old class kept for backward compatibility (in case any component references it)
 .sidebar-nav-link {
@@ -5099,16 +5111,59 @@ body {
     margin-bottom: .5rem;
   }
 
+  // ── Variant: warning (amber) — used by the unsaved-changes nav guard ──────
   &--warning::before { display: none; }
   &--warning .confirm-dialog__icon {
     background: var(--th-warning-soft);
     color: var(--th-warning);
   }
 
+  // ── Variant: info (blue) ──────────────────────────────────────────────────
   &--info::before { display: none; }
   &--info .confirm-dialog__icon {
     background: var(--th-info-soft);
     color: var(--th-info);
+  }
+
+  // ── Variant: success (green) ──────────────────────────────────────────────
+  &--success::before { display: none; }
+  &--success .confirm-dialog__icon {
+    background: var(--th-success-soft, #dcfce7);
+    color: var(--th-success, #16a34a);
+  }
+
+  // ── Variant: primary (indigo) ─────────────────────────────────────────────
+  &--primary::before { display: none; }
+  &--primary .confirm-dialog__icon {
+    background: var(--th-primary-soft, #eef2ff);
+    color: var(--th-primary, #5046e5);
+  }
+
+  // ── Icon — remove old bottom margin, use flex gap in header instead ───────
+  &__icon { flex-shrink: 0; margin-bottom: 0; }
+}
+
+// ── Confirm dialog responsive — bottom sheet on mobile ──────────────────────
+@media (max-width: 576px) {
+  .confirm-dialog-panel {
+    margin: 0 !important;
+    max-width: 100% !important;
+    width: 100% !important;
+  }
+
+  .confirm-dialog-modal .modal-dialog {
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    min-height: 100%;
+    margin: 0;
+  }
+
+  .confirm-dialog.modal-content {
+    border-bottom-left-radius:  0 !important;
+    border-bottom-right-radius: 0 !important;
+    border-top-left-radius:  var(--th-radius-2xl, 20px) !important;
+    border-top-right-radius: var(--th-radius-2xl, 20px) !important;
   }
 }
 

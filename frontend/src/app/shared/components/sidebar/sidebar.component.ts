@@ -73,8 +73,8 @@ export class SidebarComponent implements OnDestroy {
           { labelKey: 'NAV.edit_requests',      icon: 'bi-pencil-square',     route: '/admin/edit-requests',       badge: () => this.notifications.totalEditRequestsPending() },
           { labelKey: 'NAV.contact_requests',   icon: 'bi-envelope-fill',     route: '/admin/contact-submissions', badge: () => this.notifications.pendingContactRequests() },
           { labelKey: 'NAV.interest_requests',  icon: 'bi-briefcase-fill',    route: '/admin/interest-requests',   badge: () => this.notifications.pendingInterestRequests() },
-          { labelKey: 'NAV.volunteers',         icon: 'bi-mortarboard-fill',  route: '/admin/volunteers', iconColor: '#f59e0b' },
-          { labelKey: 'NAV.master_data',        icon: 'bi-database',          route: '/admin/master' },
+          { labelKey: 'NAV.volunteers',         icon: 'bi-mortarboard-fill',  route: '/admin/volunteers' },
+          { labelKey: 'NAV.master_data',        icon: 'bi-database-fill',     route: '/admin/master' },
           { labelKey: 'NAV.audit_logs',         icon: 'bi-journal-text',      route: '/admin/audit-logs' },
         ];
       case 'candidate': {

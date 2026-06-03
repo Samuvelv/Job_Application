@@ -311,6 +311,7 @@ export class CandidateRegisterComponent implements OnInit, OnDestroy, HasUnsaved
   createdLoginId = 0;
   draftSaved    = false;
   draftRestored = false;
+  private _submitSuccess = false;
 
   pendingPhoto?:  File;
   pendingResume?: File;
@@ -548,14 +549,14 @@ export class CandidateRegisterComponent implements OnInit, OnDestroy, HasUnsaved
 
   ngOnDestroy(): void {
     this.draftSub?.unsubscribe();
-    // Flush any pending draft on navigation/destroy
-    if (this.isDirty()) this.saveDraft();
+    // Flush any pending draft on navigation/destroy — skip if form was successfully submitted
+    if (!this._submitSuccess && this.isDirty()) this.saveDraft();
     this._objectUrls.forEach(u => URL.revokeObjectURL(u));
   }
 
   @HostListener('window:beforeunload', ['$event'])
   onBeforeUnload(event: BeforeUnloadEvent): void {
-    if (this.isDirty()) {
+    if (!this._submitSuccess && this.isDirty()) {
       this.saveDraft();
       event.preventDefault();
     }
@@ -1108,6 +1109,10 @@ export class CandidateRegisterComponent implements OnInit, OnDestroy, HasUnsaved
         const id = res.candidate.id;
         await this.uploadPendingFiles(id);
         this.clearDraft();
+        this.form.markAsPristine();       // Clear dirty state so the route guard allows navigation
+        this._submitSuccess = true;       // Prevent ngOnDestroy/beforeunload from re-saving draft
+        this.draftSub?.unsubscribe();     // Stop auto-save during the redirect delay
+        this.draftRestored = false;       // Dismiss the draft-restored banner if visible
         this.loading    = false;
         this.createdCandidateNumber = res.candidate.candidate_number ?? '';
         this.createdLoginId         = res.candidate.login_id ?? 0;

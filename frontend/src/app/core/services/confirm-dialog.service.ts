@@ -6,7 +6,16 @@ export interface ConfirmOptions {
   message?: string;
   confirmLabel?: string;
   cancelLabel?: string;
+  /** CSS class(es) for the confirm/primary action button. Default: 'btn-danger' */
   confirmClass?: string;
+  /** CSS class(es) for the cancel/secondary action button. Default: 'btn-outline-secondary' */
+  cancelClass?: string;
+  /**
+   * Visual variant for the icon circle.
+   * 'danger' | 'warning' | 'info' | 'success' | 'primary'
+   * Default: 'danger'
+   */
+  variant?: 'danger' | 'warning' | 'info' | 'success' | 'primary';
   showNoteField?: boolean;
   noteLabel?: string;
   notePlaceholder?: string;

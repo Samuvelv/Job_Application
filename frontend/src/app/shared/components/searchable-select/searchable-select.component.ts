@@ -113,7 +113,14 @@ export class SearchableSelectComponent implements OnChanges, OnInit, ControlValu
 
   ngOnChanges(changes: SimpleChanges) {
     if (changes['options']) {
-      this.filteredOpts.set(this.options);
+      // If the user has an active search query, re-apply it against the new options
+      // instead of blindly resetting to the full list — prevents CD cycles from
+      // wiping the filter every time the parent re-evaluates its template expression.
+      if (this.query) {
+        this.onQuery(this.query);
+      } else {
+        this.filteredOpts.set(this.options);
+      }
     }
   }
 
