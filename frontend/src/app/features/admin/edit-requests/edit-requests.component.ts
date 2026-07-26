@@ -1,6 +1,7 @@
 // src/app/features/admin/edit-requests/edit-requests.component.ts
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { TranslateModule } from '@ngx-translate/core';
 import { ReactiveFormsModule, FormBuilder, FormGroup, FormsModule } from '@angular/forms';
 import { Subject, debounceTime, distinctUntilChanged, takeUntil } from 'rxjs';
 import { EditRequestService } from '../../../core/services/edit-request.service';
@@ -26,7 +27,7 @@ import { EditChangesModalComponent } from '../../../shared/components/edit-reque
 @Component({
   selector: 'app-edit-requests',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, FormsModule, PageHeaderComponent, EmptyStateComponent, EditRequestCardComponent, ContactRequestCardComponent, SearchableSelectComponent, EditChangesModalComponent],
+  imports: [CommonModule, TranslateModule, ReactiveFormsModule, FormsModule, PageHeaderComponent, EmptyStateComponent, EditRequestCardComponent, ContactRequestCardComponent, SearchableSelectComponent, EditChangesModalComponent],
   styles: [`
     .filter-bar {
       background: var(--th-surface);
@@ -2348,3 +2349,4 @@ export class EditRequestsComponent implements OnInit, OnDestroy {
     return Array.from({ length: end - start + 1 }, (_, i) => start + i);
   }
 }
+

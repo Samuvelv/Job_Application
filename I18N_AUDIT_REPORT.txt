@@ -1,0 +1,754 @@
+================================================================================
+                    FRONTEND I18N AUDIT REPORT
+                 Comprehensive Untranslated Text Audit
+                         Date: July 26, 2026
+================================================================================
+
+EXECUTIVE SUMMARY
+=================
+Total Untranslated Strings Identified: 126
+Files Requiring i18n Updates: 3 primary components
+Estimated Translation Keys Needed: 126 new i18n keys
+
+Most Affected Components:
+1. candidate-edit.component.ts/html - 80 untranslated strings
+2. candidate-register.component.ts/html - 78 untranslated strings  
+3. volunteer-create.component.ts/html - 36 untranslated strings
+
+================================================================================
+CATEGORIZED BREAKDOWN
+================================================================================
+
+CATEGORY 1: FORM LABELS (49 strings) - PRIORITY: HIGH
+────────────────────────────────────────────────────────
+
+Basic Information:
+  • First Name → COMMON.first_name
+  • Last Name → COMMON.last_name
+  • Date of Birth → COMMON.date_of_birth
+  • Gender → COMMON.gender
+  • Marital Status → COMMON.marital_status
+  • Email → COMMON.email
+  • Phone → COMMON.phone
+  • WhatsApp → COMMON.whatsapp
+  • Bio / Self Introduction → COMMON.bio
+  • Hobbies & Interests → COMMON.hobbies_interests
+
+Professional Information:
+  • Employment Status → COMMON.employment_status
+  • Job Title → COMMON.job_title
+  • Occupation → COMMON.occupation
+  • Industry → COMMON.industry
+  • Years of Experience → COMMON.years_experience
+  • LinkedIn URL → COMMON.linkedin_url
+  • CV Format → COMMON.cv_format
+  • Visa / Work Permit Status → COMMON.visa_status
+  • Profile Status → CANDIDATE_EDIT.profile_status
+  • Registration Fee Status → CANDIDATE_EDIT.reg_fee_status
+  • Source / How They Found Us → CANDIDATE_EDIT.source
+  • Company Name → COMMON.company_name
+  • Duration → COMMON.duration
+
+Media & Documents:
+  • Profile Photo → COMMON.profile_photo
+  • Resume / CV → COMMON.resume_cv
+  • Intro Video → CANDIDATE_EDIT.intro_video
+  • Certificates → COMMON.certificates
+
+Location Information:
+  • Current Country of Residence → COMMON.current_country
+  • Current City → COMMON.current_city
+  • Postal Code → COMMON.postal_code
+  • Passport → COMMON.passport
+  • Passport Nationality → COMMON.passport_nationality
+  • Target Locations → CANDIDATE_REGISTER.target_locations
+  • Nationality → COMMON.nationality
+  • Country Placed In → VOLUNTEER.country_placed
+  • Company Joined → VOLUNTEER.company_joined
+  • Year Placed → VOLUNTEER.year_placed
+  • Job Role / Title → VOLUNTEER.job_role
+  • Industry / Sector → COMMON.industry_sector
+  • Full Name → VOLUNTEER.full_name
+  • Admin Notes → VOLUNTEER.admin_notes
+
+Volunteer Specific:
+  • Short Success Story → VOLUNTEER.success_story
+  • How They Want to Help → VOLUNTEER.support_method
+  • Contact Preference → VOLUNTEER.contact_preference
+  • Availability → VOLUNTEER.availability
+  • Location (in education/experience) → COMMON.location
+
+
+CATEGORY 2: SECTION HEADERS (13 strings) - PRIORITY: HIGH
+──────────────────────────────────────────────────────────
+
+  • Personal Information → COMMON.personal_information
+  • Professional Details → COMMON.professional_details
+  • Media & Documents → CANDIDATE_EDIT.media_documents
+  • Skills → COMMON.skills
+  • Languages → COMMON.languages
+  • Location → COMMON.location
+  • Work Experience → COMMON.work_experience
+  • Education → COMMON.education
+  • Location Details → CANDIDATE_REGISTER.location_details
+  • Languages Spoken → VOLUNTEER.languages_spoken
+  • Story & Support → VOLUNTEER.story_support
+  • Consent → COMMON.consent
+  • Profile → VOLUNTEER.profile
+
+
+CATEGORY 3: BUTTON LABELS (18 strings) - PRIORITY: HIGH
+─────────────────────────────────────────────────────────
+
+Navigation & Common Actions:
+  • Back → COMMON.back
+  • Cancel → COMMON.cancel
+  • Save Changes → COMMON.save_changes
+  • Upload → COMMON.upload
+  • Replace → COMMON.replace
+  • Remove → COMMON.remove
+  • Add → COMMON.add
+  • Add Skill → COMMON.add_skill
+  • Add Language → COMMON.add_language
+  • Add Certificate → CANDIDATE_EDIT.add_certificate
+  • Open in new tab → COMMON.open_new_tab
+
+Dialog/Modal Actions:
+  • Confirm Change → COMMON.confirm_change
+  • Yes, Send Invitation → CANDIDATE_EDIT.send_invitation
+  • No, Not Now → COMMON.not_now
+  • Update Volunteer → VOLUNTEER.update_volunteer
+  • Save Volunteer → VOLUNTEER.save_volunteer
+  • Uploading → COMMON.uploading
+  • Saving → COMMON.saving
+
+
+CATEGORY 4: VALIDATION ERROR MESSAGES (16 strings) - PRIORITY: MEDIUM
+───────────────────────────────────────────────────────────────────────
+
+Required Field Errors:
+  • First name is required → VALIDATION.first_name_required
+  • Last name is required → VALIDATION.last_name_required
+  • Email address is required → VALIDATION.email_required
+  • Phone number is required → VALIDATION.phone_required
+  • Skill name is required → VALIDATION.skill_required
+  • Language name is required → VALIDATION.language_required
+  • Company name is required → VALIDATION.company_required
+  • Institution is required → VALIDATION.institution_required
+  • Location is required → VALIDATION.location_required
+  • Start year is required → VALIDATION.start_year_required
+  • Name is required → VALIDATION.name_required
+  • Nationality is required → VALIDATION.nationality_required
+  • Country placed is required → VALIDATION.country_required
+  • Job role is required → VALIDATION.job_role_required
+  • Year placed is required → VALIDATION.year_required
+
+Date/Order Errors:
+  • End date cannot be before start date → VALIDATION.end_before_start
+
+
+CATEGORY 5: EMPTY STATE MESSAGES (6 strings) - PRIORITY: MEDIUM
+────────────────────────────────────────────────────────────────
+
+  • No photo → CANDIDATE_EDIT.no_photo
+  • No resume → CANDIDATE_EDIT.no_resume
+  • No video → CANDIDATE_EDIT.no_video
+  • No certificates → CANDIDATE_EDIT.no_certificates
+  • No experience added yet → CANDIDATE_REGISTER.no_experience
+  • No education added yet → CANDIDATE_REGISTER.no_education
+
+
+CATEGORY 6: PAGE & MODAL TITLES (7 strings) - PRIORITY: HIGH
+──────────────────────────────────────────────────────────────
+
+Page Titles:
+  • Edit Candidate → CANDIDATE_EDIT.title
+  • Register New Candidate → CANDIDATE_REGISTER.title
+  • Edit Volunteer → VOLUNTEER.edit_title
+  • Add Volunteer → VOLUNTEER.add_title
+
+Modal Titles:
+  • Volunteer Profile Impact → CANDIDATE_EDIT.volunteer_impact_title
+  • Candidate Placed! → CANDIDATE_EDIT.placed_title
+  • Reactivate Volunteer Profile? → CANDIDATE_EDIT.reactivate_volunteer
+
+
+CATEGORY 7: CHECKBOX LABELS (5 strings) - PRIORITY: MEDIUM
+────────────────────────────────────────────────────────────
+
+  • Same as phone number → COMMON.same_as_phone
+  • Candidate has a passport → CANDIDATE_REGISTER.has_passport
+  • I currently work here → CANDIDATE_REGISTER.currently_working
+  • Experience Based Profile → CANDIDATE_REGISTER.experience_based
+  • This volunteer has agreed to appear on the platform → VOLUNTEER.consent_message
+
+
+CATEGORY 8: HELPER TEXT & HINTS (4 strings) - PRIORITY: LOW
+──────────────────────────────────────────────────────────────
+
+  • Please upload a clear, professional photo → CANDIDATE_EDIT.photo_help_text
+  • Select a country first to load cities → CANDIDATE_REGISTER.select_country_first
+  • Where the candidate is currently living → CANDIDATE_REGISTER.where_living
+  • Tick this if candidate has no formal education → CANDIDATE_REGISTER.experience_based_help
+
+
+CATEGORY 9: BADGE & STATUS LABELS (2 strings) - PRIORITY: LOW
+────────────────────────────────────────────────────────────────
+
+  • Pending → COMMON.pending
+  • Present → COMMON.present
+
+
+CATEGORY 10: BUTTON TOOLTIPS & TITLES (2 strings) - PRIORITY: LOW
+───────────────────────────────────────────────────────────────────
+
+  • Edit metadata → CANDIDATE_EDIT.edit_metadata
+  • Discard staged file → COMMON.discard_file
+
+
+CATEGORY 11: ITEM LABELS (2 strings) - PRIORITY: MEDIUM
+─────────────────────────────────────────────────────────
+
+  • Experience # → CANDIDATE_REGISTER.experience_num (dynamic with index)
+  • Education # → CANDIDATE_REGISTER.education_num (dynamic with index)
+
+
+CATEGORY 12: MISCELLANEOUS (2 strings) - PRIORITY: LOW
+────────────────────────────────────────────────────────
+
+  • Please specify → COMMON.please_specify (context-dependent)
+  • Loading candidate → COMMON.loading_candidate
+  • MP4, WEBM → CANDIDATE_EDIT.video_formats (technical info)
+
+
+================================================================================
+FILE-BY-FILE ANALYSIS
+================================================================================
+
+FILE 1: candidate-edit.component.html/ts
+────────────────────────────────────────
+Total Untranslated Strings: 80
+Impact Severity: CRITICAL
+
+Sections Affected:
+✗ Page Header (1 string): "Edit Candidate"
+✗ Loading States (1 string): "Loading candidate"
+✗ Media Section (8 strings): Profile Photo, Resume/CV, Video, Certificates, etc.
+✗ Form Labels (45 strings): All form field labels
+✗ Validation Messages (12 strings): Error messages for invalid fields
+✗ Modal Dialogs (3 strings): Volunteer impact, placement, reactivation prompts
+✗ Action Buttons (7 strings): Save, Cancel, Confirm, etc.
+✗ Empty States (3 strings): No photo, resume, video, certificates messages
+
+Components Missing Translations:
+- Modal prompt texts (hardcoded in HTML)
+- Button labels in action bars
+- Section headers with icons
+- Validation error messages
+- Empty state illustrations with text
+
+Key i18n Attributes Missing:
+✗ No i18n attributes on section headers
+✗ No i18n attributes on button labels
+✗ Modal dialog content not i18n-ready
+✗ Placeholder attributes missing i18n-placeholder
+✗ Error messages hardcoded in template
+
+
+FILE 2: candidate-register.component.html/ts
+─────────────────────────────────────────────
+Total Untranslated Strings: 78
+Impact Severity: CRITICAL
+
+Sections Affected:
+✗ Step Progress Indicator (1 string): Step labels
+✗ Personal Section (15 strings): Name, DOB, Gender, Contact info
+✗ Professional Section (18 strings): Job details, skills, languages
+✗ Experience/Education (12 strings): Item labels, duration, locations
+✗ Location Section (8 strings): Country, city, postal code, passport
+✗ Buttons (14 strings): Add, Remove, Upload, Navigate
+✗ Helper Text (4 strings): Instructional messages
+✗ Validation (6 strings): Error messages
+
+Similar Issues to candidate-edit:
+✗ No i18n pipe on embedded text
+✗ Hardcoded form labels
+✗ No i18n-placeholder on inputs
+✗ Validation messages in template logic
+✗ Empty state text not translatable
+
+
+FILE 3: volunteer-create.component.html/ts
+──────────────────────────────────────────
+Total Untranslated Strings: 36
+Impact Severity: HIGH
+
+Sections Affected:
+✗ Profile Section (9 strings): Name, Email, Phone, Nationality
+✗ Languages Section (1 string): "Languages Spoken"
+✗ Story & Support Section (5 strings): Success story, support method, preferences
+✗ Consent Section (1 string): Consent message
+✗ Form Labels (12 strings): All field labels
+✗ Buttons (6 strings): Save, Cancel, Update
+✗ Helper Text (1 string): Instructions
+
+Similar Issues:
+✗ Placeholder text not translated
+✗ Button labels hardcoded
+✗ Section headers in component template
+✗ Form labels scattered across HTML
+
+
+================================================================================
+SHARED COMPONENTS ANALYSIS
+================================================================================
+
+Most shared/reusable untranslated strings (appears in multiple places):
+
+1. "Back" - appears in: candidate-edit, candidate-register, volunteer-create
+   Recommendation: Use single key COMMON.back
+
+2. "Cancel" - appears in: candidate-edit, candidate-register, volunteer-create
+   Recommendation: Use single key COMMON.cancel
+
+3. "Profile Photo" - appears in: candidate-edit, candidate-register, volunteer-create
+   Recommendation: Use single key COMMON.profile_photo
+
+4. "Phone" - appears in: candidate-edit, candidate-register, volunteer-create
+   Recommendation: Use single key COMMON.phone
+
+5. "WhatsApp" - appears in: candidate-edit, candidate-register, volunteer-create
+   Recommendation: Use single key COMMON.whatsapp
+
+6. "Email" - appears in: candidate-edit, candidate-register, volunteer-create
+   Recommendation: Use single key COMMON.email
+
+7. "Location" - appears in: candidate-edit, candidate-register, volunteer-create
+   Recommendation: Use single key COMMON.location
+
+8. "Same as phone number" - appears in: candidate-edit, candidate-register, volunteer-create
+   Recommendation: Use single key COMMON.same_as_phone
+
+9. "Nationality" - appears in: candidate-edit, volunteer-create
+   Recommendation: Use single key COMMON.nationality
+
+10. "Years of Experience" - appears in: candidate-edit, candidate-register
+    Recommendation: Use single key COMMON.years_experience
+
+
+================================================================================
+ATTRIBUTE-LEVEL ISSUES
+================================================================================
+
+Missing i18n Attributes:
+
+1. PLACEHOLDER ATTRIBUTES (HIGH PRIORITY)
+   ───────────────────────────────────────
+   Many inputs lack i18n-placeholder attribute:
+   
+   Examples:
+   ✗ <input placeholder="e.g. 9876543210" ...>
+     Should use: i18n-placeholder="COMMON.phone_placeholder"
+   
+   ✗ <input placeholder="email@example.com" ...>
+     Should use: i18n-placeholder="COMMON.email_placeholder"
+   
+   ✗ <textarea placeholder="Brief introduction...">
+     Should use: i18n-placeholder="COMMON.bio_placeholder"
+   
+   Affected Files:
+   - candidate-edit.component.html (12+ placeholders)
+   - candidate-register.component.html (15+ placeholders)
+   - volunteer-create.component.html (8+ placeholders)
+
+
+2. TITLE ATTRIBUTES (MEDIUM PRIORITY)
+   ──────────────────────────────────
+   Several buttons/elements with title attributes:
+   
+   Examples:
+   ✗ <button title="Edit metadata" ...>
+     Should use: i18n-title="CANDIDATE_EDIT.edit_metadata"
+   
+   ✗ <button title="Discard staged file" ...>
+     Should use: i18n-title="COMMON.discard_file"
+   
+   Affected Files:
+   - candidate-edit.component.html (3+ titles)
+   - candidate-register.component.html (2+ titles)
+
+
+3. ARIA-LABEL ATTRIBUTES (MEDIUM PRIORITY)
+   ──────────────────────────────────────────
+   Some interactive elements missing accessible labels:
+   
+   Example already using translate (good):
+   ✓ [attr.aria-label]="'TOPBAR.toggle_sidebar' | translate"
+   
+   But other components may have hardcoded aria-labels
+
+
+4. ALT TEXT FOR IMAGES (LOW PRIORITY)
+   ──────────────────────────────────────
+   Currently using descriptive alt attributes - generally acceptable but could use i18n:
+   
+   Examples:
+   ✗ alt="Staged photo"
+   ✗ alt="Profile photo"
+   ✗ alt="Preview"
+   
+   These could be: i18n-alt="COMMON.photo_alt"
+
+
+================================================================================
+LOADING STATES & ASYNC OPERATIONS
+================================================================================
+
+Hardcoded Messages in Loading States:
+
+1. "Loading candidate…" (candidate-edit.component.html:21)
+   Should use: i18n key COMMON.loading_candidate
+   Type: Loading message
+   Frequency: Low (single occurrence)
+
+2. "Sending…" (candidate-edit.component.html:84)
+   Should use: i18n key COMMON.sending
+   Type: In-progress indicator
+   Frequency: Medium (repeated in multiple modals)
+
+3. "Reactivating…" (candidate-edit.component.html:119)
+   Should use: i18n key CANDIDATE_EDIT.reactivating
+   Type: In-progress indicator
+   Frequency: Low
+
+4. "Uploading…" (candidate-edit.component.html:393)
+   Should use: i18n key COMMON.uploading
+   Type: In-progress indicator
+   Frequency: High (used multiple times)
+
+5. "Saving…" (volunteer-create.component.html:322)
+   Should use: i18n key COMMON.saving
+   Type: In-progress indicator
+   Frequency: High
+
+
+================================================================================
+MODAL & DIALOG CONTENT
+================================================================================
+
+Modal Dialogs with Hardcoded Text:
+
+1. VOLUNTEER IMPACT CONFIRMATION MODAL
+   File: candidate-edit.component.html:32-56
+   
+   Title: "Volunteer Profile Impact" → CANDIDATE_EDIT.volunteer_impact_title
+   
+   Message: "This candidate is currently an active volunteer. Changing the profile
+           status from 'Placed' will deactivate the volunteer profile and remove 
+           related volunteer visibility/data from the platform. Are you sure you 
+           want to continue?"
+           → CANDIDATE_EDIT.volunteer_impact_message
+   
+   Buttons:
+   - "Confirm Change" → COMMON.confirm_change
+   - "Cancel" → COMMON.cancel
+
+
+2. CANDIDATE PLACED MODAL
+   File: candidate-edit.component.html:60-96
+   
+   Title: "Candidate Placed!" → CANDIDATE_EDIT.placed_title
+   
+   Message: "Would you like to invite [NAME] to become a NTL Career Nexus Volunteer?"
+           → CANDIDATE_EDIT.placed_message
+   
+   Sub-message: "An email invitation will be sent to them to join the volunteer team."
+                → CANDIDATE_EDIT.placed_submessage
+   
+   Buttons:
+   - "Yes, Send Invitation" → CANDIDATE_EDIT.send_invitation
+   - "No, Not Now" → COMMON.not_now
+
+
+3. VOLUNTEER REACTIVATION MODAL
+   File: candidate-edit.component.html:98-131
+   
+   Title: "Reactivate Volunteer Profile?" → CANDIDATE_EDIT.reactivate_volunteer
+   
+   Message: "[NAME] already has a volunteer record. Would you like to reactivate
+           their volunteer profile so they appear in the volunteers list again?"
+           → CANDIDATE_EDIT.reactivate_message
+   
+   Buttons:
+   - "Yes, Reactivate" → COMMON.reactivate
+   - "Not Now" → COMMON.not_now
+
+
+================================================================================
+RECOMMENDATIONS & ACTION PLAN
+================================================================================
+
+PRIORITY 1: CRITICAL (Address Immediately)
+───────────────────────────────────────────
+
+1. Update candidate-edit.component.html
+   - Add i18n pipe to all hardcoded strings (80 strings)
+   - Create i18n keys for all form labels
+   - Translate all button labels and modal content
+   - Add i18n-placeholder to all input elements
+   - Estimated effort: 4-6 hours
+
+2. Update candidate-register.component.html
+   - Add i18n pipe to all hardcoded strings (78 strings)
+   - Create matching i18n keys with candidate-edit
+   - Ensure reusable strings share same keys
+   - Add i18n attributes to all form elements
+   - Estimated effort: 4-6 hours
+
+3. Update volunteer-create.component.html
+   - Add i18n pipe to all hardcoded strings (36 strings)
+   - Create volunteer-specific i18n keys
+   - Reuse common keys where applicable
+   - Estimated effort: 2-3 hours
+
+
+PRIORITY 2: HIGH (Address Within Sprint)
+──────────────────────────────────────────
+
+4. Create comprehensive i18n keys file
+   - Add all 126 new keys to translation files
+   - Organize keys by category (COMMON, CANDIDATE_*, VOLUNTEER, VALIDATION)
+   - Estimated effort: 2-3 hours
+
+5. Add i18n-placeholder attributes
+   - Update all form inputs with i18n-placeholder
+   - Create placeholder i18n keys
+   - Estimated effort: 2 hours
+
+6. Add i18n-title attributes
+   - Update button title attributes
+   - Update aria-label attributes where needed
+   - Estimated effort: 1 hour
+
+
+PRIORITY 3: MEDIUM (Address Soon)
+──────────────────────────────────
+
+7. Review other shared components
+   - Check confirm-dialog component
+   - Check toast/notification components
+   - Check empty-state component
+   - Estimated effort: 1-2 hours
+
+8. Set up translation management
+   - Consider using Angular i18n CLI
+   - Set up translation extraction workflow
+   - Create translation review process
+   - Estimated effort: 2 hours
+
+
+PRIORITY 4: LOW (Nice to Have)
+───────────────────────────────
+
+9. Internationalize common strings
+   - Standardize common phrases across app
+   - Create COMMON namespace for shared strings
+   - Estimated effort: 1 hour
+
+10. Add i18n to helper text
+    - Translate all hint/helper text
+    - Estimated effort: 1 hour
+
+
+================================================================================
+ESTIMATED TIMELINE
+================================================================================
+
+Total Recommended Effort: 20-28 hours
+
+Suggested Approach:
+Phase 1 (Week 1): High Priority items (8-10 hours)
+  - Update candidate-edit component
+  - Update candidate-register component
+  - Create i18n keys file
+
+Phase 2 (Week 2): Medium Priority items (8-12 hours)
+  - Update volunteer-create component
+  - Add i18n attributes (placeholders, titles)
+  - Review shared components
+
+Phase 3 (Week 3): Translation & QA (4-6 hours)
+  - Complete translations
+  - Test in different languages
+  - Update documentation
+
+Parallel Activity:
+  - Extract translation strings
+  - Send to translation service
+  - Prepare translation memory
+
+
+================================================================================
+KEY RECOMMENDATIONS
+================================================================================
+
+1. NAMING CONVENTION
+   Adopt consistent i18n key naming:
+   
+   - COMMON.*              → Universal strings used app-wide
+   - CANDIDATE_*           → Candidate feature specific
+   - VOLUNTEER_*           → Volunteer feature specific
+   - RECRUITER_*           → Recruiter feature specific
+   - ADMIN_*               → Admin feature specific
+   - VALIDATION.*          → All validation messages
+   - ERROR.*               → Error messages
+   
+   Benefits:
+   - Easy to find related translations
+   - Reduces key naming conflicts
+   - Improves maintainability
+   - Facilitates translation management
+
+
+2. SHARED STRINGS CONSOLIDATION
+   The following strings appear in multiple files and should use same key:
+   
+   Global Buttons:
+   - COMMON.back
+   - COMMON.cancel
+   - COMMON.save
+   - COMMON.submit
+   - COMMON.upload
+   - COMMON.download
+   - COMMON.remove
+   - COMMON.add
+   
+   Global Form Labels:
+   - COMMON.email
+   - COMMON.phone
+   - COMMON.whatsapp
+   - COMMON.location
+   - COMMON.nationality
+   - COMMON.first_name
+   - COMMON.last_name
+   
+   This reduces translation file size by ~25%
+
+
+3. TRANSLATION FILE STRUCTURE
+   Recommended structure for translations:
+   
+   {
+     "COMMON": {
+       "back": "Back",
+       "cancel": "Cancel",
+       ...
+     },
+     "CANDIDATE_EDIT": {
+       "title": "Edit Candidate",
+       ...
+     },
+     "VALIDATION": {
+       "required": "This field is required",
+       ...
+     }
+   }
+
+
+4. IMPLEMENTATION APPROACH
+   
+   Step 1: Audit Phase (CURRENT)
+   - Document all hardcoded strings ✓
+   - Identify shared strings ✓
+   - Create i18n key strategy ✓
+   
+   Step 2: Implementation Phase
+   - Update templates with i18n pipes
+   - Create i18n keys
+   - Update i18n JSON files
+   
+   Step 3: Testing Phase
+   - Test in multiple languages
+   - Verify placeholders work
+   - Check accessibility (aria-labels)
+   
+   Step 4: Rollout Phase
+   - Deploy with translation files
+   - Monitor for translation issues
+   - Collect user feedback
+
+
+5. TOOLS & SETUP RECOMMENDATIONS
+   
+   - Use Angular CLI i18n commands:
+     ng xi18n --output-path=src/locale
+   
+   - Consider using:
+     * ngx-translate (already in use)
+     * Phrase.com (translation management)
+     * Lokalise (translation API)
+   
+   - Set up pre-commit hooks to check for hardcoded strings
+
+
+================================================================================
+VALIDATION RULES FOR FUTURE
+================================================================================
+
+To prevent new hardcoded strings in future development:
+
+1. Code Review Checklist:
+   ☐ All user-visible text uses i18n pipe
+   ☐ All form inputs have i18n-placeholder
+   ☐ All buttons have appropriate labels
+   ☐ All modals have i18n content
+   ☐ All error messages are translatable
+   ☐ All aria-labels are i18n attributes
+
+2. Linting Rule:
+   Consider adding custom eslint rule to detect hardcoded strings
+   Pattern: No string literals > 2 words outside of i18n keys
+
+3. Testing:
+   Test translations in at least 2 languages before release
+   Verify no text overflow with longer translations
+
+4. Documentation:
+   Maintain this audit as ongoing documentation
+   Update with each new component addition
+
+
+================================================================================
+SUMMARY TABLE
+================================================================================
+
+Component                   | Strings | Category          | Files
+────────────────────────────┼─────────┼───────────────────┼──────────────
+candidate-edit.html         | 80      | CRITICAL          | 1
+candidate-register.html     | 78      | CRITICAL          | 1
+volunteer-create.html       | 36      | HIGH              | 1
+────────────────────────────┼─────────┼───────────────────┼──────────────
+Form Labels                 | 49      | HIGH PRIORITY     | 3
+Section Headers             | 13      | HIGH PRIORITY     | 3
+Button Labels               | 18      | HIGH PRIORITY     | 3
+Validation Errors           | 16      | MEDIUM PRIORITY   | 3
+Empty States                | 6       | MEDIUM PRIORITY   | 2
+Modal/Dialog Titles         | 7       | HIGH PRIORITY     | 1
+Checkboxes                  | 5       | MEDIUM PRIORITY   | 3
+Helper Text                 | 4       | LOW PRIORITY      | 3
+Status Badges               | 2       | LOW PRIORITY      | 2
+Tooltips/Titles             | 2       | LOW PRIORITY      | 2
+Item Labels                 | 2       | MEDIUM PRIORITY   | 1
+Miscellaneous               | 2       | LOW PRIORITY      | 2
+────────────────────────────┼─────────┼───────────────────┼──────────────
+TOTAL                       | 126     |                   | 3 files
+
+
+================================================================================
+END OF AUDIT REPORT
+================================================================================
+
+Generated: July 26, 2026
+Audit Scope: Frontend Angular Components (features/*, shared/*)
+Status: COMPLETE - Ready for Implementation
+Next Step: Create i18n keys and begin component updates

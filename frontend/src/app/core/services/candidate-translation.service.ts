@@ -1,176 +1,368 @@
-// src/app/core/services/candidate-translation.service.ts
+// frontend/src/app/core/services/candidate-translation.service.ts
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable, of } from 'rxjs';
-import { map, tap } from 'rxjs/operators';
-import { environment } from '../../../environments/environment';
-import { Candidate, Experience } from '../models/candidate.model';
+import { BehaviorSubject, Observable } from 'rxjs';
 
-// ── Language descriptor (mirrors LanguageService.SUPPORTED_LANGUAGES) ─────────
+export interface CacheEntry {
+  data: Record<string, string>;
+  timestamp: number;
+  expiresAt: number;
+  language: string;
+}
+
+export interface TranslationRequest {
+  fields: Record<string, string>;
+  targetLang: string;
+  targetLangName: string;
+}
+
+export interface TranslationResponse {
+  translated: Record<string, string>;
+}
+
 export interface TranslateLanguage {
   code: string;
-  name: string;  // English name sent to GPT as targetLangName
-  label: string; // Display label shown in the UI dropdown
+  label: string;
   flag: string;
+  dir: 'ltr' | 'rtl';
 }
 
 export const TRANSLATE_LANGUAGES: TranslateLanguage[] = [
-  { code: 'fr', name: 'French',     label: 'French',     flag: '🇫🇷' },
-  { code: 'de', name: 'German',     label: 'German',     flag: '🇩🇪' },
-  { code: 'es', name: 'Spanish',    label: 'Spanish',    flag: '🇪🇸' },
-  { code: 'pt', name: 'Portuguese', label: 'Portuguese', flag: '🇵🇹' },
-  { code: 'it', name: 'Italian',    label: 'Italian',    flag: '🇮🇹' },
-  { code: 'nl', name: 'Dutch',      label: 'Dutch',      flag: '🇳🇱' },
-  { code: 'ru', name: 'Russian',    label: 'Russian',    flag: '🇷🇺' },
-  { code: 'zh', name: 'Chinese',    label: 'Chinese',    flag: '🇨🇳' },
-  { code: 'ja', name: 'Japanese',   label: 'Japanese',   flag: '🇯🇵' },
-  { code: 'ko', name: 'Korean',     label: 'Korean',     flag: '🇰🇷' },
-  { code: 'ar', name: 'Arabic',     label: 'Arabic',     flag: '🇸🇦' },
-  { code: 'hi', name: 'Hindi',      label: 'Hindi',      flag: '🇮🇳' },
-  { code: 'tr', name: 'Turkish',    label: 'Turkish',    flag: '🇹🇷' },
-  { code: 'pl', name: 'Polish',     label: 'Polish',     flag: '🇵🇱' },
+  // English excluded - profiles display in English by default
+  // { code: 'en', label: 'English', flag: '🇬🇧', dir: 'ltr' },
+  { code: 'fr', label: 'Français', flag: '🇫🇷', dir: 'ltr' },
+  { code: 'de', label: 'Deutsch', flag: '🇩🇪', dir: 'ltr' },
+  { code: 'es', label: 'Español', flag: '🇪🇸', dir: 'ltr' },
+  { code: 'pt', label: 'Português', flag: '🇵🇹', dir: 'ltr' },
+  { code: 'it', label: 'Italiano', flag: '🇮🇹', dir: 'ltr' },
+  { code: 'nl', label: 'Nederlands', flag: '🇳🇱', dir: 'ltr' },
+  { code: 'ru', label: 'Русский', flag: '🇷🇺', dir: 'ltr' },
+  { code: 'zh', label: '中文', flag: '🇨🇳', dir: 'ltr' },
+  { code: 'ja', label: '日本語', flag: '🇯🇵', dir: 'ltr' },
+  { code: 'ko', label: '한국어', flag: '🇰🇷', dir: 'ltr' },
+  { code: 'ar', label: 'العربية', flag: '🇸🇦', dir: 'rtl' },
+  { code: 'hi', label: 'हिन्दी', flag: '🇮🇳', dir: 'ltr' },
+  { code: 'tr', label: 'Türkçe', flag: '🇹🇷', dir: 'ltr' },
+  { code: 'pl', label: 'Polski', flag: '🇵🇱', dir: 'ltr' },
 ];
 
-// ── Field key builders ─────────────────────────────────────────────────────────
-// Deterministic key format so applyTranslation can map values back precisely.
-
-function expDescKey(i: number)    { return `exp_${i}_description`; }
-function expReasonKey(i: number)  { return `exp_${i}_reason`; }
-function hobbyKey(i: number)      { return `hobby_${i}`; }
-
-// ── Service ───────────────────────────────────────────────────────────────────
-@Injectable({ providedIn: 'root' })
+@Injectable({
+  providedIn: 'root',
+})
 export class CandidateTranslationService {
+  private readonly CACHE_PREFIX = 'candidate_';
+  private readonly CACHE_VERSION = 'v1';
+  private readonly CACHE_TTL_MS = 24 * 60 * 60 * 1000; // 24 hours
+  private readonly API_ENDPOINT = '/api/v1/translate';
 
-  private readonly api = `${environment.apiUrl}/translate`;
-
-  /** In-memory cache: key = `${candidateId}_${langCode}` → translated Candidate clone */
-  private cache = new Map<string, Candidate>();
+  // Observables for UI state
+  isTranslating$ = new BehaviorSubject<boolean>(false);
+  translationError$ = new BehaviorSubject<string | null>(null);
 
   constructor(private http: HttpClient) {}
 
-  // ── Public API ──────────────────────────────────────────────────────────────
-
   /**
-   * Translate a candidate's free-form text fields into the target language.
+   * Translate candidate profile fields to target language
+   * Uses localStorage cache with 24h TTL
+   * Returns an Observable (RxJS compatible)
    *
-   * - Returns from cache immediately on second call for the same candidate + language.
-   * - Emits a new Candidate object (shallow clone) — the original is never mutated.
-   * - If a field fails to translate, the original English value is preserved (graceful fallback handled server-side).
+   * @param candidate - Candidate object with all profile data
+   * @param language - TranslateLanguage object with code and name
+   * @returns Observable of translated candidate object or fallback on error
    */
   translate(
-    candidate: Candidate,
-    lang: TranslateLanguage,
-  ): Observable<Candidate> {
-    const cacheKey = `${candidate.id}_${lang.code}`;
+    candidate: any,
+    language: TranslateLanguage
+  ): Observable<any> {
+    return new Observable((observer) => {
+      // Don't translate if target language is English
+      if (language.code === 'en') {
+        observer.next(candidate);
+        observer.complete();
+        return;
+      }
 
-    // Cache hit — return immediately
-    const cached = this.cache.get(cacheKey);
-    if (cached) return of(cached);
+      // Check cache first
+      const cached = this.getFromCache(candidate.id, language.code);
+      if (cached && !this.isCacheExpired(cached)) {
+        console.log(`[Translation] Cache HIT for candidate ${candidate.id} → ${language.code}`);
+        this.translationError$.next(null);
+        const merged = this.mergeTranslations(candidate, cached.data);
+        observer.next(merged);
+        observer.complete();
+        return;
+      }
 
-    // Extract only the free-form translatable fields
-    const fields = this.extractFields(candidate);
+      // Fetch from API
+      this.isTranslating$.next(true);
+      this.translationError$.next(null);
 
-    // If there is nothing translatable, return original unchanged
-    if (Object.keys(fields).length === 0) {
-      return of(candidate);
-    }
+      const fields = this.extractTranslatableFields(candidate);
+      const request: TranslationRequest = {
+        fields,
+        targetLang: language.code,
+        targetLangName: language.label,
+      };
 
-    return this.http.post<{ translated: Record<string, string> }>(this.api, {
-      fields,
-      targetLang:     lang.code,
-      targetLangName: lang.name,
-    }).pipe(
-      map(res => this.applyTranslation(candidate, res.translated)),
-      tap(translated => this.cache.set(cacheKey, translated)),
-    );
+      this.http
+        .post<TranslationResponse>('/api/v1/translate', request)
+        .subscribe({
+          next: (response) => {
+            if (!response?.translated) {
+              throw new Error('Invalid response from translation API');
+            }
+
+            // Cache the translation
+            this.cacheTranslation(candidate.id, language.code, response.translated);
+
+            console.log(
+              `[Translation] API SUCCESS for candidate ${candidate.id} → ${language.code}`
+            );
+
+            const merged = this.mergeTranslations(candidate, response.translated);
+            this.isTranslating$.next(false);
+            observer.next(merged);
+            observer.complete();
+          },
+          error: (error: any) => {
+            const errorMsg = this.extractErrorMessage(error);
+            console.error(`[Translation] API FAILED:`, errorMsg);
+            this.translationError$.next(errorMsg);
+            this.isTranslating$.next(false);
+
+            // Fallback: return original candidate in English
+            observer.next(candidate);
+            observer.complete();
+          },
+        });
+    });
   }
-
-  /** Clear the entire in-memory cache (e.g. on logout or profile update). */
-  clearCache(): void {
-    this.cache.clear();
-  }
-
-  // ── Private helpers ─────────────────────────────────────────────────────────
 
   /**
-   * Pull only free-form text fields from the candidate.
-   *
-   * NOT included (correct per the prompt template rules):
-   *   - Names, email, phone, dates, numbers
-   *   - job_title, occupation, industry  (professional terms / already in i18n OPTIONS)
-   *   - company_name, institution, degree, field_of_study  (proper nouns)
-   *   - skill_name, certificate names, language names  (technical / proper nouns)
-   *   - city, country, nationality  (geographic proper nouns)
-   *   - employment_status, visa_status  (enum codes mapped via existing i18n)
+   * Extract translatable fields from candidate object
+   * Filters out non-translatable content (IDs, dates, proper nouns)
    */
-  private extractFields(candidate: Candidate): Record<string, string> {
+  extractTranslatableFields(candidate: any): Record<string, string> {
     const fields: Record<string, string> = {};
 
     // Bio
-    if (candidate.bio?.trim()) {
-      fields['bio'] = candidate.bio.trim();
+    if (candidate.bio) {
+      fields['bio'] = candidate.bio;
     }
 
-    // Work experience — description + reason_for_leaving
-    candidate.experience?.forEach((exp, i) => {
-      if (exp.description?.trim()) {
-        fields[expDescKey(i)] = exp.description.trim();
-      }
-      if (exp.reason_for_leaving?.trim()) {
-        fields[expReasonKey(i)] = exp.reason_for_leaving.trim();
-      }
-    });
+    // Work experiences
+    if (Array.isArray(candidate.experiences)) {
+      candidate.experiences.forEach((exp: any, idx: number) => {
+        if (exp.description) {
+          fields[`exp_${idx}_description`] = exp.description;
+        }
+        if (exp.reasonForLeaving) {
+          fields[`exp_${idx}_reasonForLeaving`] = exp.reasonForLeaving;
+        }
+      });
+    }
+
+    // Educations
+    if (Array.isArray(candidate.educations)) {
+      candidate.educations.forEach((edu: any, idx: number) => {
+        if (edu.description) {
+          fields[`edu_${idx}_description`] = edu.description;
+        }
+      });
+    }
 
     // Hobbies
-    candidate.hobbies?.forEach((hobby, i) => {
-      if (typeof hobby === 'string' && hobby.trim()) {
-        fields[hobbyKey(i)] = hobby.trim();
-      }
-    });
+    if (Array.isArray(candidate.hobbies)) {
+      candidate.hobbies.forEach((hobby: string, idx: number) => {
+        if (hobby) {
+          fields[`hobby_${idx}`] = hobby;
+        }
+      });
+    }
+
+    // Certifications
+    if (Array.isArray(candidate.certifications)) {
+      candidate.certifications.forEach((cert: any, idx: number) => {
+        if (cert.description) {
+          fields[`cert_${idx}_description`] = cert.description;
+        }
+      });
+    }
+
+    // Volunteer experiences
+    if (Array.isArray(candidate.volunteerExperiences)) {
+      candidate.volunteerExperiences.forEach((vol: any, idx: number) => {
+        if (vol.description) {
+          fields[`vol_${idx}_description`] = vol.description;
+        }
+      });
+    }
 
     return fields;
   }
 
   /**
-   * Overlay translated values onto a shallow clone of the original candidate.
-   * The original candidate object is never mutated.
+   * Merge translated fields back into candidate object
    */
-  private applyTranslation(
-    candidate: Candidate,
-    translated: Record<string, string>,
-  ): Candidate {
-    // Shallow clone the top-level object
-    const clone: Candidate = { ...candidate };
+  mergeTranslations(
+    candidate: any,
+    translated: Record<string, string>
+  ): any {
+    const merged = { ...candidate };
 
     // Bio
-    if (translated['bio'] !== undefined) {
-      clone.bio = translated['bio'];
+    if (translated['bio']) {
+      merged.bio = translated['bio'];
     }
 
-    // Work experience — clone the array and each translated entry
-    if (candidate.experience?.length) {
-      clone.experience = candidate.experience.map((exp, i) => {
-        const descKey   = expDescKey(i);
-        const reasonKey = expReasonKey(i);
-        const hasChange = translated[descKey] !== undefined || translated[reasonKey] !== undefined;
-        if (!hasChange) return exp;
+    // Experiences
+    if (Array.isArray(merged.experiences)) {
+      merged.experiences = merged.experiences.map((exp: any, idx: number) => ({
+        ...exp,
+        description: translated[`exp_${idx}_description`] || exp.description,
+        reasonForLeaving: translated[`exp_${idx}_reasonForLeaving`] || exp.reasonForLeaving,
+      }));
+    }
 
-        const clonedExp: Experience = { ...exp };
-        if (translated[descKey]   !== undefined) clonedExp.description       = translated[descKey];
-        if (translated[reasonKey] !== undefined) clonedExp.reason_for_leaving = translated[reasonKey];
-        return clonedExp;
+    // Educations
+    if (Array.isArray(merged.educations)) {
+      merged.educations = merged.educations.map((edu: any, idx: number) => ({
+        ...edu,
+        description: translated[`edu_${idx}_description`] || edu.description,
+      }));
+    }
+
+    // Hobbies
+    if (Array.isArray(merged.hobbies)) {
+      merged.hobbies = merged.hobbies.map((hobby: string, idx: number) => {
+        return translated[`hobby_${idx}`] || hobby;
       });
     }
 
-    // Hobbies — clone the array with translated values
-    if (candidate.hobbies?.length) {
-      clone.hobbies = candidate.hobbies.map((hobby, i) => {
-        const key = hobbyKey(i);
-        return translated[key] !== undefined ? translated[key] : hobby;
-      });
+    // Certifications
+    if (Array.isArray(merged.certifications)) {
+      merged.certifications = merged.certifications.map((cert: any, idx: number) => ({
+        ...cert,
+        description: translated[`cert_${idx}_description`] || cert.description,
+      }));
     }
 
-    return clone;
+    // Volunteer experiences
+    if (Array.isArray(merged.volunteerExperiences)) {
+      merged.volunteerExperiences = merged.volunteerExperiences.map(
+        (vol: any, idx: number) => ({
+          ...vol,
+          description: translated[`vol_${idx}_description`] || vol.description,
+        })
+      );
+    }
+
+    return merged;
+  }
+
+  /**
+   * Clear all translation caches (e.g., on logout)
+   */
+  clearAllCaches(): void {
+    const keys = Object.keys(localStorage);
+    keys.forEach((key) => {
+      if (key.startsWith(this.CACHE_PREFIX) && key.endsWith(this.CACHE_VERSION)) {
+        localStorage.removeItem(key);
+      }
+    });
+    console.log('[Translation] All caches cleared');
+  }
+
+  /**
+   * Clear translation cache for a specific candidate
+   */
+  clearCandidateCache(candidateId: string): void {
+    const keys = Object.keys(localStorage);
+    keys.forEach((key) => {
+      if (
+        key.startsWith(`${this.CACHE_PREFIX}${candidateId}_`) &&
+        key.endsWith(this.CACHE_VERSION)
+      ) {
+        localStorage.removeItem(key);
+      }
+    });
+    console.log(`[Translation] Cache cleared for candidate ${candidateId}`);
+  }
+
+  // ─────────────────────────────────────────────────────────────────────────────
+  // Private Methods
+  // ─────────────────────────────────────────────────────────────────────────────
+
+  private getFromCache(candidateId: string, language: string): CacheEntry | null {
+    const key = this.getCacheKey(candidateId, language);
+    const cached = localStorage.getItem(key);
+
+    if (!cached) {
+      return null;
+    }
+
+    try {
+      return JSON.parse(cached) as CacheEntry;
+    } catch {
+      console.warn(`[Translation] Failed to parse cache for key: ${key}`);
+      localStorage.removeItem(key);
+      return null;
+    }
+  }
+
+  private cacheTranslation(
+    candidateId: string,
+    language: string,
+    data: Record<string, string>
+  ): void {
+    const key = this.getCacheKey(candidateId, language);
+    const now = Date.now();
+
+    const entry: CacheEntry = {
+      data,
+      timestamp: now,
+      expiresAt: now + this.CACHE_TTL_MS,
+      language,
+    };
+
+    try {
+      localStorage.setItem(key, JSON.stringify(entry));
+      console.log(`[Translation] Cached for candidate ${candidateId} → ${language}`);
+    } catch (error) {
+      console.warn(`[Translation] Failed to cache translation:`, error);
+    }
+  }
+
+  private isCacheExpired(entry: CacheEntry): boolean {
+    return Date.now() > entry.expiresAt;
+  }
+
+  private getCacheKey(candidateId: string, language: string): string {
+    return `${this.CACHE_PREFIX}${candidateId}_${language}_${this.CACHE_VERSION}`;
+  }
+
+  private extractErrorMessage(error: any): string {
+    if (error?.error?.message) {
+      return error.error.message;
+    }
+
+    if (error?.statusText) {
+      if (error.status === 429) {
+        return 'Too many translation requests. Please wait a moment.';
+      }
+      if (error.status === 503) {
+        return 'Translation service is temporarily unavailable.';
+      }
+      if (error.status === 401) {
+        return 'Authentication required. Please log in again.';
+      }
+      return `Error: ${error.statusText}`;
+    }
+
+    if (error?.message) {
+      return error.message;
+    }
+
+    return 'An unknown translation error occurred.';
   }
 }

@@ -1,6 +1,7 @@
 // src/app/features/admin/recruiter-profile/recruiter-profile-page.component.ts
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { TranslateModule } from '@ngx-translate/core';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { RecruiterService } from '../../../core/services/recruiter.service';
 import { Recruiter, ShortlistEntry } from '../../../core/models/recruiter.model';
@@ -10,7 +11,7 @@ import { ConfirmDialogService } from '../../../core/services/confirm-dialog.serv
 @Component({
   selector: 'app-recruiter-profile-page',
   standalone: true,
-  imports: [CommonModule, RouterLink],
+  imports: [CommonModule, TranslateModule, RouterLink],
   template: `
     <!-- Back + actions row -->
     <div class="d-flex align-items-center justify-content-between mb-4 gap-2 flex-wrap">
@@ -694,3 +695,4 @@ export class RecruiterProfilePageComponent implements OnInit {
     });
   }
 }
+

@@ -57,7 +57,7 @@ const envSchema = z.object({
   // OPENAI_API_KEY must be set to enable the /api/v1/translate endpoint.
   // Leave blank to disable translation (endpoint will return 503).
   OPENAI_API_KEY: z.string().optional(),
-  OPENAI_MODEL:   z.string().default('gpt-4o-mini'),
+  OPENAI_MODEL:   z.string().default('gpt-3.5-turbo'),
 });
 
 const parsed = envSchema.safeParse(process.env);

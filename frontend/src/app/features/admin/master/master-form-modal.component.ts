@@ -3,6 +3,7 @@
 // Driven entirely by MasterTableConfig — no per-table code needed.
 import { Component, Input, Output, EventEmitter, OnInit, OnChanges, SimpleChanges } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { TranslateModule } from '@ngx-translate/core';
 import { ReactiveFormsModule, FormBuilder, FormGroup, Validators, AbstractControl } from '@angular/forms';
 import { MasterTableConfig, MasterFieldDef } from './master-table.config';
 import { AdminMasterService, MasterRecord } from '../../../core/services/admin-master.service';
@@ -16,7 +17,7 @@ export type { MasterRecord } from '../../../core/services/admin-master.service';
 @Component({
   selector: 'app-master-form-modal',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, SearchableSelectComponent],
+  imports: [CommonModule, TranslateModule, ReactiveFormsModule, SearchableSelectComponent],
   template: `
     @if (visible) {
       <!-- Backdrop -->
@@ -280,3 +281,4 @@ export class MasterFormModalComponent implements OnInit, OnChanges {
     this.closed.emit();
   }
 }
+

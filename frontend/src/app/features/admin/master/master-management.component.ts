@@ -3,6 +3,7 @@
 // Route: /admin/master?table=<key>
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { TranslateModule } from '@ngx-translate/core';
 import { ReactiveFormsModule, FormControl } from '@angular/forms';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { Subject } from 'rxjs';
@@ -20,7 +21,7 @@ import { ConfirmDialogService } from '../../../core/services/confirm-dialog.serv
   selector: 'app-master-management',
   standalone: true,
   imports: [
-    CommonModule,
+    CommonModule, TranslateModule,
     ReactiveFormsModule,
     RouterModule,
     PageHeaderComponent,
@@ -491,3 +492,4 @@ export class MasterManagementComponent implements OnInit, OnDestroy {
     });
   }
 }
+

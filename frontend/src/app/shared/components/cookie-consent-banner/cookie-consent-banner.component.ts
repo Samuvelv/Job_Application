@@ -1,12 +1,13 @@
 // src/app/shared/components/cookie-consent-banner/cookie-consent-banner.component.ts
 import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { TranslateModule } from '@ngx-translate/core';
 import { CookieConsentService } from '../../../core/services/cookie-consent.service';
 
 @Component({
   selector: 'app-cookie-consent-banner',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, TranslateModule],
   template: `
     @if (consent.consentGiven()) {
       <!-- Floating cookie icon — persistent access point once consent is given -->
@@ -14,8 +15,8 @@ import { CookieConsentService } from '../../../core/services/cookie-consent.serv
         class="ccb-fab"
         type="button"
         (click)="openCustomize()"
-        aria-label="Manage cookie preferences"
-        title="Manage Cookies">
+        [attr.aria-label]="('COOKIE_CONSENT.manage_cookies' | translate)"
+        [title]="('COOKIE_CONSENT.manage_cookies' | translate)">
         <i class="bi bi-cookie" aria-hidden="true"></i>
       </button>
     }
@@ -34,12 +35,9 @@ import { CookieConsentService } from '../../../core/services/cookie-consent.serv
               <i class="bi bi-cookie"></i>
             </div>
             <div class="ccb__text">
-              <p class="ccb__title">We use cookies</p>
+              <p class="ccb__title">{{ 'COOKIE_CONSENT.title' | translate }}</p>
               <p class="ccb__desc">
-                We use cookies and similar technologies to keep you signed in, remember your
-                preferences, and improve your experience. Essential and authentication cookies
-                are always active — they are required for the application to work.
-                You can customise which optional cookies you allow.
+                {{ 'COOKIE_CONSENT.description' | translate }}
               </p>
             </div>
           </div>
@@ -50,22 +48,22 @@ import { CookieConsentService } from '../../../core/services/cookie-consent.serv
               class="btn btn-outline-secondary btn-sm ccb__btn"
               type="button"
               (click)="openCustomize()"
-              aria-label="Customise cookie preferences">
-              <i class="bi bi-sliders me-1"></i>Customise
+              [attr.aria-label]="('COOKIE_CONSENT.customize' | translate)">
+              <i class="bi bi-sliders me-1"></i>{{ 'COOKIE_CONSENT.customize' | translate }}
             </button>
             <button
               class="btn btn-outline-secondary btn-sm ccb__btn"
               type="button"
               (click)="rejectNonEssential()"
-              aria-label="Reject non-essential cookies">
-              Reject Non-Essential
+              [attr.aria-label]="('COOKIE_CONSENT.reject_non_essential' | translate)">
+              {{ 'COOKIE_CONSENT.reject_non_essential' | translate }}
             </button>
             <button
               class="btn btn-primary btn-sm ccb__btn ccb__btn--accept"
               type="button"
               (click)="acceptAll()"
-              aria-label="Accept all cookies">
-              <i class="bi bi-check2-circle me-1"></i>Accept All
+              [attr.aria-label]="('COOKIE_CONSENT.accept_all' | translate)">
+              <i class="bi bi-check2-circle me-1"></i>{{ 'COOKIE_CONSENT.accept_all' | translate }}
             </button>
           </div>
 

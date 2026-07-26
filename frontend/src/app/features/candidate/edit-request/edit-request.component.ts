@@ -6,6 +6,7 @@ import {
   FormArray, Validators, AbstractControl, ValidationErrors, ValidatorFn,
 } from '@angular/forms';
 import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
+import { TranslateModule } from '@ngx-translate/core';
 import { CandidateService } from '../../../core/services/candidate.service';
 import { EditRequestService } from '../../../core/services/edit-request.service';
 import { Candidate } from '../../../core/models/candidate.model';
@@ -198,7 +199,7 @@ function makePostalCodeGroupValidator(countryCtrl: string, postalCtrl: string): 
 @Component({
   selector: 'app-edit-request',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, PageHeaderComponent, SearchableSelectComponent, ChipMultiSelectComponent],
+  imports: [CommonModule, ReactiveFormsModule, TranslateModule, PageHeaderComponent, SearchableSelectComponent, ChipMultiSelectComponent],
   template: `
     <app-page-header
       title="Request Profile Edit"

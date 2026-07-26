@@ -1,6 +1,7 @@
 // src/app/features/admin/candidate-profile/candidate-profile-page.component.ts
 import { Component, OnInit, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { TranslateModule } from '@ngx-translate/core';
 import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { NgbModal, NgbModalRef } from '@ng-bootstrap/ng-bootstrap';
@@ -26,7 +27,7 @@ const STATUS_CONFIG: Record<ReferralStatus, { label: string; badgeClass: string 
 @Component({
   selector: 'app-candidate-profile-page',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, RouterLink, CandidateProfileComponent, SearchableSelectComponent],
+  imports: [CommonModule, TranslateModule, ReactiveFormsModule, RouterLink, CandidateProfileComponent, SearchableSelectComponent],
   template: `
     <!-- Header row: back + actions -->
     <div class="d-flex align-items-center justify-content-between mb-3 gap-2">
@@ -437,3 +438,5 @@ export class CandidateProfilePageComponent implements OnInit {
     });
   }
 }
+
+

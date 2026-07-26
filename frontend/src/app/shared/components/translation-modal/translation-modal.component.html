@@ -1,0 +1,133 @@
+<!-- frontend/src/app/shared/components/translation-modal/translation-modal.component.html -->
+<div class="translation-modal-overlay" (click)="closeModal()">
+  <div class="translation-modal" (click)="$event.stopPropagation()" #modalContent>
+    <!-- Header -->
+    <div class="modal-header">
+      <div class="header-content">
+        <h3 class="modal-title">
+          {{ candidate.firstName }} {{ candidate.lastName }}
+        </h3>
+        <span class="language-badge">{{ languageName }}</span>
+      </div>
+      <button class="close-btn" (click)="closeModal()" title="Close modal">
+        <span>&times;</span>
+      </button>
+    </div>
+
+    <!-- Body -->
+    <div class="modal-body">
+      <!-- Bio Section -->
+      <section class="translation-section" *ngIf="candidate.bio">
+        <h4 class="section-title">{{ 'CANDIDATE_PROFILE.bio' | translate }}</h4>
+        <p class="translated-text">{{ candidate.bio }}</p>
+      </section>
+
+      <!-- Work Experience Section -->
+      <section class="translation-section" *ngIf="candidate.experiences?.length">
+        <h4 class="section-title">
+          {{ 'CANDIDATE_PROFILE.experience' | translate }}
+        </h4>
+        <div *ngFor="let exp of candidate.experiences; let idx = index" class="experience-block">
+          <h5 class="item-title">
+            {{ exp.jobTitle }}
+            <span class="company-name">@ {{ exp.companyName }}</span>
+          </h5>
+           <p class="item-duration">
+             {{ exp.startDate }}
+             <span *ngIf="exp.endDate">- {{ exp.endDate }}</span>
+             <span *ngIf="!exp.endDate">- {{ 'COMMON.present' | translate }}</span>
+           </p>
+          <p class="translated-text" *ngIf="exp.description">{{ exp.description }}</p>
+        </div>
+      </section>
+
+       <!-- Education Section -->
+       <section class="translation-section" *ngIf="candidate.educations?.length">
+         <h4 class="section-title">
+           {{ 'CANDIDATE_PROFILE.education' | translate }}
+         </h4>
+        <div *ngFor="let edu of candidate.educations; let idx = index" class="education-block">
+          <h5 class="item-title">
+            {{ edu.degree }}
+            <span class="institution-name">{{ edu.institution }}</span>
+          </h5>
+          <p class="translated-text" *ngIf="edu.description">{{ edu.description }}</p>
+        </div>
+      </section>
+
+       <!-- Certifications Section -->
+       <section class="translation-section" *ngIf="candidate.certifications?.length">
+         <h4 class="section-title">
+           {{ 'CANDIDATE_PROFILE.certifications' | translate }}
+         </h4>
+        <div *ngFor="let cert of candidate.certifications; let idx = index" class="certification-block">
+          <h5 class="item-title">
+            {{ cert.name }}
+            <span class="organization-name">{{ cert.issuingOrganization }}</span>
+          </h5>
+          <p class="translated-text" *ngIf="cert.description">{{ cert.description }}</p>
+        </div>
+      </section>
+
+       <!-- Volunteer Experience Section -->
+       <section
+         class="translation-section"
+         *ngIf="candidate.volunteerExperiences?.length"
+       >
+         <h4 class="section-title">
+           {{ 'CANDIDATE_PROFILE.volunteer_experience' | translate }}
+         </h4>
+        <div
+          *ngFor="let vol of candidate.volunteerExperiences; let idx = index"
+          class="volunteer-block"
+        >
+          <h5 class="item-title">{{ vol.organizationName }}</h5>
+          <p class="translated-text" *ngIf="vol.description">{{ vol.description }}</p>
+        </div>
+      </section>
+
+       <!-- Hobbies Section -->
+       <section class="translation-section" *ngIf="candidate.hobbies?.length">
+         <h4 class="section-title">
+           {{ 'CANDIDATE_PROFILE.hobbies' | translate }}
+         </h4>
+        <p class="translated-text hobbies-list">
+          {{ candidate.hobbies.join(', ') }}
+        </p>
+      </section>
+
+       <!-- No Content Message -->
+       <div class="empty-state" *ngIf="!candidate.bio && !candidate.experiences?.length">
+         <p>{{ 'COMMON.no_data' | translate }}</p>
+       </div>
+    </div>
+
+    <!-- Footer -->
+    <div class="modal-footer">
+       <!-- Copy Success Message -->
+       <div class="feedback-message" *ngIf="copySuccess">
+         <span class="success">✓ {{ 'COMMON.copied' | translate }}</span>
+       </div>
+
+      <!-- Copy Error Message -->
+      <div class="feedback-message" *ngIf="copyErrorMsg">
+        <span class="error">✗ {{ copyErrorMsg }}</span>
+      </div>
+
+       <!-- Action Buttons -->
+       <div class="button-group">
+         <button (click)="copyToClipboard()" class="btn btn-secondary btn-sm">
+           <span class="icon">📋</span>
+           {{ 'COMMON.copy' | translate }}
+         </button>
+         <button (click)="downloadAsText()" class="btn btn-secondary btn-sm">
+           <span class="icon">⬇️</span>
+           {{ 'COMMON.download' | translate }}
+         </button>
+         <button (click)="closeModal()" class="btn btn-primary btn-sm">
+           {{ 'COMMON.close' | translate }}
+         </button>
+       </div>
+    </div>
+  </div>
+</div>

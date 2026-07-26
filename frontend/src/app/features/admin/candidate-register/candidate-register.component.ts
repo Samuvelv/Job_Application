@@ -1,6 +1,7 @@
 // src/app/features/admin/candidate-register/candidate-register.component.ts
 import { Component, OnInit, OnDestroy, computed, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { TranslateModule } from '@ngx-translate/core';
 import {
   ReactiveFormsModule, FormBuilder, FormGroup,
   FormArray, Validators, AbstractControl, ValidationErrors, ValidatorFn,
@@ -297,7 +298,7 @@ function makePostalCodeGroupValidator(countryCtrl: string, postalCtrl: string): 
 @Component({
   selector: 'app-candidate-register',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, RouterLink, SearchableSelectComponent, ChipMultiSelectComponent, DragDropModule],
+  imports: [CommonModule, TranslateModule, ReactiveFormsModule, RouterLink, SearchableSelectComponent, ChipMultiSelectComponent, DragDropModule],
   templateUrl: './candidate-register.component.html',
 })
 export class CandidateRegisterComponent implements OnInit, OnDestroy, HasUnsavedChanges {
@@ -1144,3 +1145,4 @@ export class CandidateRegisterComponent implements OnInit, OnDestroy, HasUnsaved
     await Promise.allSettled(uploads);
   }
 }
+

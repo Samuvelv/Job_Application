@@ -1,6 +1,7 @@
 // src/app/features/admin/interest-requests/interest-requests.component.ts
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { TranslateModule } from '@ngx-translate/core';
 import { ReactiveFormsModule, FormBuilder, FormGroup, FormsModule } from '@angular/forms';
 import { Subject, debounceTime, distinctUntilChanged, takeUntil } from 'rxjs';
 import { InterestRequestService, InterestRequest, InterestRequestCounts, PaginatedInterestRequests } from '../../../core/services/interest-request.service';
@@ -13,7 +14,7 @@ import { NotificationService } from '../../../core/services/notification.service
 @Component({
   selector: 'app-interest-requests',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, FormsModule, PageHeaderComponent, EmptyStateComponent],
+  imports: [CommonModule, TranslateModule, ReactiveFormsModule, FormsModule, PageHeaderComponent, EmptyStateComponent],
   styles: [`
     /* ── Filter bar ───────────────────────────────────────────── */
     .filter-bar {
@@ -669,3 +670,4 @@ export class InterestRequestsComponent implements OnInit, OnDestroy {
     });
   }
 }
+

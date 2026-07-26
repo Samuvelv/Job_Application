@@ -10,12 +10,13 @@ import {
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { TranslateModule } from '@ngx-translate/core';
 import { ConfirmDialogService, ConfirmOptions, ConfirmResult } from '../../../core/services/confirm-dialog.service';
 
 @Component({
   selector: 'app-confirm-dialog',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, TranslateModule],
   template: `
     @if (visible()) {
       <!-- Backdrop — click to dismiss (Stay / cancel) -->
@@ -56,7 +57,7 @@ import { ConfirmDialogService, ConfirmOptions, ConfirmResult } from '../../../co
               <button
                 type="button"
                 class="btn-close"
-                aria-label="Close dialog"
+                [attr.aria-label]="('CONFIRM_DIALOG.close_dialog' | translate)"
                 (click)="resolve(false)"
               ></button>
             </div>
@@ -73,7 +74,7 @@ import { ConfirmDialogService, ConfirmOptions, ConfirmResult } from '../../../co
                       type="number"
                       class="form-control form-control-sm"
                       [(ngModel)]="durationValue"
-                      placeholder="e.g. 6"
+                      [placeholder]="'COMMON.example' | translate"
                       min="1"
                       style="width:100px;flex-shrink:0"
                       (ngModelChange)="updateExpiryPreview()"
@@ -84,17 +85,17 @@ import { ConfirmDialogService, ConfirmOptions, ConfirmResult } from '../../../co
                       style="max-width:140px"
                       (ngModelChange)="updateExpiryPreview()"
                     >
-                      <option value="" disabled selected>— Unit —</option>
-                      <option value="hours">Hours</option>
-                      <option value="days">Days</option>
-                      <option value="weeks">Weeks</option>
-                      <option value="months">Months</option>
-                      <option value="years">Years</option>
+                      <option value="" disabled selected>{{ 'CONFIRM_DIALOG.select_unit' | translate }}</option>
+                      <option value="hours">{{ 'CONFIRM_DIALOG.hours' | translate }}</option>
+                      <option value="days">{{ 'CONFIRM_DIALOG.days' | translate }}</option>
+                      <option value="weeks">{{ 'CONFIRM_DIALOG.weeks' | translate }}</option>
+                      <option value="months">{{ 'CONFIRM_DIALOG.months' | translate }}</option>
+                      <option value="years">{{ 'CONFIRM_DIALOG.years' | translate }}</option>
                     </select>
                   </div>
                   @if (expiryPreview) {
                     <div class="form-text text-info">
-                      <i class="bi bi-calendar-check me-1"></i>New expiry: <strong>{{ expiryPreview }}</strong>
+                      <i class="bi bi-calendar-check me-1"></i>{{ 'CONFIRM_DIALOG.new_expiry' | translate }} <strong>{{ expiryPreview }}</strong>
                     </div>
                   }
                   @if (durationError) {

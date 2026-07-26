@@ -1,6 +1,7 @@
 // src/app/features/admin/volunteers/volunteer-create.component.ts
 import { Component, OnInit, OnDestroy, computed, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { TranslateModule } from '@ngx-translate/core';
 import {
   ReactiveFormsModule, FormBuilder, FormGroup,
   Validators, AbstractControl, ValidationErrors, ValidatorFn,
@@ -78,7 +79,7 @@ function makePhoneGroupValidator(dialCtrl: string, numCtrl: string): ValidatorFn
   templateUrl: './volunteer-create.component.html',
   styleUrl: './volunteer-create.component.scss',
   imports: [
-    CommonModule,
+    CommonModule, TranslateModule,
     ReactiveFormsModule,
     RouterLink,
     PageHeaderComponent,
@@ -450,3 +451,4 @@ export class VolunteerCreateComponent implements OnInit, OnDestroy {
     return this.editId ? `/admin/volunteers/${this.editId}` : '/admin/volunteers';
   }
 }
+

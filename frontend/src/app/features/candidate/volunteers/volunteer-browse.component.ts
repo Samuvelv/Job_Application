@@ -1,6 +1,7 @@
 // src/app/features/candidate/volunteers/volunteer-browse.component.ts
 import { Component, OnInit } from '@angular/core';
 import { CommonModule }      from '@angular/common';
+import { TranslateModule } from '@ngx-translate/core';
 import { RouterLink }        from '@angular/router';
 import { catchError, of }    from 'rxjs';
 import { VolunteerService }  from '../../../core/services/volunteer.service';
@@ -11,7 +12,7 @@ import { EmptyStateComponent }  from '../../../shared/components/empty-state/emp
 @Component({
   selector: 'app-volunteer-browse',
   standalone: true,
-  imports: [CommonModule, RouterLink, PageHeaderComponent, EmptyStateComponent],
+  imports: [CommonModule, TranslateModule, RouterLink, PageHeaderComponent, EmptyStateComponent],
   template: `
     <app-page-header
       title="Our Volunteers"
@@ -237,3 +238,4 @@ export class VolunteerBrowseComponent implements OnInit {
     return name.split(' ').slice(0, 2).map(w => w[0]).join('').toUpperCase();
   }
 }
+

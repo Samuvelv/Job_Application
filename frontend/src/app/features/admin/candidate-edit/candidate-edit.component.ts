@@ -9,6 +9,7 @@ import {
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 import { CdkDragDrop, DragDropModule } from '@angular/cdk/drag-drop';
+import { TranslateModule } from '@ngx-translate/core';
 import { CandidateService } from '../../../core/services/candidate.service';
 import { ToastService } from '../../../core/services/toast.service';
 import { MasterDataService } from '../../../core/services/master-data.service';
@@ -267,7 +268,7 @@ function makePostalCodeGroupValidator(countryCtrl: string, postalCtrl: string): 
 @Component({
   selector: 'app-candidate-edit',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, RouterLink, SearchableSelectComponent, ChipMultiSelectComponent, DragDropModule],
+  imports: [CommonModule, ReactiveFormsModule, RouterLink, DragDropModule, TranslateModule, SearchableSelectComponent, ChipMultiSelectComponent],
   templateUrl: './candidate-edit.component.html',
 })
 export class CandidateEditComponent implements OnInit, OnDestroy {
@@ -1153,3 +1154,4 @@ export class CandidateEditComponent implements OnInit, OnDestroy {
     });
   }
 }
+

@@ -2,6 +2,7 @@
 import { Component, signal, OnInit, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router, RouterLink } from '@angular/router';
+import { TranslateModule } from '@ngx-translate/core';
 import { forkJoin, of } from 'rxjs';
 import { catchError } from 'rxjs/operators';
 import { AuthService } from '../../../core/services/auth.service';
@@ -11,6 +12,7 @@ import { Candidate } from '../../../core/models/candidate.model';
 
 interface CompletionSection {
   label: string;
+  labelKey: string;  // i18n key for the label
   icon: string;
   done: boolean;
   weight: number;
@@ -19,7 +21,7 @@ interface CompletionSection {
 @Component({
   selector: 'app-candidate-dashboard',
   standalone: true,
-  imports: [CommonModule, RouterLink],
+  imports: [CommonModule, RouterLink, TranslateModule],
   styles: [`
     /* ── Hero ─────────────────────────────────────────────────────────── */
     .cd-hero {
@@ -373,10 +375,9 @@ interface CompletionSection {
           <i class="bi bi-patch-check-fill"></i>
         </div>
         <div class="placed-banner__body">
-          <div class="placed-banner__title">Congratulations! You have been successfully placed.</div>
+          <div class="placed-banner__title">{{ 'CANDIDATE_DASHBOARD.congratulations' | translate }}</div>
           <div class="placed-banner__sub">
-            Your profile is now in placed status. Profile editing and request changes are disabled.
-            You can continue to view your dashboard and profile information.
+            {{ 'CANDIDATE_DASHBOARD.placed_status' | translate }}
           </div>
         </div>
       </div>
@@ -386,14 +387,14 @@ interface CompletionSection {
     @if (placedBlocked()) {
       <div class="alert alert-warning d-flex align-items-center gap-2 mb-4" role="alert">
         <i class="bi bi-lock-fill flex-shrink-0"></i>
-        <span>This page is not accessible while your profile is in placed status.</span>
+        <span>{{ 'CANDIDATE_DASHBOARD.not_accessible_placed' | translate }}</span>
       </div>
     }
 
     <!-- ── Hero ──────────────────────────────────────────────────────────── -->
     <div class="cd-hero">
-      <div class="cd-hero__eyebrow">Candidate Portal</div>
-      <h1 class="cd-hero__name">Good {{ timeOfDay() }}, {{ firstName() || '…' }}</h1>
+      <div class="cd-hero__eyebrow">{{ 'CANDIDATE_DASHBOARD.candidate_portal' | translate }}</div>
+      <h1 class="cd-hero__name">{{ timeOfDay() }} {{ firstName() || '…' }}</h1>
 
       <div class="cd-hero__chips">
         <span class="cd-hero__chip">
@@ -405,34 +406,34 @@ interface CompletionSection {
           </span>
         }
         @if (candidate()?.login_id) {
-          <span class="cd-hero__chip cd-hero__chip--login-id" title="Use this ID to log in">
-            <i class="bi bi-key-fill"></i>Login ID: {{ candidate()!.login_id }}
+          <span class="cd-hero__chip cd-hero__chip--login-id" [title]="('CANDIDATE_DASHBOARD.login_id_desc' | translate)">
+            <i class="bi bi-key-fill"></i>{{ 'CANDIDATE_DASHBOARD.login_id' | translate }}: {{ candidate()!.login_id }}
           </span>
         }
         @if (!isPlaced() && stats()?.pendingRequest) {
           <span class="cd-hero__chip cd-hero__chip--warn">
-            <i class="bi bi-hourglass-split"></i>Edit request pending
+            <i class="bi bi-hourglass-split"></i>{{ 'CANDIDATE_DASHBOARD.edit_request_pending' | translate }}
           </span>
         }
         @if (isPlaced()) {
           <span class="cd-hero__chip" style="background:var(--bs-success-bg-subtle);color:var(--bs-success);border-color:var(--bs-success-border-subtle)">
-            <i class="bi bi-patch-check-fill"></i>Placed
+            <i class="bi bi-patch-check-fill"></i>{{ 'CANDIDATE_DASHBOARD.placed' | translate }}
           </span>
         }
       </div>
 
       <div class="cd-hero__actions">
         <a routerLink="/candidate/profile" class="cd-hero__btn cd-hero__btn--solid">
-          <i class="bi bi-person-circle"></i>My Profile
+          <i class="bi bi-person-circle"></i>{{ 'CANDIDATE_DASHBOARD.my_profile' | translate }}
         </a>
         @if (!isPlaced()) {
           @if (stats()?.pendingRequest) {
             <a routerLink="/candidate/edit-request" class="cd-hero__btn cd-hero__btn--ghost-warn">
-              <i class="bi bi-hourglass-split"></i>Edit Pending
+              <i class="bi bi-hourglass-split"></i>{{ 'CANDIDATE_DASHBOARD.edit_pending' | translate }}
             </a>
           } @else {
             <a routerLink="/candidate/edit-request" class="cd-hero__btn cd-hero__btn--ghost">
-              <i class="bi bi-pencil"></i>Request Edit
+              <i class="bi bi-pencil"></i>{{ 'CANDIDATE_DASHBOARD.request_edit' | translate }}
             </a>
           }
         }
@@ -440,7 +441,7 @@ interface CompletionSection {
     </div>
 
     <!-- ── Quick Actions ──────────────────────────────────────────────────── -->
-    <div class="cd-section-heading">Quick Actions</div>
+    <div class="cd-section-heading">{{ 'CANDIDATE_DASHBOARD.quick_actions' | translate }}</div>
     <div class="cd-links">
 
       <!-- My Profile -->
@@ -449,8 +450,8 @@ interface CompletionSection {
           <i class="bi bi-person-circle"></i>
         </div>
         <div class="cd-link__body">
-          <div class="cd-link__title">My Profile</div>
-          <div class="cd-link__desc">View &amp; manage your profile</div>
+          <div class="cd-link__title">{{ 'CANDIDATE_DASHBOARD.my_profile' | translate }}</div>
+          <div class="cd-link__desc">{{ 'CANDIDATE_DASHBOARD.manage_profile' | translate }}</div>
         </div>
         <i class="bi bi-chevron-right cd-link__arrow"></i>
       </a>
@@ -461,8 +462,8 @@ interface CompletionSection {
           <i class="bi bi-eye"></i>
         </div>
         <div class="cd-link__body">
-          <div class="cd-link__title">View Profile</div>
-          <div class="cd-link__desc">As seen by recruiters</div>
+          <div class="cd-link__title">{{ 'CANDIDATE_DASHBOARD.view_as_recruiter' | translate }}</div>
+          <div class="cd-link__desc">{{ 'CANDIDATE_DASHBOARD.view_as_recruiter_desc' | translate }}</div>
         </div>
         <i class="bi bi-chevron-right cd-link__arrow"></i>
       </a>
@@ -474,11 +475,11 @@ interface CompletionSection {
             <i class="bi bi-pencil-square"></i>
           </div>
           <div class="cd-link__body">
-            <div class="cd-link__title">Request Edit</div>
-            <div class="cd-link__desc">Submit changes for admin approval</div>
+            <div class="cd-link__title">{{ 'CANDIDATE_DASHBOARD.request_edit' | translate }}</div>
+            <div class="cd-link__desc">{{ 'CANDIDATE_DASHBOARD.request_edit_desc' | translate }}</div>
           </div>
           @if (stats()?.pendingRequest) {
-            <span class="cd-link__badge">Pending</span>
+            <span class="cd-link__badge">{{ 'COMMON.pending' | translate }}</span>
           }
           <i class="bi bi-chevron-right cd-link__arrow"></i>
         </a>
@@ -493,7 +494,7 @@ interface CompletionSection {
           <div class="cd-completion__icon">
             <i class="bi bi-activity"></i>
           </div>
-          <span class="cd-completion__title">Profile Completion</span>
+          <span class="cd-completion__title">{{ 'CANDIDATE_DASHBOARD.profile_completion' | translate }}</span>
           @if (loading()) {
             <span class="skeleton" style="width:52px;height:28px;display:block"></span>
           } @else {
@@ -520,9 +521,9 @@ interface CompletionSection {
             </div>
             <div class="cd-progress__hint">
               @if (completionPct() === 100) {
-                Your profile is fully complete and visible to recruiters.
+                {{ 'CANDIDATE_DASHBOARD.profile_fully_complete' | translate }}
               } @else {
-                {{ 100 - completionPct() }}% remaining — complete your profile to improve recruiter visibility.
+                {{ 100 - completionPct() }}% {{ 'CANDIDATE_DASHBOARD.profile_remaining' | translate }}
               }
             </div>
           }
@@ -530,7 +531,7 @@ interface CompletionSection {
           <!-- Section checklist -->
           @if (!loading()) {
             <div class="cd-sections">
-              @for (sec of sections(); track sec.label) {
+              @for (sec of sections(); track sec.labelKey) {
                 <div class="cd-section">
                   <div class="cd-section__dot"
                     [class.cd-section__dot--done]="sec.done"
@@ -538,8 +539,8 @@ interface CompletionSection {
                     <i class="bi" [class.bi-check-lg]="sec.done" [class.bi-dash]="!sec.done"></i>
                   </div>
                   <div class="cd-section__info">
-                    <div class="cd-section__label">{{ sec.label }}</div>
-                    <div class="cd-section__sub">{{ sec.done ? 'Complete' : 'Incomplete' }}</div>
+                    <div class="cd-section__label">{{ sec.labelKey | translate }}</div>
+                    <div class="cd-section__sub">{{ sec.done ? ('CANDIDATE_DASHBOARD.complete' | translate) : ('CANDIDATE_DASHBOARD.incomplete' | translate) }}</div>
                   </div>
                   <span class="cd-section__weight">{{ sec.weight }}%</span>
                 </div>
@@ -567,7 +568,7 @@ interface CompletionSection {
               style="font-size:13px;font-weight:600;color:var(--th-primary);text-decoration:none;
                 display:inline-flex;align-items:center;gap:5px">
               <i class="bi bi-pencil-square"></i>
-              Update your profile to reach 100%
+              {{ 'CANDIDATE_DASHBOARD.update_profile' | translate }}
               <i class="bi bi-arrow-right ms-1"></i>
             </a>
           </div>
@@ -625,60 +626,70 @@ export class CandidateDashboardComponent implements OnInit {
         // Base 15 points: name is always present after registration.
         // Matching the +15 base in both the admin card and backend formula.
         label:  'Name & Registration',
+        labelKey: 'CANDIDATE_DASHBOARD.section_name_registration',
         icon:   'bi-person-fill',
         done:   true,
         weight: 15,
       },
       {
         label:  'Profile Photo',
+        labelKey: 'CANDIDATE_DASHBOARD.section_profile_photo',
         icon:   'bi-person-circle',
         done:   !!c.profile_photo_url,
         weight: 15,
       },
       {
         label:  'Job Title',
+        labelKey: 'CANDIDATE_DASHBOARD.section_job_title',
         icon:   'bi-briefcase',
         done:   !!c.job_title,
         weight: 10,
       },
       {
         label:  'Industry',
+        labelKey: 'CANDIDATE_DASHBOARD.section_industry',
         icon:   'bi-building',
         done:   !!c.industry,
         weight: 10,
       },
       {
         label:  'Current Country',
+        labelKey: 'CANDIDATE_DASHBOARD.section_current_country',
         icon:   'bi-geo-alt',
         done:   !!c.current_country,
         weight: 10,
       },
       {
         label:  'Years of Experience',
+        labelKey: 'CANDIDATE_DASHBOARD.section_years_experience',
         icon:   'bi-clock-history',
         done:   c.years_experience != null,
         weight: 10,
       },
       {
         label:  'English Level',
+        labelKey: 'CANDIDATE_DASHBOARD.section_english_level',
         icon:   'bi-translate',
         done:   !!((c as any).languages as any[])?.some((l: any) => l.language?.toLowerCase() === 'english'),
         weight: 10,
       },
       {
         label:  'Intro Video',
+        labelKey: 'CANDIDATE_DASHBOARD.section_intro_video',
         icon:   'bi-camera-video',
         done:   !!c.intro_video_url,
         weight: 10,
       },
       {
         label:  'Nationality',
+        labelKey: 'CANDIDATE_DASHBOARD.section_nationality',
         icon:   'bi-flag',
         done:   !!c.nationality,
         weight: 5,
       },
       {
         label:  'Target Locations',
+        labelKey: 'CANDIDATE_DASHBOARD.section_target_locations',
         icon:   'bi-pin-map',
         done:   !!(c.target_locations?.length),
         weight: 5,
@@ -716,9 +727,10 @@ export class CandidateDashboardComponent implements OnInit {
 
   timeOfDay(): string {
     const h = new Date().getHours();
-    if (h < 12) return 'morning';
-    if (h < 17) return 'afternoon';
-    return 'evening';
+    if (h < 12) return 'Good morning';
+    if (h < 17) return 'Good afternoon';
+    if (h < 21) return 'Good evening';
+    return 'Good night';
   }
 
   today(): string {

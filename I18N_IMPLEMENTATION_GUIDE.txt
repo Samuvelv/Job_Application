@@ -1,0 +1,607 @@
+================================================================================
+                    I18N IMPLEMENTATION EXAMPLES
+             How to Fix Untranslated Strings in Frontend Code
+================================================================================
+
+BEFORE & AFTER EXAMPLES
+=======================
+
+EXAMPLE 1: SIMPLE TEXT IN TEMPLATE
+──────────────────────────────────
+
+BEFORE (Hardcoded):
+────────────────
+<h1 class="h4 fw-bold mb-0">Edit Candidate</h1>
+
+AFTER (With i18n):
+─────────────────
+<h1 class="h4 fw-bold mb-0" i18n="@@candidate_edit_title">Edit Candidate</h1>
+
+Or using the pipe:
+<h1 class="h4 fw-bold mb-0">{{ 'CANDIDATE_EDIT.title' | translate }}</h1>
+
+
+EXAMPLE 2: BUTTON LABELS
+────────────────────────
+
+BEFORE (Hardcoded):
+────────────────
+<button class="btn btn-primary">Save Changes</button>
+
+AFTER (With i18n):
+─────────────────
+<button class="btn btn-primary">{{ 'COMMON.save_changes' | translate }}</button>
+
+Or using i18n attribute:
+<button class="btn btn-primary" i18n="@@save_changes">Save Changes</button>
+
+
+EXAMPLE 3: FORM LABELS
+──────────────────────
+
+BEFORE (Hardcoded):
+────────────────
+<label class="form-label">First Name <span class="text-danger">*</span></label>
+<input type="text" class="form-control" formControlName="first_name"
+  placeholder="Enter your first name">
+
+AFTER (With i18n):
+─────────────────
+<label class="form-label" i18n="@@first_name">First Name <span class="text-danger">*</span></label>
+<input type="text" class="form-control" formControlName="first_name"
+  i18n-placeholder="@@first_name_placeholder" placeholder="Enter your first name">
+
+Or using translate pipe:
+<label class="form-label">{{ 'COMMON.first_name' | translate }}<span class="text-danger">*</span></label>
+<input type="text" class="form-control" formControlName="first_name"
+  [placeholder]="'COMMON.first_name_placeholder' | translate">
+
+
+EXAMPLE 4: VALIDATION ERRORS
+────────────────────────────
+
+BEFORE (Hardcoded):
+────────────────
+@if (form.get('first_name')?.errors?.['required']) {
+  <div class="invalid-feedback d-block">First name is required.</div>
+}
+
+AFTER (With i18n):
+─────────────────
+@if (form.get('first_name')?.errors?.['required']) {
+  <div class="invalid-feedback d-block" 
+       i18n="@@first_name_required">First name is required.</div>
+}
+
+Or using translate pipe:
+@if (form.get('first_name')?.errors?.['required']) {
+  <div class="invalid-feedback d-block">
+    {{ 'VALIDATION.first_name_required' | translate }}
+  </div>
+}
+
+
+EXAMPLE 5: EMPTY STATES
+───────────────────────
+
+BEFORE (Hardcoded):
+────────────────
+<div class="media-upload-cell__empty">
+  <i class="bi bi-person-circle"></i>
+  <span>No photo</span>
+</div>
+
+AFTER (With i18n):
+─────────────────
+<div class="media-upload-cell__empty">
+  <i class="bi bi-person-circle"></i>
+  <span i18n="@@no_photo">No photo</span>
+</div>
+
+Or using translate pipe:
+<div class="media-upload-cell__empty">
+  <i class="bi bi-person-circle"></i>
+  <span>{{ 'CANDIDATE_EDIT.no_photo' | translate }}</span>
+</div>
+
+
+EXAMPLE 6: SECTION HEADERS
+──────────────────────────
+
+BEFORE (Hardcoded):
+────────────────
+<h5 class="card-section-header mb-4">
+  <i class="bi bi-person"></i> Personal Information
+</h5>
+
+AFTER (With i18n):
+─────────────────
+<h5 class="card-section-header mb-4">
+  <i class="bi bi-person"></i> <span i18n="@@personal_info">Personal Information</span>
+</h5>
+
+Or using translate pipe:
+<h5 class="card-section-header mb-4">
+  <i class="bi bi-person"></i> {{ 'COMMON.personal_information' | translate }}
+</h5>
+
+
+EXAMPLE 7: MODAL DIALOG CONTENT
+────────────────────────────────
+
+BEFORE (Hardcoded):
+────────────────
+@if (showPlacedPrompt) {
+  <div class="placed-prompt-overlay">
+    <div class="placed-prompt">
+      <h4 class="placed-prompt__title">Candidate Placed!</h4>
+      <p class="placed-prompt__msg">
+        Would you like to invite
+        <strong>{{ candidate.first_name }} {{ candidate.last_name }}</strong>
+        to become a NTL Career Nexus Volunteer?
+      </p>
+      <div class="placed-prompt__actions">
+        <button class="placed-prompt__btn placed-prompt__btn--yes"
+          (click)="sendInvitation()">
+          Yes, Send Invitation
+        </button>
+        <button class="placed-prompt__btn placed-prompt__btn--no"
+          (click)="skipInvitation()">
+          No, Not Now
+        </button>
+      </div>
+    </div>
+  </div>
+}
+
+AFTER (With i18n):
+─────────────────
+@if (showPlacedPrompt) {
+  <div class="placed-prompt-overlay">
+    <div class="placed-prompt">
+      <h4 class="placed-prompt__title" i18n="@@placed_title">Candidate Placed!</h4>
+      <p class="placed-prompt__msg" 
+         i18n="@@placed_message"
+         i18n-title="More about placing candidate">
+        Would you like to invite
+        <strong>{{ candidate.first_name }} {{ candidate.last_name }}</strong>
+        to become a NTL Career Nexus Volunteer?
+      </p>
+      <div class="placed-prompt__actions">
+        <button class="placed-prompt__btn placed-prompt__btn--yes"
+          (click)="sendInvitation()"
+          i18n="@@send_invitation">
+          Yes, Send Invitation
+        </button>
+        <button class="placed-prompt__btn placed-prompt__btn--no"
+          (click)="skipInvitation()"
+          i18n="@@not_now">
+          No, Not Now
+        </button>
+      </div>
+    </div>
+  </div>
+}
+
+Or using translate pipe:
+@if (showPlacedPrompt) {
+  <div class="placed-prompt-overlay">
+    <div class="placed-prompt">
+      <h4 class="placed-prompt__title">{{ 'CANDIDATE_EDIT.placed_title' | translate }}</h4>
+      <p class="placed-prompt__msg">
+        {{ 'CANDIDATE_EDIT.placed_message' | translate: 
+           {name: candidate.first_name + ' ' + candidate.last_name} }}
+      </p>
+      <div class="placed-prompt__actions">
+        <button class="placed-prompt__btn placed-prompt__btn--yes"
+          (click)="sendInvitation()">
+          {{ 'CANDIDATE_EDIT.send_invitation' | translate }}
+        </button>
+        <button class="placed-prompt__btn placed-prompt__btn--no"
+          (click)="skipInvitation()">
+          {{ 'COMMON.not_now' | translate }}
+        </button>
+      </div>
+    </div>
+  </div>
+}
+
+
+EXAMPLE 8: PLACEHOLDERS
+──────────────────────
+
+BEFORE (Hardcoded):
+────────────────
+<input type="text" class="form-control" formControlName="first_name"
+  placeholder="e.g. John Doe">
+
+AFTER (With i18n):
+─────────────────
+<input type="text" class="form-control" formControlName="first_name"
+  i18n-placeholder="@@first_name_placeholder" 
+  placeholder="e.g. John Doe">
+
+Or using attribute binding:
+<input type="text" class="form-control" formControlName="first_name"
+  [placeholder]="'COMMON.first_name_placeholder' | translate">
+
+
+EXAMPLE 9: TITLE ATTRIBUTES
+───────────────────────────
+
+BEFORE (Hardcoded):
+────────────────
+<button type="button" class="media-upload-cell__cert-btn"
+  (click)="startEditCert(cert)" 
+  title="Edit metadata">
+  <i class="bi bi-pencil"></i>
+</button>
+
+AFTER (With i18n):
+─────────────────
+<button type="button" class="media-upload-cell__cert-btn"
+  (click)="startEditCert(cert)"
+  i18n-title="@@edit_metadata"
+  title="Edit metadata">
+  <i class="bi bi-pencil"></i>
+</button>
+
+Or using attribute binding:
+<button type="button" class="media-upload-cell__cert-btn"
+  (click)="startEditCert(cert)"
+  [title]="'CANDIDATE_EDIT.edit_metadata' | translate">
+  <i class="bi bi-pencil"></i>
+</button>
+
+
+EXAMPLE 10: CONDITIONAL CONTENT
+───────────────────────────────
+
+BEFORE (Hardcoded):
+────────────────
+@if (mediaLoading['certificates']) { 
+  <span class="spinner-border spinner-border-sm me-1"></span> Uploading… 
+}
+@else { 
+  <i class="bi bi-cloud-upload me-1"></i> Upload 
+}
+
+AFTER (With i18n):
+─────────────────
+@if (mediaLoading['certificates']) { 
+  <span class="spinner-border spinner-border-sm me-1"></span> 
+  <span i18n="@@uploading">Uploading…</span>
+}
+@else { 
+  <i class="bi bi-cloud-upload me-1"></i> 
+  <span i18n="@@upload">Upload</span>
+}
+
+Or using translate pipe:
+@if (mediaLoading['certificates']) { 
+  <span class="spinner-border spinner-border-sm me-1"></span> 
+  {{ 'COMMON.uploading' | translate }}
+}
+@else { 
+  <i class="bi bi-cloud-upload me-1"></i> 
+  {{ 'COMMON.upload' | translate }}
+}
+
+
+================================================================================
+TYPESCRIPT CODE EXAMPLES
+================================================================================
+
+EXAMPLE 1: ERROR MESSAGES IN SERVICE
+────────────────────────────────────
+
+BEFORE (Hardcoded):
+────────────────
+export class CandidateService {
+  saveCandidate(data: any): Observable<any> {
+    return this.http.post('/api/candidates', data).pipe(
+      catchError(error => {
+        this.toast.error('Failed to save candidate');
+        return throwError(() => error);
+      })
+    );
+  }
+}
+
+AFTER (With i18n):
+─────────────────
+export class CandidateService {
+  constructor(
+    private http: HttpClient,
+    private toast: ToastService,
+    private translate: TranslateService
+  ) {}
+
+  saveCandidate(data: any): Observable<any> {
+    return this.http.post('/api/candidates', data).pipe(
+      catchError(error => {
+        this.translate.get('ERROR.save_candidate_failed').subscribe(message => {
+          this.toast.error(message);
+        });
+        return throwError(() => error);
+      })
+    );
+  }
+}
+
+
+EXAMPLE 2: DYNAMIC MESSAGES IN COMPONENT
+────────────────────────────────────────
+
+BEFORE (Hardcoded):
+────────────────
+export class CandidateEditComponent {
+  confirmVolunteerImpact(): void {
+    if (confirm('Are you sure you want to deactivate this volunteer?')) {
+      // proceed
+    }
+  }
+}
+
+AFTER (With i18n):
+─────────────────
+export class CandidateEditComponent {
+  constructor(private translate: TranslateService) {}
+
+  confirmVolunteerImpact(): void {
+    this.translate.get('CANDIDATE_EDIT.volunteer_impact_message').subscribe(msg => {
+      if (confirm(msg)) {
+        // proceed
+      }
+    });
+  }
+}
+
+
+EXAMPLE 3: TOAST NOTIFICATIONS
+──────────────────────────────
+
+BEFORE (Hardcoded):
+────────────────
+this.candidateService.saveCandidate(data).subscribe({
+  next: () => {
+    this.toast.success('Candidate profile updated successfully!');
+  },
+  error: (err) => {
+    this.toast.error('Failed to update candidate profile');
+  }
+});
+
+AFTER (With i18n):
+─────────────────
+this.candidateService.saveCandidate(data).subscribe({
+  next: () => {
+    this.translate.get('SUCCESS.candidate_updated').subscribe(msg => {
+      this.toast.success(msg);
+    });
+  },
+  error: (err) => {
+    this.translate.get('ERROR.candidate_update_failed').subscribe(msg => {
+      this.toast.error(msg);
+    });
+  }
+});
+
+
+================================================================================
+COMPONENT FILE STRUCTURE EXAMPLE
+================================================================================
+
+RECOMMENDED PATTERN FOR COMPONENTS:
+
+candidate-edit.component.ts
+────────────────────────────
+
+import { Component } from '@angular/core';
+import { TranslateModule } from '@ngx-translate/core';
+
+@Component({
+  selector: 'app-candidate-edit',
+  standalone: true,
+  imports: [CommonModule, TranslateModule, ReactiveFormsModule, ...],
+  templateUrl: './candidate-edit.component.html',
+  styleUrls: ['./candidate-edit.component.scss']
+})
+export class CandidateEditComponent {
+  // Component logic here
+  
+  constructor(private translate: TranslateService) {}
+  
+  // For dynamic error messages
+  handleError(errorKey: string): void {
+    this.translate.get(errorKey).subscribe(message => {
+      this.errorMsg = message;
+    });
+  }
+}
+
+candidate-edit.component.html
+──────────────────────────────
+
+<div class="container">
+  <!-- Use translate pipe for all user-visible strings -->
+  <h1>{{ 'CANDIDATE_EDIT.title' | translate }}</h1>
+  
+  <form [formGroup]="form" (ngSubmit)="onSubmit()">
+    
+    <!-- Form Labels with i18n -->
+    <div class="form-group">
+      <label>{{ 'COMMON.first_name' | translate }}<span class="text-danger">*</span></label>
+      <input type="text" 
+             formControlName="first_name"
+             [placeholder]="'COMMON.first_name_placeholder' | translate"
+             class="form-control">
+      
+      <!-- Validation Errors with i18n -->
+      @if (form.get('first_name')?.invalid && form.get('first_name')?.touched) {
+        <div class="invalid-feedback d-block">
+          {{ 'VALIDATION.first_name_required' | translate }}
+        </div>
+      }
+    </div>
+    
+    <!-- Buttons with i18n -->
+    <div class="button-group mt-4">
+      <button type="submit" class="btn btn-primary">
+        {{ 'COMMON.save_changes' | translate }}
+      </button>
+      <button type="button" class="btn btn-secondary" (click)="cancel()">
+        {{ 'COMMON.cancel' | translate }}
+      </button>
+    </div>
+  </form>
+  
+  <!-- Error Messages -->
+  @if (errorMsg) {
+    <div class="alert alert-danger">{{ errorMsg }}</div>
+  }
+</div>
+
+
+================================================================================
+TESTING I18N
+================================================================================
+
+Unit Test Example:
+
+candidate-edit.component.spec.ts
+───────────────────────────────
+
+import { TestBed } from '@angular/core/testing';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
+import { CandidateEditComponent } from './candidate-edit.component';
+
+describe('CandidateEditComponent - i18n', () => {
+  let component: CandidateEditComponent;
+  let fixture: ComponentFixture<CandidateEditComponent>;
+  let translate: TranslateService;
+
+  beforeEach(async () => {
+    await TestBed.configureTestingModule({
+      imports: [
+        CandidateEditComponent,
+        TranslateModule.forRoot()
+      ]
+    }).compileComponents();
+
+    fixture = TestBed.createComponent(CandidateEditComponent);
+    component = fixture.componentInstance;
+    translate = TestBed.inject(TranslateService);
+    
+    translate.setDefaultLanguage('en');
+    translate.use('en');
+    fixture.detectChanges();
+  });
+
+  it('should display translated button labels', (done) => {
+    translate.get('COMMON.save_changes').subscribe(text => {
+      expect(fixture.nativeElement.textContent).toContain(text);
+      done();
+    });
+  });
+
+  it('should show translated validation error', () => {
+    const control = component.form.get('first_name');
+    control?.setErrors({ 'required': true });
+    control?.markAsTouched();
+    fixture.detectChanges();
+
+    translate.get('VALIDATION.first_name_required').subscribe(text => {
+      expect(fixture.nativeElement.textContent).toContain(text);
+    });
+  });
+});
+
+
+================================================================================
+MIGRATION CHECKLIST
+================================================================================
+
+For each component that needs i18n updates:
+
+□ Identify all hardcoded strings
+□ Create i18n keys in appropriate namespace
+□ Update template HTML with i18n pipe or attributes
+□ Update TypeScript for dynamic messages
+□ Test with multiple languages
+□ Update unit tests if necessary
+□ Update E2E tests if necessary
+□ Document any special cases
+□ Get translation review
+□ Deploy with translations
+
+
+================================================================================
+COMMON PITFALLS TO AVOID
+================================================================================
+
+1. MISSING TRANSLATION MODULE
+   ❌ WRONG:
+   import { Component } from '@angular/core';
+   export class MyComponent {
+     // Missing TranslateModule
+   }
+   
+   ✅ RIGHT:
+   import { TranslateModule } from '@ngx-translate/core';
+   @Component({
+     imports: [TranslateModule, ...],
+     // ...
+   })
+
+
+2. NOT HANDLING ASYNC TRANSLATIONS
+   ❌ WRONG:
+   message: string = this.translate.instant('KEY');
+   
+   ✅ RIGHT:
+   message$ = this.translate.get('KEY');
+   // Or use async pipe in template
+
+
+3. HARDCODING PLACEHOLDERS
+   ❌ WRONG:
+   <input placeholder="Enter text">
+   
+   ✅ RIGHT:
+   <input [placeholder]="'INPUT.placeholder' | translate">
+
+
+4. FORGETTING TO EXPORT TRANSLATION MODULE
+   ❌ WRONG:
+   @Component({
+     template: \{{ 'KEY' | translate }}\
+     // Missing TranslateModule in imports
+   })
+   
+   ✅ RIGHT:
+   @Component({
+     imports: [TranslateModule],
+     template: \{{ 'KEY' | translate }}\
+   })
+
+
+5. MIXING TRANSLATION METHODS
+   ❌ WRONG:
+   // Don't mix styles in same component
+   {{ 'KEY1' | translate }}
+   {{ translationMap.KEY2 }}
+   this.translate.instant('KEY3')
+   
+   ✅ RIGHT:
+   // Use consistent approach throughout
+
+
+================================================================================
+END OF IMPLEMENTATION GUIDE
+================================================================================
+
+For questions or clarifications, refer to:
+- Angular i18n documentation: https://angular.io/guide/i18n-overview
+- ngx-translate documentation: https://github.com/ngx-translate/core
+- This audit report for specific strings

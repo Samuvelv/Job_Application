@@ -1,6 +1,7 @@
 // src/app/features/admin/contact-submissions/contact-submissions-page.component.ts
 import { Component, signal, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { TranslateModule } from '@ngx-translate/core';
 import { ContactSubmissionService } from '../../../core/services/contact-submission.service';
 import { ContactSubmission } from '../../../core/models/contact-submission.model';
 import { PageHeaderComponent } from '../../../shared/components/page-header/page-header.component';
@@ -9,7 +10,7 @@ import { NotificationService } from '../../../core/services/notification.service
 @Component({
   selector: 'app-contact-submissions-page',
   standalone: true,
-  imports: [CommonModule, PageHeaderComponent],
+  imports: [CommonModule, TranslateModule, PageHeaderComponent],
   template: `
     <app-page-header
       title="Contact Requests"
@@ -188,3 +189,4 @@ export class ContactSubmissionsPageComponent implements OnInit {
     return Array.from({ length: end - start + 1 }, (_, i) => start + i);
   }
 }
+

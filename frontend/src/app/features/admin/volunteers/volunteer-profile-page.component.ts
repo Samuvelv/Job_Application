@@ -1,6 +1,7 @@
 // src/app/features/admin/volunteers/volunteer-profile-page.component.ts
 import { Component, OnInit, computed, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { TranslateModule } from '@ngx-translate/core';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { VolunteerService } from '../../../core/services/volunteer.service';
 import { MasterDataService } from '../../../core/services/master-data.service';
@@ -13,7 +14,7 @@ type Tab = 'overview' | 'contact';
 @Component({
   selector: 'app-volunteer-profile-page',
   standalone: true,
-  imports: [CommonModule, RouterLink],
+  imports: [CommonModule, TranslateModule, RouterLink],
   template: `
     <!-- Back + actions -->
     <div class="d-flex align-items-center justify-content-between mb-4 gap-2 flex-wrap">
@@ -634,3 +635,4 @@ export class VolunteerProfilePageComponent implements OnInit {
     });
   }
 }
+

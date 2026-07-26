@@ -1,6 +1,7 @@
 // src/app/features/admin/volunteers/volunteer-list.component.ts
 import { Component, OnInit, computed, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { TranslateModule } from '@ngx-translate/core';
 import { ReactiveFormsModule, FormBuilder, FormControl, FormGroup, FormsModule, Validators } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { catchError, of } from 'rxjs';
@@ -16,7 +17,7 @@ import { SearchableSelectComponent, SelectOption } from '../../../shared/compone
 @Component({
   selector: 'app-volunteer-list',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, FormsModule, RouterLink, PageHeaderComponent, EmptyStateComponent, SearchableSelectComponent],
+  imports: [CommonModule, TranslateModule, ReactiveFormsModule, FormsModule, RouterLink, PageHeaderComponent, EmptyStateComponent, SearchableSelectComponent],
   template: `
     <app-page-header
       title="Volunteers"
@@ -788,3 +789,4 @@ export class VolunteerListComponent implements OnInit {
     });
   }
 }
+

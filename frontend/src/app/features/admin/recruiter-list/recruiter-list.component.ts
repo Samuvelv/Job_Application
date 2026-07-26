@@ -1,6 +1,7 @@
 // src/app/features/admin/recruiter-list/recruiter-list.component.ts
 import { Component, OnInit, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { TranslateModule } from '@ngx-translate/core';
 import { ReactiveFormsModule, FormBuilder, FormGroup, FormControl, Validators, AbstractControl, ValidationErrors, ValidatorFn } from '@angular/forms';
 import { RouterLink, ActivatedRoute } from '@angular/router';
 import { catchError, of, distinctUntilChanged, skip } from 'rxjs';
@@ -97,7 +98,7 @@ function websiteValidator(): ValidatorFn {
 @Component({
   selector: 'app-recruiter-list',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, RouterLink, PageHeaderComponent, EmptyStateComponent, RecruiterCardComponent, SearchableSelectComponent, ChipMultiSelectComponent],
+  imports: [CommonModule, TranslateModule, ReactiveFormsModule, RouterLink, PageHeaderComponent, EmptyStateComponent, RecruiterCardComponent, SearchableSelectComponent, ChipMultiSelectComponent],
   template: `
     <!-- Header -->
     <app-page-header
@@ -1658,3 +1659,4 @@ export class RecruiterListComponent implements OnInit {
     });
   }
 }
+

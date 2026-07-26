@@ -1,6 +1,7 @@
 // src/app/features/admin/recruiter-create/recruiter-create.component.ts
 import { Component, OnInit, OnDestroy, computed, signal, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { TranslateModule } from '@ngx-translate/core';
 import { ReactiveFormsModule, FormBuilder, FormGroup, Validators, AbstractControl, ValidationErrors, ValidatorFn } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { Subscription, debounceTime } from 'rxjs';
@@ -101,7 +102,7 @@ function emailValidator(): ValidatorFn {
 @Component({
   selector: 'app-recruiter-create',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, RouterLink, PageHeaderComponent, SearchableSelectComponent, ChipMultiSelectComponent],
+  imports: [CommonModule, TranslateModule, ReactiveFormsModule, RouterLink, PageHeaderComponent, SearchableSelectComponent, ChipMultiSelectComponent],
   template: `
     <div class="mb-3">
       <a routerLink="/admin/recruiters" class="back-btn">
@@ -1291,3 +1292,4 @@ export class RecruiterCreateComponent implements OnInit, OnDestroy, HasUnsavedCh
     });
   }
 }
+

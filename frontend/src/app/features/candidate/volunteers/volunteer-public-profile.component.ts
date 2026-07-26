@@ -1,6 +1,7 @@
 // src/app/features/candidate/volunteers/volunteer-public-profile.component.ts
 import { Component, OnInit } from '@angular/core';
 import { CommonModule }      from '@angular/common';
+import { TranslateModule } from '@ngx-translate/core';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { FormsModule }       from '@angular/forms';
 import { forkJoin, of }      from 'rxjs';
@@ -14,7 +15,7 @@ import { VolunteerSupportRequest }        from '../../../core/models/volunteer-s
 @Component({
   selector: 'app-volunteer-public-profile',
   standalone: true,
-  imports: [CommonModule, RouterLink, FormsModule],
+  imports: [CommonModule, TranslateModule, RouterLink, FormsModule],
   template: `
     <!-- Back link -->
     <div class="mb-4">
@@ -391,3 +392,4 @@ export class VolunteerPublicProfileComponent implements OnInit {
     });
   }
 }
+

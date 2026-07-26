@@ -2,6 +2,7 @@
 import { Component, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
+import { TranslateModule } from '@ngx-translate/core';
 import { CandidateService } from '../../../core/services/candidate.service';
 import { AuthService } from '../../../core/services/auth.service';
 import { Candidate } from '../../../core/models/candidate.model';
@@ -11,7 +12,7 @@ import { PageHeaderComponent } from '../../../shared/components/page-header/page
 @Component({
   selector: 'app-my-profile',
   standalone: true,
-  imports: [CommonModule, RouterLink, CandidateProfileComponent, PageHeaderComponent],
+  imports: [CommonModule, RouterLink, TranslateModule, CandidateProfileComponent, PageHeaderComponent],
   styles: [`
     .placed-banner {
       display: flex;

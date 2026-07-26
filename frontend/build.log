@@ -1,0 +1,62 @@
+
+> ntl-career-nexus@0.0.0 build
+> ng build
+
+- Building...
+
+Application bundle generation failed. [25.255 seconds]
+
+Γû▓ [WARNING] NG8107: The left side of this optional chain operation does not include 'null' or 'undefined' in its type, therefore the '?.' operator can be replaced with the '.' operator. [plugin angular-compiler]
+
+    src/app/features/admin/candidate-edit/candidate-edit.component.html:106:32:
+      106 Γöé ...    <strong>{{ candidate?.first_name }} {{ candidate?.last_nam...
+          Γò╡                              ~~~~~~~~~~
+
+  Error occurs in the template of component CandidateEditComponent.
+
+    src/app/features/admin/candidate-edit/candidate-edit.component.ts:272:15:
+      272 Γöé   templateUrl: './candidate-edit.component.html',
+          Γò╡                ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+
+Γû▓ [WARNING] NG8107: The left side of this optional chain operation does not include 'null' or 'undefined' in its type, therefore the '?.' operator can be replaced with the '.' operator. [plugin angular-compiler]
+
+    src/app/features/admin/candidate-edit/candidate-edit.component.html:106:60:
+      106 Γöé ...g>{{ candidate?.first_name }} {{ candidate?.last_name }}</strong>
+          Γò╡                                                ~~~~~~~~~
+
+  Error occurs in the template of component CandidateEditComponent.
+
+    src/app/features/admin/candidate-edit/candidate-edit.component.ts:272:15:
+      272 Γöé   templateUrl: './candidate-edit.component.html',
+          Γò╡                ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+
+X [ERROR] NG8002: Can't bind to 'aria-label' since it isn't a known property of 'button'. [plugin angular-compiler]
+
+    src/app/shared/components/cookie-consent-banner/cookie-consent-banner.component.ts:18:8:
+      18 Γöé         [aria-label]="('COOKIE_CONSENT.manage_cookies' | translate)"
+         Γò╡         ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+
+X [ERROR] NG8002: Can't bind to 'aria-label' since it isn't a known property of 'button'. [plugin angular-compiler]
+
+    src/app/shared/components/cookie-consent-banner/cookie-consent-banner.component.ts:51:14:
+      51 Γöé ...          [aria-label]="('COOKIE_CONSENT.customize' | translate)">
+         Γò╡              ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+
+X [ERROR] NG8002: Can't bind to 'aria-label' since it isn't a known property of 'button'. [plugin angular-compiler]
+
+    src/app/shared/components/cookie-consent-banner/cookie-consent-banner.component.ts:58:14:
+      58 Γöé ...          [aria-label]="('COOKIE_CONSENT.reject_non_essential' ...
+         Γò╡              ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+
+X [ERROR] NG8002: Can't bind to 'aria-label' since it isn't a known property of 'button'. [plugin angular-compiler]
+
+    src/app/shared/components/cookie-consent-banner/cookie-consent-banner.component.ts:65:14:
+      65 Γöé ...          [aria-label]="('COOKIE_CONSENT.accept_all' | translat...
+         Γò╡              ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+

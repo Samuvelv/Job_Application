@@ -3,6 +3,7 @@ import { Component, OnInit, ViewChild, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
+import { TranslateModule } from '@ngx-translate/core';
 import { distinctUntilChanged, skip } from 'rxjs';
 import { CandidateService } from '../../../core/services/candidate.service';
 import { MasterDataService } from '../../../core/services/master-data.service';
@@ -19,12 +20,7 @@ import { SORT_OPTIONS, PROFILE_STATUS_OPTIONS, PROFILE_STATUS_WITH_COLOR } from 
 @Component({
   selector: 'app-candidate-list',
   standalone: true,
-  imports: [
-    CommonModule, ReactiveFormsModule, RouterLink,
-    PageHeaderComponent, EmptyStateComponent,
-    CandidateFilterSidebarComponent, CandidateCardComponent,
-    SearchableSelectComponent,
-  ],
+  imports: [CommonModule, ReactiveFormsModule, RouterLink, PageHeaderComponent, EmptyStateComponent, CandidateFilterSidebarComponent, CandidateCardComponent, SearchableSelectComponent, TranslateModule],
   template: `
     <app-page-header title="Candidates" icon="bi-people-fill"
                      [subtitle]="pagination.total + ' total candidates'">
@@ -949,3 +945,4 @@ export class CandidateListComponent implements OnInit {
     return Array.from({ length: end - start + 1 }, (_, i) => start + i);
   }
 }
+

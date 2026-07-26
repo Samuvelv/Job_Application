@@ -2,6 +2,7 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule, DatePipe } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, FormGroup } from '@angular/forms';
+import { TranslateModule } from '@ngx-translate/core';
 import { debounceTime, distinctUntilChanged } from 'rxjs';
 import { AuditLogService } from '../../../core/services/audit-log.service';
 import { AuditLog } from '../../../core/models/audit-log.model';
@@ -11,7 +12,7 @@ import { ToastService } from '../../../core/services/toast.service';
 @Component({
   selector: 'app-audit-logs',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, PageHeaderComponent],
+  imports: [CommonModule, ReactiveFormsModule, TranslateModule, PageHeaderComponent],
   providers: [DatePipe],
   template: `
     <!-- Header -->
