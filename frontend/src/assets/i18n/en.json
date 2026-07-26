@@ -2164,5 +2164,14 @@
       "name_max_100_chars": "Name must be 100 characters or fewer.",
       "name_pattern_error": "Name may only contain letters, spaces, hyphens, apostrophes and dots.",
       "recruiter_type": "Recruiter Type"
+    },
+    "CANDIDATE_EDIT_REQUEST": {
+      "title": "Request Profile Edit",
+      "subtitle": "Submit changes for admin review. Your profile will be updated once approved.",
+      "pending_review": "Pending Review",
+      "pending_cannot_submit": "You cannot submit a new request while one is pending.",
+      "media_documents": "Media & Documents",
+      "media_note": "Media changes require admin approval — select a new file to stage it for review.",
+      "pending_approval": "Pending approval"
     }
   }

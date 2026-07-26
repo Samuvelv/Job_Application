@@ -200,12 +200,12 @@ function makePostalCodeGroupValidator(countryCtrl: string, postalCtrl: string): 
   selector: 'app-edit-request',
   standalone: true,
   imports: [CommonModule, ReactiveFormsModule, TranslateModule, PageHeaderComponent, SearchableSelectComponent, ChipMultiSelectComponent],
-  template: `
-    <app-page-header
-      title="Request Profile Edit"
-      subtitle="Submit changes for admin review. Your profile will be updated once approved."
-      icon="bi-pencil-square"
-    />
+   template: `
+     <app-page-header
+       [title]="'CANDIDATE_EDIT_REQUEST.title' | translate"
+       [subtitle]="'CANDIDATE_EDIT_REQUEST.subtitle' | translate"
+       icon="bi-pencil-square"
+     />
 
     <!-- Existing request status banner -->
     @if (existingRequest) {
@@ -220,9 +220,9 @@ function makePostalCodeGroupValidator(countryCtrl: string, postalCtrl: string): 
         </div>
         <div class="status-banner__body">
           <div class="status-banner__title">
-            @if (existingRequest.status === 'pending')  { Pending Review }
-            @if (existingRequest.status === 'approved') { Approved }
-            @if (existingRequest.status === 'rejected') { Rejected }
+            @if (existingRequest.status === 'pending')  { {{ 'CANDIDATE_EDIT_REQUEST.pending_review' | translate }} }
+            @if (existingRequest.status === 'approved') { {{ 'COMMON.approved' | translate }} }
+            @if (existingRequest.status === 'rejected') { {{ 'COMMON.rejected' | translate }} }
           </div>
           <div class="status-banner__text">
             Submitted {{ existingRequest.created_at | date:'dd MMM yyyy' }}
@@ -231,31 +231,31 @@ function makePostalCodeGroupValidator(countryCtrl: string, postalCtrl: string): 
             }
           </div>
           @if (existingRequest.admin_note) {
-            <div class="mt-1 small"><strong>Admin note:</strong> {{ existingRequest.admin_note }}</div>
+            <div class="mt-1 small"><strong>{{ 'COMMON.admin_note' | translate }}:</strong> {{ existingRequest.admin_note }}</div>
           }
           @if (existingRequest.status === 'pending') {
-            <div class="mt-2 small text-muted">You cannot submit a new request while one is pending.</div>
+            <div class="mt-2 small text-muted">{{ 'CANDIDATE_EDIT_REQUEST.pending_cannot_submit' | translate }}</div>
           }
         </div>
       </div>
     }
 
-    @if (loadingProfile) {
-      <div class="loading-state">
-        <div class="spinner-border"></div>
-        <div class="loading-state__text">Loading profile…</div>
-      </div>
+     @if (loadingProfile) {
+       <div class="loading-state">
+         <div class="spinner-border"></div>
+         <div class="loading-state__text">{{ 'COMMON.loading_profile' | translate }}</div>
+       </div>
     } @else if (candidate && form) {
 
       <!-- ══ Section: Media ════════════════════════════════════════════════ -->
-      <div class="form-card mb-4">
-        <h5 class="card-section-header card-section-header--warning mb-1">
-          <i class="bi bi-images"></i> Media &amp; Documents
-        </h5>
-        <p class="text-muted small mb-4">
-          <i class="bi bi-shield-lock-fill text-warning me-1"></i>
-          Media changes require admin approval — select a new file to stage it for review.
-        </p>
+       <div class="form-card mb-4">
+         <h5 class="card-section-header card-section-header--warning mb-1">
+           <i class="bi bi-images"></i> {{ 'CANDIDATE_EDIT_REQUEST.media_documents' | translate }}
+         </h5>
+         <p class="text-muted small mb-4">
+           <i class="bi bi-shield-lock-fill text-warning me-1"></i>
+           {{ 'CANDIDATE_EDIT_REQUEST.media_note' | translate }}
+         </p>
 
         <div class="row g-4">
 
@@ -263,7 +263,7 @@ function makePostalCodeGroupValidator(countryCtrl: string, postalCtrl: string): 
           <div class="col-md-4">
             <div class="media-upload-cell">
               <div class="media-upload-cell__label">
-                <i class="bi bi-person-circle me-1"></i> Profile Photo
+                <i class="bi bi-person-circle me-1"></i> {{ 'COMMON.profile_photo' | translate }}
               </div>
               <div class="media-upload-cell__preview">
                 @if (staged['profiles'] || candidate.profile_photo_url) {
@@ -272,7 +272,7 @@ function makePostalCodeGroupValidator(countryCtrl: string, postalCtrl: string): 
                     (error)="$any($event.target).style.display='none'">
                   @if (staged['profiles']) {
                     <div class="media-upload-cell__staged-badge">
-                      <i class="bi bi-clock-fill me-1"></i>Pending approval
+                      <i class="bi bi-clock-fill me-1"></i>{{ 'CANDIDATE_EDIT_REQUEST.pending_approval' | translate }}
                     </div>
                   }
                   <div class="media-upload-cell__actions">
