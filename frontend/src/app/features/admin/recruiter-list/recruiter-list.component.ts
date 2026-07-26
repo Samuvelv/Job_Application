@@ -101,13 +101,13 @@ function websiteValidator(): ValidatorFn {
   imports: [CommonModule, TranslateModule, ReactiveFormsModule, RouterLink, PageHeaderComponent, EmptyStateComponent, RecruiterCardComponent, SearchableSelectComponent, ChipMultiSelectComponent],
   template: `
     <!-- Header -->
-    <app-page-header
-      title="Recruiters"
-      [subtitle]="pagination.total + ' total recruiters'"
+     <app-page-header
+      [title]="'RECRUITER_LIST.title' | translate"
+      [subtitle]="(pagination.total + ' ' + ('RECRUITER_LIST.total_recruiters' | translate: {count: pagination.total}))"
       icon="bi-people"
     >
       <a routerLink="/admin/recruiters/create" class="btn btn-primary">
-        <i class="bi bi-person-plus me-1"></i>Add Recruiter
+        <i class="bi bi-person-plus me-1"></i>{{ 'RECRUITER_CREATE.title' | translate }}
       </a>
     </app-page-header>
 
@@ -115,30 +115,30 @@ function websiteValidator(): ValidatorFn {
     <div class="cfs-topbar mb-3">
       <div class="cfs-topbar__search">
         <i class="bi bi-search"></i>
-        <input type="text" class="form-control form-control-sm"
+         <input type="text" class="form-control form-control-sm"
           [formControl]="searchCtrl"
-          placeholder="Search name, company, email…"
+          [placeholder]="'RECRUITER_LIST.search_placeholder' | translate"
           (keydown.enter)="search()">
       </div>
       <div class="cfs-topbar__actions">
         <button type="button" class="filter-search-btn" (click)="search()">
-          <i class="bi bi-search"></i> Search
+          <i class="bi bi-search"></i> {{ 'COMMON.search' | translate }}
         </button>
       <!-- Sort By -->
       <div class="cl-sort-wrap">
         <i class="bi bi-sort-down cl-sort-wrap__icon"></i>
-        <app-searchable-select
+         <app-searchable-select
           [formControl]="sortCtrl"
           [options]="RECRUITER_SORT_OPTIONS"
           [allowClear]="false"
-          placeholder="Sort by…">
+          [placeholder]="'COMMON.sort_by' | translate">
         </app-searchable-select>
       </div>
         <button type="button" class="cfs-toggle-sidebar-btn"
           [class.active]="advOpen"
           (click)="advOpen = !advOpen">
           <i class="bi bi-sliders2"></i>
-          <span class="d-none d-sm-inline">Filters</span>
+           <span class="d-none d-sm-inline">{{ 'COMMON.filters' | translate }}</span>
           @if (activeAdvCount > 0) {
             <span class="cfs-filter-badge">{{ activeAdvCount }}</span>
           }
@@ -151,7 +151,7 @@ function websiteValidator(): ValidatorFn {
           } @else {
             <i class="bi bi-download"></i>
           }
-          <span class="d-none d-sm-inline ms-1">Export CSV</span>
+           <span class="d-none d-sm-inline ms-1">{{ 'COMMON.download' | translate }} CSV</span>
         </button>
         <div class="cl-view-toggle">
           <button type="button" class="cl-view-toggle__btn"
@@ -166,8 +166,8 @@ function websiteValidator(): ValidatorFn {
           </button>
         </div>
         @if (hasAnyFilter) {
-          <button type="button" class="filter-clear-btn" (click)="clearFilters()">
-            <i class="bi bi-x-lg"></i> Clear
+           <button type="button" class="filter-clear-btn" (click)="clearFilters()">
+            <i class="bi bi-x-lg"></i> {{ 'COMMON.clear' | translate }}
           </button>
         }
       </div>
@@ -326,7 +326,7 @@ function websiteValidator(): ValidatorFn {
           <div class="table-responsive">
             <table class="table table-hover align-middle mb-0">
               <thead class="table-light">
-                <tr>
+                   <tr>
                   <th style="width:36px">
                     <input type="checkbox" class="form-check-input"
                       [checked]="isAllSelected()"
@@ -334,13 +334,13 @@ function websiteValidator(): ValidatorFn {
                       (change)="toggleSelectAll()">
                   </th>
                    <th class="small">#</th>
-                   <th class="small">Name</th>
-                   <th class="small">Type</th>
-                   <th class="small">Company</th>
-                  <th class="small">Email</th>
-                  <th class="small">Expires</th>
-                  <th class="small">Status</th>
-                  <th class="small">Actions</th>
+                   <th class="small">{{ 'COMMON.name' | translate }}</th>
+                   <th class="small">{{ 'COMMON.type' | translate }}</th>
+                   <th class="small">{{ 'FORMS.company_name' | translate }}</th>
+                  <th class="small">{{ 'COMMON.email' | translate }}</th>
+                  <th class="small">{{ 'COMMON.expires' | translate }}</th>
+                  <th class="small">{{ 'COMMON.status' | translate }}</th>
+                  <th class="small">{{ 'COMMON.actions' | translate }}</th>
                 </tr>
               </thead>
               <tbody>
@@ -358,30 +358,30 @@ function websiteValidator(): ValidatorFn {
                       }
                     </td>
                      <td class="fw-semibold small">{{ rec.contact_name }}</td>
-                     <td>
-                       <span class="rc-badge rc-badge--sm"
-                         [class.rc-badge--type-employer]="rec.type !== 'recruitment_agency'"
-                         [class.rc-badge--type-agency]="rec.type === 'recruitment_agency'">
-                         {{ rec.type === 'recruitment_agency' ? 'Recruitment Agency' : 'Direct Employer' }}
-                       </span>
-                     </td>
+                      <td>
+                        <span class="rc-badge rc-badge--sm"
+                          [class.rc-badge--type-employer]="rec.type !== 'recruitment_agency'"
+                          [class.rc-badge--type-agency]="rec.type === 'recruitment_agency'">
+                          {{ rec.type === 'recruitment_agency' ? ('OPTIONS.recruiter_agency' | translate) : ('OPTIONS.direct_employer' | translate) }}
+                        </span>
+                      </td>
                      <td class="small text-muted">{{ rec.company_name || '—' }}</td>
                     <td class="small">{{ rec.email }}</td>
                     <td class="small">
                       <span [class.text-danger]="isExpired(rec.access_expires_at)"
                             [class.text-muted]="!isExpired(rec.access_expires_at)">
                         {{ rec.access_expires_at | date:'dd MMM yyyy' }}
-                        @if (isExpired(rec.access_expires_at)) {
-                          <span class="badge bg-danger ms-1">Expired</span>
-                        }
+                         @if (isExpired(rec.access_expires_at)) {
+                           <span class="badge bg-danger ms-1">{{ 'COMMON.expired' | translate }}</span>
+                         }
                       </span>
                     </td>
                     <td>
-                      <span class="badge rounded-pill"
-                        [class.bg-success]="rec.is_active"
-                        [class.bg-secondary]="!rec.is_active">
-                        {{ rec.is_active ? 'Active' : 'Inactive' }}
-                      </span>
+                       <span class="badge rounded-pill"
+                         [class.bg-success]="rec.is_active"
+                         [class.bg-secondary]="!rec.is_active">
+                         {{ rec.is_active ? ('COMMON.active' | translate) : ('COMMON.inactive' | translate) }}
+                       </span>
                     </td>
                     <td>
                       <div class="tbl-actions">

@@ -18,7 +18,7 @@ import { ContactSubmission } from '../../../core/models/contact-submission.model
     <!-- ── Hero ─────────────────────────────────────────────────────────── -->
     <div class="adm-hero">
       <div class="adm-hero__eyebrow">{{ 'ADMIN.portal_label' | translate }}</div>
-      <h1 class="adm-hero__title">Good {{ timeOfDay() }}{{ adminName() ? ', ' + adminName() : '' }}</h1>
+       <h1 class="adm-hero__title">{{ ('COMMON.good_' + timeOfDay()) | translate }}{{ adminName() ? ', ' + adminName() : '' }}</h1>
       <div class="adm-hero__meta">
         <span class="adm-hero__chip"><i class="bi bi-calendar3"></i>{{ today() }}</span>
         <span class="adm-hero__chip adm-hero__chip--shield"><i class="bi bi-shield-fill-check"></i>{{ 'ADMIN.administrator' | translate }}</span>
@@ -233,9 +233,9 @@ import { ContactSubmission } from '../../../core/models/contact-submission.model
           @else { {{ stats()?.totalVolunteers ?? 0 }} }
         </div>
         <div class="dark-stat-card__label">{{ 'ADMIN.total_volunteers' | translate }}</div>
-        <div class="dark-stat-card__badge">
-          <i class="bi bi-people-fill"></i> Registered
-        </div>
+         <div class="dark-stat-card__badge">
+           <i class="bi bi-people-fill"></i> {{ 'COMMON.registered' | translate }}
+         </div>
       </div>
 
       <!-- Active Volunteers — Deep Teal -->

@@ -18,6 +18,7 @@
     "saving": "Saving…",
     "remove": "Remove",
     "removing": "Removing…",
+    "collapse": "Collapse",
     "submit": "Submit",
     "apply": "Apply",
     "apply_filters": "Apply Filters",
@@ -80,8 +81,17 @@
      "present": "Present",
     "no_data": "No data available",
     "example": "e.g. 6",
-    "list_view": "List view",
-    "grid_view": "Grid view"
+         "list_view": "List view",
+    "grid_view": "Grid view",
+    "type": "Type",
+    "expires": "Expires",
+    "sort_by": "Sort by…",
+    "company": "Company",
+    "expired": "Expired",
+    "type": "Type",
+    "expires": "Expires",
+    "sort_by": "Sort by…",
+    "company": "Company"
   },
   "NAV": {
     "dashboard": "Dashboard",
@@ -501,12 +511,15 @@
     "total_label": "total"
   },
   "CONTACT_SUBMISSIONS": {
-    "title": "Contact Submissions",
+    "title": "Contact Requests",
     "subtitle": "Messages submitted via the website contact form.",
     "no_submissions": "No Contact Submissions",
     "no_submissions_sub": "No messages have been submitted yet.",
-    "mark_read": "Mark as Read",
+    "no_requests": "No contact requests found",
+    "empty_message": "Submissions from the contact form will appear here.",
+    "mark_read": "Mark read",
     "mark_unread": "Mark as Unread",
+    "received": "Received",
     "loading": "Loading submissions…"
   },
   "AUDIT_LOGS": {
@@ -558,7 +571,7 @@
     "notice_days": "Days",
     "hobby_name": "Hobby Name"
   },
-  "VOLUNTEERS": {
+   "VOLUNTEERS": {
     "title": "Volunteers",
     "admin_subtitle": "Manage volunteers who support candidates.",
     "candidate_subtitle": "Community volunteers who can help guide your journey.",
@@ -569,7 +582,9 @@
     "expertise": "Expertise",
     "available": "Available",
     "unavailable": "Unavailable",
-    "contact": "Contact"
+    "contact": "Contact",
+    "add": "Add Volunteer",
+    "search_placeholder": "Search name, role, email…"
   },
   "CANDIDATE_DASHBOARD": {
     "portal_label": "NTL Career Nexus — Candidate Portal",
@@ -723,11 +738,13 @@
     "reason_redundancy": "Redundancy",
     "reason_personal": "Personal Reasons",
     "reason_other": "Other",
-    "rec_sort_newest": "Newest First",
+     "rec_sort_newest": "Newest First",
     "rec_sort_oldest": "Oldest First",
     "rec_sort_most_active": "Most Active",
     "rec_sort_alphabetical": "Alphabetical A–Z",
-    "rec_sort_last_active": "Last Active"
+    "rec_sort_last_active": "Last Active",
+    "recruiter_agency": "Recruitment Agency",
+    "direct_employer": "Direct Employer"
   },
   "CANDIDATE_CARD": {
     "shortlisted": "Shortlisted",
@@ -858,6 +875,9 @@
     "avail_3months": "Within 3 Months"
   },
   "CONTACT_STATUS": {
+    "status": "Status",
+    "read": "Read",
+    "new": "New",
     "unlocked": "Contact Unlocked",
     "pending_badge": "Request Pending",
     "rejected_badge": "Request Rejected",
@@ -1525,6 +1545,72 @@
     "sent": "Sent successfully",
     "failed": "Operation failed",
     "try_again": "Please try again"
+  },
+  "TABLE": {
+    "login_id": "Login ID",
+    "candidate": "Candidate",
+    "job_title": "Job Title",
+    "occupation": "Occupation",
+    "location": "Location",
+    "experience": "Exp.",
+    "status": "Status",
+    "fee": "Fee",
+    "cv_format": "CV Format",
+    "video": "Video",
+    "profile": "Profile",
+    "actions": "Actions",
+    "first_name": "First Name",
+    "last_name": "Last Name",
+    "email": "Email",
+    "phone": "Phone",
+    "created_date": "Created Date",
+    "select_all": "Select all",
+    "selected_count": "{{count}} candidate{{plural}} selected"
+  },
+  "TOOLTIPS": {
+    "clear_selection": "Clear selection",
+    "export_selected": "Export selected candidates to CSV",
+    "change_status": "Change profile status for selected",
+    "mark_fee_paid": "Mark registration fee as paid for selected",
+    "view_profile": "View profile",
+    "edit_candidate": "Edit candidate",
+    "already_volunteer": "Already a volunteer",
+    "resend_credentials": "Resend credentials",
+    "delete_candidate": "Delete candidate",
+    "intro_video_available": "Intro video available",
+    "no_intro_video": "No intro video",
+    "invite_volunteer": "Invite as volunteer",
+    "resend_volunteer_invitation": "Resend volunteer invitation"
+  },
+  "BULK_ACTIONS": {
+    "export": "Export",
+    "status": "Status",
+    "mark_paid": "Mark Paid"
+  },
+  "CONFIRMATIONS": {
+    "mark_fee_paid": "Mark registration fee as Paid for {{count}} candidate{{plural}}?",
+    "change_status": "Set status to \"{{status}}\" for {{count}} candidate{{plural}}?",
+    "resend_credentials": "Resend login credentials to {{email}}?",
+    "delete_candidate": "Delete {{name}}? This cannot be undone.",
+    "mark_paid_label": "Mark Paid",
+    "apply_label": "Apply",
+    "send_label": "Send",
+    "delete_label": "Delete"
+  },
+  "STATUSES": {
+    "pending_edit": "Pending Edit",
+    "paid": "Paid",
+    "pending_payment": "Pending",
+    "waived": "Waived"
+  },
+  "CSV_FORMATS": {
+    "uk_format": "UK Format",
+    "european_format": "European Format",
+    "canadian_format": "Canadian Format",
+    "australian_format": "Australian Format",
+    "gulf_format": "Gulf Format",
+    "asian_format": "Asian Format",
+    "not_yet_created": "Not Yet Created"
   }
 }
 

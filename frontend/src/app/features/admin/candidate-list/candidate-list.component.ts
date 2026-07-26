@@ -55,12 +55,12 @@ import { SORT_OPTIONS, PROFILE_STATUS_OPTIONS, PROFILE_STATUS_WITH_COLOR } from 
         <!-- Sort By -->
         <div class="cl-sort-wrap">
           <i class="bi bi-sort-down cl-sort-wrap__icon"></i>
-          <app-searchable-select
-            [formControl]="sortCtrl"
-            [options]="SORT_OPTIONS"
-            [allowClear]="false"
-            placeholder="Sort by…">
-          </app-searchable-select>
+           <app-searchable-select
+             [formControl]="sortCtrl"
+             [options]="SORT_OPTIONS"
+             [allowClear]="false"
+             [placeholder]="'COMMON.sort_by' | translate">
+           </app-searchable-select>
         </div>
         <button type="button" class="cfs-toggle-sidebar-btn"
           [class.active]="sidebarVisible"
@@ -122,8 +122,8 @@ import { SORT_OPTIONS, PROFILE_STATUS_OPTIONS, PROFILE_STATUS_WITH_COLOR } from 
         <div class="cl-bulk-bar__info">
           <i class="bi bi-check2-square"></i>
           <strong>{{ selectionCount }}</strong>
-          <span class="d-none d-sm-inline"> candidate{{ selectionCount === 1 ? '' : 's' }} selected</span>
-          <button class="cl-bulk-bar__clear-x" (click)="clearSelection()" title="Clear selection">
+           <span class="d-none d-sm-inline"> {{ selectionCount === 1 ? ('CANDIDATE_LIST.candidate_singular' | translate) : ('CANDIDATE_LIST.candidates_plural' | translate) }} {{ 'TABLE.selected_label' | translate }}</span>
+           <button class="cl-bulk-bar__clear-x" (click)="clearSelection()" [title]="'TOOLTIPS.clear_selection' | translate">
             <i class="bi bi-x"></i>
           </button>
         </div>
@@ -135,22 +135,22 @@ import { SORT_OPTIONS, PROFILE_STATUS_OPTIONS, PROFILE_STATUS_WITH_COLOR } from 
         <div class="cl-bulk-bar__actions">
 
           <!-- Export selected -->
-          <button class="cl-bulk-bar__btn"
-            [disabled]="bulkProcessing"
-            (click)="exportSelectedCsv()"
-            title="Export selected candidates to CSV">
-            <i class="bi bi-download"></i>
-            <span class="d-none d-sm-inline ms-1">Export</span>
+           <button class="cl-bulk-bar__btn"
+             [disabled]="bulkProcessing"
+             (click)="exportSelectedCsv()"
+             [title]="'TOOLTIPS.export_selected' | translate">
+             <i class="bi bi-download"></i>
+             <span class="d-none d-sm-inline ms-1">{{ 'BULK_ACTIONS.export' | translate }}</span>
           </button>
 
           <!-- Change Status dropdown -->
           <div class="cl-bulk-bar__drop-wrap">
-            <button class="cl-bulk-bar__btn"
-              [disabled]="bulkProcessing"
-              (click)="toggleStatusDrop($event)"
-              title="Change profile status for selected">
-              <i class="bi bi-person-badge"></i>
-              <span class="d-none d-sm-inline ms-1">Status</span>
+             <button class="cl-bulk-bar__btn"
+               [disabled]="bulkProcessing"
+               (click)="toggleStatusDrop($event)"
+               [title]="'TOOLTIPS.change_status' | translate">
+               <i class="bi bi-person-badge"></i>
+               <span class="d-none d-sm-inline ms-1">{{ 'BULK_ACTIONS.status' | translate }}</span>
               <i class="bi bi-chevron-down" style="font-size:.6rem;margin-left:.2rem"></i>
             </button>
             @if (statusDropOpen) {
@@ -167,16 +167,16 @@ import { SORT_OPTIONS, PROFILE_STATUS_OPTIONS, PROFILE_STATUS_WITH_COLOR } from 
           </div>
 
           <!-- Mark Fee Paid -->
-          <button class="cl-bulk-bar__btn cl-bulk-bar__btn--success"
-            [disabled]="bulkProcessing"
-            (click)="bulkMarkFeePaid()"
-            title="Mark registration fee as paid for selected">
-            @if (bulkProcessing) {
-              <span class="spinner-border spinner-border-sm"></span>
-            } @else {
-              <i class="bi bi-check-circle-fill"></i>
-            }
-            <span class="d-none d-sm-inline ms-1">Mark Paid</span>
+           <button class="cl-bulk-bar__btn cl-bulk-bar__btn--success"
+             [disabled]="bulkProcessing"
+             (click)="bulkMarkFeePaid()"
+             [title]="'TOOLTIPS.mark_fee_paid' | translate">
+             @if (bulkProcessing) {
+               <span class="spinner-border spinner-border-sm"></span>
+             } @else {
+               <i class="bi bi-check-circle-fill"></i>
+             }
+             <span class="d-none d-sm-inline ms-1">{{ 'BULK_ACTIONS.mark_paid' | translate }}</span>
           </button>
 
         </div>
@@ -186,20 +186,20 @@ import { SORT_OPTIONS, PROFILE_STATUS_OPTIONS, PROFILE_STATUS_WITH_COLOR } from 
     <!-- ── Results area ──────────────────────────────────────────────────────── -->
     <div class="cfs-results">
 
-      @if (loading) {
-        <div class="loading-state">
-          <div class="spinner-border"></div>
-          <div class="loading-state__text">Loading candidates…</div>
-        </div>
-      }
+       @if (loading) {
+         <div class="loading-state">
+           <div class="spinner-border"></div>
+           <div class="loading-state__text">{{ 'CANDIDATE_LIST.loading' | translate }}</div>
+         </div>
+       }
 
-      @if (!loading && candidates.length === 0) {
-        <app-empty-state icon="bi-people"
-                         title="No candidates found"
-                         message="Try adjusting your filters or register a new candidate."
-                         actionLabel="Register New Candidate"
-                         actionRoute="/admin/candidates/register" />
-      }
+       @if (!loading && candidates.length === 0) {
+         <app-empty-state icon="bi-people"
+                          [title]="'CANDIDATE_LIST.no_candidates' | translate"
+                          [message]="'CANDIDATE_LIST.no_candidates_sub' | translate"
+                          [actionLabel]="'CANDIDATE_LIST.add_candidate' | translate"
+                          actionRoute="/admin/candidates/register" />
+       }
 
       @if (!loading && candidates.length > 0) {
 
@@ -209,28 +209,28 @@ import { SORT_OPTIONS, PROFILE_STATUS_OPTIONS, PROFILE_STATUS_WITH_COLOR } from 
             <!-- Desktop table -->
             <div class="table-responsive d-none d-md-block">
               <table class="table table-hover align-middle mb-0" style="min-width: 1000px">
-                <thead class="table-light">
-                  <tr>
-                    <th style="width:44px">
-                      <input type="checkbox" class="cl-table-check"
-                        [checked]="isAllSelected()"
-                        (change)="toggleSelectAll()"
-                        title="Select all">
-                    </th>
-                    <th>Login ID</th>
-                    <th>Candidate</th>
-                    <th>Job Title</th>
-                    <th>Occupation</th>
-                    <th>Location</th>
-                    <th>Exp.</th>
-                    <th>Status</th>
-                    <th>Fee</th>
-                    <th>CV Format</th>
-                    <th style="width:48px;text-align:center">Video</th>
-                    <th style="width:80px;text-align:center">Profile</th>
-                    <th>Actions</th>
-                  </tr>
-                </thead>
+                 <thead class="table-light">
+                   <tr>
+                     <th style="width:44px">
+                       <input type="checkbox" class="cl-table-check"
+                         [checked]="isAllSelected()"
+                         (change)="toggleSelectAll()"
+                         [title]="'TABLE.select_all' | translate">
+                     </th>
+                     <th>{{ 'TABLE.login_id' | translate }}</th>
+                     <th>{{ 'TABLE.candidate' | translate }}</th>
+                     <th>{{ 'TABLE.job_title' | translate }}</th>
+                     <th>{{ 'TABLE.occupation' | translate }}</th>
+                     <th>{{ 'TABLE.location' | translate }}</th>
+                     <th>{{ 'TABLE.experience' | translate }}</th>
+                     <th>{{ 'TABLE.status' | translate }}</th>
+                     <th>{{ 'TABLE.fee' | translate }}</th>
+                     <th>{{ 'TABLE.cv_format' | translate }}</th>
+                     <th style="width:48px;text-align:center">{{ 'TABLE.video' | translate }}</th>
+                     <th style="width:80px;text-align:center">{{ 'TABLE.profile' | translate }}</th>
+                     <th>{{ 'TABLE.actions' | translate }}</th>
+                   </tr>
+                 </thead>
                 <tbody>
                   @for (emp of candidates; track emp.id) {
                     <tr [class.cl-row--selected]="isSelected(emp.id)">
@@ -305,11 +305,11 @@ import { SORT_OPTIONS, PROFILE_STATUS_OPTIONS, PROFILE_STATUS_WITH_COLOR } from 
                         }
                       </td>
                       <td style="text-align:center">
-                        @if (emp.intro_video_url) {
-                          <i class="bi bi-camera-video-fill" style="color:var(--th-emerald,#10b981)" title="Intro video available"></i>
-                        } @else {
-                          <i class="bi bi-camera-video-off" style="color:var(--th-muted,#9ca3af)" title="No intro video"></i>
-                        }
+                         @if (emp.intro_video_url) {
+                           <i class="bi bi-camera-video-fill" style="color:var(--th-emerald,#10b981)" [title]="'TOOLTIPS.intro_video_available' | translate"></i>
+                         } @else {
+                           <i class="bi bi-camera-video-off" style="color:var(--th-muted,#9ca3af)" [title]="'TOOLTIPS.no_intro_video' | translate"></i>
+                         }
                       </td>
                       <td style="text-align:center">
                         <span class="badge rounded-pill"
@@ -320,27 +320,27 @@ import { SORT_OPTIONS, PROFILE_STATUS_OPTIONS, PROFILE_STATUS_WITH_COLOR } from 
                         </span>
                       </td>
                       <td>
-                        <div class="tbl-actions">
-                          <a [routerLink]="['/admin/candidates', emp.id]"
-                            class="tbl-actions__btn tbl-actions__btn--view tbl-actions__btn--icon" title="View profile">
-                            <i class="bi bi-eye"></i>
-                          </a>
-                          <a [routerLink]="['/admin/candidates', emp.id, 'edit']"
-                            class="tbl-actions__btn tbl-actions__btn--edit tbl-actions__btn--icon" title="Edit candidate">
-                            <i class="bi bi-pencil"></i>
-                          </a>
+                         <div class="tbl-actions">
+                           <a [routerLink]="['/admin/candidates', emp.id]"
+                             class="tbl-actions__btn tbl-actions__btn--view tbl-actions__btn--icon" [title]="'TOOLTIPS.view_profile' | translate">
+                             <i class="bi bi-eye"></i>
+                           </a>
+                           <a [routerLink]="['/admin/candidates', emp.id, 'edit']"
+                             class="tbl-actions__btn tbl-actions__btn--edit tbl-actions__btn--icon" [title]="'TOOLTIPS.edit_candidate' | translate">
+                             <i class="bi bi-pencil"></i>
+                           </a>
                           <div class="tbl-actions__sep"></div>
                           @if (emp.profile_status === 'placed') {
-                            @if (emp.is_volunteer || emp.volunteer_invite_status === 'converted') {
-                              <span class="tbl-actions__btn tbl-actions__btn--icon"
-                                style="color:var(--th-success,#22c55e);cursor:default" title="Already a volunteer">
-                                <i class="bi bi-person-check-fill"></i>
-                              </span>
-                            } @else {
-                              <button class="tbl-actions__btn tbl-actions__btn--icon tbl-actions__btn--vol"
-                                [disabled]="invitingId === emp.id"
-                                (click)="inviteAsVolunteer(emp)"
-                                [title]="emp.volunteer_invite_status === 'invited' ? 'Resend volunteer invitation' : 'Invite as volunteer'">
+                             @if (emp.is_volunteer || emp.volunteer_invite_status === 'converted') {
+                               <span class="tbl-actions__btn tbl-actions__btn--icon"
+                                 style="color:var(--th-success,#22c55e);cursor:default" [title]="'TOOLTIPS.already_volunteer' | translate">
+                                 <i class="bi bi-person-check-fill"></i>
+                               </span>
+                             } @else {
+                               <button class="tbl-actions__btn tbl-actions__btn--icon tbl-actions__btn--vol"
+                                 [disabled]="invitingId === emp.id"
+                                 (click)="inviteAsVolunteer(emp)"
+                                 [title]="emp.volunteer_invite_status === 'invited' ? ('TOOLTIPS.resend_volunteer_invitation' | translate) : ('TOOLTIPS.invite_volunteer' | translate)">
                                 @if (invitingId === emp.id) {
                                   <span class="spinner-border spinner-border-sm"></span>
                                 } @else if (emp.volunteer_invite_status === 'invited') {
@@ -351,14 +351,14 @@ import { SORT_OPTIONS, PROFILE_STATUS_OPTIONS, PROFILE_STATUS_WITH_COLOR } from 
                               </button>
                             }
                           }
-                          <button class="tbl-actions__btn tbl-actions__btn--mail tbl-actions__btn--icon"
-                            (click)="resendCreds(emp)" title="Resend credentials">
-                            <i class="bi bi-envelope"></i>
-                          </button>
-                          <button class="tbl-actions__btn tbl-actions__btn--danger tbl-actions__btn--icon"
-                            (click)="deleteCandidate(emp)" title="Delete candidate">
-                            <i class="bi bi-trash"></i>
-                          </button>
+                           <button class="tbl-actions__btn tbl-actions__btn--mail tbl-actions__btn--icon"
+                             (click)="resendCreds(emp)" [title]="'TOOLTIPS.resend_credentials' | translate">
+                             <i class="bi bi-envelope"></i>
+                           </button>
+                           <button class="tbl-actions__btn tbl-actions__btn--danger tbl-actions__btn--icon"
+                             (click)="deleteCandidate(emp)" [title]="'TOOLTIPS.delete_candidate' | translate">
+                             <i class="bi bi-trash"></i>
+                           </button>
                         </div>
                       </td>
                     </tr>
@@ -439,25 +439,25 @@ import { SORT_OPTIONS, PROFILE_STATUS_OPTIONS, PROFILE_STATUS_WITH_COLOR } from 
                   </div>
                   <div class="tbl-actions">
                     <a [routerLink]="['/admin/candidates', emp.id]"
-                      class="tbl-actions__btn tbl-actions__btn--view tbl-actions__btn--icon" title="View profile">
-                      <i class="bi bi-eye"></i>
-                    </a>
-                    <a [routerLink]="['/admin/candidates', emp.id, 'edit']"
-                      class="tbl-actions__btn tbl-actions__btn--edit tbl-actions__btn--icon" title="Edit candidate">
-                      <i class="bi bi-pencil"></i>
-                    </a>
+                       class="tbl-actions__btn tbl-actions__btn--view tbl-actions__btn--icon" [title]="'TOOLTIPS.view_profile' | translate">
+                       <i class="bi bi-eye"></i>
+                     </a>
+                     <a [routerLink]="['/admin/candidates', emp.id, 'edit']"
+                       class="tbl-actions__btn tbl-actions__btn--edit tbl-actions__btn--icon" [title]="'TOOLTIPS.edit_candidate' | translate">
+                       <i class="bi bi-pencil"></i>
+                     </a>
                     <div class="tbl-actions__sep"></div>
                     @if (emp.profile_status === 'placed') {
-                      @if (emp.is_volunteer || emp.volunteer_invite_status === 'converted') {
-                        <span class="tbl-actions__btn tbl-actions__btn--icon"
-                          style="color:var(--th-success,#22c55e);cursor:default" title="Already a volunteer">
-                          <i class="bi bi-person-check-fill"></i>
-                        </span>
-                      } @else {
-                        <button class="tbl-actions__btn tbl-actions__btn--icon tbl-actions__btn--vol"
-                          [disabled]="invitingId === emp.id"
-                          (click)="inviteAsVolunteer(emp)"
-                          [title]="emp.volunteer_invite_status === 'invited' ? 'Resend volunteer invitation' : 'Invite as volunteer'">
+                       @if (emp.is_volunteer || emp.volunteer_invite_status === 'converted') {
+                         <span class="tbl-actions__btn tbl-actions__btn--icon"
+                           style="color:var(--th-success,#22c55e);cursor:default" [title]="'TOOLTIPS.already_volunteer' | translate">
+                           <i class="bi bi-person-check-fill"></i>
+                         </span>
+                       } @else {
+                         <button class="tbl-actions__btn tbl-actions__btn--icon tbl-actions__btn--vol"
+                           [disabled]="invitingId === emp.id"
+                           (click)="inviteAsVolunteer(emp)"
+                           [title]="emp.volunteer_invite_status === 'invited' ? ('TOOLTIPS.resend_volunteer_invitation' | translate) : ('TOOLTIPS.invite_volunteer' | translate)">
                           @if (invitingId === emp.id) {
                             <span class="spinner-border spinner-border-sm"></span>
                           } @else if (emp.volunteer_invite_status === 'invited') {
@@ -468,14 +468,14 @@ import { SORT_OPTIONS, PROFILE_STATUS_OPTIONS, PROFILE_STATUS_WITH_COLOR } from 
                         </button>
                       }
                     }
-                    <button class="tbl-actions__btn tbl-actions__btn--mail tbl-actions__btn--icon"
-                      (click)="resendCreds(emp)" title="Resend credentials">
-                      <i class="bi bi-envelope"></i>
-                    </button>
-                    <button class="tbl-actions__btn tbl-actions__btn--danger tbl-actions__btn--icon"
-                      (click)="deleteCandidate(emp)" title="Delete candidate">
-                      <i class="bi bi-trash"></i>
-                    </button>
+                     <button class="tbl-actions__btn tbl-actions__btn--mail tbl-actions__btn--icon"
+                       (click)="resendCreds(emp)" [title]="'TOOLTIPS.resend_credentials' | translate">
+                       <i class="bi bi-envelope"></i>
+                     </button>
+                     <button class="tbl-actions__btn tbl-actions__btn--danger tbl-actions__btn--icon"
+                       (click)="deleteCandidate(emp)" [title]="'TOOLTIPS.delete_candidate' | translate">
+                       <i class="bi bi-trash"></i>
+                     </button>
                   </div>
                 </div>
               }

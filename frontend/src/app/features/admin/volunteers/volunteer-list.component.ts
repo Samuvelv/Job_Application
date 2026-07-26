@@ -20,25 +20,25 @@ import { SearchableSelectComponent, SelectOption } from '../../../shared/compone
   imports: [CommonModule, TranslateModule, ReactiveFormsModule, FormsModule, RouterLink, PageHeaderComponent, EmptyStateComponent, SearchableSelectComponent],
   template: `
     <app-page-header
-      title="Volunteers"
+      [title]="'VOLUNTEERS.title' | translate"
       [subtitle]="pagination.total + ' volunteer' + (pagination.total !== 1 ? 's' : '')"
       icon="bi-people-fill">
       <button class="btn btn-primary" routerLink="/admin/volunteers/create">
-        <i class="bi bi-person-plus me-1"></i>Add Volunteer
+        <i class="bi bi-person-plus me-1"></i>{{ 'VOLUNTEERS.add' | translate }}
       </button>
     </app-page-header>
 
     <!-- ── Top Bar ─────────────────────────────────────────────────── -->
     <div class="cfs-topbar mb-3">
 
-      <!-- Search -->
-      <div class="cfs-search-wrap">
-        <i class="bi bi-search cfs-search-icon"></i>
-        <input type="text" class="cfs-search-input" [formControl]="searchCtrl"
-          placeholder="Search name, role, email…"
-          (keydown.enter)="applySearch()">
-        <button class="cfs-search-btn" (click)="applySearch()">Search</button>
-      </div>
+       <!-- Search -->
+       <div class="cfs-search-wrap">
+         <i class="bi bi-search cfs-search-icon"></i>
+         <input type="text" class="cfs-search-input" [formControl]="searchCtrl"
+           [placeholder]="'VOLUNTEERS.search_placeholder' | translate"
+           (keydown.enter)="applySearch()">
+         <button class="cfs-search-btn" (click)="applySearch()">{{ 'COMMON.search' | translate }}</button>
+       </div>
 
       <!-- Sort -->
       <select class="form-select form-select-sm vl-sort-select" [formControl]="sortCtrl" (change)="onSortChange()">

@@ -13,8 +13,8 @@ import { NotificationService } from '../../../core/services/notification.service
   imports: [CommonModule, TranslateModule, PageHeaderComponent],
   template: `
     <app-page-header
-      title="Contact Requests"
-      [subtitle]="'Total: ' + pagination().total"
+      [title]="'CONTACT_SUBMISSIONS.title' | translate"
+      [subtitle]="('COMMON.total' | translate) + ': ' + pagination().total"
       icon="bi-envelope-fill"
     ></app-page-header>
 
@@ -22,7 +22,7 @@ import { NotificationService } from '../../../core/services/notification.service
     @if (loading()) {
       <div class="loading-state">
         <div class="spinner-border"></div>
-        <div class="loading-state__text">Loading requests…</div>
+        <div class="loading-state__text">{{ 'MESSAGES.loading' | translate }}</div>
       </div>
     }
 
@@ -30,8 +30,8 @@ import { NotificationService } from '../../../core/services/notification.service
     @if (!loading() && rows().length === 0) {
       <div class="empty-state">
         <div class="empty-state__icon"><i class="bi bi-inbox"></i></div>
-        <h5 class="empty-state-title">No contact requests found</h5>
-        <p class="empty-state-message">Submissions from the contact form will appear here.</p>
+        <h5 class="empty-state-title">{{ 'CONTACT_SUBMISSIONS.no_requests' | translate }}</h5>
+        <p class="empty-state-message">{{ 'CONTACT_SUBMISSIONS.empty_message' | translate }}</p>
       </div>
     }
 
@@ -40,34 +40,34 @@ import { NotificationService } from '../../../core/services/notification.service
       <div class="section-card">
         <div class="table-responsive">
           <table class="table table-hover align-middle mb-0 small">
-            <thead class="table-light">
-              <tr>
-                <th>Status</th>
-                <th>Name</th>
-                <th>Email</th>
-                <th>Phone</th>
-                <th>Subject</th>
-                <th>Message</th>
-                <th>Received</th>
-                <th></th>
-              </tr>
-            </thead>
+             <thead class="table-light">
+               <tr>
+                 <th>{{ 'CONTACT_STATUS.status' | translate }}</th>
+                 <th>{{ 'COMMON.name' | translate }}</th>
+                 <th>{{ 'COMMON.email' | translate }}</th>
+                 <th>{{ 'COMMON.phone' | translate }}</th>
+                 <th>{{ 'COMMON.subject' | translate }}</th>
+                 <th>{{ 'COMMON.message' | translate }}</th>
+                 <th>{{ 'CONTACT_SUBMISSIONS.received' | translate }}</th>
+                 <th></th>
+               </tr>
+             </thead>
             <tbody>
               @for (s of rows(); track s.id) {
                 <tr [class.fw-semibold]="!s.is_read">
-                  <td>
-                    @if (s.is_read) {
-                      <span class="badge rounded-pill"
-                        style="background:var(--th-surface-2);color:var(--th-text-secondary);font-size:.65rem">
-                        Read
-                      </span>
-                    } @else {
-                      <span class="badge rounded-pill"
-                        style="background:var(--th-primary-soft);color:var(--th-primary);font-size:.65rem">
-                        New
-                      </span>
-                    }
-                  </td>
+                   <td>
+                     @if (s.is_read) {
+                       <span class="badge rounded-pill"
+                         style="background:var(--th-surface-2);color:var(--th-text-secondary);font-size:.65rem">
+                         {{ 'CONTACT_STATUS.read' | translate }}
+                       </span>
+                     } @else {
+                       <span class="badge rounded-pill"
+                         style="background:var(--th-primary-soft);color:var(--th-primary);font-size:.65rem">
+                         {{ 'CONTACT_STATUS.new' | translate }}
+                       </span>
+                     }
+                   </td>
                   <td class="text-nowrap">{{ s.name }}</td>
                   <td class="text-muted">{{ s.email }}</td>
                   <td class="text-muted">{{ s.phone || '—' }}</td>
@@ -75,32 +75,32 @@ import { NotificationService } from '../../../core/services/notification.service
                   <td style="max-width:240px">
                     @if (expandedId() === s.id) {
                       <div style="white-space:pre-wrap;word-break:break-word">{{ s.message }}</div>
-                      <button class="btn btn-link btn-sm p-0 text-decoration-none"
-                        style="font-size:.72rem" (click)="expandedId.set(null)">
-                        Collapse
-                      </button>
+                       <button class="btn btn-link btn-sm p-0 text-decoration-none"
+                         style="font-size:.72rem" (click)="expandedId.set(null)">
+                         {{ 'COMMON.collapse' | translate }}
+                       </button>
                     } @else {
                       <span class="text-muted"
                         style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;display:block;max-width:240px"
                         [title]="s.message">
                         {{ s.message }}
                       </span>
-                      <button class="btn btn-link btn-sm p-0 text-decoration-none"
-                        style="font-size:.72rem" (click)="expand(s)">
-                        View
-                      </button>
+                       <button class="btn btn-link btn-sm p-0 text-decoration-none"
+                         style="font-size:.72rem" (click)="expand(s)">
+                         {{ 'COMMON.view' | translate }}
+                       </button>
                     }
                   </td>
                   <td class="text-muted text-nowrap" style="font-size:.72rem">
                     {{ s.submitted_at | date:'dd MMM yyyy, HH:mm' }}
                   </td>
                   <td>
-                    @if (!s.is_read) {
-                      <button class="btn btn-link btn-sm p-0 text-decoration-none text-nowrap"
-                        style="font-size:.75rem" (click)="markRead(s)">
-                        Mark read
-                      </button>
-                    }
+                     @if (!s.is_read) {
+                       <button class="btn btn-link btn-sm p-0 text-decoration-none text-nowrap"
+                         style="font-size:.75rem" (click)="markRead(s)">
+                         {{ 'CONTACT_SUBMISSIONS.mark_read' | translate }}
+                       </button>
+                     }
                   </td>
                 </tr>
               }
