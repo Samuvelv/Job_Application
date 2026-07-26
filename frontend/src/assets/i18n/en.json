@@ -246,7 +246,13 @@
     "subject_general": "General Enquiry",
     "subject_job": "Looking for a Job",
     "subject_hire": "Looking to Hire",
-    "subject_other": "Other"
+    "subject_other": "Other",
+    "stats_active_candidates": "Active Candidates",
+    "stats_partner_companies": "Partner Companies",
+    "stats_matches_made": "Matches Made",
+    "stats_candidates": "Candidates",
+    "stats_companies": "Companies",
+    "stats_matches": "Matches"
   },
   "FEATURES": {
     "f1_title": "Visa Sponsor Job Matching",

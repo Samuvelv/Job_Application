@@ -2,7 +2,7 @@
 import { Component, signal, OnInit, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router, RouterLink } from '@angular/router';
-import { TranslateModule } from '@ngx-translate/core';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { forkJoin, of } from 'rxjs';
 import { catchError } from 'rxjs/operators';
 import { AuthService } from '../../../core/services/auth.service';
@@ -702,6 +702,7 @@ export class CandidateDashboardComponent implements OnInit {
     private statsService: StatsService,
     private candidateService: CandidateService,
     private router: Router,
+    private translate: TranslateService,
   ) {}
 
   ngOnInit(): void {
@@ -727,10 +728,10 @@ export class CandidateDashboardComponent implements OnInit {
 
   timeOfDay(): string {
     const h = new Date().getHours();
-    if (h < 12) return 'Good morning';
-    if (h < 17) return 'Good afternoon';
-    if (h < 21) return 'Good evening';
-    return 'Good night';
+    if (h < 12) return this.translate.instant('CANDIDATE_DASHBOARD.greeting_morning');
+    if (h < 17) return this.translate.instant('CANDIDATE_DASHBOARD.greeting_afternoon');
+    if (h < 21) return this.translate.instant('CANDIDATE_DASHBOARD.greeting_evening');
+    return this.translate.instant('CANDIDATE_DASHBOARD.greeting_night');
   }
 
   today(): string {
