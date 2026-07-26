@@ -40,50 +40,50 @@ import { SearchableSelectComponent, SelectOption } from '../../../shared/compone
          <button class="cfs-search-btn" (click)="applySearch()">{{ 'COMMON.search' | translate }}</button>
        </div>
 
-      <!-- Sort -->
-      <select class="form-select form-select-sm vl-sort-select" [formControl]="sortCtrl" (change)="onSortChange()">
-        <option value="newest">Newest First</option>
-        <option value="oldest">Oldest First</option>
-        <option value="most_helpful">Most Helpful</option>
-        <option value="name_asc">Name A–Z</option>
-      </select>
+       <!-- Sort -->
+       <select class="form-select form-select-sm vl-sort-select" [formControl]="sortCtrl" (change)="onSortChange()">
+         <option value="newest">{{ 'VOLUNTEERS.sort_newest' | translate }}</option>
+         <option value="oldest">{{ 'VOLUNTEERS.sort_oldest' | translate }}</option>
+         <option value="most_helpful">{{ 'VOLUNTEERS.sort_most_helpful' | translate }}</option>
+         <option value="name_asc">{{ 'VOLUNTEERS.sort_name_asc' | translate }}</option>
+       </select>
 
-      <!-- Filters toggle -->
-      <button class="btn btn-sm btn-outline-secondary d-flex align-items-center gap-1"
-        (click)="advOpen = !advOpen">
-        <i class="bi bi-funnel"></i> Filters
+       <!-- Filters toggle -->
+       <button class="btn btn-sm btn-outline-secondary d-flex align-items-center gap-1"
+         (click)="advOpen = !advOpen">
+         <i class="bi bi-funnel"></i> {{ 'VOLUNTEERS.filters' | translate }}
         @if (activeAdvCount > 0) {
           <span class="badge bg-primary rounded-pill">{{ activeAdvCount }}</span>
         }
       </button>
 
-      <!-- Export CSV -->
-      <button class="btn btn-sm btn-outline-success d-flex align-items-center gap-1"
-        [disabled]="exporting" (click)="exportCsv()">
-        @if (exporting) {
-          <span class="spinner-border spinner-border-sm"></span>
-        } @else {
-          <i class="bi bi-download"></i>
-        }
-        Export CSV
-      </button>
+       <!-- Export CSV -->
+       <button class="btn btn-sm btn-outline-success d-flex align-items-center gap-1"
+         [disabled]="exporting" (click)="exportCsv()">
+         @if (exporting) {
+           <span class="spinner-border spinner-border-sm"></span>
+         } @else {
+           <i class="bi bi-download"></i>
+         }
+         {{ 'VOLUNTEERS.export_csv' | translate }}
+       </button>
 
-      <!-- View toggle -->
-      <div class="cl-view-toggle">
-        <button [class.active]="viewMode === 'list'" (click)="viewMode = 'list'" title="List view">
-          <i class="bi bi-list-ul"></i>
-        </button>
-        <button [class.active]="viewMode === 'grid'" (click)="viewMode = 'grid'" title="Grid view">
-          <i class="bi bi-grid-3x3-gap-fill"></i>
-        </button>
-      </div>
+       <!-- View toggle -->
+       <div class="cl-view-toggle">
+         <button [class.active]="viewMode === 'list'" (click)="viewMode = 'list'" [title]="'VOLUNTEERS.list_view' | translate">
+           <i class="bi bi-list-ul"></i>
+         </button>
+         <button [class.active]="viewMode === 'grid'" (click)="viewMode = 'grid'" [title]="'VOLUNTEERS.grid_view' | translate">
+           <i class="bi bi-grid-3x3-gap-fill"></i>
+         </button>
+       </div>
 
-      <!-- Clear all -->
-      @if (hasAnyFilter) {
-        <button class="btn btn-sm btn-link text-danger p-0" (click)="clearFilters()">
-          <i class="bi bi-x-lg me-1"></i>Clear All
-        </button>
-      }
+       <!-- Clear all -->
+       @if (hasAnyFilter) {
+         <button class="btn btn-sm btn-link text-danger p-0" (click)="clearFilters()">
+           <i class="bi bi-x-lg me-1"></i>{{ 'VOLUNTEERS.clear_all' | translate }}
+         </button>
+       }
     </div>
 
     <!-- ── Advanced Filter Panel ────────────────────────────────────── -->
@@ -93,51 +93,51 @@ import { SearchableSelectComponent, SelectOption } from '../../../shared/compone
           <div class="row g-3">
 
             <div class="col-md-4">
-              <label class="form-label fw-semibold small">Country Placed In</label>
+              <label class="form-label fw-semibold small">{{ 'VOLUNTEERS.country_placed_in' | translate }}</label>
               <app-searchable-select
                 formControlName="country_placed"
                 [options]="countryOpts()"
-                placeholder="All countries"
+                [placeholder]="'VOLUNTEERS.all_countries' | translate"
                 [allowClear]="true">
               </app-searchable-select>
             </div>
 
             <div class="col-md-4">
-              <label class="form-label fw-semibold small">Industry / Sector</label>
+              <label class="form-label fw-semibold small">{{ 'VOLUNTEERS.industry_sector' | translate }}</label>
               <app-searchable-select
                 formControlName="sector"
                 [options]="industryOpts()"
-                placeholder="All industries"
+                [placeholder]="'VOLUNTEERS.all_industries' | translate"
                 [allowClear]="true">
               </app-searchable-select>
             </div>
 
             <div class="col-md-4">
-              <label class="form-label fw-semibold small">Language Spoken</label>
+              <label class="form-label fw-semibold small">{{ 'VOLUNTEERS.language_spoken' | translate }}</label>
               <app-searchable-select
                 formControlName="language"
                 [options]="languageOpts()"
-                placeholder="All languages"
+                [placeholder]="'VOLUNTEERS.all_languages' | translate"
                 [allowClear]="true">
               </app-searchable-select>
             </div>
 
             <div class="col-md-4">
-              <label class="form-label fw-semibold small">Nationality</label>
+              <label class="form-label fw-semibold small">{{ 'VOLUNTEERS.nationality' | translate }}</label>
               <app-searchable-select
                 formControlName="nationality"
                 [options]="nationalityOpts()"
-                placeholder="All nationalities"
+                [placeholder]="'VOLUNTEERS.all_nationalities' | translate"
                 [allowClear]="true">
               </app-searchable-select>
             </div>
 
             <div class="col-md-4">
-              <label class="form-label fw-semibold small">Availability</label>
+              <label class="form-label fw-semibold small">{{ 'VOLUNTEERS.availability' | translate }}</label>
               <app-searchable-select
                 formControlName="availability"
                 [options]="availabilityOpts"
-                placeholder="All"
+                [placeholder]="'COMMON.all' | translate"
                 [allowClear]="true">
               </app-searchable-select>
             </div>
@@ -146,10 +146,10 @@ import { SearchableSelectComponent, SelectOption } from '../../../shared/compone
 
           <div class="d-flex gap-2 mt-3">
             <button type="button" class="btn btn-sm btn-primary" (click)="applyFilters()">
-              <i class="bi bi-funnel-fill me-1"></i>Apply Filters
+              <i class="bi bi-funnel-fill me-1"></i>{{ 'VOLUNTEERS.apply_filters' | translate }}
             </button>
             <button type="button" class="btn btn-sm btn-outline-secondary" (click)="clearFilters()">
-              <i class="bi bi-x-lg me-1"></i>Clear All
+              <i class="bi bi-x-lg me-1"></i>{{ 'VOLUNTEERS.clear_all' | translate }}
             </button>
           </div>
         </form>
@@ -160,17 +160,17 @@ import { SearchableSelectComponent, SelectOption } from '../../../shared/compone
     @if (loading) {
       <div class="loading-state">
         <div class="spinner-border"></div>
-        <div class="loading-state__text">Loading volunteers…</div>
+        <div class="loading-state__text">{{ 'VOLUNTEERS.loading' | translate }}</div>
       </div>
 
     <!-- ── Empty ────────────────────────────────────────────────────── -->
     } @else if (volunteers.length === 0) {
       @if (hasAnyFilter) {
-        <app-empty-state icon="bi-people" title="No volunteers found"
-          subtitle="No volunteers match your filters. Try adjusting your search." />
+        <app-empty-state icon="bi-people" [title]="'VOLUNTEERS.no_volunteers_found' | translate"
+          [subtitle]="'VOLUNTEERS.no_volunteers_match_filters' | translate" />
       } @else {
-        <app-empty-state icon="bi-people" title="No volunteers yet"
-          subtitle="Volunteers are placed candidates who have chosen to give back by supporting new job seekers." />
+        <app-empty-state icon="bi-people" [title]="'VOLUNTEERS.no_volunteers_yet' | translate"
+          [subtitle]="'VOLUNTEERS.volunteers_give_back' | translate" />
       }
 
     <!-- ── Grid View ────────────────────────────────────────────────── -->
@@ -189,11 +189,11 @@ import { SearchableSelectComponent, SelectOption } from '../../../shared/compone
               </div>
               @if (v.availability === 'Active') {
                 <span class="vol-card__avail-badge vol-card__avail-badge--active">
-                  <i class="bi bi-circle-fill"></i> Active
+                  <i class="bi bi-circle-fill"></i> {{ 'VOLUNTEERS.active' | translate }}
                 </span>
               } @else {
                 <span class="vol-card__avail-badge vol-card__avail-badge--inactive">
-                  <i class="bi bi-circle"></i> Unavailable
+                  <i class="bi bi-circle"></i> {{ 'VOLUNTEERS.unavailable' | translate }}
                 </span>
               }
             </div>
@@ -217,7 +217,7 @@ import { SearchableSelectComponent, SelectOption } from '../../../shared/compone
             <div class="vol-card__meta">
               @if (v.role) { <span class="vol-card__role-badge">{{ v.role }}</span> }
               @if (v.year_placed) {
-                <span class="vol-card__year"><i class="bi bi-calendar3"></i> Placed in {{ v.year_placed }}</span>
+                <span class="vol-card__year"><i class="bi bi-calendar3"></i> {{ 'VOLUNTEERS.placed_in' | translate }} {{ v.year_placed }}</span>
               }
             </div>
 
@@ -238,25 +238,25 @@ import { SearchableSelectComponent, SelectOption } from '../../../shared/compone
                   {{ v.success_story }}
                 </p>
                 @if (v.success_story.length > 120) {
-                  <button class="vol-card__read-more" (click)="toggleExpand(v.id)">
-                    {{ isExpanded(v.id) ? 'Read Less' : 'Read More' }}
-                    <i class="bi" [class.bi-chevron-down]="!isExpanded(v.id)" [class.bi-chevron-up]="isExpanded(v.id)"></i>
-                  </button>
-                }
+                   <button class="vol-card__read-more" (click)="toggleExpand(v.id)">
+                     {{ isExpanded(v.id) ? ('VOLUNTEERS.read_less' | translate) : ('VOLUNTEERS.read_more' | translate) }}
+                     <i class="bi" [class.bi-chevron-down]="!isExpanded(v.id)" [class.bi-chevron-up]="isExpanded(v.id)"></i>
+                   </button>
+                 }
               </div>
             }
 
             <div class="vol-card__helped">
               <i class="bi bi-people-fill"></i>
-              Helped {{ v.candidates_helped ?? 0 }} candidate{{ (v.candidates_helped ?? 0) === 1 ? '' : 's' }}
+              {{ 'VOLUNTEERS.helped' | translate }} {{ v.candidates_helped ?? 0 }} {{ (v.candidates_helped ?? 0) === 1 ? ('VOLUNTEERS.candidate_singular' | translate) : ('VOLUNTEERS.candidate_plural' | translate) }}
             </div>
 
             <div class="vol-card__actions">
               <button class="vol-card__action-btn vol-card__action-btn--view" (click)="viewVolunteer(v)">
-                <i class="bi bi-eye"></i> View
+                <i class="bi bi-eye"></i> {{ 'VOLUNTEERS.view' | translate }}
               </button>
               <button class="vol-card__action-btn vol-card__action-btn--edit" (click)="editVolunteer(v)">
-                <i class="bi bi-pencil"></i> Edit
+                <i class="bi bi-pencil"></i> {{ 'VOLUNTEERS.edit' | translate }}
               </button>
               <button class="vol-card__action-btn"
                 [class.vol-card__action-btn--deactivate]="v.availability === 'Active'"
@@ -265,9 +265,9 @@ import { SearchableSelectComponent, SelectOption } from '../../../shared/compone
                 @if (toggling === v.id) {
                   <span class="spinner-border spinner-border-sm"></span>
                 } @else if (v.availability === 'Active') {
-                  <i class="bi bi-pause-circle"></i> Deactivate
+                  <i class="bi bi-pause-circle"></i> {{ 'VOLUNTEERS.deactivate' | translate }}
                 } @else {
-                  <i class="bi bi-play-circle"></i> Activate
+                  <i class="bi bi-play-circle"></i> {{ 'VOLUNTEERS.activate' | translate }}
                 }
               </button>
             </div>
@@ -280,18 +280,18 @@ import { SearchableSelectComponent, SelectOption } from '../../../shared/compone
     } @else {
       <div class="table-responsive">
         <table class="table table-hover align-middle mb-0">
-          <thead class="table-light">
-            <tr>
-              <th style="width:40px">#</th>
-              <th>Name</th>
-              <th>Role / Sector</th>
-              <th>Country Placed</th>
-              <th>Languages</th>
-              <th>Availability</th>
-              <th class="text-center">Helped</th>
-              <th class="text-end">Actions</th>
-            </tr>
-          </thead>
+           <thead class="table-light">
+             <tr>
+               <th style="width:40px">#</th>
+               <th>{{ 'VOLUNTEERS.name' | translate }}</th>
+               <th>{{ 'VOLUNTEERS.role_sector' | translate }}</th>
+               <th>{{ 'COMMON.country' | translate }} {{ 'VOLUNTEERS.placed_in' | translate | lowercase }}</th>
+               <th>{{ 'VOLUNTEERS.languages' | translate }}</th>
+               <th>{{ 'VOLUNTEERS.availability' | translate }}</th>
+               <th class="text-center">{{ 'VOLUNTEERS.helped' | translate }}</th>
+               <th class="text-end">{{ 'COMMON.actions' | translate }}</th>
+             </tr>
+           </thead>
           <tbody>
             @for (v of volunteers; track v.id; let i = $index) {
               <tr [class.table-secondary]="v.availability !== 'Active'">
@@ -330,35 +330,35 @@ import { SearchableSelectComponent, SelectOption } from '../../../shared/compone
                     </div>
                   } @else { <span class="text-muted small">—</span> }
                 </td>
-                <td>
-                  @if (v.availability === 'Active') {
-                    <span class="badge bg-success-subtle text-success border border-success-subtle" style="font-size:.7rem">Active</span>
-                  } @else {
-                    <span class="badge bg-secondary-subtle text-secondary border border-secondary-subtle" style="font-size:.7rem">Unavailable</span>
-                  }
-                </td>
+                 <td>
+                   @if (v.availability === 'Active') {
+                     <span class="badge bg-success-subtle text-success border border-success-subtle" style="font-size:.7rem">{{ 'VOLUNTEERS.active' | translate }}</span>
+                   } @else {
+                     <span class="badge bg-secondary-subtle text-secondary border border-secondary-subtle" style="font-size:.7rem">{{ 'VOLUNTEERS.unavailable' | translate }}</span>
+                   }
+                 </td>
                 <td class="text-center small">{{ v.candidates_helped ?? 0 }}</td>
-                <td class="text-end">
-                  <div class="d-flex justify-content-end gap-1">
-                    <button class="btn btn-xs btn-outline-primary" (click)="viewVolunteer(v)" title="View">
-                      <i class="bi bi-eye"></i>
-                    </button>
-                    <button class="btn btn-xs btn-outline-warning" (click)="editVolunteer(v)" title="Edit">
-                      <i class="bi bi-pencil"></i>
-                    </button>
-                    <button class="btn btn-xs"
-                      [class.btn-outline-danger]="v.availability === 'Active'"
-                      [class.btn-outline-success]="v.availability !== 'Active'"
-                      (click)="toggleAvailability(v)" [disabled]="toggling === v.id"
-                      [title]="v.availability === 'Active' ? 'Deactivate' : 'Activate'">
-                      @if (toggling === v.id) {
-                        <span class="spinner-border spinner-border-sm"></span>
-                      } @else {
-                        <i class="bi" [class.bi-pause-circle]="v.availability === 'Active'" [class.bi-play-circle]="v.availability !== 'Active'"></i>
-                      }
-                    </button>
-                  </div>
-                </td>
+                 <td class="text-end">
+                   <div class="d-flex justify-content-end gap-1">
+                     <button class="btn btn-xs btn-outline-primary" (click)="viewVolunteer(v)" [title]="'VOLUNTEERS.view' | translate">
+                       <i class="bi bi-eye"></i>
+                     </button>
+                     <button class="btn btn-xs btn-outline-warning" (click)="editVolunteer(v)" [title]="'VOLUNTEERS.edit' | translate">
+                       <i class="bi bi-pencil"></i>
+                     </button>
+                     <button class="btn btn-xs"
+                       [class.btn-outline-danger]="v.availability === 'Active'"
+                       [class.btn-outline-success]="v.availability !== 'Active'"
+                       (click)="toggleAvailability(v)" [disabled]="toggling === v.id"
+                       [title]="v.availability === 'Active' ? ('VOLUNTEERS.deactivate' | translate) : ('VOLUNTEERS.activate' | translate)">
+                       @if (toggling === v.id) {
+                         <span class="spinner-border spinner-border-sm"></span>
+                       } @else {
+                         <i class="bi" [class.bi-pause-circle]="v.availability === 'Active'" [class.bi-play-circle]="v.availability !== 'Active'"></i>
+                       }
+                     </button>
+                   </div>
+                 </td>
               </tr>
             }
           </tbody>
@@ -390,58 +390,58 @@ import { SearchableSelectComponent, SelectOption } from '../../../shared/compone
       <div class="file-preview-overlay" (click)="closePanel()">
         <div class="rec-edit-panel" (click)="$event.stopPropagation()">
           <div class="rec-edit-panel__header">
-            <div class="rec-edit-panel__avatar" style="background:var(--th-gradient-success)">
-              <i class="bi bi-person-fill" style="font-size:.9rem"></i>
-            </div>
-            <div class="rec-edit-panel__title-group">
-              <div class="rec-edit-panel__title">Edit Volunteer</div>
-              <div class="rec-edit-panel__subtitle">{{ editingVolunteer?.name }}</div>
-            </div>
-            <button type="button" class="file-preview-dialog__close" (click)="closePanel()">
-              <i class="bi bi-x-lg"></i>
-            </button>
-          </div>
-          <div class="rec-edit-panel__body">
-            <form [formGroup]="form" (ngSubmit)="save()">
-              <div class="rep-section">
-                <div class="rep-section__label"><i class="bi bi-person"></i> Details</div>
-                <div class="mb-3">
-                  <label class="form-label">Name <span class="text-danger">*</span></label>
-                  <input formControlName="name" class="form-control" placeholder="Full name" [class.is-invalid]="invalid('name')">
-                  @if (invalid('name')) { <div class="invalid-feedback">Name is required.</div> }
-                </div>
-                <div class="mb-3">
-                  <label class="form-label">Role / Sector <span class="rep-optional">optional</span></label>
-                  <input formControlName="role" class="form-control" placeholder="e.g. Registered Nurse">
-                </div>
-                <div class="mb-3">
-                  <label class="form-label">Email <span class="rep-optional">optional</span></label>
-                  <input formControlName="email" class="form-control" type="email" placeholder="volunteer@example.com" [class.is-invalid]="invalid('email')">
-                  @if (invalid('email')) { <div class="invalid-feedback">Enter a valid email address.</div> }
-                </div>
-                <div class="mb-0">
-                  <label class="form-label">Phone <span class="rep-optional">optional</span></label>
-                  <input formControlName="phone" class="form-control" placeholder="+1 555 000 0000">
-                </div>
-              </div>
-              <div class="rep-section">
-                <div class="rep-section__label"><i class="bi bi-chat-left-text"></i> Notes</div>
-                <textarea formControlName="notes" class="form-control" rows="3" placeholder="Any relevant notes…"></textarea>
-              </div>
-              @if (saveError) {
-                <div class="alert alert-danger small py-2 mb-3">
-                  <i class="bi bi-exclamation-triangle me-1"></i>{{ saveError }}
-                </div>
-              }
-              <div class="rec-edit-panel__footer">
-                <button type="button" class="btn btn-outline-secondary" (click)="closePanel()">Cancel</button>
-                <button type="submit" class="btn btn-primary" [disabled]="saving">
-                  @if (saving) { <span class="spinner-border spinner-border-sm me-1"></span>Saving… }
-                  @else { <i class="bi bi-check-lg me-1"></i>Save Changes }
-                </button>
-              </div>
-            </form>
-          </div>
+             <div class="rec-edit-panel__avatar" style="background:var(--th-gradient-success)">
+               <i class="bi bi-person-fill" style="font-size:.9rem"></i>
+             </div>
+             <div class="rec-edit-panel__title-group">
+               <div class="rec-edit-panel__title">{{ 'VOLUNTEERS.edit_volunteer' | translate }}</div>
+               <div class="rec-edit-panel__subtitle">{{ editingVolunteer?.name }}</div>
+             </div>
+             <button type="button" class="file-preview-dialog__close" (click)="closePanel()">
+               <i class="bi bi-x-lg"></i>
+             </button>
+           </div>
+           <div class="rec-edit-panel__body">
+             <form [formGroup]="form" (ngSubmit)="save()">
+               <div class="rep-section">
+                 <div class="rep-section__label"><i class="bi bi-person"></i> {{ 'VOLUNTEERS.details' | translate }}</div>
+                 <div class="mb-3">
+                   <label class="form-label">{{ 'VOLUNTEERS.name' | translate }} <span class="text-danger">*</span></label>
+                   <input formControlName="name" class="form-control" [placeholder]="'COMMON.name' | translate" [class.is-invalid]="invalid('name')">
+                   @if (invalid('name')) { <div class="invalid-feedback">{{ 'VOLUNTEERS.name' | translate }} {{ 'VOLUNTEERS.is_required' | translate }}</div> }
+                 </div>
+                 <div class="mb-3">
+                   <label class="form-label">{{ 'VOLUNTEERS.role_sector' | translate }} <span class="rep-optional">{{ 'VOLUNTEERS.optional' | translate }}</span></label>
+                   <input formControlName="role" class="form-control" placeholder="e.g. Registered Nurse">
+                 </div>
+                 <div class="mb-3">
+                   <label class="form-label">{{ 'COMMON.email' | translate }} <span class="rep-optional">{{ 'VOLUNTEERS.optional' | translate }}</span></label>
+                   <input formControlName="email" class="form-control" type="email" placeholder="volunteer@example.com" [class.is-invalid]="invalid('email')">
+                   @if (invalid('email')) { <div class="invalid-feedback">{{ 'VOLUNTEERS.enter_valid_email' | translate }}</div> }
+                 </div>
+                 <div class="mb-0">
+                   <label class="form-label">{{ 'COMMON.phone' | translate }} <span class="rep-optional">{{ 'VOLUNTEERS.optional' | translate }}</span></label>
+                   <input formControlName="phone" class="form-control" placeholder="+1 555 000 0000">
+                 </div>
+               </div>
+               <div class="rep-section">
+                 <div class="rep-section__label"><i class="bi bi-chat-left-text"></i> {{ 'VOLUNTEERS.notes' | translate }}</div>
+                 <textarea formControlName="notes" class="form-control" rows="3" placeholder="Any relevant notes…"></textarea>
+               </div>
+               @if (saveError) {
+                 <div class="alert alert-danger small py-2 mb-3">
+                   <i class="bi bi-exclamation-triangle me-1"></i>{{ saveError }}
+                 </div>
+               }
+               <div class="rec-edit-panel__footer">
+                 <button type="button" class="btn btn-outline-secondary" (click)="closePanel()">{{ 'VOLUNTEERS.cancel' | translate }}</button>
+                 <button type="submit" class="btn btn-primary" [disabled]="saving">
+                   @if (saving) { <span class="spinner-border spinner-border-sm me-1"></span>{{ 'VOLUNTEERS.saving' | translate }} }
+                   @else { <i class="bi bi-check-lg me-1"></i>{{ 'VOLUNTEERS.save_changes' | translate }} }
+                 </button>
+               </div>
+             </form>
+           </div>
         </div>
       </div>
     }

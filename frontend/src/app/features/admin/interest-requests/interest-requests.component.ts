@@ -247,28 +247,28 @@ import { NotificationService } from '../../../core/services/notification.service
     }
   `],
   template: `
-    <app-page-header title="Agency Interest Requests" subtitle="Review interest requests submitted by recruitment agencies." />
+    <app-page-header [title]="'INTEREST_REQUESTS.admin_title' | translate" [subtitle]="'INTEREST_REQUESTS.admin_subtitle_full' | translate" />
 
     <!-- Status tabs -->
     <div class="tabs-row">
       <button class="tab-btn" [class.tab-btn--active]="activeTab === ''"         (click)="setTab('')">
-        <i class="bi bi-grid"></i>All
+        <i class="bi bi-grid"></i>{{ 'INTEREST_REQUESTS.all' | translate }}
         <span class="tab-count">{{ counts.total }}</span>
       </button>
       <button class="tab-btn" [class.tab-btn--active]="activeTab === 'pending'"  (click)="setTab('pending')">
-        <i class="bi bi-hourglass-split"></i>Pending
+        <i class="bi bi-hourglass-split"></i>{{ 'INTEREST_REQUESTS.pending' | translate }}
         <span class="tab-count">{{ counts.pending }}</span>
       </button>
       <button class="tab-btn" [class.tab-btn--active]="activeTab === 'approved'" (click)="setTab('approved')">
-        <i class="bi bi-check-circle"></i>Approved
+        <i class="bi bi-check-circle"></i>{{ 'INTEREST_REQUESTS.approved' | translate }}
         <span class="tab-count">{{ counts.approved }}</span>
       </button>
       <button class="tab-btn" [class.tab-btn--active]="activeTab === 'rejected'" (click)="setTab('rejected')">
-        <i class="bi bi-x-circle"></i>Rejected
+        <i class="bi bi-x-circle"></i>{{ 'INTEREST_REQUESTS.rejected' | translate }}
         <span class="tab-count">{{ counts.rejected }}</span>
       </button>
       <button class="tab-btn" [class.tab-btn--active]="activeTab === 'revoked'"  (click)="setTab('revoked')">
-        <i class="bi bi-slash-circle"></i>Revoked
+        <i class="bi bi-slash-circle"></i>{{ 'INTEREST_REQUESTS.revoked' | translate }}
         <span class="tab-count">{{ counts.revoked }}</span>
       </button>
     </div>
@@ -277,31 +277,31 @@ import { NotificationService } from '../../../core/services/notification.service
     <div class="filter-bar">
       <div class="filter-bar__row">
         <div class="filter-bar__group filter-bar__group--wide">
-          <label class="filter-bar__label">Search</label>
-          <input class="filter-bar__input" type="text" placeholder="Agency name, candidate…"
+          <label class="filter-bar__label">{{ 'COMMON.search' | translate }}</label>
+          <input class="filter-bar__input" type="text" [placeholder]="'INTEREST_REQUESTS.search_placeholder' | translate"
             [(ngModel)]="searchTerm" (ngModelChange)="onSearchChange($event)" />
         </div>
         <div class="filter-bar__group">
-          <label class="filter-bar__label">Status</label>
+          <label class="filter-bar__label">{{ 'INTEREST_REQUESTS.status' | translate }}</label>
           <select class="filter-bar__select" [(ngModel)]="statusFilter" (ngModelChange)="onStatusFilterChange()">
-            <option value="">All</option>
-            <option value="pending">Pending</option>
-            <option value="approved">Approved</option>
-            <option value="rejected">Rejected</option>
-            <option value="revoked">Revoked</option>
+            <option value="">{{ 'INTEREST_REQUESTS.all' | translate }}</option>
+            <option value="pending">{{ 'INTEREST_REQUESTS.pending' | translate }}</option>
+            <option value="approved">{{ 'INTEREST_REQUESTS.approved' | translate }}</option>
+            <option value="rejected">{{ 'INTEREST_REQUESTS.rejected' | translate }}</option>
+            <option value="revoked">{{ 'INTEREST_REQUESTS.revoked' | translate }}</option>
           </select>
         </div>
 
         <!-- Date From -->
         <div class="filter-bar__group">
-          <label class="filter-bar__label"><i class="bi bi-calendar me-1"></i>Date from</label>
+          <label class="filter-bar__label"><i class="bi bi-calendar me-1"></i>{{ 'INTEREST_REQUESTS.date_from' | translate }}</label>
           <input class="filter-bar__input" type="date"
             [(ngModel)]="dateFrom" (ngModelChange)="onFilterChange()" />
         </div>
 
         <!-- Date To -->
         <div class="filter-bar__group">
-          <label class="filter-bar__label"><i class="bi bi-calendar-check me-1"></i>Date to</label>
+          <label class="filter-bar__label"><i class="bi bi-calendar-check me-1"></i>{{ 'INTEREST_REQUESTS.date_to' | translate }}</label>
           <input class="filter-bar__input" type="date"
             [(ngModel)]="dateTo" (ngModelChange)="onFilterChange()" />
         </div>
@@ -312,7 +312,7 @@ import { NotificationService } from '../../../core/services/notification.service
             [disabled]="exporting" (click)="exportCsv()">
             @if (exporting) { <span class="spinner-border spinner-border-sm"></span> }
             @else { <i class="bi bi-download"></i> }
-            Export CSV
+            {{ 'INTEREST_REQUESTS.export_csv' | translate }}
           </button>
         </div>
 
@@ -320,7 +320,7 @@ import { NotificationService } from '../../../core/services/notification.service
         @if (activeFilterCount > 0) {
           <button class="filter-bar__clear" (click)="clearFilters()">
             <i class="bi bi-x-lg"></i>
-            Clear
+            {{ 'INTEREST_REQUESTS.clear' | translate }}
             <span class="filter-bar__active-badge">{{ activeFilterCount }}</span>
           </button>
         }

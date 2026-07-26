@@ -1,14 +1,14 @@
 <!-- volunteer-create.component.html -->
 <div class="mb-3">
   <a [routerLink]="cancelRoute" class="back-btn">
-    <i class="bi bi-arrow-left"></i>Back to Volunteers
+    <i class="bi bi-arrow-left"></i>{{ 'VOLUNTEERS.back_to_volunteers' | translate }}
   </a>
 </div>
 
 <app-page-header
-  [title]="editId ? 'Edit Volunteer' : 'Add Volunteer'"
+  [title]="editId ? ('VOLUNTEERS.edit_volunteer_title' | translate) : ('VOLUNTEERS.add_volunteer' | translate)"
   icon="bi-person-heart"
-  [subtitle]="editId ? 'Update volunteer profile' : 'Create a detailed volunteer profile'" />
+  [subtitle]="editId ? ('VOLUNTEERS.update_volunteer_profile' | translate) : ('VOLUNTEERS.create_volunteer_profile' | translate)" />
 
 @if (error) {
   <div class="alert alert-danger d-flex align-items-center gap-2 mb-4">
