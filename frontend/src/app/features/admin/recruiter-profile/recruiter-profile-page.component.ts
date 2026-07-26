@@ -69,10 +69,10 @@ import { ConfirmDialogService } from '../../../core/services/confirm-dialog.serv
               <span class="rp-hero__status-badge"
                 [class.rp-hero__status-badge--active]="recruiter.is_active"
                 [class.rp-hero__status-badge--inactive]="!recruiter.is_active">
-                <i class="bi"
-                  [class.bi-shield-fill-check]="recruiter.is_active"
-                  [class.bi-shield-fill-x]="!recruiter.is_active"></i>
-                {{ recruiter.is_active ? 'Active' : 'Inactive' }}
+               <i class="bi"
+                   [class.bi-shield-fill-check]="recruiter.is_active"
+                   [class.bi-shield-fill-x]="!recruiter.is_active"></i>
+                 {{ recruiter.is_active ? ('COMMON.active' | translate) : ('COMMON.inactive' | translate) }}
               </span>
                @if (recruiter.free_account) {
                  <span class="badge bg-info text-dark ms-1">{{ 'RECRUITER_PROFILE.free_account' | translate }}</span>

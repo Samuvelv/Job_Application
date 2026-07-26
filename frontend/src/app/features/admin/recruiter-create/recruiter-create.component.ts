@@ -103,14 +103,14 @@ function emailValidator(): ValidatorFn {
   selector: 'app-recruiter-create',
   standalone: true,
   imports: [CommonModule, TranslateModule, ReactiveFormsModule, RouterLink, PageHeaderComponent, SearchableSelectComponent, ChipMultiSelectComponent],
-  template: `
-    <div class="mb-3">
-      <a routerLink="/admin/recruiters" class="back-btn">
-        <i class="bi bi-arrow-left"></i>Back to Recruiters
-      </a>
-    </div>
+   template: `
+     <div class="mb-3">
+       <a routerLink="/admin/recruiters" class="back-btn">
+         <i class="bi bi-arrow-left"></i>{{ 'RECRUITER_CREATE.back_to_recruiters' | translate }}
+       </a>
+     </div>
 
-    <app-page-header title="Add Recruiter" icon="bi-person-plus" subtitle="Create a new recruiter account" />
+     <app-page-header [title]="'RECRUITER_CREATE.title' | translate" icon="bi-person-plus" [subtitle]="'RECRUITER_CREATE.subtitle' | translate" />
 
     <div class="form-card">
 
@@ -123,59 +123,59 @@ function emailValidator(): ValidatorFn {
             <div class="reg-success-banner__title">
               {{ createdContactName }}{{ createdCompanyName ? ' from ' + createdCompanyName : '' }} created successfully!
             </div>
-            <div class="text-muted small mt-1">
-              Login credentials have been emailed.
-              @if (createdWhatsApp) {
-                A WhatsApp welcome message has been sent.
-              }
-            </div>
+             <div class="text-muted small mt-1">
+              {{ 'RECRUITER_CREATE.credentials_emailed' | translate }}
+               @if (createdWhatsApp) {
+                 {{ 'RECRUITER_CREATE.whatsapp_message_sent' | translate }}
+               }
+             </div>
             @if (createdRecruiterNumber) {
-              <div class="reg-success-banner__code-row">
-                Recruiter ID: <span class="reg-success-banner__code">{{ createdRecruiterNumber }}</span>
-              </div>
+               <div class="reg-success-banner__code-row">
+                 {{ 'RECRUITER_CREATE.recruiter_id' | translate }}: <span class="reg-success-banner__code">{{ createdRecruiterNumber }}</span>
+               </div>
             }
-            <div class="mt-3 d-flex gap-2">
-              <a routerLink="/admin/recruiters" class="btn btn-sm btn-primary">View Recruiters</a>
-              <button class="btn btn-sm btn-outline-secondary" (click)="reset()">Add Another</button>
-            </div>
-            <div class="text-muted small mt-2">Redirecting to Recruiters list…</div>
+             <div class="mt-3 d-flex gap-2">
+              <a routerLink="/admin/recruiters" class="btn btn-sm btn-primary">{{ 'RECRUITER_CREATE.view_recruiters' | translate }}</a>
+              <button class="btn btn-sm btn-outline-secondary" (click)="reset()">{{ 'RECRUITER_CREATE.add_another' | translate }}</button>
+             </div>
+             <div class="text-muted small mt-2">{{ 'RECRUITER_CREATE.redirecting' | translate }}</div>
           </div>
         </div>
       } @else {
-        @if (draftRestored) {
-          <div class="alert alert-info alert-dismissible d-flex align-items-center gap-2" role="alert">
-            <i class="bi bi-floppy2-fill"></i>
-            <span>A saved draft has been restored. You can continue where you left off.</span>
-            <button type="button" class="btn-close" (click)="dismissDraftBanner()"></button>
-          </div>
-        }
+         @if (draftRestored) {
+           <div class="alert alert-info alert-dismissible d-flex align-items-center gap-2" role="alert">
+             <i class="bi bi-floppy2-fill"></i>
+             <span>{{ 'RECRUITER_CREATE.draft_restored' | translate }}</span>
+             <button type="button" class="btn-close" (click)="dismissDraftBanner()"></button>
+           </div>
+         }
         <form [formGroup]="form" (ngSubmit)="submit()">
 
-          <!-- ── Section 1: Contact Details ─────────────────────────── -->
-          <h6 class="form-section-heading">
-            <i class="bi bi-person-vcard me-2"></i>Contact Person Details
-          </h6>
+           <!-- ── Section 1: Contact Details ─────────────────────────── -->
+           <h6 class="form-section-heading">
+             <i class="bi bi-person-vcard me-2"></i>{{ 'RECRUITER_CREATE.contact_person_details' | translate }}
+           </h6>
           <div class="row g-3 mb-4">
 
-            <div class="col-md-6">
-              <label class="form-label fw-semibold">Full Name <span class="text-danger">*</span></label>
+             <div class="col-md-6">
+              <label class="form-label fw-semibold">{{ 'COMMON.full_name' | translate }} <span class="text-danger">*</span></label>
               <input formControlName="contact_name" class="form-control"
                 [class.is-invalid]="invalid('contact_name')" placeholder="Jane Smith">
               @if (invalid('contact_name')) {
                 @if (ctrl('contact_name').hasError('required')) {
-                  <div class="invalid-feedback">Full name is required.</div>
+                  <div class="invalid-feedback">{{ 'RECRUITER_CREATE.full_name_required' | translate }}</div>
                 } @else if (ctrl('contact_name').hasError('minlength')) {
-                  <div class="invalid-feedback">Name must be at least 3 characters.</div>
+                  <div class="invalid-feedback">{{ 'RECRUITER_CREATE.name_min_3_chars' | translate }}</div>
                 } @else if (ctrl('contact_name').hasError('maxlength')) {
-                  <div class="invalid-feedback">Name must be 100 characters or fewer.</div>
+                  <div class="invalid-feedback">{{ 'RECRUITER_CREATE.name_max_100_chars' | translate }}</div>
                 } @else if (ctrl('contact_name').hasError('pattern')) {
-                  <div class="invalid-feedback">Name may only contain letters, spaces, hyphens, apostrophes and dots.</div>
+                  <div class="invalid-feedback">{{ 'RECRUITER_CREATE.name_pattern_error' | translate }}</div>
                 }
               }
-            </div>
+             </div>
 
-            <div class="col-md-6">
-              <label class="form-label fw-semibold">Recruiter Type</label>
+             <div class="col-md-6">
+              <label class="form-label fw-semibold">{{ 'RECRUITER_CREATE.recruiter_type' | translate }}</label>
               <app-searchable-select
                 formControlName="type"
                 [options]="RECRUITER_TYPE_OPTS"

@@ -239,52 +239,52 @@ import { EditChangesModalComponent } from '../../../shared/components/edit-reque
     .cl-view-toggle button:not(.active):hover { background: var(--th-surface, #fff); color: var(--th-text, #111); }
     .btn-xs { padding: .2rem .45rem; font-size: .75rem; }
   `],
-  template: `
-    <app-page-header
-      title="Requests"
-      [subtitle]="activeSection === 'edit' ? (editPagination.total + ' edit requests') : activeSection === 'contact' ? (contactPagination.total + ' contact requests') : activeSection === 'support' ? (supportPagination.total + ' volunteer support requests') : (accessPagination.total + ' recruiter access requests')"
-      icon="bi-inbox-fill"
-    />
+   template: `
+     <app-page-header
+       [title]="'EDIT_REQUESTS.title' | translate"
+       [subtitle]="activeSection === 'edit' ? (editPagination.total + ' ' + ('EDIT_REQUESTS.edit_requests' | translate)) : activeSection === 'contact' ? (contactPagination.total + ' ' + ('EDIT_REQUESTS.contact_requests' | translate)) : activeSection === 'support' ? (supportPagination.total + ' ' + ('EDIT_REQUESTS.support_requests' | translate)) : (accessPagination.total + ' ' + ('EDIT_REQUESTS.recruiter_access_requests' | translate))"
+       icon="bi-inbox-fill"
+     />
 
-    <!-- Section toggle -->
-    <div class="req-section-toggle mb-4">
-      <button class="req-section-btn"
-        [class.active]="activeSection === 'edit'"
-        (click)="setSection('edit')">
-        <i class="bi bi-pencil-square"></i>
-        Candidate Edit Requests
-        @if (editPendingCount > 0) {
-          <span class="req-section-badge">{{ editPendingCount }}</span>
-        }
-      </button>
-      <button class="req-section-btn"
-        [class.active]="activeSection === 'contact'"
-        (click)="setSection('contact')">
-        <i class="bi bi-person-lines-fill"></i>
-        Contact Info Requests
-        @if (contactPendingCount > 0) {
-          <span class="req-section-badge">{{ contactPendingCount }}</span>
-        }
-      </button>
-      <button class="req-section-btn"
-        [class.active]="activeSection === 'support'"
-        (click)="setSection('support')">
-        <i class="bi bi-hand-thumbs-up-fill"></i>
-        Volunteer Support
-        @if (supportPendingCount > 0) {
-          <span class="req-section-badge">{{ supportPendingCount }}</span>
-        }
-      </button>
-      <button class="req-section-btn"
-        [class.active]="activeSection === 'recruiter-access'"
-        (click)="setSection('recruiter-access')">
-        <i class="bi bi-key-fill"></i>
-        Recruiter Access Requests
-        @if (accessPendingCount > 0) {
-          <span class="req-section-badge">{{ accessPendingCount }}</span>
-        }
-      </button>
-    </div>
+     <!-- Section toggle -->
+     <div class="req-section-toggle mb-4">
+       <button class="req-section-btn"
+         [class.active]="activeSection === 'edit'"
+         (click)="setSection('edit')">
+         <i class="bi bi-pencil-square"></i>
+         {{ 'EDIT_REQUESTS.edit_requests' | translate }}
+         @if (editPendingCount > 0) {
+           <span class="req-section-badge">{{ editPendingCount }}</span>
+         }
+       </button>
+       <button class="req-section-btn"
+         [class.active]="activeSection === 'contact'"
+         (click)="setSection('contact')">
+         <i class="bi bi-person-lines-fill"></i>
+         {{ 'EDIT_REQUESTS.contact_info_requests' | translate }}
+         @if (contactPendingCount > 0) {
+           <span class="req-section-badge">{{ contactPendingCount }}</span>
+         }
+       </button>
+       <button class="req-section-btn"
+         [class.active]="activeSection === 'support'"
+         (click)="setSection('support')">
+         <i class="bi bi-hand-thumbs-up-fill"></i>
+         {{ 'EDIT_REQUESTS.volunteer_support' | translate }}
+         @if (supportPendingCount > 0) {
+           <span class="req-section-badge">{{ supportPendingCount }}</span>
+         }
+       </button>
+       <button class="req-section-btn"
+         [class.active]="activeSection === 'recruiter-access'"
+         (click)="setSection('recruiter-access')">
+         <i class="bi bi-key-fill"></i>
+         {{ 'EDIT_REQUESTS.recruiter_access_requests' | translate }}
+         @if (accessPendingCount > 0) {
+           <span class="req-section-badge">{{ accessPendingCount }}</span>
+         }
+       </button>
+     </div>
 
     <!-- ── EDIT REQUESTS SECTION ── -->
     @if (activeSection === 'edit') {
