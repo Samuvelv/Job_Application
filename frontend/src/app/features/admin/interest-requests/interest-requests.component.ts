@@ -354,22 +354,22 @@ import { NotificationService } from '../../../core/services/notification.service
             </span>
           </div>
 
-          <div class="request-card__fields">
-            <div class="request-card__field">
-              <strong>Candidate:</strong> {{ r.candidate_first_name }} {{ r.candidate_last_name }}
-              @if (r.candidate_number) { <span style="color:var(--th-muted);">#{{ r.candidate_number }}</span> }
-            </div>
-            <div class="request-card__field"><strong>Sector:</strong> {{ r.sector }}</div>
-            <div class="request-card__field"><strong>Country:</strong> {{ r.country }}</div>
-          </div>
+           <div class="request-card__fields">
+             <div class="request-card__field">
+               <strong>{{ 'INTEREST_REQUESTS.candidate_label' | translate }}:</strong> {{ r.candidate_first_name }} {{ r.candidate_last_name }}
+               @if (r.candidate_number) { <span style="color:var(--th-muted);">#{{ r.candidate_number }}</span> }
+             </div>
+             <div class="request-card__field"><strong>{{ 'INTEREST_REQUESTS.sector' | translate }}:</strong> {{ r.sector }}</div>
+             <div class="request-card__field"><strong>{{ 'INTEREST_REQUESTS.country' | translate }}:</strong> {{ r.country }}</div>
+           </div>
 
           <div class="request-card__message">{{ r.message }}</div>
 
-          @if (r.admin_note) {
-            <div class="mt-2 small" style="color:var(--th-muted);">
-              <i class="bi bi-chat-left-text me-1"></i><strong>Admin note:</strong> {{ r.admin_note }}
-            </div>
-          }
+           @if (r.admin_note) {
+             <div class="mt-2 small" style="color:var(--th-muted);">
+               <i class="bi bi-chat-left-text me-1"></i><strong>{{ 'COMMON.admin_note' | translate }}:</strong> {{ r.admin_note }}
+             </div>
+           }
 
           <!-- Revocation details -->
           @if (r.status === 'revoked' && r.revoked_at) {
