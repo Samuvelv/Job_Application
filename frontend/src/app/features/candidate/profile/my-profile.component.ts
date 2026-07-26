@@ -30,42 +30,41 @@ import { PageHeaderComponent } from '../../../shared/components/page-header/page
   `],
   template: `
     <app-page-header
-      title="My Profile"
-      subtitle="View your current profile information"
+      [title]="'MY_PROFILE.title' | translate"
+      [subtitle]="'MY_PROFILE.subtitle' | translate"
       icon="bi-person-badge"
     />
 
     @if (error) {
       <div class="alert alert-danger">{{ error }}</div>
-    } @else if (!candidate) {
-      <div class="loading-state">
-        <div class="spinner-border"></div>
-        <div class="loading-state__text">Loading your profile…</div>
-      </div>
-    } @else {
+     } @else if (!candidate) {
+       <div class="loading-state">
+         <div class="spinner-border"></div>
+         <div class="loading-state__text">{{ 'MY_PROFILE.loading' | translate }}</div>
+       </div>
+     } @else {
 
       <!-- Placed banner -->
       @if (isPlaced) {
-        <div class="placed-banner">
-          <div class="placed-banner__icon"><i class="bi bi-patch-check-fill"></i></div>
-          <div>
-            <div class="placed-banner__title">Congratulations! You have been successfully placed.</div>
-            <div class="placed-banner__sub">
-              Your profile is now in placed status. Profile editing and request changes are disabled.
-              You can continue to view your dashboard and profile information.
-            </div>
-          </div>
-        </div>
+         <div class="placed-banner">
+           <div class="placed-banner__icon"><i class="bi bi-patch-check-fill"></i></div>
+           <div>
+             <div class="placed-banner__title">{{ 'MY_PROFILE.placed_title' | translate }}</div>
+             <div class="placed-banner__sub">
+               {{ 'MY_PROFILE.placed_message' | translate }}
+             </div>
+           </div>
+         </div>
       }
 
       <!-- Quick-action bar — hidden for placed candidates -->
       @if (!isPlaced) {
-        <div class="d-flex gap-2 mb-4">
-          <a routerLink="/candidate/edit-request"
-            class="btn btn-primary btn-sm">
-            <i class="bi bi-pencil-square me-1"></i> Request Edit
-          </a>
-        </div>
+         <div class="d-flex gap-2 mb-4">
+           <a routerLink="/candidate/edit-request"
+             class="btn btn-primary btn-sm">
+             <i class="bi bi-pencil-square me-1"></i> {{ 'MY_PROFILE.request_edit' | translate }}
+           </a>
+         </div>
       }
 
       <!-- Profile (read-only) -->
@@ -93,14 +92,14 @@ import { PageHeaderComponent } from '../../../shared/components/page-header/page
                 style="max-width:100%;max-height:70vh;border-radius:var(--th-radius);display:block;margin:0 auto">
               </video>
             } @else {
-              <div style="text-align:center;padding:3rem 1rem">
-                <i class="bi bi-file-earmark-pdf-fill"
-                  style="font-size:4rem;color:var(--th-rose);display:block;margin-bottom:1rem"></i>
-                <p class="text-muted mb-3">PDF preview is not available inline.</p>
-                <a [href]="previewUrl()" target="_blank" class="btn btn-primary">
-                  <i class="bi bi-box-arrow-up-right me-1"></i> Open in new tab
-                </a>
-              </div>
+               <div style="text-align:center;padding:3rem 1rem">
+                 <i class="bi bi-file-earmark-pdf-fill"
+                   style="font-size:4rem;color:var(--th-rose);display:block;margin-bottom:1rem"></i>
+                 <p class="text-muted mb-3">{{ 'MY_PROFILE.pdf_not_available' | translate }}</p>
+                 <a [href]="previewUrl()" target="_blank" class="btn btn-primary">
+                   <i class="bi bi-box-arrow-up-right me-1"></i> {{ 'COMMON.open_new_tab' | translate }}
+                 </a>
+               </div>
             }
           </div>
         </div>

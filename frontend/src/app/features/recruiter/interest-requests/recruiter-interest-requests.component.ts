@@ -2,7 +2,7 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
-import { TranslateModule } from '@ngx-translate/core';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { forkJoin, of } from 'rxjs';
 import { catchError } from 'rxjs/operators';
 import { InterestRequestService, InterestRequest } from '../../../core/services/interest-request.service';
@@ -290,6 +290,7 @@ export class RecruiterInterestRequestsComponent implements OnInit {
     private interestSvc: InterestRequestService,
     private recruiterSvc: RecruiterService,
     private toast: ToastService,
+    private translateService: TranslateService,
   ) {}
 
   ngOnInit(): void {
@@ -312,8 +313,8 @@ export class RecruiterInterestRequestsComponent implements OnInit {
           return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
         });
       } else {
-        this.toast.error('Failed to load interest requests.');
-      }
+         this.toast.error(this.translateService.instant('INTEREST_REQUESTS.load_error'));
+       }
     });
   }
 
@@ -321,7 +322,7 @@ export class RecruiterInterestRequestsComponent implements OnInit {
     const first = r.candidate_first_name ?? '';
     const last  = r.candidate_last_name  ?? '';
     const name  = `${first} ${last}`.trim();
-    return name || 'Unknown Candidate';
+    return name || this.translateService.instant('INTEREST_REQUESTS.unknown_candidate');
   }
 
   countByStatus(status: 'pending' | 'approved' | 'rejected'): number {

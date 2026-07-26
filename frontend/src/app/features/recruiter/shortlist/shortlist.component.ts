@@ -3,7 +3,7 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { ReactiveFormsModule, FormBuilder, FormGroup } from '@angular/forms';
-import { TranslateModule } from '@ngx-translate/core';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { RecruiterService } from '../../../core/services/recruiter.service';
 import { ShortlistEntry } from '../../../core/models/recruiter.model';
 import { ToastService } from '../../../core/services/toast.service';
@@ -254,6 +254,7 @@ export class ShortlistComponent implements OnInit {
     private recruiterService: RecruiterService,
     private toast: ToastService,
     private fb: FormBuilder,
+    private translateService: TranslateService,
   ) {
     this.filterForm = this.fb.group({
       search:          [''],
@@ -315,11 +316,11 @@ export class ShortlistComponent implements OnInit {
         this.removing   = null;
         this.allEntries = this.allEntries.filter(e => e.candidate_id !== entry.candidate_id);
         this.entries    = this.entries.filter(e => e.candidate_id !== entry.candidate_id);
-        this.toast.success(`${entry.first_name} ${entry.last_name} removed from shortlist`);
+        this.toast.success(this.translateService.instant('SHORTLIST.removed_success', { name: `${entry.first_name} ${entry.last_name}` }));
       },
       error: (err) => {
         this.removing = null;
-        this.toast.error(err?.error?.message ?? 'Failed to remove');
+        this.toast.error(err?.error?.message ?? this.translateService.instant('SHORTLIST.remove_failed'));
       },
     });
   }
