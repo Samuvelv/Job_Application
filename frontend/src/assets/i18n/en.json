@@ -546,7 +546,7 @@
       "export_csv": "Export CSV",
       "clear": "Clear",
       "all_count": "All",
-      "submitted": "Submitted",
+       "submitted": "Submitted",
        "sector_field_label": "Sector",
        "country_field_label": "Country",
        "candidate_label": "Candidate",
@@ -559,15 +559,16 @@
       "reject": "Reject",
       "revoke": "Revoke",
       "interest_request": "Interest Request",
-      "agency": "Agency",
-      "optional_note_to_agency": "Optional note to the agency…"
-    },
-    "no_requests_yet": "No interest requests yet",
-    "no_requests_browse": "Browse candidates and submit an interest request from their profile page.",
-    "total_label": "total",
-    "load_error": "Failed to load interest requests.",
-    "unknown_candidate": "Unknown Candidate"
-  },
+       "agency": "Agency",
+       "optional_note_to_agency": "Optional note to the agency…"
+     },
+      "ADMIN_INTEREST_REQUESTS": {
+       "no_requests_yet": "No interest requests yet",
+       "no_requests_browse": "Browse candidates and submit an interest request from their profile page.",
+       "total_label": "total",
+       "load_error": "Failed to load interest requests.",
+       "unknown_candidate": "Unknown Candidate"
+     },
   "CONTACT_SUBMISSIONS": {
     "title": "Contact Requests",
     "subtitle": "Messages submitted via the website contact form.",

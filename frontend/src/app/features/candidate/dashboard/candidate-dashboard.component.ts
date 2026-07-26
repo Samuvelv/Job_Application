@@ -16,6 +16,7 @@ interface CompletionSection {
   icon: string;
   done: boolean;
   weight: number;
+  translatedLabel?: string;  // computed translated label
 }
 
 @Component({
@@ -539,7 +540,7 @@ interface CompletionSection {
                     <i class="bi" [class.bi-check-lg]="sec.done" [class.bi-dash]="!sec.done"></i>
                   </div>
                   <div class="cd-section__info">
-                    <div class="cd-section__label">{{ sec.labelKey | translate }}</div>
+                    <div class="cd-section__label">{{ sec.translatedLabel || (sec.labelKey | translate) }}</div>
                     <div class="cd-section__sub">{{ sec.done ? ('CANDIDATE_DASHBOARD.complete' | translate) : ('CANDIDATE_DASHBOARD.incomplete' | translate) }}</div>
                   </div>
                   <span class="cd-section__weight">{{ sec.weight }}%</span>
@@ -618,84 +619,89 @@ export class CandidateDashboardComponent implements OnInit {
    * The "Name & Registration" section is always marked done because the base
    * 15 points are unconditionally added by both the backend and admin card.
    */
-  sections = computed<CompletionSection[]>(() => {
-    const c = this.candidate();
-    if (!c) return [];
-    return [
-      {
-        // Base 15 points: name is always present after registration.
-        // Matching the +15 base in both the admin card and backend formula.
-        label:  'Name & Registration',
-        labelKey: 'CANDIDATE_DASHBOARD.section_name_registration',
-        icon:   'bi-person-fill',
-        done:   true,
-        weight: 15,
-      },
-      {
-        label:  'Profile Photo',
-        labelKey: 'CANDIDATE_DASHBOARD.section_profile_photo',
-        icon:   'bi-person-circle',
-        done:   !!c.profile_photo_url,
-        weight: 15,
-      },
-      {
-        label:  'Job Title',
-        labelKey: 'CANDIDATE_DASHBOARD.section_job_title',
-        icon:   'bi-briefcase',
-        done:   !!c.job_title,
-        weight: 10,
-      },
-      {
-        label:  'Industry',
-        labelKey: 'CANDIDATE_DASHBOARD.section_industry',
-        icon:   'bi-building',
-        done:   !!c.industry,
-        weight: 10,
-      },
-      {
-        label:  'Current Country',
-        labelKey: 'CANDIDATE_DASHBOARD.section_current_country',
-        icon:   'bi-geo-alt',
-        done:   !!c.current_country,
-        weight: 10,
-      },
-      {
-        label:  'Years of Experience',
-        labelKey: 'CANDIDATE_DASHBOARD.section_years_experience',
-        icon:   'bi-clock-history',
-        done:   c.years_experience != null,
-        weight: 10,
-      },
-      {
-        label:  'English Level',
-        labelKey: 'CANDIDATE_DASHBOARD.section_english_level',
-        icon:   'bi-translate',
-        done:   !!((c as any).languages as any[])?.some((l: any) => l.language?.toLowerCase() === 'english'),
-        weight: 10,
-      },
-      {
-        label:  'Intro Video',
-        labelKey: 'CANDIDATE_DASHBOARD.section_intro_video',
-        icon:   'bi-camera-video',
-        done:   !!c.intro_video_url,
-        weight: 10,
-      },
-      {
-        label:  'Nationality',
-        labelKey: 'CANDIDATE_DASHBOARD.section_nationality',
-        icon:   'bi-flag',
-        done:   !!c.nationality,
-        weight: 5,
-      },
-      {
-        label:  'Target Locations',
-        labelKey: 'CANDIDATE_DASHBOARD.section_target_locations',
-        icon:   'bi-pin-map',
-        done:   !!(c.target_locations?.length),
-        weight: 5,
-      },
-    ];
-  });
+   sections = computed<CompletionSection[]>(() => {
+     const c = this.candidate();
+     if (!c) return [];
+     const sections = [
+       {
+         // Base 15 points: name is always present after registration.
+         // Matching the +15 base in both the admin card and backend formula.
+         label:  'Name & Registration',
+         labelKey: 'CANDIDATE_DASHBOARD.section_name_registration',
+         icon:   'bi-person-fill',
+         done:   true,
+         weight: 15,
+       },
+       {
+         label:  'Profile Photo',
+         labelKey: 'CANDIDATE_DASHBOARD.section_profile_photo',
+         icon:   'bi-person-circle',
+         done:   !!c.profile_photo_url,
+         weight: 15,
+       },
+       {
+         label:  'Job Title',
+         labelKey: 'CANDIDATE_DASHBOARD.section_job_title',
+         icon:   'bi-briefcase',
+         done:   !!c.job_title,
+         weight: 10,
+       },
+       {
+         label:  'Industry',
+         labelKey: 'CANDIDATE_DASHBOARD.section_industry',
+         icon:   'bi-building',
+         done:   !!c.industry,
+         weight: 10,
+       },
+       {
+         label:  'Current Country',
+         labelKey: 'CANDIDATE_DASHBOARD.section_current_country',
+         icon:   'bi-geo-alt',
+         done:   !!c.current_country,
+         weight: 10,
+       },
+       {
+         label:  'Years of Experience',
+         labelKey: 'CANDIDATE_DASHBOARD.section_years_experience',
+         icon:   'bi-clock-history',
+         done:   c.years_experience != null,
+         weight: 10,
+       },
+       {
+         label:  'English Level',
+         labelKey: 'CANDIDATE_DASHBOARD.section_english_level',
+         icon:   'bi-translate',
+         done:   !!((c as any).languages as any[])?.some((l: any) => l.language?.toLowerCase() === 'english'),
+         weight: 10,
+       },
+       {
+         label:  'Intro Video',
+         labelKey: 'CANDIDATE_DASHBOARD.section_intro_video',
+         icon:   'bi-camera-video',
+         done:   !!c.intro_video_url,
+         weight: 10,
+       },
+       {
+         label:  'Nationality',
+         labelKey: 'CANDIDATE_DASHBOARD.section_nationality',
+         icon:   'bi-flag',
+         done:   !!c.nationality,
+         weight: 5,
+       },
+       {
+         label:  'Target Locations',
+         labelKey: 'CANDIDATE_DASHBOARD.section_target_locations',
+         icon:   'bi-pin-map',
+         done:   !!(c.target_locations?.length),
+         weight: 5,
+       },
+     ];
+     // Translate each section's label
+     return sections.map(sec => ({
+       ...sec,
+       translatedLabel: this.translate.instant(sec.labelKey)
+     }));
+   });
 
   constructor(
     private auth: AuthService,
