@@ -1,12 +1,13 @@
 // src/app/shared/components/toast-container/toast-container.component.ts
 import { Component } from '@angular/core';
+import { TranslateModule } from '@ngx-translate/core';
 import { CommonModule } from '@angular/common';
 import { ToastService } from '../../../core/services/toast.service';
 
 @Component({
   selector: 'app-toast-container',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, TranslateModule],
   template: `
     <div class="position-fixed top-0 end-0 p-3" style="z-index:2000;min-width:min(300px,90vw)">
       @for (toast of toastSvc.toasts(); track toast.id) {
@@ -35,3 +36,4 @@ import { ToastService } from '../../../core/services/toast.service';
 export class ToastContainerComponent {
   constructor(readonly toastSvc: ToastService) {}
 }
+

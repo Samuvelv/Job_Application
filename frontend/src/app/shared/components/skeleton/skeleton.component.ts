@@ -1,11 +1,12 @@
 // src/app/shared/components/skeleton/skeleton.component.ts
 import { Component, Input } from '@angular/core';
+import { TranslateModule } from '@ngx-translate/core';
 import { CommonModule } from '@angular/common';
 
 @Component({
   selector: 'app-skeleton',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, TranslateModule],
   template: `
     <div class="skeleton"
          [style.width]="width"
@@ -21,3 +22,4 @@ export class SkeletonComponent {
   @Input() radius = '0.375rem';
   @Input() circle = false;
 }
+

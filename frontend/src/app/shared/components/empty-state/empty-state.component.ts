@@ -1,12 +1,13 @@
 // src/app/shared/components/empty-state/empty-state.component.ts
 import { Component, Input } from '@angular/core';
+import { TranslateModule } from '@ngx-translate/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
 
 @Component({
   selector: 'app-empty-state',
   standalone: true,
-  imports: [CommonModule, RouterLink],
+  imports: [CommonModule, RouterLink, TranslateModule],
   template: `
     <div class="empty-state">
       <div class="empty-state__icon">
@@ -32,3 +33,4 @@ export class EmptyStateComponent {
   @Input() actionLabel = '';
   @Input() actionRoute = '';
 }
+

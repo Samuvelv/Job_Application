@@ -1,5 +1,6 @@
 // src/app/shared/components/cookie-preferences-modal/cookie-preferences-modal.component.ts
 import { Component, effect } from '@angular/core';
+import { TranslateModule } from '@ngx-translate/core';
 import { CommonModule } from '@angular/common';
 import { CookieConsentService } from '../../../core/services/cookie-consent.service';
 
@@ -38,167 +39,151 @@ const CATEGORY_ROWS: CategoryRow[] = [
 @Component({
   selector: 'app-cookie-preferences-modal',
   standalone: true,
-  imports: [CommonModule],
-  template: `
-    @if (consent.showPreferencesModal()) {
-      <!-- Backdrop -->
-      <div class="modal-backdrop fade show" style="z-index:1050" (click)="close()"></div>
+  imports: [CommonModule, TranslateModule],
+   template: `
+     @if (consent.showPreferencesModal()) {
+       <!-- Backdrop -->
+       <div class="modal-backdrop fade show" style="z-index:1050" (click)="close()"></div>
 
-      <!-- Modal -->
-      <div class="modal d-block cpm" tabindex="-1" style="z-index:1055" role="dialog"
-           aria-modal="true" aria-labelledby="cpm-title">
-        <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable cpm__dialog">
-          <div class="modal-content cpm__content">
+       <!-- Modal -->
+       <div class="modal d-block cpm" tabindex="-1" style="z-index:1055" role="dialog"
+            aria-modal="true" aria-labelledby="cpm-title">
+         <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable cpm__dialog">
+           <div class="modal-content cpm__content">
 
-            <!-- Header -->
-            <div class="modal-header cpm__header">
-              <div class="cpm__header-inner">
-                <div class="cpm__header-icon" aria-hidden="true">
-                  <i class="bi bi-shield-check"></i>
-                </div>
-                <div>
-                  <h5 class="modal-title cpm__title" id="cpm-title">Cookie Preferences</h5>
-                  <p class="cpm__subtitle">
-                    Manage how this application uses cookies and local storage on your device.
-                  </p>
-                </div>
-              </div>
-              <button type="button" class="btn-close cpm__close" (click)="close()"
-                      aria-label="Close cookie preferences"></button>
-            </div>
+             <!-- Header -->
+             <div class="modal-header cpm__header">
+               <div class="cpm__header-inner">
+                 <div class="cpm__header-icon" aria-hidden="true">
+                   <i class="bi bi-shield-check"></i>
+                 </div>
+                 <div>
+                   <h5 class="modal-title cpm__title" id="cpm-title">{{ 'COOKIE_PREFERENCES.title' | translate }}</h5>
+                   <p class="cpm__subtitle">{{ 'COOKIE_PREFERENCES.subtitle' | translate }}</p>
+                 </div>
+               </div>
+               <button type="button" class="btn-close cpm__close" (click)="close()"
+                       [attr.aria-label]="('COOKIE_PREFERENCES.close_preferences' | translate)"></button>
+             </div>
 
-            <!-- Body -->
-            <div class="modal-body cpm__body">
+             <!-- Body -->
+             <div class="modal-body cpm__body">
 
-              <!-- Consent expiry notice -->
-              @if (expiryLabel()) {
-                <div class="alert alert-info cpm__expiry-notice" role="status">
-                  <i class="bi bi-calendar-check me-2"></i>
-                  {{ expiryLabel() }}
-                </div>
-              }
+               <!-- Consent expiry notice -->
+               @if (expiryLabel()) {
+                 <div class="alert alert-info cpm__expiry-notice" role="status">
+                   <i class="bi bi-calendar-check me-2"></i>
+                   {{ expiryLabel() }}
+                 </div>
+               }
 
-              <!-- ── Always-on categories ─────────────────────────────────── -->
-              <p class="cpm__section-label">Always Active</p>
+               <!-- ── Always-on categories ─────────────────────────────────── -->
+               <p class="cpm__section-label">{{ 'COOKIE_PREFERENCES.always_active_cookies' | translate }}</p>
 
-              <div class="cpm__category cpm__category--fixed">
-                <div class="cpm__category-left">
-                  <div class="cpm__category-icon" aria-hidden="true">
-                    <i class="bi bi-lock-fill"></i>
-                  </div>
-                  <div class="cpm__category-text">
-                    <span class="cpm__category-name">Essential Cookies</span>
-                    <span class="cpm__category-desc">
-                      Required for the application to function. Includes CSRF protection,
-                      secure routing, and core session management.
-                    </span>
-                    <span class="cpm__category-examples">
-                      <i class="bi bi-info-circle me-1"></i>
-                      Internal routing state. No personally identifiable data.
-                    </span>
-                  </div>
-                </div>
-                <div class="cpm__category-right">
-                  <span class="cpm__always-active">
-                    <i class="bi bi-check-circle-fill me-1"></i>Always Active
-                  </span>
-                </div>
-              </div>
+               <div class="cpm__category cpm__category--fixed">
+                 <div class="cpm__category-left">
+                   <div class="cpm__category-icon" aria-hidden="true">
+                     <i class="bi bi-lock-fill"></i>
+                   </div>
+                   <div class="cpm__category-text">
+                     <span class="cpm__category-name">{{ 'COOKIE_PREFERENCES.essential_cookies' | translate }}</span>
+                     <span class="cpm__category-desc">{{ 'COOKIE_PREFERENCES.essential_desc' | translate }}</span>
+                     <span class="cpm__category-examples">
+                       <i class="bi bi-info-circle me-1"></i>{{ 'COOKIE_PREFERENCES.essential_examples' | translate }}
+                     </span>
+                   </div>
+                 </div>
+                 <div class="cpm__category-right">
+                   <span class="cpm__always-active">
+                     <i class="bi bi-check-circle-fill me-1"></i>{{ 'COOKIE_PREFERENCES.always_active' | translate }}
+                   </span>
+                 </div>
+               </div>
 
-              <div class="cpm__category cpm__category--fixed">
-                <div class="cpm__category-left">
-                  <div class="cpm__category-icon" aria-hidden="true">
-                    <i class="bi bi-key-fill"></i>
-                  </div>
-                  <div class="cpm__category-text">
-                    <span class="cpm__category-name">Authentication &amp; Session Cookies</span>
-                    <span class="cpm__category-desc">
-                      Keeps you signed in across page loads. The refresh token is stored in an
-                      HttpOnly cookie (server-managed, inaccessible to JavaScript). The access
-                      token is held in localStorage and expires automatically.
-                    </span>
-                    <span class="cpm__category-examples">
-                      <i class="bi bi-info-circle me-1"></i>
-                      HttpOnly refresh token cookie (7-day expiry, Secure + SameSite=Strict in production).
-                      Access token in localStorage (2-hour expiry).
-                    </span>
-                  </div>
-                </div>
-                <div class="cpm__category-right">
-                  <span class="cpm__always-active">
-                    <i class="bi bi-check-circle-fill me-1"></i>Always Active
-                  </span>
-                </div>
-              </div>
+               <div class="cpm__category cpm__category--fixed">
+                 <div class="cpm__category-left">
+                   <div class="cpm__category-icon" aria-hidden="true">
+                     <i class="bi bi-key-fill"></i>
+                   </div>
+                   <div class="cpm__category-text">
+                     <span class="cpm__category-name">{{ 'COOKIE_PREFERENCES.authentication_cookies' | translate }}</span>
+                     <span class="cpm__category-desc">{{ 'COOKIE_PREFERENCES.authentication_desc' | translate }}</span>
+                     <span class="cpm__category-examples">
+                       <i class="bi bi-info-circle me-1"></i>{{ 'COOKIE_PREFERENCES.authentication_examples' | translate }}
+                     </span>
+                   </div>
+                 </div>
+                 <div class="cpm__category-right">
+                   <span class="cpm__always-active">
+                     <i class="bi bi-check-circle-fill me-1"></i>{{ 'COOKIE_PREFERENCES.always_active' | translate }}
+                   </span>
+                 </div>
+               </div>
 
-              <!-- ── Toggleable categories ────────────────────────────────── -->
-              <p class="cpm__section-label mt-3">Optional Cookies</p>
+               <!-- ── Toggleable categories ────────────────────────────────── -->
+               <p class="cpm__section-label mt-3">{{ 'COOKIE_PREFERENCES.optional_cookies' | translate }}</p>
 
-              @for (row of categoryRows; track row.key) {
-                <div class="cpm__category"
-                     [class.cpm__category--enabled]="toggles[row.key]">
-                  <div class="cpm__category-left">
-                    <div class="cpm__category-icon" aria-hidden="true">
-                      <i class="bi" [ngClass]="row.icon"></i>
-                    </div>
-                    <div class="cpm__category-text">
-                      <span class="cpm__category-name">{{ row.label }}</span>
-                      <span class="cpm__category-desc">{{ row.description }}</span>
-                      <span class="cpm__category-examples">
-                        <i class="bi bi-info-circle me-1"></i>{{ row.examples }}
-                      </span>
-                    </div>
-                  </div>
-                  <div class="cpm__category-right">
-                    <div class="form-check form-switch cpm__switch" [attr.title]="'Toggle ' + row.label">
-                      <input
-                        class="form-check-input cpm__switch-input"
-                        type="checkbox"
-                        role="switch"
-                        [id]="'cpm-toggle-' + row.key"
-                        [checked]="toggles[row.key]"
-                        (change)="setToggle(row.key, $any($event.target).checked)"
-                        [attr.aria-label]="'Enable ' + row.label"
-                        [attr.aria-checked]="toggles[row.key]"
-                      >
-                    </div>
-                  </div>
-                </div>
-              }
+               @for (row of categoryRows; track row.key) {
+                 <div class="cpm__category"
+                      [class.cpm__category--enabled]="toggles[row.key]">
+                   <div class="cpm__category-left">
+                     <div class="cpm__category-icon" aria-hidden="true">
+                       <i class="bi" [ngClass]="row.icon"></i>
+                     </div>
+                     <div class="cpm__category-text">
+                       <span class="cpm__category-name">{{ row.label }}</span>
+                       <span class="cpm__category-desc">{{ row.description }}</span>
+                       <span class="cpm__category-examples">
+                         <i class="bi bi-info-circle me-1"></i>{{ row.examples }}
+                       </span>
+                     </div>
+                   </div>
+                   <div class="cpm__category-right">
+                     <div class="form-check form-switch cpm__switch" [attr.title]="'COOKIE_PREFERENCES.toggle_label' | translate: {category: row.label}">
+                       <input
+                         class="form-check-input cpm__switch-input"
+                         type="checkbox"
+                         role="switch"
+                         [id]="'cpm-toggle-' + row.key"
+                         [checked]="toggles[row.key]"
+                         (change)="setToggle(row.key, $any($event.target).checked)"
+                         [attr.aria-label]="'COOKIE_PREFERENCES.toggle_label' | translate: {category: row.label}"
+                         [attr.aria-checked]="toggles[row.key]"
+                       >
+                     </div>
+                   </div>
+                 </div>
+               }
 
-              <!-- Info note -->
-              <div class="cpm__note">
-                <i class="bi bi-info-circle me-2 flex-shrink-0"></i>
-                <span>
-                  Your preferences are stored locally on your device and will be remembered
-                  for <strong>12 months</strong>. You can update them at any time from the
-                  <strong>Manage Cookies</strong> link in the page footer.
-                </span>
-              </div>
+               <!-- Info note -->
+               <div class="cpm__note">
+                 <i class="bi bi-info-circle me-2 flex-shrink-0"></i>
+                 <span>{{ 'COOKIE_PREFERENCES.preferences_note' | translate }}</span>
+               </div>
 
-            </div>
+             </div>
 
-            <!-- Footer -->
-            <div class="modal-footer cpm__footer">
-              <button type="button" class="btn btn-outline-secondary btn-sm cpm__footer-btn"
-                      (click)="close()">
-                Cancel
-              </button>
-              <button type="button" class="btn btn-outline-secondary btn-sm cpm__footer-btn"
-                      (click)="acceptAll()">
-                <i class="bi bi-check2-all me-1"></i>Accept All
-              </button>
-              <button type="button" class="btn btn-primary btn-sm cpm__footer-btn cpm__footer-btn--save"
-                      (click)="savePreferences()">
-                <i class="bi bi-floppy me-1"></i>Save Preferences
-              </button>
-            </div>
+             <!-- Footer -->
+             <div class="modal-footer cpm__footer">
+               <button type="button" class="btn btn-outline-secondary btn-sm cpm__footer-btn"
+                       (click)="close()">
+                 {{ 'COOKIE_PREFERENCES.cancel' | translate }}
+               </button>
+               <button type="button" class="btn btn-outline-secondary btn-sm cpm__footer-btn"
+                       (click)="acceptAll()">
+                 <i class="bi bi-check2-all me-1"></i>{{ 'COOKIE_PREFERENCES.accept_all' | translate }}
+               </button>
+               <button type="button" class="btn btn-primary btn-sm cpm__footer-btn cpm__footer-btn--save"
+                       (click)="savePreferences()">
+                 <i class="bi bi-floppy me-1"></i>{{ 'COOKIE_PREFERENCES.save_preferences' | translate }}
+               </button>
+             </div>
 
-          </div>
-        </div>
-      </div>
-    }
-  `,
+           </div>
+         </div>
+       </div>
+     }
+   `,
   styles: [`
     /* ── Dialog sizing ──────────────────────────────────────────────────────── */
     .cpm__dialog {
@@ -566,3 +551,4 @@ export class CookiePreferencesModalComponent {
     this.consent.showPreferencesModal.set(false);
   }
 }
+

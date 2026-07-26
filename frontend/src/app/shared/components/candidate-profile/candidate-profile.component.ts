@@ -1,6 +1,7 @@
 // src/app/shared/components/candidate-profile/candidate-profile.component.ts
 import { Component, Input, signal, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { TranslateModule } from '@ngx-translate/core';
 import { Candidate } from '../../../core/models/candidate.model';
 import { CandidateService, CandidateActivity } from '../../../core/services/candidate.service';
 
@@ -9,7 +10,7 @@ type Tab = 'overview' | 'experience' | 'education' | 'documents' | 'activity';
 @Component({
   selector: 'app-candidate-profile',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, TranslateModule],
   template: `
     @if (!candidate) {
       <div class="loading-state">
@@ -973,3 +974,4 @@ export class CandidateProfileComponent {
     return month ? `${monthNames[month - 1]} ${year}` : `${year}`;
   }
 }
+

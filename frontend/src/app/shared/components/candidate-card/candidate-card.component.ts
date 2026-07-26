@@ -2,13 +2,14 @@
 import { Component, Input, Output, EventEmitter, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
+import { TranslateModule } from '@ngx-translate/core';
 import { Candidate } from '../../../core/models/candidate.model';
 import { MasterDataService } from '../../../core/services/master-data.service';
 
 @Component({
   selector: 'app-candidate-card',
   standalone: true,
-  imports: [CommonModule, RouterLink],
+  imports: [CommonModule, RouterLink, TranslateModule],
   styles: [':host { display: block; height: 100%; }'],
   template: `
     <div class="cl-card" [class.cl-card--selected]="selected">
@@ -76,11 +77,11 @@ import { MasterDataService } from '../../../core/services/master-data.service';
             <i class="bi bi-building"></i> {{ candidate.occupation }}
           </span>
         }
-        @if (candidate.years_experience != null) {
-          <span class="cl-card__stat">
-            <i class="bi bi-clock-history"></i> {{ candidate.years_experience }} yrs
-          </span>
-        }
+         @if (candidate.years_experience != null) {
+           <span class="cl-card__stat">
+             <i class="bi bi-clock-history"></i> {{ candidate.years_experience }} {{ 'COMMON.years' | translate }}
+           </span>
+         }
         @if (englishLabel) {
           <span class="cl-card__stat">
             <i class="bi bi-translate"></i> {{ englishLabel }}
@@ -103,14 +104,14 @@ import { MasterDataService } from '../../../core/services/master-data.service';
           }
           {{ feeLabel }}
         </span>
-        <span class="cl-card__flag" [class.cl-card__flag--has-video]="!!candidate.intro_video_url"
-          [class.cl-card__flag--no-video]="!candidate.intro_video_url">
-          @if (candidate.intro_video_url) {
-            <i class="bi bi-camera-video-fill"></i> Video
-          } @else {
-            <i class="bi bi-camera-video-off"></i> No video
-          }
-        </span>
+         <span class="cl-card__flag" [class.cl-card__flag--has-video]="!!candidate.intro_video_url"
+           [class.cl-card__flag--no-video]="!candidate.intro_video_url">
+           @if (candidate.intro_video_url) {
+             <i class="bi bi-camera-video-fill"></i> {{ 'COMMON.view' | translate }}
+           } @else {
+             <i class="bi bi-camera-video-off"></i> {{ 'EDIT_REQUEST.media_changes' | translate }}
+           }
+         </span>
         @if (cvFormatLabel) {
           <span class="cl-card__flag cl-card__flag--cv">
             <i class="bi bi-file-earmark-text"></i> {{ cvFormatLabel }}
@@ -118,21 +119,21 @@ import { MasterDataService } from '../../../core/services/master-data.service';
         }
       </div>
 
-      <!-- ── Profile completion bar ── -->
-      <div class="cl-card__completion">
-        <div class="cl-card__completion-header">
-          <span>Profile</span>
-          <span class="cl-card__completion-pct" [style.color]="completionColor">
-            {{ completionPercent }}%
-          </span>
-        </div>
-        <div class="cl-card__bar">
-          <div class="cl-card__bar-fill"
-            [style.width.%]="completionPercent"
-            [style.background]="completionColor">
-          </div>
-        </div>
-      </div>
+       <!-- ── Profile completion bar ── -->
+       <div class="cl-card__completion">
+         <div class="cl-card__completion-header">
+           <span>{{ 'MY_PROFILE.title' | translate }}</span>
+           <span class="cl-card__completion-pct" [style.color]="completionColor">
+             {{ completionPercent }}%
+           </span>
+         </div>
+         <div class="cl-card__bar">
+           <div class="cl-card__bar-fill"
+             [style.width.%]="completionPercent"
+             [style.background]="completionColor">
+           </div>
+         </div>
+       </div>
 
       <!-- ── Last updated ── -->
       <div class="cl-card__updated">
@@ -140,26 +141,26 @@ import { MasterDataService } from '../../../core/services/master-data.service';
         {{ (candidate.updated_at || candidate.created_at) | date:'mediumDate' }}
       </div>
 
-      <!-- ── Actions footer ── -->
-      <div class="cl-card__actions">
-        <a [routerLink]="['/admin/candidates', candidate.id]"
-          class="cl-card__action cl-card__action--view" title="View profile">
-          <i class="bi bi-eye"></i>
-          <span>View</span>
-        </a>
-        <a [routerLink]="['/admin/candidates', candidate.id, 'edit']"
-          class="cl-card__action cl-card__action--edit" title="Edit candidate">
-          <i class="bi bi-pencil"></i>
-          <span>Edit</span>
-        </a>
-        <button class="cl-card__action cl-card__action--forward"
-          (click)="forwardToEmployer.emit()" title="Forward to employer">
-          <i class="bi bi-send-fill"></i>
-          <span>Forward</span>
-        </button>
-        <button class="cl-card__action cl-card__action--mail"
-          (click)="resendCreds.emit()" title="Resend credentials">
-          <i class="bi bi-envelope"></i>
+       <!-- ── Actions footer ── -->
+       <div class="cl-card__actions">
+         <a [routerLink]="['/admin/candidates', candidate.id]"
+           class="cl-card__action cl-card__action--view" [title]="('COMMON.view' | translate)">
+           <i class="bi bi-eye"></i>
+           <span>{{ 'COMMON.view' | translate }}</span>
+         </a>
+         <a [routerLink]="['/admin/candidates', candidate.id, 'edit']"
+           class="cl-card__action cl-card__action--edit" [title]="('COMMON.edit' | translate)">
+           <i class="bi bi-pencil"></i>
+           <span>{{ 'COMMON.edit' | translate }}</span>
+         </a>
+         <button class="cl-card__action cl-card__action--forward"
+           (click)="forwardToEmployer.emit()" title="Forward to employer">
+           <i class="bi bi-send-fill"></i>
+           <span>Forward</span>
+         </button>
+         <button class="cl-card__action cl-card__action--mail"
+           (click)="resendCreds.emit()" title="Resend credentials">
+           <i class="bi bi-envelope"></i>
         </button>
         <button class="cl-card__action cl-card__action--danger"
           (click)="deleteCandidate.emit()" title="Delete candidate">

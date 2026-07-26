@@ -1,4 +1,5 @@
 import { Component, Input, Output, EventEmitter } from '@angular/core';
+import { TranslateModule } from '@ngx-translate/core';
 import { CommonModule } from '@angular/common';
 
 interface FieldChange {
@@ -11,7 +12,7 @@ interface FieldChange {
 @Component({
   selector: 'app-edit-changes-modal',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, TranslateModule],
   template: `
     @if (isOpen) {
       <!-- Backdrop -->
@@ -22,12 +23,12 @@ interface FieldChange {
         <!-- Header -->
         <div class="edit-changes-modal__header">
           <div class="edit-changes-modal__header-content">
-            <h2 class="edit-changes-modal__title">
-              <i class="bi bi-arrow-left-right me-2"></i>Requested Changes
-            </h2>
-            <p class="edit-changes-modal__subtitle">
-              Review all {{ changes.length }} change{{ changes.length !== 1 ? 's' : '' }}
-            </p>
+           <h2 class="edit-changes-modal__title">
+             <i class="bi bi-arrow-left-right me-2"></i>{{ 'EDIT_REQUEST.media_changes' | translate }}
+           </h2>
+           <p class="edit-changes-modal__subtitle">
+             Review all {{ changes.length }} change{{ changes.length !== 1 ? 's' : '' }}
+           </p>
           </div>
           <button class="edit-changes-modal__close-btn" (click)="onClose()">
             <i class="bi bi-x-lg"></i>
@@ -36,11 +37,11 @@ interface FieldChange {
 
       <!-- Content -->
       <div class="edit-changes-modal__content">
-        @if (changes.length === 0) {
-          <div class="edit-changes-modal__empty-state">
-            <i class="bi bi-inbox"></i>
-            <p>No changes found</p>
-          </div>
+         @if (changes.length === 0) {
+           <div class="edit-changes-modal__empty-state">
+             <i class="bi bi-inbox"></i>
+             <p>{{ 'COMMON.no_data' | translate }}</p>
+           </div>
         } @else {
           <div class="edit-changes-modal__changes-list">
             @for (change of changes; track change.key) {
@@ -61,12 +62,12 @@ interface FieldChange {
         }
       </div>
 
-        <!-- Footer -->
-        <div class="edit-changes-modal__footer">
-          <button class="edit-changes-modal__btn edit-changes-modal__btn--primary" (click)="onClose()">
-            <i class="bi bi-check-lg me-2"></i>Got it
-          </button>
-        </div>
+         <!-- Footer -->
+         <div class="edit-changes-modal__footer">
+           <button class="edit-changes-modal__btn edit-changes-modal__btn--primary" (click)="onClose()">
+             <i class="bi bi-check-lg me-2"></i>{{ 'COMMON.ok' | translate }}
+           </button>
+         </div>
       </div>
     }
   `,
@@ -391,3 +392,4 @@ export class EditChangesModalComponent {
     this.closed.emit();
   }
 }
+

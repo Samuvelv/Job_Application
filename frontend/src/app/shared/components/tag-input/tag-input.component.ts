@@ -3,12 +3,13 @@ import {
   Component, forwardRef, signal, Input, HostListener,
 } from '@angular/core';
 import { ControlValueAccessor, NG_VALUE_ACCESSOR, FormsModule } from '@angular/forms';
+import { TranslateModule } from '@ngx-translate/core';
 import { CommonModule } from '@angular/common';
 
 @Component({
   selector: 'app-tag-input',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, TranslateModule],
   providers: [
     {
       provide: NG_VALUE_ACCESSOR,
@@ -95,3 +96,4 @@ export class TagInputComponent implements ControlValueAccessor {
     this.onChange(this.tags());
   }
 }
+

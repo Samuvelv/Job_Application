@@ -1,11 +1,12 @@
 // src/app/shared/components/page-header/page-header.component.ts
 import { Component, Input } from '@angular/core';
+import { TranslateModule } from '@ngx-translate/core';
 import { CommonModule } from '@angular/common';
 
 @Component({
   selector: 'app-page-header',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, TranslateModule],
   template: `
     <div class="page-header">
       <div>
@@ -34,3 +35,4 @@ export class PageHeaderComponent {
   @Input() subtitle = '';
   @Input() icon     = '';
 }
+

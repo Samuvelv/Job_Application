@@ -1,6 +1,7 @@
 // src/app/app.component.ts
 import { Component, signal } from '@angular/core';
 import { Router, RouterOutlet, NavigationEnd } from '@angular/router';
+import { TranslateModule } from '@ngx-translate/core';
 import { ToastContainerComponent } from './shared/components/toast-container/toast-container.component';
 import { TopbarComponent } from './shared/components/topbar/topbar.component';
 import { SidebarComponent } from './shared/components/sidebar/sidebar.component';
@@ -20,6 +21,7 @@ const PUBLIC_ROUTES = ['/', '/login', '/unauthorized'];
   imports: [
     CommonModule,
     RouterOutlet,
+    TranslateModule,
     ToastContainerComponent,
     TopbarComponent,
     SidebarComponent,
