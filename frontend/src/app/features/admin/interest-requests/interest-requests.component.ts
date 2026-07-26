@@ -376,7 +376,7 @@ import { NotificationService } from '../../../core/services/notification.service
             <div class="revocation-info">
               <i class="bi bi-slash-circle-fill"></i>
               <span>
-                <strong>Revoked</strong> {{ r.revoked_at | date:'dd MMM yyyy, HH:mm' }}
+                <strong>{{ 'INTEREST_REQUESTS.revoked' | translate }}</strong> {{ r.revoked_at | date:'dd MMM yyyy, HH:mm' }}
                 @if (r.revocation_reason) { · {{ r.revocation_reason }} }
               </span>
             </div>
@@ -386,17 +386,17 @@ import { NotificationService } from '../../../core/services/notification.service
           @if (r.status === 'pending') {
             <div class="request-card__actions">
               <button class="btn btn-sm btn-success" (click)="openReview(r, 'approved')">
-                <i class="bi bi-check-lg me-1"></i>Approve
+                <i class="bi bi-check-lg me-1"></i>{{ 'INTEREST_REQUESTS.approve' | translate }}
               </button>
               <button class="btn btn-sm btn-danger" (click)="openReview(r, 'rejected')">
-                <i class="bi bi-x-lg me-1"></i>Reject
+                <i class="bi bi-x-lg me-1"></i>{{ 'INTEREST_REQUESTS.reject' | translate }}
               </button>
             </div>
           }
           @if (r.status === 'approved') {
             <div class="request-card__actions">
               <button class="btn btn-sm btn-outline-warning" (click)="onRevokeClick(r)">
-                <i class="bi bi-slash-circle me-1"></i>Revoke
+                <i class="bi bi-slash-circle me-1"></i>{{ 'INTEREST_REQUESTS.revoke' | translate }}
               </button>
             </div>
           }
@@ -406,9 +406,9 @@ import { NotificationService } from '../../../core/services/notification.service
       <!-- Pagination -->
       @if (pagination && pagination.pages > 1) {
         <div class="d-flex justify-content-center gap-2 mt-4">
-          <button class="btn btn-sm btn-outline-secondary" [disabled]="page <= 1" (click)="goToPage(page - 1)">Previous</button>
+          <button class="btn btn-sm btn-outline-secondary" [disabled]="page <= 1" (click)="goToPage(page - 1)">{{ 'COMMON.previous' | translate }}</button>
           <span class="btn btn-sm disabled">{{ page }} / {{ pagination.pages }}</span>
-          <button class="btn btn-sm btn-outline-secondary" [disabled]="page >= pagination.pages" (click)="goToPage(page + 1)">Next</button>
+          <button class="btn btn-sm btn-outline-secondary" [disabled]="page >= pagination.pages" (click)="goToPage(page + 1)">{{ 'COMMON.next' | translate }}</button>
         </div>
       }
     }
@@ -417,24 +417,24 @@ import { NotificationService } from '../../../core/services/notification.service
     @if (reviewTarget) {
       <div class="modal-backdrop" (click)="closeModal()">
         <div class="modal-box" (click)="$event.stopPropagation()">
-          <h5>{{ reviewAction === 'approved' ? 'Approve' : 'Reject' }} Interest Request</h5>
+          <h5>{{ reviewAction === 'approved' ? ('INTEREST_REQUESTS.approve' | translate) : ('INTEREST_REQUESTS.reject' | translate) }} {{ 'INTEREST_REQUESTS.interest_request' | translate }}</h5>
           <p class="small text-muted">
-            Agency: <strong>{{ reviewTarget.recruiter_company }}</strong><br>
-            Candidate: <strong>{{ reviewTarget.candidate_first_name }} {{ reviewTarget.candidate_last_name }}</strong>
+            {{ 'INTEREST_REQUESTS.agency' | translate }}: <strong>{{ reviewTarget.recruiter_company }}</strong><br>
+            {{ 'COMMON.candidate' | translate }}: <strong>{{ reviewTarget.candidate_first_name }} {{ reviewTarget.candidate_last_name }}</strong>
           </p>
           <div class="mb-3">
-            <div class="modal-label">Admin Note <span style="font-weight:400;text-transform:none;">(optional)</span></div>
+            <div class="modal-label">{{ 'INTEREST_REQUESTS.admin_note' | translate }} <span style="font-weight:400;text-transform:none;">({{ 'COMMON.optional' | translate }})</span></div>
             <textarea class="modal-textarea" rows="3" [(ngModel)]="adminNote"
-              placeholder="Optional note to the agency…"></textarea>
+              [placeholder]="'INTEREST_REQUESTS.optional_note_to_agency' | translate"></textarea>
           </div>
           <div class="d-flex gap-2 justify-content-end">
-            <button class="btn btn-sm btn-outline-secondary" (click)="closeModal()">Cancel</button>
+            <button class="btn btn-sm btn-outline-secondary" (click)="closeModal()">{{ 'COMMON.cancel' | translate }}</button>
             <button class="btn btn-sm"
               [class.btn-success]="reviewAction === 'approved'"
               [class.btn-danger]="reviewAction === 'rejected'"
               [disabled]="submitting" (click)="submitReview()">
               @if (submitting) { <span class="spinner-border spinner-border-sm me-1"></span> }
-              {{ reviewAction === 'approved' ? 'Approve' : 'Reject' }}
+              {{ reviewAction === 'approved' ? ('INTEREST_REQUESTS.approve' | translate) : ('INTEREST_REQUESTS.reject' | translate) }}
             </button>
           </div>
         </div>
