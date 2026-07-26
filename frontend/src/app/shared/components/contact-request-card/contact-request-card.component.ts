@@ -26,19 +26,19 @@ import { ConfirmDialogService } from '../../../core/services/confirm-dialog.serv
             </div>
           }
           <!-- Status badge inline in header -->
-          <span class="status-badge ms-auto" [class]="'status-' + request.status">
-            @if (request.status === 'pending') { <i class="bi bi-hourglass-split me-1"></i> }
-            @else if (request.status === 'approved') { <i class="bi bi-check-circle-fill me-1"></i> }
-            @else if (request.status === 'rejected') { <i class="bi bi-x-circle-fill me-1"></i> }
-            @else if (request.status === 'revoked') { <i class="bi bi-shield-x-fill me-1"></i> }
-            {{ request.status | uppercase }}
-          </span>
+           <span class="status-badge ms-auto" [class]="'status-' + request.status">
+             @if (request.status === 'pending') { <i class="bi bi-hourglass-split me-1"></i> }
+             @else if (request.status === 'approved') { <i class="bi bi-check-circle-fill me-1"></i> }
+             @else if (request.status === 'rejected') { <i class="bi bi-x-circle-fill me-1"></i> }
+             @else if (request.status === 'revoked') { <i class="bi bi-shield-x-fill me-1"></i> }
+             {{ ('OPTIONS.contact_request_status_' + request.status) | translate }}
+           </span>
         </div>
 
         <div class="header-content">
           <!-- Recruiter Info -->
         <div class="party-block recruiter-block">
-             <div class="party-label"><i class="bi bi-briefcase-fill me-1"></i>Recruiter</div>
+             <div class="party-label"><i class="bi bi-briefcase-fill me-1"></i>{{ 'CONTACT_REQUESTS.recruiter' | translate }}</div>
              <div class="party-name">{{ request.recruiter_name ?? '—' }}</div>
              @if (request.recruiter_company) {
                <div class="party-company">{{ request.recruiter_company }}</div>
@@ -58,7 +58,7 @@ import { ConfirmDialogService } from '../../../core/services/confirm-dialog.serv
 
            <!-- Candidate Info -->
            <div class="party-block candidate-block">
-             <div class="party-label"><i class="bi bi-person-fill me-1"></i>Candidate</div>
+             <div class="party-label"><i class="bi bi-person-fill me-1"></i>{{ 'CONTACT_REQUESTS.candidate' | translate }}</div>
              <div class="party-name">{{ request.candidate_first_name }} {{ request.candidate_last_name }}</div>
              @if (request.candidate_number) {
                <div class="candidate-number">

@@ -87,9 +87,15 @@
     "type": "Type",
     "expires": "Expires",
     "sort_by": "Sort by…",
-    "company": "Company",
-    "expired": "Expired",
-    "type": "Type",
+     "company": "Company",
+     "expired": "Expired",
+     "never": "Never",
+     "joined": "Joined",
+     "verified": "Verified",
+     "forwarded": "Forwarded",
+     "resend_code": "Resend code",
+     "resend_credentials": "Resend credentials",
+     "type": "Type",
      "expires": "Expires",
      "sort_by": "Sort by…",
      "company": "Company",
@@ -933,10 +939,24 @@
     "rec_sort_most_active": "Most Active",
     "rec_sort_alphabetical": "Alphabetical A–Z",
     "rec_sort_last_active": "Last Active",
-    "recruiter_agency": "Recruitment Agency",
-    "direct_employer": "Direct Employer"
-  },
-  "CANDIDATE_CARD": {
+      "recruiter_agency": "Recruitment Agency",
+      "direct_employer": "Direct Employer",
+      "contact_request_status_pending": "Pending",
+      "contact_request_status_approved": "Approved",
+      "contact_request_status_rejected": "Rejected",
+      "contact_request_status_revoked": "Revoked"
+   },
+   "RECRUITER": {
+     "recruitment_agency": "Recruitment Agency",
+     "direct_employer": "Direct Employer",
+     "not_verified": "Not Verified",
+     "last_login": "Last Login"
+   },
+   "CONTACT_REQUESTS": {
+     "recruiter": "Recruiter",
+     "candidate": "Candidate"
+   },
+   "CANDIDATE_CARD": {
     "shortlisted": "Shortlisted",
     "industry": "Industry",
     "exp": "Exp.",

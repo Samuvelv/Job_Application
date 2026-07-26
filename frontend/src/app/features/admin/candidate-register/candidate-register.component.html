@@ -19,20 +19,20 @@
     </div>
     <div class="reg-success-banner__body">
       <div class="reg-success-banner__title">{{ successMsg }}</div>
-      @if (createdCandidateNumber) {
-        <div class="reg-success-banner__code-row">
-          Reference ID: <span class="reg-success-banner__code">{{ createdCandidateNumber }}</span>
-        </div>
-      }
-      @if (createdLoginId) {
-        <div class="reg-success-banner__code-row">
-          Login ID: <span class="reg-success-banner__code reg-success-banner__code--login">{{ createdLoginId }}</span>
-        </div>
-        <div class="reg-success-banner__hint">
-          <i class="bi bi-info-circle-fill"></i>
-          Candidate must use their <strong>Login ID</strong> (not email) to sign in to the portal.
-        </div>
-      }
+       @if (createdCandidateNumber) {
+         <div class="reg-success-banner__code-row">
+           {{ 'CANDIDATE_REGISTER.reference_id' | translate }}: <span class="reg-success-banner__code">{{ createdCandidateNumber }}</span>
+         </div>
+       }
+       @if (createdLoginId) {
+         <div class="reg-success-banner__code-row">
+           {{ 'CANDIDATE_REGISTER.login_id' | translate }}: <span class="reg-success-banner__code reg-success-banner__code--login">{{ createdLoginId }}</span>
+         </div>
+         <div class="reg-success-banner__hint">
+           <i class="bi bi-info-circle-fill"></i>
+           {{ 'CANDIDATE_REGISTER.candidate_use_login_id' | translate }}
+         </div>
+       }
     </div>
   </div>
 }
@@ -56,9 +56,9 @@
       <i class="bi bi-ui-checks-grid"></i>
       {{ STEPS[currentStep - 1].label }}
     </div>
-    <span class="step-progress-card__counter">
-      Step {{ currentStep }} of {{ totalSteps }}
-    </span>
+     <span class="step-progress-card__counter">
+       {{ 'CANDIDATE_REGISTER.step_of' | translate: { current: currentStep, total: totalSteps } }}
+     </span>
   </div>
   <div class="step-indicator">
     @for (step of STEPS; track step.num) {

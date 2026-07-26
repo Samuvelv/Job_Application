@@ -2,7 +2,7 @@
 import { Component, Input, Output, EventEmitter, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
-import { TranslateModule } from '@ngx-translate/core';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { Candidate } from '../../../core/models/candidate.model';
 import { MasterDataService } from '../../../core/services/master-data.service';
 
@@ -153,19 +153,19 @@ import { MasterDataService } from '../../../core/services/master-data.service';
            <i class="bi bi-pencil"></i>
            <span>{{ 'COMMON.edit' | translate }}</span>
          </a>
-         <button class="cl-card__action cl-card__action--forward"
-           (click)="forwardToEmployer.emit()" title="Forward to employer">
-           <i class="bi bi-send-fill"></i>
-           <span>Forward</span>
+          <button class="cl-card__action cl-card__action--forward"
+            (click)="forwardToEmployer.emit()" [title]="'COMMON.forwarded' | translate">
+            <i class="bi bi-send-fill"></i>
+            <span>{{ 'COMMON.forwarded' | translate }}</span>
+          </button>
+          <button class="cl-card__action cl-card__action--mail"
+            (click)="resendCreds.emit()" [title]="'COMMON.resend_code' | translate">
+            <i class="bi bi-envelope"></i>
          </button>
-         <button class="cl-card__action cl-card__action--mail"
-           (click)="resendCreds.emit()" title="Resend credentials">
-           <i class="bi bi-envelope"></i>
-        </button>
-        <button class="cl-card__action cl-card__action--danger"
-          (click)="deleteCandidate.emit()" title="Delete candidate">
-          <i class="bi bi-trash"></i>
-        </button>
+         <button class="cl-card__action cl-card__action--danger"
+           (click)="deleteCandidate.emit()" [title]="'COMMON.delete' | translate">
+           <i class="bi bi-trash"></i>
+         </button>
       </div>
 
     </div>
@@ -179,7 +179,11 @@ export class CandidateCardComponent {
   @Output() deleteCandidate    = new EventEmitter<void>();
   @Output() forwardToEmployer  = new EventEmitter<void>();
 
-  constructor(private master: MasterDataService) {}
+  constructor(private master: MasterDataService, private translate: TranslateService) {}
+
+  private translateKey(key: string): string {
+    return this.translate.instant(key);
+  }
 
   private readonly flagMap = computed<Map<string, string>>(() => {
     const map = new Map<string, string>();
@@ -207,10 +211,13 @@ export class CandidateCardComponent {
 
   get feeLabel(): string {
     const map: Record<string, string> = {
-      paid: 'Paid', pending_payment: 'Pending', waived: 'Waived',
+      paid: 'fee_paid',
+      pending_payment: 'fee_pending',
+      waived: 'fee_waived',
     };
-    return this.candidate.registration_fee_status
+    const key = this.candidate.registration_fee_status
       ? (map[this.candidate.registration_fee_status] ?? '—') : '—';
+    return key !== '—' ? this.translateKey(key) : '—';
   }
 
   get cvFormatLabel(): string {
