@@ -3,10 +3,10 @@
 <!-- Header -->
 <div class="d-flex align-items-center gap-3 mb-4">
   <a [routerLink]="['/admin/candidates', candidateId]" class="back-btn">
-    <i class="bi bi-arrow-left"></i> Back
+    <i class="bi bi-arrow-left"></i> {{ 'COMMON.back' | translate }}
   </a>
   <div>
-    <h1 class="h4 fw-bold mb-0">Edit Candidate</h1>
+    <h1 class="h4 fw-bold mb-0">{{ 'CANDIDATE_EDIT.title' | translate }}</h1>
     <p class="text-muted small mb-0">
       @if (candidate) { {{ candidate.first_name }} {{ candidate.last_name }} }
     </p>
@@ -18,7 +18,7 @@
 } @else if (!candidate) {
   <div class="loading-state">
     <div class="spinner-border"></div>
-    <div class="loading-state__text">Loading candidate…</div>
+    <div class="loading-state__text">{{ 'CANDIDATE_EDIT.loading' | translate }}</div>
   </div>
 } @else {
 
@@ -32,25 +32,22 @@
   @if (showVolunteerImpactConfirm) {
     <div class="placed-prompt-overlay">
       <div class="placed-prompt">
-        <div class="placed-prompt__icon">
-          <i class="bi bi-exclamation-triangle-fill text-warning"></i>
-        </div>
-        <h4 class="placed-prompt__title">Volunteer Profile Impact</h4>
-        <p class="placed-prompt__msg">
-          This candidate is currently an active volunteer. Changing the profile
-          status from <strong>'Placed'</strong> will deactivate the volunteer
-          profile and remove related volunteer visibility/data from the platform.
-          Are you sure you want to continue?
-        </p>
-        <div class="placed-prompt__actions">
-          <button class="placed-prompt__btn placed-prompt__btn--yes"
-            (click)="confirmVolunteerImpact()">
-            <i class="bi bi-check2-circle me-2"></i>Confirm Change
-          </button>
-          <button class="placed-prompt__btn placed-prompt__btn--no"
-            (click)="cancelVolunteerImpact()">
-            <i class="bi bi-x-circle me-1"></i>Cancel
-          </button>
+         <div class="placed-prompt__icon">
+           <i class="bi bi-exclamation-triangle-fill text-warning"></i>
+         </div>
+         <h4 class="placed-prompt__title">{{ 'CANDIDATE_EDIT.volunteer_impact_title' | translate }}</h4>
+         <p class="placed-prompt__msg">
+           {{ 'CANDIDATE_EDIT.volunteer_impact_msg' | translate }}
+         </p>
+         <div class="placed-prompt__actions">
+           <button class="placed-prompt__btn placed-prompt__btn--yes"
+             (click)="confirmVolunteerImpact()">
+             <i class="bi bi-check2-circle me-2"></i>{{ 'CANDIDATE_EDIT.confirm_change' | translate }}
+           </button>
+           <button class="placed-prompt__btn placed-prompt__btn--no"
+             (click)="cancelVolunteerImpact()">
+             <i class="bi bi-x-circle me-1"></i>{{ 'COMMON.cancel' | translate }}
+           </button>
         </div>
       </div>
     </div>
@@ -60,36 +57,34 @@
   @if (showPlacedPrompt) {
     <div class="placed-prompt-overlay">
       <div class="placed-prompt">
-        <div class="placed-prompt__icon">
-          <i class="bi bi-trophy-fill"></i>
-        </div>
-        <h4 class="placed-prompt__title">Candidate Placed!</h4>
-        <p class="placed-prompt__msg">
-          Would you like to invite
-          <strong>{{ candidate.first_name }} {{ candidate.last_name }}</strong>
-          to become a NTL Career Nexus Volunteer?
-        </p>
-        <p class="placed-prompt__sub">
-          An email invitation will be sent to them to join the volunteer team.
-        </p>
-        @if (inviteError) {
-          <div class="alert alert-danger small py-2 mb-3">
-            <i class="bi bi-exclamation-triangle me-1"></i>{{ inviteError }}
-          </div>
-        }
-        <div class="placed-prompt__actions">
-          <button class="placed-prompt__btn placed-prompt__btn--yes"
-            (click)="sendInvitation()" [disabled]="inviteSending">
-            @if (inviteSending) {
-              <span class="spinner-border spinner-border-sm me-2"></span>Sending…
-            } @else {
-              <i class="bi bi-envelope-check-fill me-2"></i>Yes, Send Invitation
-            }
-          </button>
-          <button class="placed-prompt__btn placed-prompt__btn--no"
-            (click)="skipInvitation()" [disabled]="inviteSending">
-            <i class="bi bi-x-circle me-1"></i>No, Not Now
-          </button>
+         <div class="placed-prompt__icon">
+           <i class="bi bi-trophy-fill"></i>
+         </div>
+         <h4 class="placed-prompt__title">{{ 'CANDIDATE_EDIT.candidate_placed' | translate }}</h4>
+         <p class="placed-prompt__msg">
+           {{ 'CANDIDATE_EDIT.volunteer_invite_msg' | translate: { name: candidate.first_name + ' ' + candidate.last_name } }}
+         </p>
+         <p class="placed-prompt__sub">
+           {{ 'CANDIDATE_EDIT.volunteer_invite_sub' | translate }}
+         </p>
+         @if (inviteError) {
+           <div class="alert alert-danger small py-2 mb-3">
+             <i class="bi bi-exclamation-triangle me-1"></i>{{ inviteError }}
+           </div>
+         }
+         <div class="placed-prompt__actions">
+           <button class="placed-prompt__btn placed-prompt__btn--yes"
+             (click)="sendInvitation()" [disabled]="inviteSending">
+             @if (inviteSending) {
+               <span class="spinner-border spinner-border-sm me-2"></span>{{ 'COMMON.sending' | translate }}
+             } @else {
+               <i class="bi bi-envelope-check-fill me-2"></i>{{ 'CANDIDATE_EDIT.send_invitation' | translate }}
+             }
+           </button>
+           <button class="placed-prompt__btn placed-prompt__btn--no"
+             (click)="skipInvitation()" [disabled]="inviteSending">
+             <i class="bi bi-x-circle me-1"></i>{{ 'CANDIDATE_EDIT.not_now' | translate }}
+           </button>
         </div>
       </div>
     </div>
@@ -98,33 +93,31 @@
   @if (showVolunteerReactivatePrompt) {
     <div class="placed-prompt-overlay">
       <div class="placed-prompt">
-        <div class="placed-prompt__icon">
-          <i class="bi bi-person-check-fill"></i>
-        </div>
-        <h4 class="placed-prompt__title">Reactivate Volunteer Profile?</h4>
-        <p class="placed-prompt__msg">
-          <strong>{{ candidate?.first_name }} {{ candidate?.last_name }}</strong>
-          already has a volunteer record. Would you like to reactivate
-          their volunteer profile so they appear in the volunteers list again?
-        </p>
-        @if (reactivateError) {
-          <div class="alert alert-danger small py-2 mb-3">
-            <i class="bi bi-exclamation-triangle me-1"></i>{{ reactivateError }}
-          </div>
-        }
-        <div class="placed-prompt__actions">
-          <button class="placed-prompt__btn placed-prompt__btn--yes"
-            (click)="confirmReactivation()" [disabled]="reactivating">
-            @if (reactivating) {
-              <span class="spinner-border spinner-border-sm me-2"></span>Reactivating…
-            } @else {
-              <i class="bi bi-check2-circle me-2"></i>Yes, Reactivate
-            }
-          </button>
-          <button class="placed-prompt__btn placed-prompt__btn--no"
-            (click)="skipReactivation()" [disabled]="reactivating">
-            <i class="bi bi-x-circle me-1"></i>Not Now
-          </button>
+         <div class="placed-prompt__icon">
+           <i class="bi bi-person-check-fill"></i>
+         </div>
+         <h4 class="placed-prompt__title">{{ 'CANDIDATE_EDIT.reactivate_volunteer' | translate }}</h4>
+         <p class="placed-prompt__msg">
+           {{ 'CANDIDATE_EDIT.reactivate_msg' | translate: { name: (candidate?.first_name || '') + ' ' + (candidate?.last_name || '') } }}
+         </p>
+         @if (reactivateError) {
+           <div class="alert alert-danger small py-2 mb-3">
+             <i class="bi bi-exclamation-triangle me-1"></i>{{ reactivateError }}
+           </div>
+         }
+         <div class="placed-prompt__actions">
+           <button class="placed-prompt__btn placed-prompt__btn--yes"
+             (click)="confirmReactivation()" [disabled]="reactivating">
+             @if (reactivating) {
+               <span class="spinner-border spinner-border-sm me-2"></span>{{ 'CANDIDATE_EDIT.reactivating' | translate }}
+             } @else {
+               <i class="bi bi-check2-circle me-2"></i>{{ 'CANDIDATE_EDIT.yes_reactivate' | translate }}
+             }
+           </button>
+           <button class="placed-prompt__btn placed-prompt__btn--no"
+             (click)="skipReactivation()" [disabled]="reactivating">
+             <i class="bi bi-x-circle me-1"></i>{{ 'CANDIDATE_EDIT.not_now' | translate }}
+           </button>
         </div>
       </div>
     </div>
@@ -135,54 +128,54 @@
     </div>
   }
 
-  <!-- ══ Section: Media ══════════════════════════════════════════════════════ -->
-  <div class="form-card mb-4">
-    <h5 class="card-section-header card-section-header--warning mb-4">
-      <i class="bi bi-images"></i> Media &amp; Documents
-    </h5>
-    <div class="row g-4">
+   <!-- ══ Section: Media ══════════════════════════════════════════════════════ -->
+   <div class="form-card mb-4">
+     <h5 class="card-section-header card-section-header--warning mb-4">
+       <i class="bi bi-images"></i> {{ 'CANDIDATE_EDIT.media_documents' | translate }}
+     </h5>
+     <div class="row g-4">
 
-      <!-- Profile Photo -->
-      <div class="col-md-3">
-        <div class="media-upload-cell">
-          <div class="media-upload-cell__label"><i class="bi bi-person-circle me-1"></i> Profile Photo</div>
-          <div class="media-upload-cell__preview">
-            @if (stagedPreviews['profiles']) {
-              <img [src]="stagedPreviews['profiles']" alt="Staged photo" class="media-upload-cell__img">
-              <div class="media-upload-cell__actions">
-                <span class="badge bg-warning text-dark me-1" style="font-size:.65rem"><i class="bi bi-clock me-1"></i>Pending</span>
-                <button type="button" class="media-upload-cell__action-btn"
-                  (click)="openPreview('image', stagedPreviews['profiles']!, 'Profile Photo (Pending)')"><i class="bi bi-eye"></i></button>
-                <button type="button" class="media-upload-cell__action-btn media-upload-cell__action-btn--danger"
-                  title="Discard staged file" (click)="clearStaged('profiles')"><i class="bi bi-x-lg"></i></button>
-              </div>
-            } @else if (candidate.profile_photo_url) {
-              <img [src]="candidate.profile_photo_url" alt="Profile photo" class="media-upload-cell__img"
-                (error)="$any($event.target).style.display='none'">
-              <div class="media-upload-cell__actions">
-                <button type="button" class="media-upload-cell__action-btn"
-                  (click)="openPreview('image', candidate.profile_photo_url, 'Profile Photo')"><i class="bi bi-eye"></i></button>
-                <button type="button" class="media-upload-cell__action-btn media-upload-cell__action-btn--danger"
-                  [disabled]="mediaLoading['profiles']" (click)="deleteFile('profiles')"><i class="bi bi-trash"></i></button>
-              </div>
-            } @else {
-              <div class="media-upload-cell__empty"><i class="bi bi-person-circle"></i><span>No photo</span></div>
-            }
-          </div>
-          <label class="btn btn-sm btn-outline-secondary w-100 mt-2">
-            <i class="bi bi-upload me-1"></i>{{ (candidate.profile_photo_url || stagedPreviews['profiles']) ? 'Replace' : 'Upload' }}
-            <input type="file" class="d-none" accept="image/jpeg,image/png,image/webp" (change)="uploadFile('profiles', $event)">
-          </label>
-          <div class="form-text text-muted mt-2">
-            <i class="bi bi-info-circle me-1"></i>Please upload a clear, professional photo. Face should be clearly visible. Plain background preferred.
-          </div>
-        </div>
-      </div>
+       <!-- Profile Photo -->
+       <div class="col-md-3">
+         <div class="media-upload-cell">
+           <div class="media-upload-cell__label"><i class="bi bi-person-circle me-1"></i> {{ 'COMMON.profile_photo' | translate }}</div>
+           <div class="media-upload-cell__preview">
+             @if (stagedPreviews['profiles']) {
+               <img [src]="stagedPreviews['profiles']" alt="Staged photo" class="media-upload-cell__img">
+               <div class="media-upload-cell__actions">
+                 <span class="badge bg-warning text-dark me-1" style="font-size:.65rem"><i class="bi bi-clock me-1"></i>{{ 'COMMON.pending' | translate }}</span>
+                 <button type="button" class="media-upload-cell__action-btn"
+                   (click)="openPreview('image', stagedPreviews['profiles']!, 'Profile Photo (Pending)')"><i class="bi bi-eye"></i></button>
+                 <button type="button" class="media-upload-cell__action-btn media-upload-cell__action-btn--danger"
+                   [title]="'CANDIDATE_EDIT.discard_staged' | translate" (click)="clearStaged('profiles')"><i class="bi bi-x-lg"></i></button>
+               </div>
+             } @else if (candidate.profile_photo_url) {
+               <img [src]="candidate.profile_photo_url" alt="Profile photo" class="media-upload-cell__img"
+                 (error)="$any($event.target).style.display='none'">
+               <div class="media-upload-cell__actions">
+                 <button type="button" class="media-upload-cell__action-btn"
+                   (click)="openPreview('image', candidate.profile_photo_url, 'Profile Photo')"><i class="bi bi-eye"></i></button>
+                 <button type="button" class="media-upload-cell__action-btn media-upload-cell__action-btn--danger"
+                   [disabled]="mediaLoading['profiles']" (click)="deleteFile('profiles')"><i class="bi bi-trash"></i></button>
+               </div>
+             } @else {
+               <div class="media-upload-cell__empty"><i class="bi bi-person-circle"></i><span>{{ 'CANDIDATE_EDIT.no_photo' | translate }}</span></div>
+             }
+           </div>
+           <label class="btn btn-sm btn-outline-secondary w-100 mt-2">
+             <i class="bi bi-upload me-1"></i>{{ (candidate.profile_photo_url || stagedPreviews['profiles']) ? ('CANDIDATE_EDIT.replace' | translate) : ('CANDIDATE_EDIT.upload' | translate) }}
+             <input type="file" class="d-none" accept="image/jpeg,image/png,image/webp" (change)="uploadFile('profiles', $event)">
+           </label>
+           <div class="form-text text-muted mt-2">
+             <i class="bi bi-info-circle me-1"></i>{{ 'CANDIDATE_EDIT.photo_guidelines' | translate }}
+           </div>
+         </div>
+       </div>
 
-      <!-- Resume / CV -->
-      <div class="col-md-3">
-        <div class="media-upload-cell">
-          <div class="media-upload-cell__label"><i class="bi bi-file-earmark-person me-1"></i> Resume / CV</div>
+       <!-- Resume / CV -->
+       <div class="col-md-3">
+         <div class="media-upload-cell">
+           <div class="media-upload-cell__label"><i class="bi bi-file-earmark-person me-1"></i> {{ 'CANDIDATE_EDIT.resume_cv' | translate }}</div>
           <div class="media-upload-cell__preview media-upload-cell__preview--doc">
             @if (stagedFiles['resumes']) {
               <i class="bi bi-file-earmark-pdf-fill media-upload-cell__doc-icon"></i>

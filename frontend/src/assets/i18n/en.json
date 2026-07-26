@@ -1773,8 +1773,31 @@
     "contact_volunteer": "Contact Volunteer",
     "message_sent": "Message sent successfully",
     "no_volunteers": "No volunteers found"
-  },
-   "VOLUNTEER_PROFILE": {
+    },
+    "CANDIDATE_EDIT": {
+      "title": "Edit Candidate",
+      "loading": "Loading candidate…",
+      "volunteer_impact_title": "Volunteer Profile Impact",
+      "volunteer_impact_msg": "This candidate is currently an active volunteer. Changing the profile status from 'Placed' will deactivate the volunteer profile and remove related volunteer visibility/data from the platform. Are you sure you want to continue?",
+      "confirm_change": "Confirm Change",
+      "candidate_placed": "Candidate Placed!",
+      "volunteer_invite_msg": "Would you like to invite {{name}} to become a NTL Career Nexus Volunteer?",
+      "volunteer_invite_sub": "An email invitation will be sent to them to join the volunteer team.",
+      "send_invitation": "Yes, Send Invitation",
+      "not_now": "Not Now",
+      "reactivate_volunteer": "Reactivate Volunteer Profile?",
+      "reactivate_msg": "{{name}} already has a volunteer record. Would you like to reactivate their volunteer profile so they appear in the volunteers list again?",
+      "reactivating": "Reactivating…",
+      "yes_reactivate": "Yes, Reactivate",
+      "media_documents": "Media & Documents",
+      "discard_staged": "Discard staged file",
+      "no_photo": "No photo",
+      "replace": "Replace",
+      "upload": "Upload",
+      "photo_guidelines": "Please upload a clear, professional photo. Face should be clearly visible. Plain background preferred.",
+      "resume_cv": "Resume / CV"
+    },
+    "VOLUNTEER_PROFILE": {
      "title": "Volunteer Profile",
      "expertise": "Expertise",
      "about": "About",
