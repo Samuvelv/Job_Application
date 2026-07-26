@@ -917,7 +917,11 @@
     "all_formats": "All formats",
     "select_sources": "Select sources…"
   },
-  "FILTER_OPTIONS": {
+   "FILTER_OPTIONS": {
+     "candidates": "candidates",
+     "search_name": "Search name, ID, email, job title…",
+     "search_placeholder": "Search name, ID, email, job title…",
+     "export_csv": "Export CSV",
     "ind_technology": "Technology",
     "ind_healthcare": "Healthcare",
     "ind_finance": "Finance",
