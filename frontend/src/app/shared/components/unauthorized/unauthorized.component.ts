@@ -1,6 +1,6 @@
 // src/app/shared/components/unauthorized/unauthorized.component.ts
 import { Component, OnInit } from '@angular/core';
-import { TranslateModule } from '@ngx-translate/core';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
@@ -98,6 +98,7 @@ export class UnauthorizedComponent implements OnInit {
     private auth: AuthService,
     private fb: FormBuilder,
     private accessRequestSvc: RecruiterAccessRequestService,
+    private translate: TranslateService,
   ) {
     this.dashRoute = auth.getDashboardRoute();
     const nav = history.state as { reason?: string } | undefined;
@@ -134,7 +135,7 @@ export class UnauthorizedComponent implements OnInit {
         if (err?.status === 409) {
           this.pageState = 'already-sent';
         } else {
-          this.submitError = err?.error?.message ?? 'Failed to submit. Please try again.';
+          this.submitError = err?.error?.message ?? this.translate.instant('UNAUTHORIZED.submit_failed');
         }
       },
     });

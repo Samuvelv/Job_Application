@@ -9,7 +9,7 @@
         </h3>
         <span class="language-badge">{{ languageName }}</span>
       </div>
-      <button class="close-btn" (click)="closeModal()" title="Close modal">
+      <button class="close-btn" (click)="closeModal()" [title]="'TRANSLATION_MODAL.close' | translate">
         <span>&times;</span>
       </button>
     </div>

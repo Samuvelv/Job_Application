@@ -1,7 +1,7 @@
 // frontend/src/app/shared/components/translation-modal/translation-modal.component.ts
 import { Component, Input, Output, EventEmitter, OnInit, ViewChild, ElementRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { TranslateModule } from '@ngx-translate/core';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
 
 interface TranslatedCandidate {
   firstName: string;
@@ -48,6 +48,8 @@ export class TranslationModalComponent implements OnInit {
   copySuccess = false;
   copyErrorMsg: string | null = null;
 
+  constructor(private translate: TranslateService) {}
+
   ngOnInit(): void {
     // Prevent body scroll when modal is open
     document.body.style.overflow = 'hidden';
@@ -78,7 +80,7 @@ export class TranslationModalComponent implements OnInit {
       })
       .catch((err) => {
         console.error('Failed to copy to clipboard:', err);
-        this.copyErrorMsg = 'Failed to copy to clipboard';
+        this.copyErrorMsg = this.translate.instant('TRANSLATION_MODAL.copy_error');
         setTimeout(() => {
           this.copyErrorMsg = null;
         }, 3000);
@@ -103,13 +105,13 @@ export class TranslationModalComponent implements OnInit {
 
     // Header
     lines.push(`${this.candidate.firstName} ${this.candidate.lastName}`);
-    lines.push(`Language: ${this.languageName}`);
+    lines.push(`${this.translate.instant('TRANSLATION_MODAL.language')}: ${this.languageName}`);
     lines.push('='.repeat(60));
     lines.push('');
 
     // Bio
     if (this.candidate.bio) {
-      lines.push('BIOGRAPHY');
+      lines.push(this.translate.instant('TRANSLATION_MODAL.biography'));
       lines.push('-'.repeat(60));
       lines.push(this.candidate.bio);
       lines.push('');
@@ -117,11 +119,11 @@ export class TranslationModalComponent implements OnInit {
 
     // Work Experience
     if (this.candidate.experiences && this.candidate.experiences.length > 0) {
-      lines.push('WORK EXPERIENCE');
+      lines.push(this.translate.instant('TRANSLATION_MODAL.work_experience'));
       lines.push('-'.repeat(60));
       this.candidate.experiences.forEach((exp, idx) => {
         lines.push(`${idx + 1}. ${exp.jobTitle} at ${exp.companyName}`);
-        lines.push(`   ${exp.startDate} - ${exp.endDate || 'Present'}`);
+        lines.push(`   ${exp.startDate} - ${exp.endDate || this.translate.instant('COMMON.present')}`);
         if (exp.description) {
           lines.push(`   ${exp.description}`);
         }
@@ -131,7 +133,7 @@ export class TranslationModalComponent implements OnInit {
 
     // Education
     if (this.candidate.educations && this.candidate.educations.length > 0) {
-      lines.push('EDUCATION');
+      lines.push(this.translate.instant('TRANSLATION_MODAL.education'));
       lines.push('-'.repeat(60));
       this.candidate.educations.forEach((edu, idx) => {
         lines.push(`${idx + 1}. ${edu.degree} from ${edu.institution}`);
@@ -144,7 +146,7 @@ export class TranslationModalComponent implements OnInit {
 
     // Certifications
     if (this.candidate.certifications && this.candidate.certifications.length > 0) {
-      lines.push('CERTIFICATIONS');
+      lines.push(this.translate.instant('TRANSLATION_MODAL.certifications'));
       lines.push('-'.repeat(60));
       this.candidate.certifications.forEach((cert, idx) => {
         lines.push(`${idx + 1}. ${cert.name} - ${cert.issuingOrganization}`);
@@ -160,7 +162,7 @@ export class TranslationModalComponent implements OnInit {
       this.candidate.volunteerExperiences &&
       this.candidate.volunteerExperiences.length > 0
     ) {
-      lines.push('VOLUNTEER EXPERIENCE');
+      lines.push(this.translate.instant('TRANSLATION_MODAL.volunteer_experience'));
       lines.push('-'.repeat(60));
       this.candidate.volunteerExperiences.forEach((vol, idx) => {
         lines.push(`${idx + 1}. ${vol.organizationName}`);
@@ -173,7 +175,7 @@ export class TranslationModalComponent implements OnInit {
 
     // Hobbies
     if (this.candidate.hobbies && this.candidate.hobbies.length > 0) {
-      lines.push('HOBBIES & INTERESTS');
+      lines.push(this.translate.instant('TRANSLATION_MODAL.hobbies_interests'));
       lines.push('-'.repeat(60));
       lines.push(this.candidate.hobbies.join(', '));
       lines.push('');
