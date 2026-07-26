@@ -1,6 +1,8 @@
 // src/app/core/services/language.service.ts
 import { Injectable, signal } from '@angular/core';
 import { TranslateService } from '@ngx-translate/core';
+import { HttpClient } from '@angular/common/http';
+import { TranslationApiService } from './translation-api.service';
 
 export interface Language {
   code:   string;
@@ -55,8 +57,14 @@ const RTL_LANGS    = new Set(['ar', 'he', 'fa', 'ur']);
 export class LanguageService {
   readonly languages = SUPPORTED_LANGUAGES;
   readonly current   = signal<Language>(SUPPORTED_LANGUAGES[0]);
+  isTranslating      = signal(false);
+  translationError   = signal<string | null>(null);
 
-  constructor(private translate: TranslateService) {}
+  constructor(
+    private translate: TranslateService,
+    private http: HttpClient,
+    private translationApi: TranslationApiService
+  ) {}
 
   /** Called once at app startup via APP_INITIALIZER */
   init(): Promise<void> {
@@ -74,7 +82,7 @@ export class LanguageService {
   }
 
   /** Switch the active language and persist the preference */
-  use(code: string): Promise<void> {
+  async use(code: string): Promise<void> {
     const lang = this.languages.find(l => l.code === code) ?? this.languages[0];
     this.current.set(lang);
     localStorage.setItem(STORAGE_KEY, code);
@@ -83,16 +91,122 @@ export class LanguageService {
     document.documentElement.setAttribute('dir', lang.dir);
     document.documentElement.setAttribute('lang', code);
 
-    return new Promise<void>((resolve, reject) => {
-      this.translate.use(code).subscribe({
-        next:     () => resolve(),
-        error:    (err) => {
-          // Graceful fallback — switch to English if the file is missing
-          console.warn(`[i18n] Missing translation file for "${code}", falling back to "en"`, err);
-          this.translate.use(DEFAULT_LANG).subscribe({ next: resolve, error: reject });
-        },
+    // If English, no translation needed
+    if (code === DEFAULT_LANG) {
+      return new Promise<void>((resolve, reject) => {
+        this.translate.use(code).subscribe({
+          next:     () => {
+            this.translationError.set(null);
+            resolve();
+          },
+          error:    (err) => {
+            console.error(`Failed to load English translations:`, err);
+            this.translationError.set('Failed to load English');
+            reject(err);
+          },
+        });
+      });
+    }
+
+    // For other languages, use real-time translation API
+    this.isTranslating.set(true);
+    this.translationError.set(null);
+
+    try {
+      // Load English base translations
+      const enJson = await this.loadJsonFile('assets/i18n/en.json');
+
+      // Translate to target language using API
+      const translatedJson = await this.translationApi.translateAllKeys(enJson, this.getLanguageName(code));
+
+      // Set the translated JSON in TranslateService
+      this.translate.setTranslation(code, translatedJson, true);
+
+      // Use the translated language
+      await new Promise<void>((resolve, reject) => {
+        this.translate.use(code).subscribe({
+          next:     () => {
+            this.translationError.set(null);
+            this.isTranslating.set(false);
+            console.log(`✅ Language switched to ${code}`);
+            resolve();
+          },
+          error:    (err) => {
+            this.translationError.set(`Failed to switch to ${code}`);
+            this.isTranslating.set(false);
+            reject(err);
+          },
+        });
+      });
+    } catch (error) {
+      console.error(`Translation failed for ${code}:`, error);
+      this.translationError.set(`Translation failed. Falling back to English.`);
+      this.isTranslating.set(false);
+
+      // Fallback to English
+      return new Promise<void>((resolve, reject) => {
+        this.translate.use(DEFAULT_LANG).subscribe({
+          next:     () => resolve(),
+          error:    (err) => reject(err),
+        });
+      });
+    }
+  }
+
+  /** Load JSON file from assets */
+  private async loadJsonFile(path: string): Promise<Record<string, any>> {
+    return new Promise((resolve, reject) => {
+      this.http.get<Record<string, any>>(path).subscribe({
+        next:  (data) => resolve(data),
+        error: (err) => {
+          console.error(`Failed to load ${path}:`, err);
+          reject(err);
+        }
       });
     });
+  }
+
+  /** Get language name from code for API translation */
+  private getLanguageName(code: string): string {
+    const langMap: Record<string, string> = {
+      'en': 'English',
+      'fr': 'French',
+      'de': 'German',
+      'es': 'Spanish',
+      'pt': 'Portuguese',
+      'it': 'Italian',
+      'nl': 'Dutch',
+      'ru': 'Russian',
+      'zh': 'Chinese (Simplified)',
+      'ja': 'Japanese',
+      'ko': 'Korean',
+      'ar': 'Arabic',
+      'hi': 'Hindi',
+      'tr': 'Turkish',
+      'pl': 'Polish',
+      'bg': 'Bulgarian',
+      'hr': 'Croatian',
+      'el': 'Greek',
+      'cs': 'Czech',
+      'da': 'Danish',
+      'et': 'Estonian',
+      'fi': 'Finnish',
+      'sv': 'Swedish',
+      'hu': 'Hungarian',
+      'ga': 'Irish',
+      'lv': 'Latvian',
+      'lt': 'Lithuanian',
+      'lb': 'Luxembourgish',
+      'mt': 'Maltese',
+      'ro': 'Romanian',
+      'sk': 'Slovak',
+      'sl': 'Slovenian',
+      'no': 'Norwegian',
+      'rm': 'Romansh',
+      'is': 'Icelandic',
+    };
+
+    return langMap[code] || code;
   }
 
   /** Convenience getter */
@@ -100,3 +214,4 @@ export class LanguageService {
     return this.current().code;
   }
 }
+
