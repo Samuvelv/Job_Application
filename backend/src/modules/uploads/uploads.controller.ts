@@ -65,18 +65,14 @@ async function deleteLocalFile(storedUrl: string | null | undefined): Promise<vo
   if (!storedUrl) return;
   const localPath = localPathFromUrl(storedUrl);
   if (!localPath) {
-    console.log(`[DELETE] Skipping non-local URL: ${storedUrl}`);
     return;
   }
   try {
     await fs.unlink(localPath);
-    console.log(`[DELETE] ✓ Removed: ${localPath}`);
   } catch (err: any) {
     if (err.code === 'ENOENT') {
-      console.warn(`[DELETE] File already gone: ${localPath}`);
       return;
     }
-    console.error(`[DELETE] ✗ Failed to delete: ${localPath} — ${err.message}`);
     throw err;
   }
 }
@@ -92,18 +88,9 @@ async function getOwnCandidateId(userId: string): Promise<string | null> {
 
 function logUploadedFile(label: string, file: Express.Multer.File | undefined): void {
   if (!file) {
-    console.warn(`[${label}] ✗ req.file is undefined — multer did not attach a file`);
     return;
   }
-  console.log(`[${label}] req.file = {`);
-  console.log(`[${label}]   fieldname    : "${file.fieldname}"`);
-  console.log(`[${label}]   originalname : "${file.originalname}"`);
-  console.log(`[${label}]   mimetype     : "${file.mimetype}"`);
-  console.log(`[${label}]   size         : ${file.size} bytes (${(file.size / 1024).toFixed(1)} KB)`);
-  console.log(`[${label}]   destination  : "${(file as any).destination ?? 'N/A'}"`);
-  console.log(`[${label}]   filename     : "${file.filename ?? 'N/A'}"`);
-  console.log(`[${label}]   path         : "${(file as any).path ?? 'N/A'}"`);
-  console.log(`[${label}] }`);
+  // File metadata is available if needed for audit logging
 }
 
 // ── Handlers ──────────────────────────────────────────────────────────────────
@@ -122,7 +109,6 @@ export async function stageCandidateFile(
 ): Promise<void> {
   try {
     const type = p(req.params['type']);
-    console.log(`[STAGE] POST /candidates/me/stage-file/${type}`);
     logUploadedFile('STAGE', req.file);
 
     const file = req.file;
@@ -130,14 +116,11 @@ export async function stageCandidateFile(
 
     const maxSize = MAX_SIZES[type];
     if (maxSize && file.size > maxSize) {
-      console.warn(`[STAGE] ✗ File too large: ${file.size} > ${maxSize}`);
       await deleteLocalFile(buildFileUrl(type, file.filename));
       throw new AppError(413, `File too large. Max size for ${type}: ${maxSize / 1024 / 1024} MB`);
     }
 
     const url = buildFileUrl(type, file.filename);
-    console.log(`[STAGE] ✓ Saved → ${url}`);
-    console.log(`[STAGE]   Disk  → ${(file as any).path}`);
 
     res.json({
       message:      'File staged — will be applied on approval',
@@ -145,7 +128,6 @@ export async function stageCandidateFile(
       url,
     });
   } catch (err: any) {
-    console.error(`[STAGE] ✗ Error: ${err.message ?? err}`);
     next(err);
   }
 }
@@ -164,7 +146,6 @@ export async function uploadCandidateFile(
   try {
     const id   = p(req.params['id']);
     const type = p(req.params['type']);
-    console.log(`[UPLOAD] POST /candidates/${id}/files/${type}`);
     logUploadedFile('UPLOAD', req.file);
 
     if (req.user?.role === 'candidate') {
@@ -177,7 +158,6 @@ export async function uploadCandidateFile(
 
     const maxSize = MAX_SIZES[type];
     if (maxSize && file.size > maxSize) {
-      console.warn(`[UPLOAD] ✗ File too large: ${file.size} > ${maxSize}`);
       await deleteLocalFile(buildFileUrl(type, file.filename));
       throw new AppError(413, `File too large. Max size for ${type}: ${maxSize / 1024 / 1024} MB`);
     }
@@ -185,8 +165,6 @@ export async function uploadCandidateFile(
     await getCandidateById(id); // throws 404 if not found
 
     const url = buildFileUrl(type, file.filename);
-    console.log(`[UPLOAD] ✓ Saved → ${url}`);
-    console.log(`[UPLOAD]   Disk  → ${(file as any).path}`);
 
     if (type === 'certificates') {
       const certName    = (req.body['name']       as string) || file.originalname;
@@ -194,12 +172,10 @@ export async function uploadCandidateFile(
       const issue_date  = (req.body['issue_date']  as string) || undefined;
       const expiry_date = (req.body['expiry_date'] as string) || null;
       const no_expiry   = req.body['no_expiry'] === 'true' || req.body['no_expiry'] === true;
-      console.log(`[UPLOAD] Adding certificate: name="${certName}"`);
       await addCertificateFile(id, certName, url, { issuer, issue_date, expiry_date, no_expiry });
     } else {
       const field = TYPE_TO_FIELD[type];
       if (!field) throw new AppError(400, `Unknown file type: ${type}`);
-      console.log(`[UPLOAD] Updating DB: ${field} = "${url}"`);
       await updateCandidateFile(id, field, url);
     }
 
@@ -212,14 +188,12 @@ export async function uploadCandidateFile(
       ipAddress:  req.ip,
     });
 
-    console.log(`[UPLOAD] ✓ Done`);
     res.json({
       message:  'File uploaded successfully',
       url,
       filename: file.filename,
     });
   } catch (err: any) {
-    console.error(`[UPLOAD] ✗ Error: ${err.message ?? err}`);
     next(err);
   }
 }
@@ -238,7 +212,6 @@ export async function deleteCandidateFile(
   try {
     const id   = p(req.params['id']);
     const type = p(req.params['type']);
-    console.log(`[DELETE_FILE] DELETE /candidates/${id}/files/${type}`);
 
     if (req.user?.role === 'candidate') {
       const ownId = await getOwnCandidateId(req.user.sub);
@@ -250,10 +223,8 @@ export async function deleteCandidateFile(
 
     const candidate = await getCandidateById(id);
     const existing  = (candidate as any)[field] as string | null;
-    console.log(`[DELETE_FILE] Existing URL: ${existing ?? 'null'}`);
 
     await db('candidates').where({ id }).update({ [field]: null, updated_at: new Date() });
-    console.log(`[DELETE_FILE] ✓ DB cleared`);
 
     await deleteLocalFile(existing);
 
@@ -268,7 +239,6 @@ export async function deleteCandidateFile(
 
     res.json({ message: 'File removed' });
   } catch (err: any) {
-    console.error(`[DELETE_FILE] ✗ Error: ${err.message ?? err}`);
     next(err);
   }
 }
@@ -286,7 +256,6 @@ export async function deleteCandidateCertificate(
   try {
     const id     = p(req.params['id']);
     const certId = p(req.params['certId']);
-    console.log(`[DELETE_CERT] DELETE /candidates/${id}/certificates/${certId}`);
 
     if (req.user?.role === 'candidate') {
       const ownId = await getOwnCandidateId(req.user.sub);
@@ -298,10 +267,8 @@ export async function deleteCandidateCertificate(
       .first();
 
     if (!cert) throw new AppError(404, 'Certificate not found');
-    console.log(`[DELETE_CERT] file_url: ${cert.file_url ?? 'null'}`);
 
     await db('candidate_certificates').where({ id: certId }).delete();
-    console.log(`[DELETE_CERT] ✓ DB row deleted`);
 
     await deleteLocalFile(cert.file_url as string | null);
 
@@ -316,7 +283,6 @@ export async function deleteCandidateCertificate(
 
     res.json({ message: 'Certificate removed' });
   } catch (err: any) {
-    console.error(`[DELETE_CERT] ✗ Error: ${err.message ?? err}`);
     next(err);
   }
 }
@@ -358,7 +324,6 @@ export async function patchCandidateCertificate(
 
     res.json({ message: 'Certificate updated' });
   } catch (err: any) {
-    console.error(`[PATCH_CERT] ✗ Error: ${err.message ?? err}`);
     next(err);
   }
 }

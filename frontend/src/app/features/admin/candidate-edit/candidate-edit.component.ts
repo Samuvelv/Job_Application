@@ -17,6 +17,7 @@ import { VolunteerService } from '../../../core/services/volunteer.service';
 import { SearchableSelectComponent, SelectOption } from '../../../shared/components/searchable-select/searchable-select.component';
 import { ChipMultiSelectComponent, ChipOption } from '../../../shared/components/chip-multi-select/chip-multi-select.component';
 import { Candidate, Certificate } from '../../../core/models/candidate.model';
+import { Volunteer } from '../../../core/models/volunteer.model';
 import { REGISTRATION_FEE_STATUS_OPTIONS, CV_FORMAT_OPTIONS, SOURCE_OPTIONS, EMPLOYMENT_STATUS_OPTIONS, VISA_STATUS_OPTIONS, REASON_FOR_LEAVING_OPTIONS, PROFILE_STATUS_OPTIONS } from '../../../core/constants/candidate-options';
 
 // ── Email validator ────────────────────────────────────────────────────────
@@ -654,7 +655,12 @@ export class CandidateEditComponent implements OnInit, OnDestroy {
         next: () => {
           this.mediaLoading[type] = false;
           this.toast.success('Certificate uploaded');
-          this.empSvc.getById(this.candidateId).subscribe(r => { this.candidate = r.candidate; });
+          this.empSvc.getById(this.candidateId).subscribe({
+            next: (r) => { this.candidate = r.candidate; },
+            error: (err) => {
+              this.toast.error(err?.error?.message ?? 'Failed to load candidate');
+            },
+          });
         },
         error: (err) => {
           this.mediaLoading[type] = false;
@@ -694,7 +700,12 @@ export class CandidateEditComponent implements OnInit, OnDestroy {
       next: () => {
         this.mediaLoading[type] = false;
         this.toast.success('File removed');
-        this.empSvc.getById(this.candidateId).subscribe(r => { this.candidate = r.candidate; });
+        this.empSvc.getById(this.candidateId).subscribe({
+          next: (r) => { this.candidate = r.candidate; },
+          error: (err) => {
+            this.toast.error(err?.error?.message ?? 'Failed to load candidate');
+          },
+        });
       },
       error: (err) => {
         this.mediaLoading[type] = false;
@@ -710,7 +721,12 @@ export class CandidateEditComponent implements OnInit, OnDestroy {
       next: () => {
         this.certDeleting = null;
         this.toast.success('Certificate removed');
-        this.empSvc.getById(this.candidateId).subscribe(r => { this.candidate = r.candidate; });
+        this.empSvc.getById(this.candidateId).subscribe({
+          next: (r) => { this.candidate = r.candidate; },
+          error: (err) => {
+            this.toast.error(err?.error?.message ?? 'Failed to load candidate');
+          },
+        });
       },
       error: (err) => {
         this.certDeleting = null;
@@ -789,7 +805,12 @@ export class CandidateEditComponent implements OnInit, OnDestroy {
         this.mediaLoading['certificates'] = false;
         this.pendingNewCert = null;
         this.toast.success('Certificate uploaded');
-        this.empSvc.getById(this.candidateId).subscribe(r => { this.candidate = r.candidate; });
+        this.empSvc.getById(this.candidateId).subscribe({
+          next: (r) => { this.candidate = r.candidate; },
+          error: (err) => {
+            this.toast.error(err?.error?.message ?? 'Failed to load candidate');
+          },
+        });
       },
       error: (err) => {
         this.mediaLoading['certificates'] = false;
@@ -847,7 +868,7 @@ export class CandidateEditComponent implements OnInit, OnDestroy {
       industry:         [emp.industry ?? '',         Validators.required],
       years_experience: [emp.years_experience ?? 0],
       linkedin_url:     [emp.linkedin_url ?? '', linkedInValidator()],
-      notice_period_id: [(emp as any).notice_period_id ?? null],
+      notice_period_id: [emp.notice_period_id ?? null],
 
       current_country:  [emp.current_country ?? '', Validators.required],
       current_city:     [emp.current_city ?? '',    Validators.required],
@@ -1038,7 +1059,7 @@ export class CandidateEditComponent implements OnInit, OnDestroy {
           delete this.stagedFiles[t];
           delete this.stagedPreviews[t];
         });
-        this.empSvc.update(this.candidateId, payload as any).subscribe({
+        this.empSvc.update(this.candidateId, payload).subscribe({
           next: (res) => {
             this.saving     = false;
             this.candidate   = res.candidate;
@@ -1083,7 +1104,7 @@ export class CandidateEditComponent implements OnInit, OnDestroy {
         const placedReferral = (c.referrals ?? []).find((r: any) => r.status === 'placed');
         const countryPlaced  = placedReferral?.country ?? c.current_country ?? null;
 
-        const payload = {
+    const payload: Partial<Volunteer> = {
           name:             `${c.first_name} ${c.last_name}`.trim(),
           email:            c.email            ?? undefined,
           phone:            c.phone            ?? undefined,
