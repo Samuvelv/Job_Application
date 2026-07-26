@@ -1,7 +1,7 @@
 // src/app/features/admin/volunteers/volunteer-profile-page.component.ts
 import { Component, OnInit, computed, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { TranslateModule } from '@ngx-translate/core';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { VolunteerService } from '../../../core/services/volunteer.service';
 import { MasterDataService } from '../../../core/services/master-data.service';
@@ -18,15 +18,15 @@ type Tab = 'overview' | 'contact';
   template: `
     <!-- Back + actions -->
     <div class="d-flex align-items-center justify-content-between mb-4 gap-2 flex-wrap">
-      <a routerLink="/admin/volunteers" class="back-btn">
-        <i class="bi bi-arrow-left"></i> Back to Volunteers
-      </a>
+       <a routerLink="/admin/volunteers" class="back-btn">
+         <i class="bi bi-arrow-left"></i> {{ 'VOLUNTEER_PROFILE.back_to_volunteers' | translate }}
+       </a>
       @if (volunteer) {
         <div class="tbl-actions">
           <a class="tbl-actions__btn tbl-actions__btn--edit"
             [routerLink]="['/admin/volunteers/create']"
             [queryParams]="{edit: volunteer.id}">
-            <i class="bi bi-pencil me-1"></i> Edit
+             <i class="bi bi-pencil me-1"></i> {{ 'COMMON.edit' | translate }}
           </a>
           <div class="tbl-actions__sep"></div>
           <button class="tbl-actions__btn"
@@ -36,11 +36,11 @@ type Tab = 'overview' | 'contact';
             [disabled]="toggling">
             @if (toggling) {
               <span class="spinner-border spinner-border-sm"></span>
-            } @else if (volunteer.availability === 'Active') {
-              <i class="bi bi-pause-circle me-1"></i> Deactivate
-            } @else {
-              <i class="bi bi-play-circle me-1"></i> Activate
-            }
+             } @else if (volunteer.availability === 'Active') {
+               <i class="bi bi-pause-circle me-1"></i> {{ 'VOLUNTEER_PROFILE.deactivate' | translate }}
+             } @else {
+               <i class="bi bi-play-circle me-1"></i> {{ 'VOLUNTEER_PROFILE.activate' | translate }}
+             }
           </button>
           <div class="tbl-actions__sep"></div>
           <button class="tbl-actions__btn tbl-actions__btn--danger tbl-actions__btn--icon"
@@ -55,10 +55,10 @@ type Tab = 'overview' | 'contact';
       <div class="alert alert-danger">{{ loadError }}</div>
 
     } @else if (!volunteer) {
-      <div class="loading-state">
-        <div class="spinner-border"></div>
-        <div class="loading-state__text">Loading volunteer profile…</div>
-      </div>
+       <div class="loading-state">
+         <div class="spinner-border"></div>
+         <div class="loading-state__text">{{ 'VOLUNTEER_PROFILE.loading_profile' | translate }}</div>
+       </div>
 
     } @else {
 
@@ -154,14 +154,14 @@ type Tab = 'overview' | 'contact';
 
       <!-- ── Tabs ──────────────────────────────────────────────── -->
       <div class="vp-tabs mb-4">
-        <button class="vp-tab" [class.vp-tab--active]="activeTab() === 'overview'"
-          (click)="activeTab.set('overview')">
-          <i class="bi bi-person-lines-fill"></i> Overview
-        </button>
-        <button class="vp-tab" [class.vp-tab--active]="activeTab() === 'contact'"
-          (click)="activeTab.set('contact')">
-          <i class="bi bi-headset"></i> Contact &amp; Record
-        </button>
+         <button class="vp-tab" [class.vp-tab--active]="activeTab() === 'overview'"
+           (click)="activeTab.set('overview')">
+           <i class="bi bi-person-lines-fill"></i> {{ 'VOLUNTEER_PROFILE.overview' | translate }}
+         </button>
+         <button class="vp-tab" [class.vp-tab--active]="activeTab() === 'contact'"
+           (click)="activeTab.set('contact')">
+           <i class="bi bi-headset"></i> {{ 'VOLUNTEER_PROFILE.contact_record' | translate }}
+         </button>
       </div>
 
       <!-- ── Tab: Overview ──────────────────────────────────────── -->
@@ -365,7 +365,7 @@ type Tab = 'overview' | 'contact';
                         [class.vp-avail-badge--active]="volunteer.availability === 'Active'"
                         [class.vp-avail-badge--inactive]="volunteer.availability !== 'Active'">
                         <i class="bi bi-circle-fill" style="font-size:.4rem"></i>
-                        {{ volunteer.availability === 'Active' ? 'Active' : 'Unavailable' }}
+                        {{ volunteer.availability === 'Active' ? ('COMMON.active' | translate) : ('VOLUNTEER_PROFILE.unavailable' | translate) }}
                       </span>
                     </span>
                   </div>
@@ -580,6 +580,7 @@ export class VolunteerProfilePageComponent implements OnInit {
     private master: MasterDataService,
     private toast: ToastService,
     private confirm: ConfirmDialogService,
+    private translate: TranslateService,
   ) {}
 
   ngOnInit(): void {
@@ -605,34 +606,34 @@ export class VolunteerProfilePageComponent implements OnInit {
     const next = this.volunteer.availability === 'Active' ? 'Temporarily Unavailable' : 'Active';
     this.toggling = true;
     this.volunteerSvc.update(this.volunteer.id, { availability: next as any }).subscribe({
-      next: (res) => {
-        this.toggling  = false;
-        this.volunteer = res.volunteer;
-        this.toast.success(next === 'Active' ? 'Volunteer activated' : 'Volunteer deactivated');
-      },
-      error: (err) => {
-        this.toggling = false;
-        this.toast.error(err?.error?.message ?? 'Failed to update availability');
-      },
-    });
-  }
+       next: (res) => {
+         this.toggling  = false;
+         this.volunteer = res.volunteer;
+         this.toast.success(next === 'Active' ? this.translate.instant('VOLUNTEER_PROFILE.activated') : this.translate.instant('VOLUNTEER_PROFILE.deactivated'));
+       },
+       error: (err) => {
+         this.toggling = false;
+         this.toast.error(err?.error?.message ?? this.translate.instant('VOLUNTEER_PROFILE.availability_update_failed'));
+       },
+     });
+   }
 
-  async deleteVolunteer(): Promise<void> {
-    if (!this.volunteer) return;
-    const ok = await this.confirm.confirm({
-      title: 'Delete Volunteer',
-      message: `Permanently remove ${this.volunteer.name} from the volunteer list?`,
-      confirmLabel: 'Delete',
-      confirmClass: 'btn-danger',
-    });
-    if (!ok.confirmed) return;
-    this.volunteerSvc.delete(this.volunteer.id).subscribe({
-      next: () => {
-        this.toast.success('Volunteer removed');
-        this.router.navigate(['/admin/volunteers']);
-      },
-      error: (err) => this.toast.error(err?.error?.message ?? 'Failed to delete'),
-    });
-  }
+   async deleteVolunteer(): Promise<void> {
+     if (!this.volunteer) return;
+     const ok = await this.confirm.confirm({
+       title: this.translate.instant('VOLUNTEER_PROFILE.delete_volunteer'),
+       message: this.translate.instant('VOLUNTEER_PROFILE.delete_volunteer_msg', { name: this.volunteer.name }),
+       confirmLabel: this.translate.instant('COMMON.delete'),
+       confirmClass: 'btn-danger',
+     });
+     if (!ok.confirmed) return;
+     this.volunteerSvc.delete(this.volunteer.id).subscribe({
+       next: () => {
+         this.toast.success(this.translate.instant('VOLUNTEER_PROFILE.volunteer_deleted'));
+         this.router.navigate(['/admin/volunteers']);
+       },
+       error: (err) => this.toast.error(err?.error?.message ?? this.translate.instant('VOLUNTEER_PROFILE.delete_failed')),
+     });
+   }
 }
 
