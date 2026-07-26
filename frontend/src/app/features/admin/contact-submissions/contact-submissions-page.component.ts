@@ -112,8 +112,8 @@ import { NotificationService } from '../../../core/services/notification.service
         @if (pagination().pages > 1) {
           <div class="d-flex justify-content-between align-items-center px-3 py-2 border-top">
             <small class="text-muted">
-              Page {{ pagination().page }} of {{ pagination().pages }}
-              ({{ pagination().total }} entries)
+              {{ 'COMMON.page' | translate }} {{ pagination().page }} {{ 'COMMON.of' | translate }} {{ pagination().pages }}
+              ({{ pagination().total }} {{ 'COMMON.entries' | translate }})
             </small>
             <div class="d-flex gap-1">
               <button class="btn btn-sm btn-outline-secondary"

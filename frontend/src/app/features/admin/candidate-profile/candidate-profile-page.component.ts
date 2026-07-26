@@ -18,10 +18,10 @@ import { CandidateProfileComponent } from '../../../shared/components/candidate-
 import { SearchableSelectComponent, SelectOption } from '../../../shared/components/searchable-select/searchable-select.component';
 
 const STATUS_CONFIG: Record<ReferralStatus, { label: string; badgeClass: string }> = {
-  pending:      { label: 'Pending',      badgeClass: 'bg-warning text-dark' },
-  progressing:  { label: 'Progressing',  badgeClass: 'bg-primary' },
-  placed:       { label: 'Placed',       badgeClass: 'bg-success' },
-  not_suitable: { label: 'Not Suitable', badgeClass: 'bg-danger' },
+  pending:      { label: 'CANDIDATE_PROFILE.pending',      badgeClass: 'bg-warning text-dark' },
+  progressing:  { label: 'CANDIDATE_PROFILE.progressing',  badgeClass: 'bg-primary' },
+  placed:       { label: 'CANDIDATE_PROFILE.placed',       badgeClass: 'bg-success' },
+  not_suitable: { label: 'CANDIDATE_PROFILE.not_suitable', badgeClass: 'bg-danger' },
 };
 
 @Component({
@@ -32,7 +32,7 @@ const STATUS_CONFIG: Record<ReferralStatus, { label: string; badgeClass: string 
     <!-- Header row: back + actions -->
     <div class="d-flex align-items-center justify-content-between mb-3 gap-2">
       <a routerLink="/admin/candidates" class="back-btn">
-        <i class="bi bi-arrow-left"></i>Back to Candidates
+        <i class="bi bi-arrow-left"></i>{{ 'CANDIDATE_PROFILE.back_to_candidates' | translate }}
       </a>
       @if (candidate) {
         <div class="d-flex gap-2 align-items-center flex-wrap">
@@ -43,29 +43,29 @@ const STATUS_CONFIG: Record<ReferralStatus, { label: string; badgeClass: string 
             @if (candidate.is_volunteer || candidate.volunteer_invite_status === 'converted') {
               <!-- Already a volunteer -->
               <span class="vol-status-chip vol-status-chip--converted">
-                <i class="bi bi-person-check-fill me-1"></i>Volunteer
+                <i class="bi bi-person-check-fill me-1"></i>{{ 'CANDIDATE_PROFILE.volunteer' | translate }}
               </span>
               <a [routerLink]="['/admin/volunteers']" class="btn btn-outline-success btn-sm">
-                <i class="bi bi-people-fill me-1"></i>View Volunteers
+                <i class="bi bi-people-fill me-1"></i>{{ 'CANDIDATE_PROFILE.view_volunteers' | translate }}
               </a>
             } @else if (candidate.volunteer_invite_status === 'invited') {
               <!-- Invitation already sent -->
               <span class="vol-status-chip vol-status-chip--invited">
-                <i class="bi bi-envelope-check-fill me-1"></i>Invitation Sent
+                <i class="bi bi-envelope-check-fill me-1"></i>{{ 'CANDIDATE_PROFILE.invitation_sent' | translate }}
               </span>
               <button class="btn btn-outline-success btn-sm"
                 [disabled]="inviting()"
                 (click)="inviteAsVolunteer()"
-                title="Resend invitation email">
+                [title]="'CANDIDATE_PROFILE.resend_invitation_email' | translate">
                 @if (inviting()) {
                   <span class="spinner-border spinner-border-sm me-1"></span>
                 } @else {
                   <i class="bi bi-arrow-repeat me-1"></i>
                 }
-                Resend Invite
+                {{ 'CANDIDATE_PROFILE.resend_invite' | translate }}
               </button>
               <button class="btn btn-success btn-sm" (click)="convertToVolunteer()">
-                <i class="bi bi-person-plus-fill me-1"></i>Convert to Volunteer
+                <i class="bi bi-person-plus-fill me-1"></i>{{ 'CANDIDATE_PROFILE.convert_to_volunteer' | translate }}
               </button>
             } @else {
               <!-- Not yet invited -->
@@ -73,20 +73,20 @@ const STATUS_CONFIG: Record<ReferralStatus, { label: string; badgeClass: string 
                 [disabled]="inviting()"
                 (click)="inviteAsVolunteer()">
                 @if (inviting()) {
-                  <span class="spinner-border spinner-border-sm me-1"></span>Sending…
+                  <span class="spinner-border spinner-border-sm me-1"></span>{{ 'CANDIDATE_PROFILE.sending' | translate }}…
                 } @else {
-                  <i class="bi bi-envelope-plus me-1"></i>Invite as Volunteer
+                  <i class="bi bi-envelope-plus me-1"></i>{{ 'CANDIDATE_PROFILE.invite_as_volunteer' | translate }}
                 }
               </button>
               <button class="btn btn-success btn-sm" (click)="convertToVolunteer()">
-                <i class="bi bi-person-plus-fill me-1"></i>Convert to Volunteer
+                <i class="bi bi-person-plus-fill me-1"></i>{{ 'CANDIDATE_PROFILE.convert_to_volunteer' | translate }}
               </button>
             }
           }
 
           <a [routerLink]="['/admin/candidates', candidate.id, 'edit']"
             class="btn btn-primary btn-sm">
-            <i class="bi bi-pencil me-1"></i>Edit Candidate
+            <i class="bi bi-pencil me-1"></i>{{ 'CANDIDATE_PROFILE.edit_candidate' | translate }}
           </a>
         </div>
       }
@@ -94,20 +94,20 @@ const STATUS_CONFIG: Record<ReferralStatus, { label: string; badgeClass: string 
 
     @if (loadError()) {
       <div class="alert alert-danger">{{ loadError() }}</div>
-    } @else if (!candidate) {
-      <div class="loading-state">
-        <div class="spinner-border"></div>
-        <div class="loading-state__text">Loading profile…</div>
-      </div>
+      } @else if (!candidate) {
+        <div class="loading-state">
+          <div class="spinner-border"></div>
+          <div class="loading-state__text">{{ 'CANDIDATE_PROFILE.loading_profile' | translate }}</div>
+        </div>
     } @else {
       <app-candidate-profile [candidate]="candidate" />
 
       <!-- ── Agency Referrals Section ──────────────────────────────────────── -->
       <div class="card mt-4">
         <div class="card-header d-flex align-items-center justify-content-between">
-          <h5 class="mb-0"><i class="bi bi-building me-2"></i>Agency Referrals</h5>
+          <h5 class="mb-0"><i class="bi bi-building me-2"></i>{{ 'CANDIDATE_PROFILE.agency_referrals' | translate }}</h5>
           <button class="btn btn-primary btn-sm" (click)="openAddModal(modalTpl)">
-            <i class="bi bi-plus-lg me-1"></i>Add Referral
+            <i class="bi bi-plus-lg me-1"></i>{{ 'CANDIDATE_PROFILE.add_referral' | translate }}
           </button>
         </div>
         <div class="card-body">
@@ -116,18 +116,17 @@ const STATUS_CONFIG: Record<ReferralStatus, { label: string; badgeClass: string 
               <div class="spinner-border spinner-border-sm"></div>
             </div>
           } @else if (referrals().length === 0) {
-            <p class="text-muted mb-0">No agency referrals recorded yet.</p>
+            <p class="text-muted mb-0">{{ 'CANDIDATE_PROFILE.no_agency_referrals' | translate }}</p>
           } @else {
             <ul class="list-group list-group-flush">
               @for (ref of referrals(); track ref.id) {
                 <li class="list-group-item px-0">
                   <div class="d-flex align-items-start justify-content-between gap-2">
                     <div>
-                      <div class="fw-semibold">
-                        Referred to {{ ref.agency_name }} for {{ ref.employer_name }}
-                        — {{ ref.country }}
-                        — Date: {{ ref.referral_date | date:'dd MMM yyyy' }}
-                      </div>
+                   <div class="fw-semibold">
+                         {{ 'CANDIDATE_PROFILE.referred_to' | translate: { agency: ref.agency_name, employer: ref.employer_name, country: ref.country } }}
+                         — {{ ref.referral_date | date:'dd MMM yyyy' }}
+                       </div>
                       @if (ref.notes) {
                         <div class="text-muted small mt-1">{{ ref.notes }}</div>
                       }
@@ -137,11 +136,11 @@ const STATUS_CONFIG: Record<ReferralStatus, { label: string; badgeClass: string 
                         {{ statusConfig(ref.status).label }}
                       </span>
                       <button class="btn btn-outline-secondary btn-sm"
-                        (click)="openEditModal(modalTpl, ref)" title="Edit">
+                        (click)="openEditModal(modalTpl, ref)" [title]="'COMMON.edit' | translate">
                         <i class="bi bi-pencil"></i>
                       </button>
                       <button class="btn btn-outline-danger btn-sm"
-                        (click)="deleteReferral(ref.id)" title="Delete">
+                        (click)="deleteReferral(ref.id)" [title]="'COMMON.delete' | translate">
                         <i class="bi bi-trash"></i>
                       </button>
                     </div>
@@ -160,7 +159,7 @@ const STATUS_CONFIG: Record<ReferralStatus, { label: string; badgeClass: string 
     <!-- ── Modal Template ────────────────────────────────────────────────────── -->
     <ng-template #modalTpl let-modal>
       <div class="modal-header">
-        <h5 class="modal-title">{{ editingId() ? 'Edit Referral' : 'Add Agency Referral' }}</h5>
+        <h5 class="modal-title">{{ editingId() ? ('CANDIDATE_PROFILE.edit_referral' | translate) : ('CANDIDATE_PROFILE.add_agency_referral' | translate) }}</h5>
         <button type="button" class="btn-close" (click)="modal.dismiss()"></button>
       </div>
       <div class="modal-body">
@@ -170,73 +169,73 @@ const STATUS_CONFIG: Record<ReferralStatus, { label: string; badgeClass: string 
         <form [formGroup]="form" (ngSubmit)="submitForm(modal)">
           <!-- Agency Name -->
           <div class="mb-3">
-            <label class="form-label">Agency Name <span class="text-danger">*</span></label>
+            <label class="form-label">{{ 'CANDIDATE_PROFILE.agency_name' | translate }} <span class="text-danger">*</span></label>
             <input class="form-control" formControlName="agency_name"
               [class.is-invalid]="isInvalid('agency_name')" />
             @if (isInvalid('agency_name')) {
-              <div class="invalid-feedback">Agency name is required.</div>
+              <div class="invalid-feedback">{{ 'CANDIDATE_PROFILE.agency_name_required' | translate }}</div>
             }
           </div>
 
           <!-- Employer Name -->
           <div class="mb-3">
-            <label class="form-label">Employer Name <span class="text-danger">*</span></label>
+            <label class="form-label">{{ 'CANDIDATE_PROFILE.employer_name' | translate }} <span class="text-danger">*</span></label>
             <input class="form-control" formControlName="employer_name"
               [class.is-invalid]="isInvalid('employer_name')" />
             @if (isInvalid('employer_name')) {
-              <div class="invalid-feedback">Employer name is required.</div>
+              <div class="invalid-feedback">{{ 'CANDIDATE_PROFILE.employer_name_required' | translate }}</div>
             }
           </div>
 
           <!-- Country -->
           <div class="mb-3">
-            <label class="form-label">Country <span class="text-danger">*</span></label>
+            <label class="form-label">{{ 'FORMS.country' | translate }} <span class="text-danger">*</span></label>
             <app-searchable-select
               formControlName="country"
               [options]="countryOptions()"
-              placeholder="Select country…"
+              [placeholder]="'CANDIDATE_PROFILE.select_country' | translate"
               [invalid]="isInvalid('country')">
             </app-searchable-select>
             @if (isInvalid('country')) {
-              <div class="text-danger small mt-1">Country is required.</div>
+              <div class="text-danger small mt-1">{{ 'CANDIDATE_PROFILE.country_required' | translate }}</div>
             }
           </div>
 
           <!-- Referral Date -->
           <div class="mb-3">
-            <label class="form-label">Referral Date <span class="text-danger">*</span></label>
+            <label class="form-label">{{ 'CANDIDATE_PROFILE.referral_date' | translate }} <span class="text-danger">*</span></label>
             <input type="date" class="form-control" formControlName="referral_date"
               [class.is-invalid]="isInvalid('referral_date')" />
             @if (isInvalid('referral_date')) {
-              <div class="invalid-feedback">A valid date is required.</div>
+              <div class="invalid-feedback">{{ 'CANDIDATE_PROFILE.valid_date_required' | translate }}</div>
             }
           </div>
 
           <!-- Status -->
           <div class="mb-3">
-            <label class="form-label">Status <span class="text-danger">*</span></label>
+            <label class="form-label">{{ 'STATUS.status' | translate }} <span class="text-danger">*</span></label>
             <select class="form-select" formControlName="status">
-              <option value="pending">Pending</option>
-              <option value="progressing">Progressing</option>
-              <option value="placed">Placed</option>
-              <option value="not_suitable">Not Suitable</option>
+              <option value="pending">{{ 'CANDIDATE_PROFILE.pending' | translate }}</option>
+              <option value="progressing">{{ 'CANDIDATE_PROFILE.progressing' | translate }}</option>
+              <option value="placed">{{ 'CANDIDATE_PROFILE.placed' | translate }}</option>
+              <option value="not_suitable">{{ 'CANDIDATE_PROFILE.not_suitable' | translate }}</option>
             </select>
           </div>
 
           <!-- Notes -->
           <div class="mb-3">
-            <label class="form-label">Notes</label>
+            <label class="form-label">{{ 'COMMON.notes' | translate }}</label>
             <textarea class="form-control" formControlName="notes" rows="3"></textarea>
           </div>
         </form>
       </div>
       <div class="modal-footer">
-        <button type="button" class="btn btn-secondary" (click)="modal.dismiss()">Cancel</button>
+        <button type="button" class="btn btn-secondary" (click)="modal.dismiss()">{{ 'COMMON.cancel' | translate }}</button>
         <button type="button" class="btn btn-primary" (click)="submitForm(modal)" [disabled]="formSaving()">
           @if (formSaving()) {
             <span class="spinner-border spinner-border-sm me-1"></span>
           }
-          {{ editingId() ? 'Save Changes' : 'Add Referral' }}
+          {{ editingId() ? ('CANDIDATE_PROFILE.save_changes' | translate) : ('CANDIDATE_PROFILE.add_referral' | translate) }}
         </button>
       </div>
     </ng-template>
