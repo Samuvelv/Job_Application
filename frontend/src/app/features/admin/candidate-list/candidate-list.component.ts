@@ -22,10 +22,10 @@ import { SORT_OPTIONS, PROFILE_STATUS_OPTIONS, PROFILE_STATUS_WITH_COLOR } from 
   standalone: true,
   imports: [CommonModule, ReactiveFormsModule, RouterLink, PageHeaderComponent, EmptyStateComponent, CandidateFilterSidebarComponent, CandidateCardComponent, SearchableSelectComponent, TranslateModule],
   template: `
-    <app-page-header title="Candidates" icon="bi-people-fill"
-                     [subtitle]="pagination.total + ' total candidates'">
+    <app-page-header [title]="'ADMIN_CANDIDATES.title' | translate" icon="bi-people-fill"
+                     [subtitle]="pagination.total + ' ' + ('FILTER_OPTIONS.candidates' | translate)">
       <a routerLink="/admin/candidates/register" class="btn btn-primary">
-        <i class="bi bi-plus-lg me-1"></i> Register Candidate
+        <i class="bi bi-plus-lg me-1"></i> {{ 'CANDIDATE_REGISTER.register_btn' | translate }}
       </a>
     </app-page-header>
 
@@ -35,7 +35,7 @@ import { SORT_OPTIONS, PROFILE_STATUS_OPTIONS, PROFILE_STATUS_WITH_COLOR } from 
         <i class="bi bi-search"></i>
         <input type="text" class="form-control form-control-sm"
           [formControl]="searchCtrl"
-          placeholder="Search name, email, job title, Login ID…"
+          [placeholder]="'FILTER_OPTIONS.search_name' | translate"
           (keydown.enter)="doSearch()">
       </div>
       <!-- Profile Status filter -->
@@ -45,12 +45,12 @@ import { SORT_OPTIONS, PROFILE_STATUS_OPTIONS, PROFILE_STATUS_WITH_COLOR } from 
           [formControl]="statusFilterCtrl"
           [options]="PROFILE_STATUS_OPTIONS"
           [allowClear]="true"
-          placeholder="Profile Status…">
+          [placeholder]="'CANDIDATE_LIST.profile_status' | translate">
         </app-searchable-select>
       </div>
       <div class="cfs-topbar__actions">
         <button type="button" class="filter-search-btn" (click)="doSearch()">
-          <i class="bi bi-search"></i> Search
+          <i class="bi bi-search"></i> {{ 'COMMON.search' | translate }}
         </button>
         <!-- Sort By -->
         <div class="cl-sort-wrap">
@@ -66,37 +66,37 @@ import { SORT_OPTIONS, PROFILE_STATUS_OPTIONS, PROFILE_STATUS_WITH_COLOR } from 
           [class.active]="sidebarVisible"
           (click)="toggleSidebar()">
           <i class="bi bi-sliders2"></i>
-          <span class="d-none d-sm-inline">Filters</span>
+          <span class="d-none d-sm-inline">{{ 'COMMON.filters' | translate }}</span>
           @if (sidebarActiveCount > 0) {
             <span class="cfs-filter-badge">{{ sidebarActiveCount }}</span>
           }
         </button>
         <button type="button" class="cfs-export-btn"
           (click)="exportCsv()" [disabled]="exporting"
-          title="Export filtered candidates to CSV">
+          [title]="'FILTER_OPTIONS.export_csv' | translate">
           @if (exporting) {
             <span class="spinner-border spinner-border-sm" role="status"></span>
           } @else {
             <i class="bi bi-download"></i>
           }
-          <span class="d-none d-sm-inline ms-1">Export CSV</span>
+          <span class="d-none d-sm-inline ms-1">{{ 'FILTER_OPTIONS.export_csv' | translate }}</span>
         </button>
         <!-- View mode toggle -->
         <div class="cl-view-toggle">
           <button type="button" class="cl-view-toggle__btn"
             [class.cl-view-toggle__btn--active]="viewMode === 'list'"
-            (click)="setViewMode('list')" title="List view">
+            (click)="setViewMode('list')" [title]="'COMMON.list_view' | translate">
             <i class="bi bi-list-ul"></i>
           </button>
           <button type="button" class="cl-view-toggle__btn"
             [class.cl-view-toggle__btn--active]="viewMode === 'grid'"
-            (click)="setViewMode('grid')" title="Grid view">
+            (click)="setViewMode('grid')" [title]="'COMMON.grid_view' | translate">
             <i class="bi bi-grid-3x3-gap-fill"></i>
           </button>
         </div>
         @if (hasActiveFilters) {
           <button type="button" class="filter-clear-btn" (click)="clearAll()">
-            <i class="bi bi-x-lg"></i> Clear
+            <i class="bi bi-x-lg"></i> {{ 'COMMON.clear' | translate }}
           </button>
         }
       </div>

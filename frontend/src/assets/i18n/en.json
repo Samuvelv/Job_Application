@@ -79,7 +79,9 @@
     "download": "Download",
      "present": "Present",
     "no_data": "No data available",
-    "example": "e.g. 6"
+    "example": "e.g. 6",
+    "list_view": "List view",
+    "grid_view": "Grid view"
   },
   "NAV": {
     "dashboard": "Dashboard",
