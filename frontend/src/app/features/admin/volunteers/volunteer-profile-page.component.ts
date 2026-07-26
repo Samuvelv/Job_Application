@@ -88,7 +88,7 @@ type Tab = 'overview' | 'contact';
                 [class.vp-avail-badge--active]="volunteer.availability === 'Active'"
                 [class.vp-avail-badge--inactive]="volunteer.availability !== 'Active'">
                 <i class="bi bi-circle-fill" style="font-size:.4rem"></i>
-                {{ volunteer.availability === 'Active' ? 'Active' : 'Unavailable' }}
+                {{ volunteer.availability === 'Active' ? ('COMMON.active' | translate) : ('VOLUNTEER_PROFILE.unavailable' | translate) }}
               </span>
             </div>
 
@@ -110,11 +110,11 @@ type Tab = 'overview' | 'contact';
                   {{ flagOf(volunteer.country_placed) }} {{ volunteer.country_placed }}
                 </span>
               }
-              @if (volunteer.year_placed) {
-                <span class="vp-chip">
-                  <i class="bi bi-calendar3"></i> Placed {{ volunteer.year_placed }}
-                </span>
-              }
+               @if (volunteer.year_placed) {
+                 <span class="vp-chip">
+                   <i class="bi bi-calendar3"></i> {{ 'VOLUNTEER_PROFILE.placed' | translate }} {{ volunteer.year_placed }}
+                 </span>
+               }
               @if (volunteer.company_joined) {
                 <span class="vp-chip vp-chip--company">
                   <i class="bi bi-building"></i> {{ volunteer.company_joined }}
@@ -135,18 +135,18 @@ type Tab = 'overview' | 'contact';
 
           <!-- Stats -->
           <div class="vp-hero__stats">
-            <div class="vp-stat">
-              <div class="vp-stat__val">{{ volunteer.candidates_helped ?? 0 }}</div>
-              <div class="vp-stat__label">Helped</div>
-            </div>
-            <div class="vp-stat">
-              <div class="vp-stat__val">{{ volunteer.languages?.length ?? 0 }}</div>
-              <div class="vp-stat__label">Languages</div>
-            </div>
-            <div class="vp-stat">
-              <div class="vp-stat__val">{{ volunteer.created_at | date:'yyyy' }}</div>
-              <div class="vp-stat__label">Since</div>
-            </div>
+             <div class="vp-stat">
+               <div class="vp-stat__val">{{ volunteer.candidates_helped ?? 0 }}</div>
+               <div class="vp-stat__label">{{ 'VOLUNTEER_PROFILE.helped' | translate }}</div>
+             </div>
+             <div class="vp-stat">
+               <div class="vp-stat__val">{{ volunteer.languages?.length ?? 0 }}</div>
+               <div class="vp-stat__label">{{ 'VOLUNTEER_PROFILE.languages' | translate }}</div>
+             </div>
+             <div class="vp-stat">
+               <div class="vp-stat__val">{{ volunteer.created_at | date:'yyyy' }}</div>
+               <div class="vp-stat__label">{{ 'VOLUNTEER_PROFILE.since' | translate }}</div>
+             </div>
           </div>
 
         </div>
@@ -173,9 +173,9 @@ type Tab = 'overview' | 'contact';
 
             @if (volunteer.success_story) {
               <div class="section-card mb-3">
-                <div class="section-card__header">
-                  <span class="section-card__title"><i class="bi bi-chat-quote-fill"></i> Success Story</span>
-                </div>
+                 <div class="section-card__header">
+                   <span class="section-card__title"><i class="bi bi-chat-quote-fill"></i> {{ 'VOLUNTEER_PROFILE.success_story' | translate }}</span>
+                 </div>
                 <div class="section-card__body">
                   <p class="vp-story-text">{{ volunteer.success_story }}</p>
                 </div>
@@ -184,9 +184,9 @@ type Tab = 'overview' | 'contact';
 
             @if (volunteer.languages?.length) {
               <div class="section-card mb-3">
-                <div class="section-card__header">
-                  <span class="section-card__title"><i class="bi bi-translate"></i> Languages Spoken</span>
-                </div>
+                 <div class="section-card__header">
+                   <span class="section-card__title"><i class="bi bi-translate"></i> {{ 'VOLUNTEER_PROFILE.languages_spoken' | translate }}</span>
+                 </div>
                 <div class="section-card__body">
                   <div class="vp-lang-list">
                     @for (lang of volunteer.languages ?? []; track lang) {
@@ -199,21 +199,21 @@ type Tab = 'overview' | 'contact';
 
             @if (volunteer.notes) {
               <div class="section-card mb-3">
-                <div class="section-card__header">
-                  <span class="section-card__title"><i class="bi bi-sticky-fill"></i> Admin Notes</span>
-                </div>
+                 <div class="section-card__header">
+                   <span class="section-card__title"><i class="bi bi-sticky-fill"></i> {{ 'VOLUNTEER_PROFILE.admin_notes' | translate }}</span>
+                 </div>
                 <div class="section-card__body">
                   <p class="small text-muted mb-0">{{ volunteer.notes }}</p>
                 </div>
               </div>
             }
 
-            @if (!volunteer.success_story && !volunteer.languages?.length && !volunteer.notes) {
-              <div class="vp-empty-state">
-                <i class="bi bi-journal-text vp-empty-state__icon"></i>
-                <div>No overview information recorded yet.</div>
-              </div>
-            }
+             @if (!volunteer.success_story && !volunteer.languages?.length && !volunteer.notes) {
+               <div class="vp-empty-state">
+                 <i class="bi bi-journal-text vp-empty-state__icon"></i>
+                 <div>{{ 'VOLUNTEER_PROFILE.no_overview' | translate }}</div>
+               </div>
+             }
 
           </div>
 
@@ -222,72 +222,72 @@ type Tab = 'overview' | 'contact';
 
             <!-- Support info card -->
             <div class="section-card mb-3">
-              <div class="section-card__header">
-                <span class="section-card__title"><i class="bi bi-tools"></i> Support Details</span>
-              </div>
+               <div class="section-card__header">
+                 <span class="section-card__title"><i class="bi bi-tools"></i> {{ 'VOLUNTEER_PROFILE.support_details' | translate }}</span>
+               </div>
               <div class="section-card__body">
                 <div class="vp-info-list">
-                  <div class="vp-info-row">
-                    <span class="vp-info-label">Support method</span>
-                    <span class="vp-info-val">
-                      @if (volunteer.support_method) {
-                        <span class="badge bg-info-subtle text-info-emphasis">
-                          {{ volunteer.support_method }}
-                        </span>
-                      } @else { <span class="text-muted">—</span> }
-                    </span>
-                  </div>
-                  <div class="vp-info-row">
-                    <span class="vp-info-label">Contact preference</span>
-                    <span class="vp-info-val">
-                      @if (volunteer.contact_preference) {
-                        <span class="badge bg-secondary-subtle text-secondary-emphasis">
-                          {{ volunteer.contact_preference }}
-                        </span>
-                      } @else { <span class="text-muted">—</span> }
-                    </span>
-                  </div>
-                  <div class="vp-info-row">
-                    <span class="vp-info-label">Country placed</span>
-                    <span class="vp-info-val">
-                      {{ volunteer.country_placed ? (flagOf(volunteer.country_placed) + ' ' + volunteer.country_placed) : '—' }}
-                    </span>
-                  </div>
-                  <div class="vp-info-row">
-                    <span class="vp-info-label">Company joined</span>
-                    <span class="vp-info-val">{{ volunteer.company_joined || '—' }}</span>
-                  </div>
-                  <div class="vp-info-row">
-                    <span class="vp-info-label">Year placed</span>
-                    <span class="vp-info-val">{{ volunteer.year_placed || '—' }}</span>
-                  </div>
+                   <div class="vp-info-row">
+                     <span class="vp-info-label">{{ 'VOLUNTEER_PROFILE.support_method' | translate }}</span>
+                     <span class="vp-info-val">
+                       @if (volunteer.support_method) {
+                         <span class="badge bg-info-subtle text-info-emphasis">
+                           {{ volunteer.support_method }}
+                         </span>
+                       } @else { <span class="text-muted">—</span> }
+                     </span>
+                   </div>
+                   <div class="vp-info-row">
+                     <span class="vp-info-label">{{ 'VOLUNTEER_PROFILE.contact_preference' | translate }}</span>
+                     <span class="vp-info-val">
+                       @if (volunteer.contact_preference) {
+                         <span class="badge bg-secondary-subtle text-secondary-emphasis">
+                           {{ volunteer.contact_preference }}
+                         </span>
+                       } @else { <span class="text-muted">—</span> }
+                     </span>
+                   </div>
+                   <div class="vp-info-row">
+                     <span class="vp-info-label">{{ 'VOLUNTEER_PROFILE.country_placed' | translate }}</span>
+                     <span class="vp-info-val">
+                       {{ volunteer.country_placed ? (flagOf(volunteer.country_placed) + ' ' + volunteer.country_placed) : '—' }}
+                     </span>
+                   </div>
+                   <div class="vp-info-row">
+                     <span class="vp-info-label">{{ 'VOLUNTEER_PROFILE.company_joined' | translate }}</span>
+                     <span class="vp-info-val">{{ volunteer.company_joined || '—' }}</span>
+                   </div>
+                   <div class="vp-info-row">
+                     <span class="vp-info-label">{{ 'VOLUNTEER_PROFILE.year_placed' | translate }}</span>
+                     <span class="vp-info-val">{{ volunteer.year_placed || '—' }}</span>
+                   </div>
                 </div>
               </div>
             </div>
 
             <!-- Consent card -->
             <div class="section-card mb-3">
-              <div class="section-card__header">
-                <span class="section-card__title"><i class="bi bi-shield-check-fill"></i> Consent</span>
-              </div>
+               <div class="section-card__header">
+                 <span class="section-card__title"><i class="bi bi-shield-check-fill"></i> {{ 'COMMON.consent' | translate }}</span>
+               </div>
               <div class="section-card__body">
                 <div class="vp-consent-block">
                   @if (volunteer.consent) {
                     <div class="vp-consent-block__icon vp-consent-block__icon--yes">
                       <i class="bi bi-check-circle-fill"></i>
                     </div>
-                    <div>
-                      <div class="vp-consent-block__label">Consent confirmed</div>
-                      <div class="vp-consent-block__sub">Volunteer has agreed to be listed on the platform</div>
-                    </div>
+                     <div>
+                       <div class="vp-consent-block__label">{{ 'VOLUNTEER_PROFILE.consent_confirmed' | translate }}</div>
+                       <div class="vp-consent-block__sub">{{ 'VOLUNTEER_PROFILE.consent_agreed' | translate }}</div>
+                     </div>
                   } @else {
                     <div class="vp-consent-block__icon vp-consent-block__icon--no">
                       <i class="bi bi-x-circle-fill"></i>
                     </div>
-                    <div>
-                      <div class="vp-consent-block__label">Consent not confirmed</div>
-                      <div class="vp-consent-block__sub">Volunteer has not confirmed consent</div>
-                    </div>
+                     <div>
+                       <div class="vp-consent-block__label">{{ 'VOLUNTEER_PROFILE.consent_not_confirmed' | translate }}</div>
+                       <div class="vp-consent-block__sub">{{ 'VOLUNTEER_PROFILE.consent_not_agreed' | translate }}</div>
+                     </div>
                   }
                 </div>
               </div>
@@ -302,10 +302,10 @@ type Tab = 'overview' | 'contact';
         <div class="vp-grid">
 
           <div class="vp-col">
-            <div class="section-card mb-3">
-              <div class="section-card__header">
-                <span class="section-card__title"><i class="bi bi-person-badge-fill"></i> Contact Information</span>
-              </div>
+             <div class="section-card mb-3">
+               <div class="section-card__header">
+                 <span class="section-card__title"><i class="bi bi-person-badge-fill"></i> {{ 'VOLUNTEER_PROFILE.contact_information' | translate }}</span>
+               </div>
               <div class="section-card__body">
                 <div class="vp-info-list">
                   <div class="vp-info-row">

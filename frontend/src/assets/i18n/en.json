@@ -90,10 +90,11 @@
     "company": "Company",
     "expired": "Expired",
     "type": "Type",
-    "expires": "Expires",
-    "sort_by": "Sort by…",
-    "company": "Company"
-  },
+     "expires": "Expires",
+     "sort_by": "Sort by…",
+     "company": "Company",
+     "consent": "Consent"
+   },
   "NAV": {
     "dashboard": "Dashboard",
     "candidates": "Candidates",
@@ -2165,13 +2166,31 @@
       "name_pattern_error": "Name may only contain letters, spaces, hyphens, apostrophes and dots.",
       "recruiter_type": "Recruiter Type"
     },
-    "CANDIDATE_EDIT_REQUEST": {
-      "title": "Request Profile Edit",
-      "subtitle": "Submit changes for admin review. Your profile will be updated once approved.",
-      "pending_review": "Pending Review",
-      "pending_cannot_submit": "You cannot submit a new request while one is pending.",
-      "media_documents": "Media & Documents",
-      "media_note": "Media changes require admin approval — select a new file to stage it for review.",
-      "pending_approval": "Pending approval"
+    "VOLUNTEER_PROFILE": {
+      "back_to_volunteers": "Back to Volunteers",
+      "deactivate": "Deactivate",
+      "activate": "Activate",
+      "loading_profile": "Loading profile…",
+      "overview": "Overview",
+      "contact_record": "Contact & Record",
+      "unavailable": "Unavailable",
+      "placed": "Placed",
+      "helped": "Helped",
+      "languages": "Languages",
+      "since": "Since",
+      "success_story": "Success Story",
+      "languages_spoken": "Languages Spoken",
+      "admin_notes": "Admin Notes",
+      "no_overview": "No overview information recorded yet.",
+      "support_details": "Support Details",
+      "support_method": "Support method",
+      "contact_preference": "Contact preference",
+      "country_placed": "Country placed",
+      "company_joined": "Company joined",
+      "year_placed": "Year placed",
+      "consent_confirmed": "Consent confirmed",
+      "consent_agreed": "Volunteer has agreed to be listed on the platform",
+      "consent_not_confirmed": "Consent not confirmed",
+      "consent_not_agreed": "Volunteer has not confirmed consent",
+      "contact_information": "Contact Information"
     }
-  }
