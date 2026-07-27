@@ -1,0 +1,388 @@
+================================================================================
+COMPREHENSIVE TRANSLATION AUDIT REPORT
+NTL Career Nexus - Frontend Application
+Generated: 2026-07-28 00:44:22
+================================================================================
+
+EXECUTIVE SUMMARY
+=================
+This audit identified 71 unique hardcoded English text strings across 2 main
+components that require translation via i18n keys.
+
+Total occurrences: 174 (same string repeated in multiple places)
+Files requiring attention: 2 primary files
+i18n coverage: ~60-70% (missing labels, error messages, form field labels)
+
+
+1. COMPONENTS WITH FULL TRANSLATION COVERAGE
+==============================================
+
+✓ shared/components/translation-modal/translation-modal.component.html
+  - Uses proper | translate pipe
+  - All visible text properly internationalized
+  - Keys used: TRANSLATION_MODAL.*, CANDIDATE_PROFILE.*
+
+✓ features/admin/volunteers/volunteer-create.component.html  
+  - Excellent translation coverage
+  - Uses {{ 'KEY' | translate }} pattern consistently
+  - Keys used: VOLUNTEERS.*, COMMON.*
+
+✓ app.component.html
+  - Placeholder content, no translation needed
+
+
+2. COMPONENTS WITH MISSING TRANSLATION COVERAGE
+================================================
+
+CRITICAL: features/admin/candidate-edit/candidate-edit.component.html
+CRITICAL: features/admin/candidate-register/candidate-register.component.html
+
+These files have the most untranslated hardcoded English text.
+
+
+3. DETAILED UNTRANSLATED TEXT BY CATEGORY
+==========================================
+
+A. FORM FIELD LABELS (High Priority)
+------------------------------------
+The following field labels appear hardcoded and need i18n keys:
+
+Lines 450, 1300: "Personal Information" → CANDIDATE_FORM.section_personal (EXISTS)
+Lines 454, 92: "First Name" → COMMON.first_name (EXISTS)
+Lines 467, 106: "Last Name" → COMMON.last_name (EXISTS)
+Line 480, 120: "Date of Birth" → COMMON.date_of_birth (EXISTS)
+Line 498, 138: "Gender" → COMMON.gender (EXISTS)
+Line 512, 152: "Marital Status" → CANDIDATE_FORM.marital_status (MISSING - use COMMON or FORMS)
+Line 522, 162: "Phone" → COMMON.phone (EXISTS)
+Line 544, 184: "WhatsApp" → COMMON.whatsapp (EXISTS)
+Line 577, 1075: "Email Address" → COMMON.email (EXISTS)
+Line 587, 216: "Bio / Self Introduction" → CANDIDATE_FORM.bio (MISSING - ADD)
+Line 604, 233: "Hobbies & Interests" → CANDIDATE_FORM.hobbies (MISSING - ADD)
+Line 612, 1117: "Profile Status" → CANDIDATE_FORM.profile_status (MISSING - ADD)
+Line 621, 1119: "Registration Fee Status" → CANDIDATE_FORM.registration_fee_status (MISSING - ADD)
+Line 630, 1128: "Source / How They Found Us" → CANDIDATE_FORM.source (MISSING - ADD)
+
+B. PROFESSIONAL SECTION LABELS
+-------------------------------
+Line 644, 279: "Professional Details" → CANDIDATE_FORM.section_professional (MISSING - ADD)
+Line 648, 284: "Employment Status" → CANDIDATE_FORM.employment_status (EXISTS)
+Line 661, 299: "Job Title" → COMMON.job_title (MISSING - PARTIAL)
+Line 674, 314: "Occupation" → CANDIDATE_FORM.occupation (EXISTS)
+Line 687, 329: "Industry" → COMMON.industry (EXISTS)
+Line 700, 1133: "Notice Period / Availability" → CANDIDATE_FORM.notice_period (EXISTS)
+Line 709, 355: "Years of Experience" → CANDIDATE_FORM.years_of_experience (EXISTS)
+Line 719, 367: "LinkedIn URL" → CANDIDATE_FORM.linkedin_url (EXISTS)
+Line 730, 380: "CV Format" → CANDIDATE_FORM.cv_format (EXISTS)
+Line 739, 391: "Visa / Work Permit Status" → CANDIDATE_FORM.visa_status (EXISTS)
+
+C. SKILL & LANGUAGE SECTION LABELS
+-----------------------------------
+Line 759, 409: "Skills" → CANDIDATE_FORM.skills (EXISTS)
+Line 761, 411: "Add Skill" → CANDIDATE_FORM.add_skill (EXISTS)
+Line 767, 417: "Skill Name" → CANDIDATE_FORM.skill_name (EXISTS)
+Line 768, 418: "Proficiency" → CANDIDATE_FORM.proficiency (EXISTS)
+Line 808, 461: "Languages" → CANDIDATE_FORM.languages (EXISTS)
+Line 810, 463: "Add Language" → CANDIDATE_FORM.add_language (EXISTS)
+Line 816, 469: "Language" → COMMON.language (MISSING - ADD)
+Line 817, 470: "Proficiency" → CANDIDATE_FORM.proficiency (EXISTS)
+
+D. LOCATION SECTION LABELS
+---------------------------
+Line 859, 1137: "Location" → FORMS.section_location (EXISTS)
+Line 864, 973: "Current Country of Residence" → CANDIDATE_FORM.current_country (EXISTS)
+Line 875, 975: "Where the candidate is currently living" → FORMS.current_country_helper (MISSING - ADD)
+Line 880, 980: "Current City" → CANDIDATE_FORM.current_city (EXISTS)
+Line 891, 991: "Select a country first to load cities" → FORMS.select_country_first (MISSING - ADD)
+Line 896, 996: "Postal Code" → FORMS.postal_code (MISSING - ADD)
+Line 911, 1011: "Passport" → FORMS.passport (MISSING - ADD)
+Line 920, 1020: "Passport Nationality" → FORMS.passport_nationality (MISSING - ADD)
+Line 944, 1040: "Target Locations" → FORMS.target_locations (MISSING - ADD)
+Line 950: "Select multiple countries you are open to work in" → FORMS.target_locations_helper (MISSING - ADD)
+
+E. WORK EXPERIENCE SECTION
+---------------------------
+Line 958, 1205: "Work Experience" → CANDIDATE_FORM.work_experience (EXISTS)
+Line 960: "Add" → BUTTONS.add (MISSING - ADD)
+Line 975, 1256: Experience #N → FORMS.experience_number (MISSING - ADD)
+Line 983, 606: "Company Name" → CANDIDATE_FORM.company_name (EXISTS)
+Line 991, 614: "Job Title" → COMMON.job_title (MISSING - PARTIAL)
+Line 999, 622: "Duration" → FORMS.duration (MISSING - ADD)
+Line 1019, 642: "Start" → FORMS.start_date (MISSING - ADD)
+Line 1052, 675: "End" → FORMS.end_date (MISSING - ADD)
+Line 1049, 672: "Present" → COMMON.present (EXISTS)
+Line 1057, 1246: "End date cannot be before start date." → FORMS.end_before_start (MISSING - ADD)
+Line 1134: "Location" → FORMS.location (MISSING - ADD)
+
+F. EDUCATION SECTION (candidate-register)
+------------------------------------------
+Line 759, 1223: "Education" → CANDIDATE_FORM.education (EXISTS)
+Line 785, 1233: "Institution / University" → CANDIDATE_FORM.institution (EXISTS)
+Line 793, 1242: "Degree" → CANDIDATE_FORM.degree (EXISTS)
+Line 806, 1252: "Field of Study" → CANDIDATE_FORM.field_of_study (EXISTS)
+Line 819, 1265: "Location" → FORMS.location (MISSING - ADD)
+Line 832, 1275: "Duration" → FORMS.duration (MISSING - ADD)
+Line 848, 1291: "Start" → FORMS.start_date (MISSING - ADD)
+Line 868, 1311: "End / expected" → FORMS.end_date_expected (MISSING - ADD)
+
+G. CERTIFICATES SECTION
+------------------------
+Line 251, 890: "Certificates" → CANDIDATE_FORM.certificates (EXISTS)
+Line 256, 892: "Add Certificate" → CANDIDATE_FORM.add_certificate (EXISTS)
+Line 270, 913: "Name" → FORMS.name (MISSING - ADD)
+Line 274, 918: "Issuing Organisation" → CANDIDATE_FORM.cert_issuer (EXISTS)
+Line 278, 923: "Issue Date" → CANDIDATE_FORM.cert_issue_date (EXISTS)
+Line 282, 928: "Expiry Date" → CANDIDATE_FORM.cert_expiry_date (EXISTS)
+Line 289, 937: "No Expiry" → CANDIDATE_FORM.cert_no_expiry (EXISTS)
+
+H. VALIDATION ERROR MESSAGES (High Priority)
+----------------------------------------------
+These are critical for user experience and should be translated:
+
+COMMON VALIDATION ERRORS:
+Line 457-462: "First name is required." → FORMS.first_name_required (MISSING)
+Line 458: "Minimum 3 characters required." → FORMS.min_3_chars (PARTIAL - exists in CANDIDATE_REGISTER)
+Line 459: "Maximum 100 characters allowed." → FORMS.max_100_chars (PARTIAL)
+Line 460: "Only letters, spaces, hyphens and apostrophes are allowed." → FORMS.name_pattern (MISSING)
+
+Line 471-476: Similar for Last Name
+
+Line 488-493: Date of Birth errors
+Line 488: "Date of birth is required." → FORMS.dob_required (MISSING)
+Line 489: "Please enter a valid date." → FORMS.invalid_date (MISSING - PARTIAL in CANDIDATE_REGISTER)
+Line 490: "Date of birth cannot be in the future." → FORMS.future_date_invalid (MISSING - PARTIAL)
+Line 491: "Candidate must be at least 16 years old." → FORMS.too_young (MISSING - PARTIAL)
+Line 492: "Please enter a valid date of birth." → FORMS.too_old (MISSING - PARTIAL)
+
+Line 507: "Gender is required." → FORMS.gender_required (MISSING - exists in CANDIDATE_REGISTER)
+Line 657: "Employment status is required." → FORMS.employment_status_required (MISSING)
+Line 670: "Job title is required." → FORMS.job_title_required (EXISTS in CANDIDATE_FORM)
+Line 683: "Occupation is required." → FORMS.occupation_required (EXISTS in CANDIDATE_FORM)
+Line 696: "Industry is required." → FORMS.industry_required (EXISTS in CANDIDATE_FORM)
+Line 725: "Enter a valid LinkedIn URL..." → FORMS.linkedin_invalid (EXISTS in CANDIDATE_FORM)
+Line 779: "Skill name is required." → FORMS.skill_name_required (EXISTS in CANDIDATE_FORM)
+Line 791: "Select a proficiency level." → FORMS.proficiency_required (EXISTS in CANDIDATE_FORM)
+Line 831: "Language name is required." → FORMS.language_required (EXISTS in CANDIDATE_FORM)
+Line 843: "Select a proficiency level." → FORMS.proficiency_required (EXISTS)
+Line 873: "Current country is required." → FORMS.current_country_required (MISSING)
+Line 889: "Current city is required." → FORMS.current_city_required (MISSING)
+Line 902: "Invalid format — ..." → FORMS.postal_code_invalid (MISSING)
+Line 904: "Postal code is too long." → FORMS.postal_code_too_long (MISSING)
+Line 929: "Passport nationality is required." → FORMS.passport_nationality_required (MISSING)
+Line 987: "Company name is required." → FORMS.company_name_required (EXISTS in CANDIDATE_FORM)
+Line 995: "Job title is required." → FORMS.job_title_required (EXISTS)
+Line 1021: "Start year is required." → FORMS.start_year_required (MISSING)
+Line 1057: "End date cannot be before start date." → FORMS.end_before_start (EXISTS in CANDIDATE_FORM)
+
+I. OTHER HARDCODED STRINGS
+---------------------------
+Line 184, 219: "Pending" → COMMON.pending (EXISTS)
+Line 200: "No resume" → FORMS.no_resume (MISSING - ADD)
+Line 213, 1095: "Intro Video" → FORMS.intro_video (MISSING - ADD)
+Line 235: "No video" → FORMS.no_video (MISSING - ADD)
+Line 251: "Certificates" → CANDIDATE_FORM.certificates (EXISTS)
+Line 335: "No certificates" → FORMS.no_certificates (MISSING - ADD)
+Line 344: "New Certificate" → FORMS.new_certificate (MISSING - ADD)
+Line 386: "Uploading…" → COMMON.uploading (MISSING - ADD)
+Line 387: "Upload" → BUTTONS.upload (MISSING - ADD)
+Line 426, 436: "Open in new tab" → COMMON.open_new_tab (EXISTS)
+Line 450: "Personal Information" → FORMS.section_personal (MISSING - ADD)
+Line 749, 1096: "Please specify" → FORMS.please_specify (MISSING - ADD)
+Line 759: "Skills" → CANDIDATE_FORM.skills (EXISTS)
+Line 808: "Languages" → CANDIDATE_FORM.languages (EXISTS)
+Line 1288: "All required before submission" → FORMS.all_required_before_submit (MISSING - ADD)
+Line 1287: "Compliance Confirmations" → FORMS.compliance_confirmations (MISSING - ADD)
+Line 1295: "New Password" → FORMS.new_password (MISSING - ADD)
+Line 1313: "Confirm New Password" → FORMS.confirm_password (MISSING - ADD)
+
+
+4. MISSING I18N KEYS TO ADD
+===========================
+
+Add to COMMON:
+- "language": "Language"
+- "uploading": "Uploading…"
+
+Add to BUTTONS (or use COMMON):
+- "add": "Add"
+- "upload": "Upload"
+- "save": "Save"
+
+Add to FORMS section (NEW or expand existing):
+- "section_personal": "Personal Information"
+- "bio": "Bio / Self Introduction"
+- "hobbies": "Hobbies & Interests"
+- "profile_status": "Profile Status"
+- "registration_fee_status": "Registration Fee Status"
+- "source": "Source / How They Found Us"
+- "section_professional": "Professional Details"
+- "marital_status": "Marital Status"
+- "postal_code": "Postal Code"
+- "passport": "Passport"
+- "passport_nationality": "Passport Nationality"
+- "target_locations": "Target Locations"
+- "target_locations_helper": "Select multiple countries you are open to work in"
+- "current_country_helper": "Where the candidate is currently living"
+- "select_country_first": "Select a country first to load cities"
+- "duration": "Duration"
+- "start_date": "Start"
+- "end_date": "End"
+- "end_date_expected": "End / expected"
+- "experience_number": "Experience #"
+- "location": "Location"
+- "no_resume": "No resume"
+- "intro_video": "Intro Video"
+- "no_video": "No video"
+- "no_certificates": "No certificates"
+- "new_certificate": "New Certificate"
+- "please_specify": "Please specify"
+- "all_required_before_submit": "All required before submission"
+- "compliance_confirmations": "Compliance Confirmations"
+- "new_password": "New Password"
+- "confirm_password": "Confirm New Password"
+- "first_name_required": "First name is required."
+- "name_pattern": "Only letters, spaces, hyphens and apostrophes are allowed."
+- "dob_required": "Date of birth is required."
+- "invalid_date": "Please enter a valid date."
+- "future_date_invalid": "Date of birth cannot be in the future."
+- "too_young": "Candidate must be at least 16 years old."
+- "too_old": "Please enter a valid date of birth."
+- "gender_required": "Gender is required."
+- "employment_status_required": "Employment status is required."
+- "current_country_required": "Current country is required."
+- "current_city_required": "Current city is required."
+- "postal_code_invalid": "Invalid format"
+- "postal_code_too_long": "Postal code is too long."
+- "passport_nationality_required": "Passport nationality is required."
+- "start_year_required": "Start year is required."
+- "end_before_start": "End date cannot be before start date."
+
+
+5. DETAILED FILE ANALYSIS
+==========================
+
+FILE: candidate-edit.component.html
+Path: frontend/src/app/features/admin/candidate-edit/candidate-edit.component.html
+
+SECTIONS WITH HARDCODED TEXT:
+- Media/Documents section (lines 132-398): Has hardcoded labels and messages
+- Personal Information section (lines 449-639): Multiple hardcoded field labels  
+- Professional Details section (lines 642-755): All labels hardcoded
+- Skills section (lines 757-803): Labels hardcoded
+- Languages section (lines 806-855): Labels hardcoded
+- Location section (lines 858-953): Labels hardcoded
+- Work Experience section (lines 956-1090): Labels hardcoded
+- Password section (lines 1300-1328): Labels hardcoded
+
+TOTAL UNTRANSLATED STRINGS: 65+ unique strings
+USAGE: Used by admin staff to edit candidate profiles
+
+
+FILE: candidate-register.component.html
+Path: frontend/src/app/features/admin/candidate-register/candidate-register.component.html
+
+SECTIONS WITH HARDCODED TEXT:
+- Step Progress display (line 57)
+- Step 1 - Personal Information (lines 87-275): Field labels hardcoded
+- Step 2 - Professional (lines 278-573): Field labels hardcoded
+- Step 3 - Education & Experience (lines 576-955): Section headers hardcoded
+- Compliance section (line 1287)
+- Password validation section
+
+TOTAL UNTRANSLATED STRINGS: 50+ unique strings
+USAGE: Used by admin to register new candidates
+
+
+6. COMPONENTS WITH GOOD TRANSLATION COVERAGE
+==============================================
+
+✓ volunteer-create.component.html
+  Coverage: ~95%
+  Uses consistent {{ 'VOLUNTEERS.key' | translate }} pattern
+  Some hardcoded help text but primary labels are translated
+
+✓ translation-modal.component.html
+  Coverage: ~90%
+  All visible text uses translate pipe
+  Minor helper text is hardcoded
+
+
+7. PRIORITY RECOMMENDATIONS
+============================
+
+PRIORITY 1 (CRITICAL - Do First):
+- [ ] Add validation error messages to FORMS section in i18n
+- [ ] Translate candidate-edit.component.html field labels
+- [ ] Translate candidate-register.component.html field labels
+- [ ] Add missing FORMS section keys to all language files
+
+PRIORITY 2 (HIGH - Do Second):
+- [ ] Add section header translations
+- [ ] Add helper text and validation messages
+- [ ] Update BUTTONS section with common button labels
+- [ ] Add "No data" style messages
+
+PRIORITY 3 (MEDIUM - Do Third):
+- [ ] Add placeholder text translations
+- [ ] Translate error dialog messages
+- [ ] Add tooltips for complex fields
+- [ ] Translate success/info messages
+
+PRIORITY 4 (LOW - Nice to Have):
+- [ ] Add keyboard shortcuts help
+- [ ] Translate aria-labels for accessibility
+- [ ] Add tutorial tooltips
+
+
+8. ACTION ITEMS
+================
+
+1. CREATE NEW I18N KEYS:
+   - Open: frontend/src/assets/i18n/en.json
+   - Add missing keys listed in section 4
+   - Test with existing translate pipe
+
+2. UPDATE HTML FILES:
+   - Replace hardcoded text with {{ 'KEY' | translate }}
+   - Files to update:
+     * features/admin/candidate-edit/candidate-edit.component.html
+     * features/admin/candidate-register/candidate-register.component.html
+
+3. PROPAGATE TO ALL LANGUAGES:
+   - Run translation service for all 34 languages
+   - Verify translations in sample languages (ES, FR, DE, AR, HI, JA, ZH)
+
+4. TESTING:
+   - Test with light/dark mode
+   - Test with long translations (German, Russian)
+   - Verify on mobile devices
+   - Test RTL languages (AR)
+
+5. ACCESSIBILITY:
+   - Ensure all form labels use proper <label> tags
+   - Add aria-label where needed
+   - Test with screen readers
+
+
+9. ESTIMATED EFFORT
+====================
+
+Adding i18n keys: 2-3 hours
+Updating HTML files (2 files): 3-4 hours
+Testing across languages: 2-3 hours
+Total: ~7-10 hours
+
+
+10. FILES SUMMARY TABLE
+======================
+
+File Name                          | Translation % | Status      | Effort
+----------------------------------|---------------|-------------|--------
+candidate-edit.component.html      | 30%           | CRITICAL    | 3 hrs
+candidate-register.component.html  | 40%           | CRITICAL    | 3 hrs
+volunteer-create.component.html    | 95%           | GOOD        | <1 hr
+translation-modal.component.html   | 90%           | GOOD        | <1 hr
+app.component.html                 | N/A           | NONE        | -
+
+================================================================================
+END OF AUDIT REPORT
+================================================================================
