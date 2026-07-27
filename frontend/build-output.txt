@@ -1,0 +1,83 @@
+
+> ntl-career-nexus@0.0.0 build
+> ng build
+
+- Building...
+
+Initial chunk files   | Names                            |  Raw size | Estimated transfer size
+styles-BXFOWP7P.css   | styles                           | 730.07 kB |                69.33 kB
+chunk-EV2WX5PT.js     | -                                | 155.28 kB |                46.04 kB
+scripts-SQ7W6IC7.js   | scripts                          |  78.53 kB |                21.12 kB
+chunk-WQRMJ46Y.js     | -                                |  74.41 kB |                18.29 kB
+chunk-SDCBTJUX.js     | -                                |  55.19 kB |                15.28 kB
+chunk-WKRQJZFY.js     | -                                |  44.03 kB |                 8.44 kB
+main-6P4JZM4B.js      | main                             |  41.23 kB |                 9.99 kB
+polyfills-EJ46DL77.js | polyfills                        |  34.98 kB |                11.46 kB
+chunk-YATWFUVQ.js     | -                                |  12.33 kB |                 3.81 kB
+chunk-YTG7HKBD.js     | -                                |  10.98 kB |                 2.77 kB
+chunk-E7DJ3WKR.js     | -                                |   5.92 kB |                 1.93 kB
+chunk-DVUPTFPF.js     | -                                |   4.76 kB |                 1.47 kB
+chunk-2TFIKMI2.js     | -                                |   4.64 kB |                 1.58 kB
+chunk-ECWCF5QU.js     | -                                |   2.34 kB |               824 bytes
+chunk-IHPSV7WO.js     | -                                |   2.12 kB |               631 bytes
+chunk-K5EALCRQ.js     | -                                | 601 bytes |               601 bytes
+chunk-77SYAKM2.js     | -                                | 419 bytes |               419 bytes
+
+                      | Initial total                    |   1.23 MB |               213.91 kB
+
+Lazy chunk files      | Names                            |  Raw size | Estimated transfer size
+chunk-2Q72G222.js     | edit-requests-component          | 113.45 kB |                18.06 kB
+chunk-X5KGFWIP.js     | candidate-edit-component         |  92.16 kB |                18.78 kB
+chunk-LLWK4GDK.js     | candidate-register-component     |  90.73 kB |                18.79 kB
+chunk-Y2QSEVQ6.js     | edit-request-component           |  76.59 kB |                15.93 kB
+chunk-VSFSXARI.js     | recruiter-list-component         |  61.88 kB |                14.25 kB
+chunk-CZDBNQQI.js     | -                                |  55.05 kB |                13.11 kB
+chunk-LIQRUD5V.js     | recruiter-create-component       |  43.52 kB |                 9.78 kB
+chunk-I2GSCPQG.js     | candidate-list-component         |  42.84 kB |                 9.50 kB
+chunk-RK2EXPPO.js     | volunteer-list-component         |  36.98 kB |                 8.50 kB
+chunk-S7ANH6JI.js     | -                                |  36.81 kB |                 7.95 kB
+chunk-WXMUTA67.js     | landing-component                |  36.09 kB |                 8.52 kB
+chunk-T3TP6SO4.js     | candidate-profile-component      |  34.06 kB |                 7.54 kB
+chunk-YVNCEZAW.js     | candidate-profile-page-component |  32.15 kB |                 8.69 kB
+chunk-5ORYA4CC.js     | master-management-component      |  28.17 kB |                 7.50 kB
+chunk-WQHAUCLE.js     | recruiter-profile-page-component |  24.51 kB |                 5.53 kB
+...and 38 more lazy chunks files. Use "--verbose" to show all the files.
+
+Output location: C:\Dhinesh\projects\Job_Application\frontend\dist\ntl-career-nexus
+
+Application bundle generation complete. [18.190 seconds]
+
+Γû▓ [WARNING] NG8107: The left side of this optional chain operation does not include 'null' or 'undefined' in its type, therefore the '?.' operator can be replaced with the '.' operator. [plugin angular-compiler]
+
+    src/app/features/admin/candidate-edit/candidate-edit.component.html:101:81:
+      101 Γöé ...ate: { name: ((candidate?.first_name ?? '') + ' ' + (candidate...
+          Γò╡                              ~~~~~~~~~~
+
+  Error occurs in the template of component CandidateEditComponent.
+
+    src/app/features/admin/candidate-edit/candidate-edit.component.ts:274:15:
+      274 Γöé   templateUrl: './candidate-edit.component.html',
+          Γò╡                ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+
+Γû▓ [WARNING] NG8107: The left side of this optional chain operation does not include 'null' or 'undefined' in its type, therefore the '?.' operator can be replaced with the '.' operator. [plugin angular-compiler]
+
+    src/app/features/admin/candidate-edit/candidate-edit.component.html:101:119:
+      101 Γöé ...rst_name ?? '') + ' ' + (candidate?.last_name ?? '')).trim() } }}
+          Γò╡                                        ~~~~~~~~~
+
+  Error occurs in the template of component CandidateEditComponent.
+
+    src/app/features/admin/candidate-edit/candidate-edit.component.ts:274:15:
+      274 Γöé   templateUrl: './candidate-edit.component.html',
+          Γò╡                ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+
+Γû▓ [WARNING] bundle initial exceeded maximum budget. Budget 1.00 MB was not met by 233.81 kB with a total of 1.23 MB.
+
+
+Γû▓ [WARNING] 2 rules skipped due to selector errors:
+  .form-floating>~label -> Did not expect successive traversals.
+  .form-floating>~label -> Did not expect successive traversals.
+
+

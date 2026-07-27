@@ -2,6 +2,7 @@
 import { Component, OnInit, OnDestroy, computed, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { TranslateModule } from '@ngx-translate/core';
+import { TranslateUserDataPipe } from '../../../core/pipes/translate-user-data.pipe';
 import {
   ReactiveFormsModule, FormBuilder, FormGroup,
   Validators, AbstractControl, ValidationErrors, ValidatorFn,
@@ -79,7 +80,7 @@ function makePhoneGroupValidator(dialCtrl: string, numCtrl: string): ValidatorFn
   templateUrl: './volunteer-create.component.html',
   styleUrl: './volunteer-create.component.scss',
   imports: [
-    CommonModule, TranslateModule,
+    CommonModule, TranslateModule, TranslateUserDataPipe,
     ReactiveFormsModule,
     RouterLink,
     PageHeaderComponent,

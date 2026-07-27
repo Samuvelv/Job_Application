@@ -212,8 +212,8 @@
             </div>
           }
         </div>
-        <div class="col-12">
-          <label class="form-label">Bio / Self Introduction</label>
+         <div class="col-12">
+           <label class="form-label">{{ 'ADMIN.CANDIDATE_FORM.bio' | translate }}</label>
           <textarea class="form-control" formControlName="bio" rows="3"
             placeholder="Brief introduction about the candidate…"
             [class.is-invalid]="form.get('bio')?.invalid && form.get('bio')?.dirty"></textarea>
@@ -228,9 +228,9 @@
             </div>
           }
         </div>
-        <!-- Hobbies -->
-        <div class="col-12">
-          <label class="form-label">Hobbies &amp; Interests</label>
+         <!-- Hobbies -->
+         <div class="col-12">
+           <label class="form-label">{{ 'ADMIN.CANDIDATE_FORM.hobbies' | translate }}</label>
           <app-chip-multi-select
             formControlName="hobbies"
             [options]="hobbyChipOptions()"
@@ -339,9 +339,9 @@
           }
         </div>
 
-        <!-- Notice Period -->
-        <div class="col-md-6">
-          <label class="form-label">{{ 'CANDIDATE_FORM.notice_period' | translate }}</label>
+         <!-- Notice Period -->
+         <div class="col-md-6">
+           <label class="form-label">Notice Period / Availability</label>
           <app-searchable-select
             formControlName="notice_period_id"
             [options]="noticePeriodOptions()"
@@ -362,9 +362,9 @@
           </div>
         </div>
 
-        <!-- LinkedIn URL -->
-        <div class="col-md-3">
-          <label class="form-label">LinkedIn URL</label>
+         <!-- LinkedIn URL -->
+         <div class="col-md-3">
+           <label class="form-label">{{ 'ADMIN.CANDIDATE_FORM.linkedin_url' | translate }}</label>
           <input type="url" class="form-control" formControlName="linkedin_url"
             placeholder="https://linkedin.com/in/username"
             [class.is-invalid]="ctrl('linkedin_url').invalid && ctrl('linkedin_url').touched">
@@ -375,9 +375,9 @@
           }
         </div>
 
-        <!-- CV Format -->
-        <div class="col-md-6">
-          <label class="form-label">CV Format</label>
+         <!-- CV Format -->
+         <div class="col-md-6">
+           <label class="form-label">{{ 'ADMIN.CANDIDATE_FORM.cv_format' | translate }}</label>
           <app-searchable-select
             formControlName="cv_format"
             [options]="cvFormatOptions"
@@ -386,9 +386,9 @@
           </app-searchable-select>
         </div>
 
-        <!-- Visa / Work Permit Status -->
-        <div class="col-md-6">
-          <label class="form-label">Visa / Work Permit Status</label>
+         <!-- Visa / Work Permit Status -->
+         <div class="col-md-6">
+           <label class="form-label">{{ 'ADMIN.CANDIDATE_FORM.visa_status' | translate }}</label>
           <app-searchable-select
             formControlName="visa_status_select"
             [options]="visaStatusOptions"
@@ -575,9 +575,9 @@
     <!-- ══════════════════ STEP 3: Education & Experience ══════════════════ -->
     @if (currentStep === 3) {
 
-      <!-- Work Experience -->
-      <div class="card-section-header mb-3">
-        <i class="bi bi-briefcase-fill"></i>Work Experience
+         <!-- ── Work Experience -->
+       <div class="card-section-header mb-3">
+         <i class="bi bi-briefcase-fill"></i>{{ 'ADMIN.CANDIDATE_FORM.work_experience' | translate }}
         <button type="button" class="btn btn-sm btn-outline-primary ms-auto" (click)="addExperience()">
           <i class="bi bi-plus-lg me-1"></i>Add
         </button>
@@ -602,8 +602,8 @@
               </button>
             </div>
             <div class="row g-3">
-              <div class="col-md-6">
-                <label class="form-label form-label-sm">Company Name <span class="text-danger">*</span></label>
+               <div class="col-md-6">
+                 <label class="form-label form-label-sm">{{ 'ADMIN.CANDIDATE_FORM.company_name' | translate }} <span class="text-danger">*</span></label>
                 <input class="form-control form-control-sm" formControlName="company_name" placeholder="e.g. Google Inc."
                   [class.is-invalid]="experience.at(i).get('company_name')!.invalid && experience.at(i).get('company_name')!.touched">
                 @if (experience.at(i).get('company_name')!.invalid && experience.at(i).get('company_name')!.touched) {
@@ -754,9 +754,9 @@
       </div>
 
       @if (!isExperienceBased) {
-      <!-- Education -->
-      <div class="card-section-header mt-4 mb-3">
-        <i class="bi bi-mortarboard-fill"></i>Education
+       <!-- ── Education -->
+       <div class="card-section-header mt-4 mb-3">
+         <i class="bi bi-mortarboard-fill"></i>Education
         <button type="button" class="btn btn-sm btn-outline-primary ms-auto" (click)="addEducation()">
           <i class="bi bi-plus-lg me-1"></i>Add
         </button>
@@ -885,9 +885,9 @@
         }
       </div>
 
-      <!-- Certificates -->
-      <div class="d-flex justify-content-between align-items-center mb-3 mt-4">
-        <h5 class="fw-bold mb-0">Certificates</h5>
+       <!-- Certificates -->
+       <div class="d-flex justify-content-between align-items-center mb-3 mt-4">
+         <h5 class="fw-bold mb-0">{{ 'ADMIN.CANDIDATE_FORM.certificates' | translate }}</h5>
         <button type="button" class="btn btn-sm btn-outline-primary" (click)="addCertEntry()">
           <i class="bi bi-plus-lg me-1"></i> Add Certificate
         </button>
@@ -959,9 +959,9 @@
       <p class="text-muted small mb-4">Please provide the candidate's current residential address for administrative and payroll purposes.</p>
       <div class="row g-3">
 
-        <!-- Current Country -->
-        <div class="col-md-6">
-          <label class="form-label fw-semibold">Current Country of Residence <span class="text-danger">*</span></label>
+         <!-- Current Country -->
+         <div class="col-md-6">
+           <label class="form-label fw-semibold">{{ 'ADMIN.CANDIDATE_FORM.current_country' | translate }} <span class="text-danger">*</span></label>
           <app-searchable-select
             formControlName="current_country"
             [options]="countryOptions()"
@@ -975,9 +975,9 @@
           <div class="form-text">Where the candidate is currently living</div>
         </div>
 
-        <!-- Current City -->
-        <div class="col-md-6">
-          <label class="form-label fw-semibold">Current City <span class="text-danger">*</span></label>
+         <!-- Current City -->
+         <div class="col-md-6">
+           <label class="form-label fw-semibold">{{ 'ADMIN.CANDIDATE_FORM.current_city' | translate }} <span class="text-danger">*</span></label>
           <app-searchable-select
             formControlName="current_city"
             [options]="cityOptions()"
@@ -991,9 +991,9 @@
           <div class="form-text">Select a country first to load cities</div>
         </div>
 
-        <!-- Postal Code -->
-        <div class="col-md-6">
-          <label class="form-label fw-semibold">Postal Code</label>
+         <!-- Postal Code -->
+         <div class="col-md-6">
+           <label class="form-label fw-semibold">{{ 'ADMIN.CANDIDATE_FORM.postal_code' | translate }}</label>
           <input type="text" class="form-control" formControlName="postal_code"
             placeholder="e.g. 400001"
             [class.is-invalid]="ctrl('postal_code').invalid && ctrl('postal_code').touched">
@@ -1006,9 +1006,9 @@
           }
         </div>
 
-        <!-- Passport toggle + Nationality -->
-        <div class="col-md-6">
-          <label class="form-label fw-semibold d-block mb-2">Passport</label>
+         <!-- Passport toggle + Nationality -->
+         <div class="col-md-6">
+           <label class="form-label fw-semibold d-block mb-2">{{ 'ADMIN.CANDIDATE_FORM.passport' | translate }}</label>
           <div class="form-check form-switch mb-2">
             <input type="checkbox" class="form-check-input" role="switch"
               formControlName="has_passport" id="hasPassportToggle">
@@ -1040,9 +1040,9 @@
           }
         </div>
 
-        <!-- Target Locations -->
-        <div class="col-12">
-          <label class="form-label fw-semibold">Target Locations <span class="text-muted fw-normal small">(optional)</span></label>
+         <!-- Target Locations -->
+         <div class="col-12">
+           <label class="form-label fw-semibold">{{ 'ADMIN.CANDIDATE_FORM.target_locations' | translate }} <span class="text-muted fw-normal small">(optional)</span></label>
           <app-chip-multi-select
             formControlName="target_locations"
             [options]="targetLocationChipOptions()"

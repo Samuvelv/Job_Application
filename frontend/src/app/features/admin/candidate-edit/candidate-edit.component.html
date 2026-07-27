@@ -197,11 +197,11 @@
                   [disabled]="mediaLoading['resumes']" (click)="deleteFile('resumes')"><i class="bi bi-trash"></i></button>
               </div>
             } @else {
-              <div class="media-upload-cell__empty"><i class="bi bi-file-earmark-person"></i><span>No resume</span></div>
+              <div class="media-upload-cell__empty"><i class="bi bi-file-earmark-person"></i><span>{{ 'COMMON.no_data' | translate }}</span></div>
             }
           </div>
-          <label class="btn btn-sm btn-outline-secondary w-100 mt-2">
-            <i class="bi bi-upload me-1"></i>{{ (candidate.resume_url || stagedFiles['resumes']) ? 'Replace' : 'Upload' }}
+             <label class="btn btn-sm btn-outline-secondary w-100 mt-2">
+              <i class="bi bi-upload me-1"></i>{{ (candidate.resume_url || stagedFiles['resumes']) ? ('CANDIDATE_EDIT.replace' | translate) : ('CANDIDATE_EDIT.upload' | translate) }}
             <input type="file" class="d-none" accept=".pdf,.doc,.docx" (change)="uploadFile('resumes', $event)">
           </label>
         </div>
@@ -210,7 +210,7 @@
       <!-- Intro Video -->
       <div class="col-md-3">
         <div class="media-upload-cell">
-          <div class="media-upload-cell__label"><i class="bi bi-camera-video me-1"></i> Intro Video</div>
+            <div class="media-upload-cell__label"><i class="bi bi-camera-video me-1"></i> {{ 'CANDIDATE_EDIT.intro_video' | translate }}</div>
           <div class="media-upload-cell__preview media-upload-cell__preview--doc">
             @if (stagedFiles['videos']) {
               <i class="bi bi-play-circle-fill media-upload-cell__doc-icon" style="color:var(--th-purple)"></i>
@@ -236,7 +236,7 @@
             }
           </div>
           <label class="btn btn-sm btn-outline-secondary w-100 mt-2">
-            <i class="bi bi-upload me-1"></i>{{ (candidate.intro_video_url || stagedFiles['videos']) ? 'Replace' : 'Upload' }}
+             <i class="bi bi-upload me-1"></i>{{ (candidate.intro_video_url || stagedFiles['videos']) ? ('CANDIDATE_EDIT.replace' | translate) : ('CANDIDATE_EDIT.upload' | translate) }}
             <input type="file" class="d-none" accept="video/mp4,video/webm,video/ogg" (change)="uploadFile('videos', $event)">
           </label>
           <div class="text-muted mt-1" style="font-size:.7rem">MP4, WEBM — max 200 MB</div>
@@ -245,10 +245,10 @@
 
       <!-- Certificates -->
       <div class="col-12">
-        <div class="card border mb-2" style="border-radius:var(--th-radius-lg)">
-          <div class="card-body p-3">
-            <div class="d-flex justify-content-between align-items-center mb-3">
-              <h6 class="mb-0 fw-semibold"><i class="bi bi-patch-check me-1"></i> Certificates
+           <div class="card border mb-2" style="border-radius:var(--th-radius-lg)">
+             <div class="card-body p-3">
+               <div class="d-flex justify-content-between align-items-center mb-3">
+                 <h6 class="mb-0 fw-semibold"><i class="bi bi-patch-check me-1"></i> {{ 'ADMIN.CANDIDATE_FORM.certificates' | translate }}
                 <span class="badge bg-secondary rounded-pill ms-1">{{ candidate.certificates?.length || 0 }}</span>
               </h6>
               @if (!pendingNewCert) {
@@ -447,11 +447,11 @@
 
     <!-- ── Section: Personal ── -->
     <div class="form-card mb-4">
-      <h5 class="card-section-header mb-4"><i class="bi bi-person"></i> Personal Information</h5>
+      <h5 class="card-section-header mb-4"><i class="bi bi-person"></i> {{ 'ADMIN.CANDIDATE_FORM.section_personal' | translate }}</h5>
       <div class="row g-3">
         <!-- First Name -->
-        <div class="col-md-6">
-          <label class="form-label">First Name <span class="text-danger">*</span></label>
+         <div class="col-md-6">
+           <label class="form-label">{{ 'ADMIN.CANDIDATE_FORM.first_name' | translate }} <span class="text-danger">*</span></label>
           <input type="text" class="form-control" formControlName="first_name" [class.is-invalid]="invalid('first_name')">
           @if (invalid('first_name') && form.get('first_name')?.errors) {
             <div class="invalid-feedback d-block">
@@ -462,9 +462,9 @@
             </div>
           }
         </div>
-        <!-- Last Name -->
-        <div class="col-md-6">
-          <label class="form-label">Last Name <span class="text-danger">*</span></label>
+         <!-- Last Name -->
+         <div class="col-md-6">
+           <label class="form-label">{{ 'ADMIN.CANDIDATE_FORM.last_name' | translate }} <span class="text-danger">*</span></label>
           <input type="text" class="form-control" formControlName="last_name" [class.is-invalid]="invalid('last_name')">
           @if (invalid('last_name') && form.get('last_name')?.errors) {
             <div class="invalid-feedback d-block">
@@ -475,9 +475,9 @@
             </div>
           }
         </div>
-        <!-- Date of Birth -->
-        <div class="col-md-4">
-          <label class="form-label">Date of Birth <span class="text-danger">*</span></label>
+         <!-- Date of Birth -->
+         <div class="col-md-4">
+           <label class="form-label">{{ 'ADMIN.CANDIDATE_FORM.date_of_birth' | translate }} <span class="text-danger">*</span></label>
           <input type="date" class="form-control"
             formControlName="date_of_birth"
             [class.is-invalid]="invalid('date_of_birth')"
@@ -493,9 +493,9 @@
             </div>
           }
         </div>
-        <!-- Gender -->
-        <div class="col-md-4">
-          <label class="form-label">Gender <span class="text-danger">*</span></label>
+         <!-- Gender -->
+         <div class="col-md-4">
+           <label class="form-label">{{ 'ADMIN.CANDIDATE_FORM.gender' | translate }} <span class="text-danger">*</span></label>
           <app-searchable-select
             formControlName="gender"
             [options]="genderOptions"
@@ -507,9 +507,9 @@
             <div class="text-danger small mt-1">Gender is required.</div>
           }
         </div>
-        <!-- Marital Status -->
-        <div class="col-md-4">
-          <label class="form-label">Marital Status</label>
+         <!-- Marital Status -->
+         <div class="col-md-4">
+           <label class="form-label">{{ 'ADMIN.CANDIDATE_FORM.marital_status' | translate }}</label>
           <app-searchable-select
             formControlName="marital_status"
             [options]="maritalStatusOptions"
@@ -517,9 +517,9 @@
             [allowClear]="true">
           </app-searchable-select>
         </div>
-        <!-- Phone -->
-        <div class="col-md-4">
-          <label class="form-label">Phone <span class="text-danger">*</span></label>
+         <!-- Phone -->
+         <div class="col-md-4">
+           <label class="form-label">{{ 'ADMIN.CANDIDATE_FORM.phone' | translate }} <span class="text-danger">*</span></label>
           <div class="phone-input-group">
             <app-searchable-select
               formControlName="dial_code"
@@ -539,9 +539,9 @@
             </div>
           }
         </div>
-        <!-- WhatsApp -->
-        <div class="col-md-4">
-          <label class="form-label">WhatsApp <span class="text-danger">*</span></label>
+         <!-- WhatsApp -->
+         <div class="col-md-4">
+           <label class="form-label">{{ 'ADMIN.CANDIDATE_FORM.whatsapp' | translate }} <span class="text-danger">*</span></label>
           <div class="phone-input-group">
             <app-searchable-select
               formControlName="whatsapp_dial_code"
@@ -572,9 +572,9 @@
             </div>
           }
         </div>
-        <!-- Email Address -->
-        <div class="col-md-6">
-          <label class="form-label">Email Address <span class="text-danger">*</span></label>
+         <!-- Email Address -->
+         <div class="col-md-6">
+           <label class="form-label">{{ 'ADMIN.CANDIDATE_FORM.email_address' | translate }} <span class="text-danger">*</span></label>
           <input type="email" class="form-control" formControlName="email" [class.is-invalid]="invalid('email')" placeholder="email@example.com" autocomplete="off">
           @if (invalid('email') && form.get('email')?.errors) {
             <div class="invalid-feedback d-block">
@@ -583,8 +583,8 @@
             </div>
           }
         </div>
-        <div class="col-12">
-          <label class="form-label">Bio / Self Introduction</label>
+         <div class="col-12">
+           <label class="form-label">{{ 'ADMIN.CANDIDATE_FORM.bio' | translate }}</label>
           <textarea class="form-control" formControlName="bio" rows="3"
             placeholder="Brief introduction about the candidate…"
             [class.is-invalid]="form.get('bio')?.invalid && form.get('bio')?.dirty"></textarea>
@@ -599,17 +599,17 @@
             </div>
           }
         </div>
-        <!-- Hobbies -->
-        <div class="col-12">
-          <label class="form-label">Hobbies &amp; Interests</label>
+         <!-- Hobbies -->
+         <div class="col-12">
+           <label class="form-label">{{ 'ADMIN.CANDIDATE_FORM.hobbies' | translate }}</label>
           <app-chip-multi-select
             formControlName="hobbies"
             [options]="hobbyChipOptions()"
             placeholder="Select hobbies…">
           </app-chip-multi-select>
         </div>
-        <div class="col-md-6">
-          <label class="form-label">Profile Status</label>
+         <div class="col-md-6">
+           <label class="form-label">{{ 'ADMIN.CANDIDATE_FORM.profile_status' | translate }}</label>
           <app-searchable-select
             formControlName="profile_status"
             [options]="statusOptions"
@@ -641,11 +641,11 @@
     <!-- ── Section: Professional ── -->
     <div class="form-card mb-4">
       <h5 class="card-section-header card-section-header--info mb-4">
-        <i class="bi bi-briefcase"></i> Professional Details
+        <i class="bi bi-briefcase"></i> {{ 'ADMIN.CANDIDATE_FORM.section_professional' | translate }}
       </h5>
       <div class="row g-3">
               <div class="col-md-6">
-                <label class="form-label">Employment Status <span class="text-danger">*</span></label>
+                 <label class="form-label">{{ 'ADMIN.CANDIDATE_FORM.employment_status' | translate }} <span class="text-danger">*</span></label>
                 <app-searchable-select
                   formControlName="employment_status"
                   [options]="employmentStatusOptions"
@@ -657,8 +657,8 @@
                   <div class="text-danger small mt-1">Employment status is required.</div>
                 }
               </div>
-              <div class="col-md-6">
-                <label class="form-label">Job Title <span class="text-danger">*</span></label>
+               <div class="col-md-6">
+                 <label class="form-label">{{ 'ADMIN.CANDIDATE_FORM.job_title' | translate }} <span class="text-danger">*</span></label>
                 <app-searchable-select
                   formControlName="job_title"
                   [options]="jobTitleOptions()"
@@ -670,8 +670,8 @@
                   <div class="text-danger small mt-1">Job title is required.</div>
                 }
               </div>
-        <div class="col-md-6">
-          <label class="form-label">Occupation <span class="text-danger">*</span></label>
+         <div class="col-md-6">
+           <label class="form-label">{{ 'ADMIN.CANDIDATE_FORM.occupation' | translate }} <span class="text-danger">*</span></label>
           <app-searchable-select
             formControlName="occupation"
             [options]="occupationOptions()"
@@ -683,8 +683,8 @@
             <div class="text-danger small mt-1">Occupation is required.</div>
           }
         </div>
-        <div class="col-md-6">
-          <label class="form-label">Industry <span class="text-danger">*</span></label>
+         <div class="col-md-6">
+           <label class="form-label">{{ 'ADMIN.CANDIDATE_FORM.industry' | translate }} <span class="text-danger">*</span></label>
           <app-searchable-select
             formControlName="industry"
             [options]="industryOptions()"
@@ -715,8 +715,8 @@
             <span>0 yrs</span><span>25 yrs</span>
           </div>
         </div>
-        <div class="col-md-3">
-          <label class="form-label">LinkedIn URL</label>
+         <div class="col-md-3">
+           <label class="form-label">{{ 'ADMIN.CANDIDATE_FORM.linkedin_url' | translate }}</label>
           <input type="url" class="form-control" formControlName="linkedin_url"
             placeholder="https://linkedin.com/in/username"
             [class.is-invalid]="invalid('linkedin_url')">
@@ -726,8 +726,8 @@
             </div>
           }
         </div>
-        <div class="col-md-6">
-          <label class="form-label">CV Format</label>
+         <div class="col-md-6">
+           <label class="form-label">{{ 'ADMIN.CANDIDATE_FORM.cv_format' | translate }}</label>
           <app-searchable-select
             formControlName="cv_format"
             [options]="cvFormatOptions"
@@ -735,8 +735,8 @@
             [allowClear]="false">
           </app-searchable-select>
         </div>
-        <div class="col-md-6">
-          <label class="form-label">Visa / Work Permit Status</label>
+         <div class="col-md-6">
+           <label class="form-label">{{ 'ADMIN.CANDIDATE_FORM.visa_status' | translate }}</label>
           <app-searchable-select
             formControlName="visa_status_select"
             [options]="visaStatusOptions"
@@ -756,7 +756,7 @@
     <!-- ── Section: Skills ── -->
     <div class="form-card mb-4">
       <div class="d-flex justify-content-between align-items-center mb-3">
-        <h5 class="card-section-header mb-0" style="border:none;padding:0"><i class="bi bi-tools"></i> Skills</h5>
+         <h5 class="card-section-header mb-0" style="border:none;padding:0"><i class="bi bi-tools"></i> {{ 'ADMIN.CANDIDATE_FORM.skills' | translate }}</h5>
         <button type="button" class="btn btn-sm btn-outline-primary" (click)="addSkill()">
           <i class="bi bi-plus-lg me-1"></i> Add Skill
         </button>
@@ -805,7 +805,7 @@
     <!-- ── Section: Languages ── -->
     <div class="form-card mb-4">
       <div class="d-flex justify-content-between align-items-center mb-3">
-        <h5 class="card-section-header mb-0" style="border:none;padding:0"><i class="bi bi-translate"></i> Languages</h5>
+         <h5 class="card-section-header mb-0" style="border:none;padding:0"><i class="bi bi-translate"></i> {{ 'ADMIN.CANDIDATE_FORM.languages' | translate }}</h5>
         <button type="button" class="btn btn-sm btn-outline-primary" (click)="addLanguage()">
           <i class="bi bi-plus-lg me-1"></i> Add Language
         </button>
@@ -859,9 +859,9 @@
       <h5 class="card-section-header card-section-header--success mb-4"><i class="bi bi-geo-alt"></i> Location</h5>
       <div class="row g-3">
 
-        <!-- Current Country -->
-        <div class="col-md-6">
-          <label class="form-label fw-semibold">Current Country of Residence <span class="text-danger">*</span></label>
+         <!-- Current Country -->
+         <div class="col-md-6">
+           <label class="form-label fw-semibold">{{ 'ADMIN.CANDIDATE_FORM.current_country' | translate }} <span class="text-danger">*</span></label>
           <app-searchable-select
             formControlName="current_country"
             [options]="countryOptions()"
@@ -875,9 +875,9 @@
           <div class="form-text">Where the candidate is currently living</div>
         </div>
 
-        <!-- Current City -->
-        <div class="col-md-6">
-          <label class="form-label fw-semibold">Current City <span class="text-danger">*</span></label>
+         <!-- Current City -->
+         <div class="col-md-6">
+           <label class="form-label fw-semibold">{{ 'ADMIN.CANDIDATE_FORM.current_city' | translate }} <span class="text-danger">*</span></label>
           <app-searchable-select
             formControlName="current_city"
             [options]="cityOptions()"
@@ -891,9 +891,9 @@
           <div class="form-text">Select a country first to load cities</div>
         </div>
 
-        <!-- Postal Code -->
-        <div class="col-md-6">
-          <label class="form-label fw-semibold">Postal Code</label>
+         <!-- Postal Code -->
+         <div class="col-md-6">
+           <label class="form-label fw-semibold">{{ 'ADMIN.CANDIDATE_FORM.postal_code' | translate }}</label>
           <input type="text" class="form-control" formControlName="postal_code"
             placeholder="e.g. 400001"
             [class.is-invalid]="invalid('postal_code')">
@@ -906,9 +906,9 @@
           }
         </div>
 
-        <!-- Passport toggle + Nationality -->
-        <div class="col-md-6">
-          <label class="form-label fw-semibold d-block mb-2">Passport</label>
+         <!-- Passport toggle + Nationality -->
+         <div class="col-md-6">
+           <label class="form-label fw-semibold d-block mb-2">{{ 'ADMIN.CANDIDATE_FORM.passport' | translate }}</label>
           <div class="form-check form-switch mb-2">
             <input type="checkbox" class="form-check-input" role="switch"
               formControlName="has_passport" id="hasPassportToggleEdit">
@@ -939,9 +939,9 @@
           }
         </div>
 
-        <!-- Target Locations -->
-        <div class="col-12">
-          <label class="form-label fw-semibold">Target Locations <span class="text-muted fw-normal small">(optional)</span></label>
+         <!-- Target Locations -->
+         <div class="col-12">
+           <label class="form-label fw-semibold">{{ 'ADMIN.CANDIDATE_FORM.target_locations' | translate }} <span class="text-muted fw-normal small">(optional)</span></label>
           <app-chip-multi-select
             formControlName="target_locations"
             [options]="targetLocationChipOptions()"
@@ -952,10 +952,10 @@
       </div>
     </div>
 
-    <!-- ── Section: Work Experience ── -->
-    <div class="form-card mb-4">
-      <div class="d-flex justify-content-between align-items-center mb-3">
-        <h5 class="card-section-header mb-0" style="border:none;padding:0"><i class="bi bi-briefcase-fill"></i> Work Experience</h5>
+     <!-- ── Section: Work Experience ── -->
+     <div class="form-card mb-4">
+       <div class="d-flex justify-content-between align-items-center mb-3">
+         <h5 class="card-section-header mb-0" style="border:none;padding:0"><i class="bi bi-briefcase-fill"></i> {{ 'ADMIN.CANDIDATE_FORM.work_experience' | translate }}</h5>
         <button type="button" class="btn btn-sm btn-outline-primary" (click)="addExperience()">
           <i class="bi bi-plus-lg me-1"></i> Add
         </button>
@@ -979,8 +979,8 @@
               </button>
             </div>
             <div class="row g-3">
-              <div class="col-md-6">
-                <label class="form-label form-label-sm">Company Name <span class="text-danger">*</span></label>
+               <div class="col-md-6">
+                 <label class="form-label form-label-sm">{{ 'ADMIN.CANDIDATE_FORM.company_name' | translate }} <span class="text-danger">*</span></label>
                 <input class="form-control form-control-sm" formControlName="company_name" placeholder="e.g. Google Inc."
                   [class.is-invalid]="experience.at(i).get('company_name')!.invalid && experience.at(i).get('company_name')!.touched">
                 @if (experience.at(i).get('company_name')!.invalid && experience.at(i).get('company_name')!.touched) {

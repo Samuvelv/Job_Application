@@ -2,6 +2,7 @@
 import { Component, OnInit, OnDestroy, computed, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { TranslateModule } from '@ngx-translate/core';
+import { TranslateUserDataPipe } from '../../../core/pipes/translate-user-data.pipe';
 import {
   ReactiveFormsModule, FormBuilder, FormGroup,
   FormArray, Validators, AbstractControl, ValidationErrors, ValidatorFn,
@@ -298,7 +299,7 @@ function makePostalCodeGroupValidator(countryCtrl: string, postalCtrl: string): 
 @Component({
   selector: 'app-candidate-register',
   standalone: true,
-  imports: [CommonModule, TranslateModule, ReactiveFormsModule, RouterLink, SearchableSelectComponent, ChipMultiSelectComponent, DragDropModule],
+  imports: [CommonModule, TranslateModule, ReactiveFormsModule, RouterLink, SearchableSelectComponent, ChipMultiSelectComponent, DragDropModule, TranslateUserDataPipe],
   templateUrl: './candidate-register.component.html',
 })
 export class CandidateRegisterComponent implements OnInit, OnDestroy, HasUnsavedChanges {
