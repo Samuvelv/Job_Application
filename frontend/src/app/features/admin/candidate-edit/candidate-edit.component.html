@@ -98,7 +98,7 @@
          </div>
          <h4 class="placed-prompt__title">{{ 'CANDIDATE_EDIT.reactivate_volunteer' | translate }}</h4>
          <p class="placed-prompt__msg">
-           {{ 'CANDIDATE_EDIT.reactivate_msg' | translate: { name: (candidate?.first_name || '') + ' ' + (candidate?.last_name || '') } }}
+            {{ 'CANDIDATE_EDIT.reactivate_msg' | translate: { name: ((candidate?.first_name ?? '') + ' ' + (candidate?.last_name ?? '')).trim() } }}
          </p>
          @if (reactivateError) {
            <div class="alert alert-danger small py-2 mb-3">

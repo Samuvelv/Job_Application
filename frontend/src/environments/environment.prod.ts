@@ -14,7 +14,7 @@ export const environment = {
     // API key should be set via environment variable or config service
     apiKey: '',
     apiEndpoint: 'https://api.openai.com/v1/chat/completions',
-    model: 'gpt-4-mini',
+    model: 'gpt-3.5-turbo',
     timeoutMs: 10000,
     cacheTtlMs: 3600000, // 1 hour
   }
