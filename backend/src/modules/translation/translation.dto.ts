@@ -11,12 +11,12 @@ const SUPPORTED_LANG_CODES = [
 export const TranslateSchema = z.object({
   /** Flat map of field-key → source text value.
    *  Keys are deterministic strings like "bio", "exp_0_description", "hobby_1".
-   *  Total characters across all values must not exceed 5 000 to cap token costs. */
+   *  Total characters across all values must not exceed 100 000 to cap token costs. */
   fields: z
     .record(z.string(), z.string())
     .refine(
-      (rec) => Object.values(rec).join('').length <= 5_000,
-      { message: 'Total content exceeds the 5 000 character limit per request.' },
+      (rec) => Object.values(rec).join('').length <= 100_000,
+      { message: 'Total content exceeds the 100 000 character limit per request.' },
     )
     .refine(
       (rec) => Object.keys(rec).length > 0,
