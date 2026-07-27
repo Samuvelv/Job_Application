@@ -2,7 +2,6 @@
 import { Injectable, signal } from '@angular/core';
 import { TranslateService } from '@ngx-translate/core';
 import { HttpClient } from '@angular/common/http';
-import { TranslationApiService } from './translation-api.service';
 
 export interface Language {
   code:   string;
@@ -62,8 +61,7 @@ export class LanguageService {
 
   constructor(
     private translate: TranslateService,
-    private http: HttpClient,
-    private translationApi: TranslationApiService
+    private http: HttpClient
   ) {}
 
   /** Called once at app startup via APP_INITIALIZER */
@@ -91,67 +89,41 @@ export class LanguageService {
     document.documentElement.setAttribute('dir', lang.dir);
     document.documentElement.setAttribute('lang', code);
 
-    // If English, no translation needed
-    if (code === DEFAULT_LANG) {
-      return new Promise<void>((resolve, reject) => {
-        this.translate.use(code).subscribe({
-          next:     () => {
-            this.translationError.set(null);
-            resolve();
-          },
-          error:    (err) => {
-            console.error(`Failed to load English translations:`, err);
-            this.translationError.set('Failed to load English');
-            reject(err);
-          },
-        });
+    // Load static i18n file for UI text (pre-translated, no API needed)
+    return new Promise<void>((resolve, reject) => {
+      this.http.get<Record<string, any>>(`assets/i18n/${code}.json`).subscribe({
+        next:     (data) => {
+          // Set the static i18n translations directly from file
+          this.translate.setTranslation(code, data, true);
+          
+          this.translate.use(code).subscribe({
+            next:     () => {
+              this.translationError.set(null);
+              this.isTranslating.set(false);
+              console.log(`✅ Language switched to ${code} (using pre-translated static file)`);
+              resolve();
+            },
+            error:    (err) => {
+              this.translationError.set(`Failed to switch to ${code}`);
+              this.isTranslating.set(false);
+              console.error(`Failed to load ${code} translations:`, err);
+              reject(err);
+            },
+          });
+        },
+        error:    (err) => {
+          console.error(`Failed to load i18n file for ${code}:`, err);
+          this.translationError.set(`Language file not found for ${code}`);
+          this.isTranslating.set(false);
+          
+          // Fallback to English
+          this.translate.use(DEFAULT_LANG).subscribe({
+            next:     () => resolve(),
+            error:    (err) => reject(err),
+          });
+        }
       });
-    }
-
-    // For other languages, use real-time translation API
-    this.isTranslating.set(true);
-    this.translationError.set(null);
-
-    try {
-      // Load English base translations
-      const enJson = await this.loadJsonFile('assets/i18n/en.json');
-
-      // Translate to target language using API
-      const translatedJson = await this.translationApi.translateAllKeys(enJson, code);
-
-      // Set the translated JSON in TranslateService
-      this.translate.setTranslation(code, translatedJson, true);
-
-      // Use the translated language
-      await new Promise<void>((resolve, reject) => {
-        this.translate.use(code).subscribe({
-          next:     () => {
-            this.translationError.set(null);
-            this.isTranslating.set(false);
-            console.log(`✅ Language switched to ${code}`);
-            resolve();
-          },
-          error:    (err) => {
-            this.translationError.set(`Failed to switch to ${code}`);
-            this.isTranslating.set(false);
-            reject(err);
-          },
-        });
-      });
-    } catch (error) {
-      console.error(`Translation failed for ${code}:`, error);
-      const errorMsg = error instanceof Error ? error.message : String(error);
-      this.translationError.set(`Translation failed: ${errorMsg}. Falling back to English.`);
-      this.isTranslating.set(false);
-
-      // Fallback to English
-      return new Promise<void>((resolve, reject) => {
-        this.translate.use(DEFAULT_LANG).subscribe({
-          next:     () => resolve(),
-          error:    (err) => reject(err),
-        });
-      });
-    }
+    });
   }
 
   /** Load JSON file from assets */
