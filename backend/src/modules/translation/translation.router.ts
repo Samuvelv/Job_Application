@@ -27,12 +27,19 @@ const translationLimiter = rateLimit({
 const router = Router();
 
 // ── POST /api/v1/translate ────────────────────────────────────────────────────
-// 1. authenticate  — rejects unauthenticated requests (no valid JWT)
-// 2. authorize     — rejects non-recruiter roles (admin, candidate, etc.)
-// 3. translationLimiter — caps cost abuse at 10 req/min per recruiter
-// 4. translate     — calls OpenAI and returns translated fields
+// Public endpoint for UI translations (no auth required for frontend use)
+// Rate limited by IP to prevent abuse
 router.post(
   '/',
+  translationLimiter,
+  translate,
+);
+
+// ── POST /api/v1/translate/recruiter ───────────────────────────────────────────
+// Protected endpoint for recruiter-specific translations (requires authentication)
+// Rate limited per recruiter user ID
+router.post(
+  '/recruiter',
   authenticate,
   authorize('recruiter'),
   translationLimiter,
