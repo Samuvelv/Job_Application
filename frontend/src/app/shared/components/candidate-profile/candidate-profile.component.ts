@@ -420,26 +420,34 @@ type Tab = 'overview' | 'experience' | 'education' | 'documents' | 'activity';
               </div>
               <div class="profile-section-card__body">
                 <div class="row g-2">
-                  <div class="col-sm-6">
-                    <div style="padding:.75rem;background:var(--th-surface-raised);border-radius:var(--th-radius);
-                      border:1px solid var(--th-border)">
-                      <div style="font-size:.7rem;text-transform:uppercase;letter-spacing:.06em;
-                        color:var(--th-muted);font-weight:600;margin-bottom:.3rem">Occupation</div>
-                      <div style="font-size:.875rem;font-weight:600;color:var(--th-text)">
-                        {{ candidate.occupation || '—' }}
-                      </div>
-                    </div>
-                  </div>
-                  <div class="col-sm-6">
-                    <div style="padding:.75rem;background:var(--th-surface-raised);border-radius:var(--th-radius);
-                      border:1px solid var(--th-border)">
-                      <div style="font-size:.7rem;text-transform:uppercase;letter-spacing:.06em;
-                        color:var(--th-muted);font-weight:600;margin-bottom:.3rem">Industry</div>
-                      <div style="font-size:.875rem;font-weight:600;color:var(--th-text)">
-                        {{ candidate.industry || '—' }}
-                      </div>
-                    </div>
-                  </div>
+                   <div class="col-sm-6">
+                     <div style="padding:.75rem;background:var(--th-surface-raised);border-radius:var(--th-radius);
+                       border:1px solid var(--th-border)">
+                       <div style="font-size:.7rem;text-transform:uppercase;letter-spacing:.06em;
+                         color:var(--th-muted);font-weight:600;margin-bottom:.3rem">Occupation</div>
+                       <div style="font-size:.875rem;font-weight:600;color:var(--th-text)">
+                         @if (translatedProfessionalDetails()?.occupation && currentLanguage() !== 'en') {
+                           {{ translatedProfessionalDetails().occupation }}
+                         } @else {
+                           {{ candidate.occupation || '—' }}
+                         }
+                       </div>
+                     </div>
+                   </div>
+                   <div class="col-sm-6">
+                     <div style="padding:.75rem;background:var(--th-surface-raised);border-radius:var(--th-radius);
+                       border:1px solid var(--th-border)">
+                       <div style="font-size:.7rem;text-transform:uppercase;letter-spacing:.06em;
+                         color:var(--th-muted);font-weight:600;margin-bottom:.3rem">Industry</div>
+                       <div style="font-size:.875rem;font-weight:600;color:var(--th-text)">
+                         @if (translatedProfessionalDetails()?.industry && currentLanguage() !== 'en') {
+                           {{ translatedProfessionalDetails().industry }}
+                         } @else {
+                           {{ candidate.industry || '—' }}
+                         }
+                       </div>
+                     </div>
+                   </div>
                   <div class="col-sm-6">
                     <div style="padding:.75rem;background:var(--th-surface-raised);border-radius:var(--th-radius);
                       border:1px solid var(--th-border)">
@@ -463,16 +471,20 @@ type Tab = 'overview' | 'experience' | 'education' | 'documents' | 'activity';
                     </div>
                   </div>
                   }
-                  <div class="col-sm-6">
-                    <div style="padding:.75rem;background:var(--th-surface-raised);border-radius:var(--th-radius);
-                      border:1px solid var(--th-border)">
-                      <div style="font-size:.7rem;text-transform:uppercase;letter-spacing:.06em;
-                        color:var(--th-muted);font-weight:600;margin-bottom:.3rem">Job Title</div>
-                      <div style="font-size:.875rem;font-weight:600;color:var(--th-text)">
-                        {{ candidate.job_title || '—' }}
-                      </div>
-                    </div>
-                  </div>
+                   <div class="col-sm-6">
+                     <div style="padding:.75rem;background:var(--th-surface-raised);border-radius:var(--th-radius);
+                       border:1px solid var(--th-border)">
+                       <div style="font-size:.7rem;text-transform:uppercase;letter-spacing:.06em;
+                         color:var(--th-muted);font-weight:600;margin-bottom:.3rem">Job Title</div>
+                       <div style="font-size:.875rem;font-weight:600;color:var(--th-text)">
+                         @if (translatedProfessionalDetails()?.job_title && currentLanguage() !== 'en') {
+                           {{ translatedProfessionalDetails().job_title }}
+                         } @else {
+                           {{ candidate.job_title || '—' }}
+                         }
+                       </div>
+                     </div>
+                   </div>
                   <div class="col-sm-6">
                     <div style="padding:.75rem;background:var(--th-surface-raised);border-radius:var(--th-radius);
                       border:1px solid var(--th-border)">
@@ -571,8 +583,15 @@ type Tab = 'overview' | 'experience' | 'education' | 'documents' | 'activity';
                       {{ exp.start_date | date:'MMM yyyy' }} —
                       {{ exp.end_date ? (exp.end_date | date:'MMM yyyy') : 'Present' }}
                     </div>
-                    @if (exp.description) {
-                      <div class="exp-timeline__desc">{{ exp.description }}</div>
+                     @if (exp.description) {
+                      <div class="exp-timeline__desc" style="display:flex;justify-content:space-between;align-items:flex-start;gap:1rem">
+                        <div style="flex:1">{{ exp.description }}</div>
+                        @if (currentLanguage() !== 'en') {
+                          <span style="font-size:.65rem;color:var(--th-muted);font-style:italic;white-space:nowrap;margin-top:.2rem">
+                            Translation available
+                          </span>
+                        }
+                      </div>
                     }
                     @if (exp.reason_for_leaving) {
                       <div class="exp-timeline__period" style="margin-top:.35rem;opacity:.8">
@@ -953,6 +972,9 @@ export class CandidateProfileComponent implements OnInit, OnDestroy {
   translatedBio = signal<string>('');
   isTranslatingBio = signal(false);
   currentLanguage = signal<string>('en');
+  translatedExperience = signal<Map<number, any>>(new Map());
+  translatedProfessionalDetails = signal<any>(null);
+  isTranslatingProfessional = signal(false);
 
   readonly cvFormatLabels: Record<string, string> = {
     uk_format:         'UK Format',
@@ -979,20 +1001,29 @@ export class CandidateProfileComponent implements OnInit, OnDestroy {
       .pipe(takeUntil(this.destroy$))
       .subscribe((event) => {
         this.currentLanguage.set(event.lang);
-        // Auto-translate bio when language changes (if not English)
-        if (event.lang !== 'en' && this.candidate?.bio) {
-          this.translateBioToCurrentLanguage();
-        } else if (event.lang === 'en') {
-          this.translatedBio.set('');
+        // Reset translations when language changes
+        this.translatedBio.set('');
+        this.translatedProfessionalDetails.set(null);
+        this.translatedExperience.set(new Map());
+        
+        // Auto-translate bio and professional details when language changes (if not English)
+        if (event.lang !== 'en') {
+          if (this.candidate?.bio) {
+            this.translateBioToCurrentLanguage();
+          }
+          this.translateProfessionalDetails();
         }
       });
 
     // Set initial language
     this.currentLanguage.set(this.translate.currentLang || 'en');
 
-    // If not English, translate bio on init
-    if (this.currentLanguage() !== 'en' && this.candidate?.bio) {
-      this.translateBioToCurrentLanguage();
+    // If not English, translate bio and professional details on init
+    if (this.currentLanguage() !== 'en') {
+      if (this.candidate?.bio) {
+        this.translateBioToCurrentLanguage();
+      }
+      this.translateProfessionalDetails();
     }
   }
 
@@ -1018,6 +1049,65 @@ export class CandidateProfileComponent implements OnInit, OnDestroy {
       this.translatedBio.set('');
     } finally {
       this.isTranslatingBio.set(false);
+    }
+  }
+
+  async getTranslatedExperience(index: number): Promise<string> {
+    const cached = this.translatedExperience().get(index);
+    if (cached) {
+      return cached;
+    }
+
+    if (!this.candidate?.experience || this.currentLanguage() === 'en') {
+      return '';
+    }
+
+    const exp = this.candidate.experience[index];
+    if (!exp || !exp.description) {
+      return '';
+    }
+
+    try {
+      const translated = await this.userDataTranslation.translateUserData(
+        exp.description,
+        this.currentLanguage()
+      );
+      // Cache the translation
+      const map = new Map(this.translatedExperience());
+      map.set(index, translated);
+      this.translatedExperience.set(map);
+      return translated;
+    } catch (error) {
+      console.error('Error translating experience:', error);
+      return '';
+    }
+  }
+
+  async translateProfessionalDetails(): Promise<void> {
+    if (!this.candidate || this.currentLanguage() === 'en') {
+      return;
+    }
+
+    if (this.translatedProfessionalDetails()) {
+      return; // Already translated
+    }
+
+    this.isTranslatingProfessional.set(true);
+    try {
+      const fields: any = {};
+      if (this.candidate.occupation) fields.occupation = this.candidate.occupation;
+      if (this.candidate.industry) fields.industry = this.candidate.industry;
+      if (this.candidate.job_title) fields.job_title = this.candidate.job_title;
+
+      const translated = await this.userDataTranslation.translateUserFields(
+        fields,
+        this.currentLanguage()
+      );
+      this.translatedProfessionalDetails.set(translated);
+    } catch (error) {
+      console.error('Error translating professional details:', error);
+    } finally {
+      this.isTranslatingProfessional.set(false);
     }
   }
 
