@@ -117,7 +117,7 @@ export class LanguageService {
       const enJson = await this.loadJsonFile('assets/i18n/en.json');
 
       // Translate to target language using API
-      const translatedJson = await this.translationApi.translateAllKeys(enJson, this.getLanguageName(code));
+      const translatedJson = await this.translationApi.translateAllKeys(enJson, code);
 
       // Set the translated JSON in TranslateService
       this.translate.setTranslation(code, translatedJson, true);
