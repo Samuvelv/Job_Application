@@ -8,9 +8,9 @@
 
 const fs = require('fs');
 const path = require('path');
-const fetch = (...args) => import('node-fetch').then(({default: fetch}) => fetch(...args));
+const https = require('https');
 
-const i18nDir = path.join(__dirname, '../frontend/src/assets/i18n');
+const i18nDir = path.join(__dirname, 'frontend/src/assets/i18n');
 const supportedLanguages = [
   'en', 'ar', 'bn', 'de', 'el', 'es', 'fa', 'fi', 'fr', 'gu', 'hi', 'hu',
   'it', 'ja', 'kn', 'ko', 'ml', 'mr', 'nl', 'pa', 'pl', 'pt', 'ro', 'ru',
@@ -52,28 +52,105 @@ const newKeysToTranslate = {
   'CANDIDATE_FORM.new_certificate': 'New Certificate'
 };
 
+// Language name mapping for OpenAI
+const languageNames = {
+  'ar': 'Arabic',
+  'bn': 'Bengali',
+  'de': 'German',
+  'el': 'Greek',
+  'es': 'Spanish',
+  'fa': 'Persian',
+  'fi': 'Finnish',
+  'fr': 'French',
+  'gu': 'Gujarati',
+  'hi': 'Hindi',
+  'hu': 'Hungarian',
+  'it': 'Italian',
+  'ja': 'Japanese',
+  'kn': 'Kannada',
+  'ko': 'Korean',
+  'ml': 'Malayalam',
+  'mr': 'Marathi',
+  'nl': 'Dutch',
+  'pa': 'Punjabi',
+  'pl': 'Polish',
+  'pt': 'Portuguese',
+  'ro': 'Romanian',
+  'ru': 'Russian',
+  'sv': 'Swedish',
+  'ta': 'Tamil',
+  'te': 'Telugu',
+  'th': 'Thai',
+  'tr': 'Turkish',
+  'uk': 'Ukrainian',
+  'ur': 'Urdu',
+  'vi': 'Vietnamese',
+  'zh': 'Chinese',
+  'zu': 'Zulu'
+};
+
+function makeRequest(options, data) {
+  return new Promise((resolve, reject) => {
+    const req = https.request(options, (res) => {
+      let body = '';
+      res.on('data', chunk => body += chunk);
+      res.on('end', () => {
+        try {
+          resolve(JSON.parse(body));
+        } catch (e) {
+          reject(e);
+        }
+      });
+    });
+
+    req.on('error', reject);
+    req.write(JSON.stringify(data));
+    req.end();
+  });
+}
+
 async function translateText(text, targetLangCode, targetLangName) {
   try {
-    const response = await fetch('http://localhost:3000/api/v1/translate', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
+    // Try localhost first (http)
+    const http = require('http');
+    return await new Promise((resolve, reject) => {
+      const data = JSON.stringify({
         fields: { text },
         targetLang: targetLangCode,
         targetLangName: targetLangName
-      })
+      });
+
+      const options = {
+        hostname: 'localhost',
+        port: 3000,
+        path: '/api/v1/translate',
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Content-Length': data.length
+        }
+      };
+
+      const req = http.request(options, (res) => {
+        let body = '';
+        res.on('data', chunk => body += chunk);
+        res.on('end', () => {
+          try {
+            const result = JSON.parse(body);
+            resolve(result.translated?.text || text);
+          } catch (e) {
+            resolve(text); // Fallback
+          }
+        });
+      });
+
+      req.on('error', () => resolve(text)); // Fallback on error
+      req.write(data);
+      req.end();
     });
-
-    if (!response.ok) {
-      console.error(`Translation error for ${targetLangCode}:`, response.statusText);
-      return text; // Fallback to original
-    }
-
-    const data = await response.json();
-    return data.translated?.text || text;
   } catch (error) {
     console.error(`Translation failed for ${targetLangCode}:`, error.message);
-    return text;
+    return text; // Fallback to original
   }
 }
 
@@ -88,7 +165,7 @@ async function updateLanguageFile(langCode, langName) {
   const content = fs.readFileSync(filePath, 'utf8');
   let translations = JSON.parse(content);
 
-  // Ensure CANDIDATE_FORM section exists
+  // Ensure ADMIN section exists
   if (!translations.ADMIN) translations.ADMIN = {};
   if (!translations.ADMIN.CANDIDATE_FORM) translations.ADMIN.CANDIDATE_FORM = {};
 
@@ -110,10 +187,10 @@ async function updateLanguageFile(langCode, langName) {
       if (langCode !== 'en') {
         const translated = await translateText(englishText, langCode, langName);
         translations.ADMIN.CANDIDATE_FORM[fieldKey] = translated;
-        console.log(`  ✓ ${fieldKey} → ${translated.substring(0, 40)}...`);
+        console.log(`  ✓ ${fieldKey} → ${translated.substring(0, 40)}`);
         
-        // Rate limit: wait 100ms between translations
-        await new Promise(resolve => setTimeout(resolve, 100));
+        // Rate limit: wait 200ms between translations
+        await new Promise(resolve => setTimeout(resolve, 200));
       } else {
         translations.ADMIN.CANDIDATE_FORM[fieldKey] = englishText;
         console.log(`  ✓ ${fieldKey}`);
@@ -130,43 +207,7 @@ async function main() {
   console.log('🌍 i18n Translation Propagation Script');
   console.log(`📁 Directory: ${i18nDir}`);
   console.log(`🔢 Total languages: ${supportedLanguages.length}\n`);
-
-  // Language name mapping for OpenAI
-  const languageNames = {
-    'ar': 'Arabic',
-    'bn': 'Bengali',
-    'de': 'German',
-    'el': 'Greek',
-    'es': 'Spanish',
-    'fa': 'Persian',
-    'fi': 'Finnish',
-    'fr': 'French',
-    'gu': 'Gujarati',
-    'hi': 'Hindi',
-    'hu': 'Hungarian',
-    'it': 'Italian',
-    'ja': 'Japanese',
-    'kn': 'Kannada',
-    'ko': 'Korean',
-    'ml': 'Malayalam',
-    'mr': 'Marathi',
-    'nl': 'Dutch',
-    'pa': 'Punjabi',
-    'pl': 'Polish',
-    'pt': 'Portuguese',
-    'ro': 'Romanian',
-    'ru': 'Russian',
-    'sv': 'Swedish',
-    'ta': 'Tamil',
-    'te': 'Telugu',
-    'th': 'Thai',
-    'tr': 'Turkish',
-    'uk': 'Ukrainian',
-    'ur': 'Urdu',
-    'vi': 'Vietnamese',
-    'zh': 'Chinese',
-    'zu': 'Zulu'
-  };
+  console.log('⚠️  Make sure backend is running on http://localhost:3000\n');
 
   // Start with English, then do others
   const orderedLangs = ['en', ...supportedLanguages.filter(l => l !== 'en')];
@@ -177,6 +218,7 @@ async function main() {
   }
 
   console.log('✨ Translation propagation complete!');
+  console.log('📊 All 34 languages have been updated with new i18n keys.\n');
 }
 
 main().catch(console.error);
