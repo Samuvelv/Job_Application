@@ -140,7 +140,8 @@ export class LanguageService {
       });
     } catch (error) {
       console.error(`Translation failed for ${code}:`, error);
-      this.translationError.set(`Translation failed. Falling back to English.`);
+      const errorMsg = error instanceof Error ? error.message : String(error);
+      this.translationError.set(`Translation failed: ${errorMsg}. Falling back to English.`);
       this.isTranslating.set(false);
 
       // Fallback to English

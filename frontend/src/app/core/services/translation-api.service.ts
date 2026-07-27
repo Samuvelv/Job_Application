@@ -198,13 +198,18 @@ JSON to translate:
     } catch (error) {
       if (error instanceof HttpErrorResponse) {
         console.error(`API Error ${error.status}:`, error.message);
+        console.error(`Response:`, error.error);
         if (error.status === 401) {
           throw new Error('Invalid API key. Please check OPENAI_API_KEY configuration.');
         }
         if (error.status === 429) {
           throw new Error('Rate limit exceeded. Please try again later.');
         }
+        if (error.status === 404) {
+          throw new Error('API endpoint not found. Check TRANSLATION_API_ENDPOINT configuration.');
+        }
       }
+      console.error('Translation API Error:', error);
       throw error;
     }
   }
