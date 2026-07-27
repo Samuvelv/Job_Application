@@ -8,11 +8,12 @@ import { AuthService } from '../../../core/services/auth.service';
 import { Candidate } from '../../../core/models/candidate.model';
 import { CandidateProfileComponent } from '../../../shared/components/candidate-profile/candidate-profile.component';
 import { PageHeaderComponent } from '../../../shared/components/page-header/page-header.component';
+import { TranslateUserDataPipe } from '../../../core/pipes/translate-user-data.pipe';
 
 @Component({
   selector: 'app-my-profile',
   standalone: true,
-  imports: [CommonModule, RouterLink, TranslateModule, CandidateProfileComponent, PageHeaderComponent],
+  imports: [CommonModule, RouterLink, TranslateModule, CandidateProfileComponent, PageHeaderComponent, TranslateUserDataPipe],
   styles: [`
     .placed-banner {
       display: flex;

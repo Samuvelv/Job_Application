@@ -10,6 +10,7 @@ import { CandidateService } from '../../../core/services/candidate.service';
 import { AgencyReferralService, ReferralPayload } from '../../../core/services/agency-referral.service';
 import { MasterDataService } from '../../../core/services/master-data.service';
 import { ToastService } from '../../../core/services/toast.service';
+import { TranslateUserDataPipe } from '../../../core/pipes/translate-user-data.pipe';
 
 import { Candidate } from '../../../core/models/candidate.model';
 import { AgencyReferral, ReferralStatus } from '../../../core/models/agency-referral.model';
@@ -27,7 +28,7 @@ const STATUS_CONFIG: Record<ReferralStatus, { label: string; badgeClass: string 
 @Component({
   selector: 'app-candidate-profile-page',
   standalone: true,
-  imports: [CommonModule, TranslateModule, ReactiveFormsModule, RouterLink, CandidateProfileComponent, SearchableSelectComponent],
+  imports: [CommonModule, TranslateModule, ReactiveFormsModule, RouterLink, CandidateProfileComponent, SearchableSelectComponent, TranslateUserDataPipe],
   template: `
     <!-- Header row: back + actions -->
     <div class="d-flex align-items-center justify-content-between mb-3 gap-2">

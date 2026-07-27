@@ -16,6 +16,7 @@ import { PageHeaderComponent } from '../../../shared/components/page-header/page
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { CandidateProfileComponent } from '../../../shared/components/candidate-profile/candidate-profile.component';
 import { SearchableSelectComponent, SelectOption } from '../../../shared/components/searchable-select/searchable-select.component';
+import { TranslateUserDataPipe } from '../../../core/pipes/translate-user-data.pipe';
 import {
   CandidateTranslationService,
   TRANSLATE_LANGUAGES,
@@ -25,7 +26,7 @@ import {
 @Component({
   selector: 'app-recruiter-candidate-profile',
   standalone: true,
-  imports: [CommonModule, RouterLink, FormsModule, PageHeaderComponent, CandidateProfileComponent, SearchableSelectComponent, TranslateModule],
+  imports: [CommonModule, RouterLink, FormsModule, PageHeaderComponent, CandidateProfileComponent, SearchableSelectComponent, TranslateModule, TranslateUserDataPipe],
   styles: [`
     .interest-panel {
       background: var(--th-surface);

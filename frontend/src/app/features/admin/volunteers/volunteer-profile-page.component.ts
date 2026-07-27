@@ -8,13 +8,14 @@ import { MasterDataService } from '../../../core/services/master-data.service';
 import { ToastService } from '../../../core/services/toast.service';
 import { ConfirmDialogService } from '../../../core/services/confirm-dialog.service';
 import { Volunteer } from '../../../core/models/volunteer.model';
+import { TranslateUserDataPipe } from '../../../core/pipes/translate-user-data.pipe';
 
 type Tab = 'overview' | 'contact';
 
 @Component({
   selector: 'app-volunteer-profile-page',
   standalone: true,
-  imports: [CommonModule, TranslateModule, RouterLink],
+  imports: [CommonModule, TranslateModule, RouterLink, TranslateUserDataPipe],
   template: `
     <!-- Back + actions -->
     <div class="d-flex align-items-center justify-content-between mb-4 gap-2 flex-wrap">

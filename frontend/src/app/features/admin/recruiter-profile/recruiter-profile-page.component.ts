@@ -7,11 +7,12 @@ import { RecruiterService } from '../../../core/services/recruiter.service';
 import { Recruiter, ShortlistEntry } from '../../../core/models/recruiter.model';
 import { ToastService } from '../../../core/services/toast.service';
 import { ConfirmDialogService } from '../../../core/services/confirm-dialog.service';
+import { TranslateUserDataPipe } from '../../../core/pipes/translate-user-data.pipe';
 
 @Component({
   selector: 'app-recruiter-profile-page',
   standalone: true,
-  imports: [CommonModule, TranslateModule, RouterLink],
+  imports: [CommonModule, TranslateModule, RouterLink, TranslateUserDataPipe],
   template: `
     <!-- Back + actions row -->
     <div class="d-flex align-items-center justify-content-between mb-4 gap-2 flex-wrap">

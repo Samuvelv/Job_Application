@@ -6,6 +6,7 @@ import { Candidate } from '../../../core/models/candidate.model';
 import { CandidateService, CandidateActivity } from '../../../core/services/candidate.service';
 import { UserDataTranslationService } from '../../../core/services/user-data-translation.service';
 import { LanguageService } from '../../../core/services/language.service';
+import { TranslateUserDataPipe } from '../../../core/pipes/translate-user-data.pipe';
 import { Subject } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
 
@@ -14,7 +15,7 @@ type Tab = 'overview' | 'experience' | 'education' | 'documents' | 'activity';
 @Component({
   selector: 'app-candidate-profile',
   standalone: true,
-  imports: [CommonModule, TranslateModule],
+  imports: [CommonModule, TranslateModule, TranslateUserDataPipe],
   template: `
     @if (!candidate) {
       <div class="loading-state">
