@@ -105,7 +105,7 @@ export class UserDataTranslationService {
 
     try {
       const result = await this.translateFields({ content: text }, targetLang);
-      return result.content || text;
+      return result['content'] || text;
     } catch (error) {
       console.error('Failed to translate user data:', error);
       return text; // Fallback to original text

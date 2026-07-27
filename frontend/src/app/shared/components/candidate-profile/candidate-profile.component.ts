@@ -1,9 +1,13 @@
 // src/app/shared/components/candidate-profile/candidate-profile.component.ts
-import { Component, Input, signal, inject } from '@angular/core';
+import { Component, Input, signal, inject, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { TranslateModule } from '@ngx-translate/core';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { Candidate } from '../../../core/models/candidate.model';
 import { CandidateService, CandidateActivity } from '../../../core/services/candidate.service';
+import { UserDataTranslationService } from '../../../core/services/user-data-translation.service';
+import { LanguageService } from '../../../core/services/language.service';
+import { Subject } from 'rxjs';
+import { takeUntil } from 'rxjs/operators';
 
 type Tab = 'overview' | 'experience' | 'education' | 'documents' | 'activity';
 
@@ -375,11 +379,32 @@ type Tab = 'overview' | 'experience' | 'education' | 'documents' | 'activity';
                     <i class="bi bi-chat-quote-fill"></i>
                   </div>
                   <h6>About</h6>
+                  @if (translatedBio() && currentLanguage() !== 'en') {
+                    <span style="margin-left:auto;font-size:.65rem;color:var(--th-muted);font-style:italic">
+                      Translated by AI
+                    </span>
+                  }
                 </div>
                 <div class="profile-section-card__body">
-                  <p style="font-size:.875rem;line-height:1.75;color:var(--th-text-secondary);margin:0">
-                    {{ candidate.bio }}
-                  </p>
+                  @if (isTranslatingBio()) {
+                    <div style="display:flex;align-items:center;gap:.5rem;color:var(--th-muted);font-size:.875rem">
+                      <span style="display:inline-block;width:14px;height:14px;border:2px solid var(--th-primary);
+                        border-right:2px solid transparent;border-radius:50%;animation:spin .6s linear infinite"></span>
+                      Translating…
+                    </div>
+                  } @else if (translatedBio() && currentLanguage() !== 'en') {
+                    <p style="font-size:.875rem;line-height:1.75;color:var(--th-text-secondary);margin:0">
+                      {{ translatedBio() }}
+                    </p>
+                    <p style="font-size:.8rem;color:var(--th-muted);margin:0.75rem 0 0 0;font-style:italic;padding:.5rem;
+                      background:var(--th-surface-raised);border-radius:var(--th-radius);border-left:2px solid var(--th-primary)">
+                      Original: {{ candidate.bio }}
+                    </p>
+                  } @else {
+                    <p style="font-size:.875rem;line-height:1.75;color:var(--th-text-secondary);margin:0">
+                      {{ candidate.bio }}
+                    </p>
+                  }
                 </div>
               </div>
             }
@@ -859,6 +884,9 @@ type Tab = 'overview' | 'experience' | 'education' | 'documents' | 'activity';
     }
   `,
   styles: [`
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
     .activity-timeline {
       display: flex;
       flex-direction: column;
@@ -903,12 +931,16 @@ type Tab = 'overview' | 'experience' | 'education' | 'documents' | 'activity';
     }
   `],
 })
-export class CandidateProfileComponent {
+export class CandidateProfileComponent implements OnInit, OnDestroy {
   @Input() candidate: Candidate | null = null;
   @Input() contactLocked = false;
   @Input() showAdminInfo = true;
 
   private candidateSvc = inject(CandidateService);
+  private userDataTranslation = inject(UserDataTranslationService);
+  private languageService = inject(LanguageService);
+  private translate = inject(TranslateService);
+  private destroy$ = new Subject<void>();
 
   activeTab = signal<Tab>('overview');
 
@@ -916,6 +948,11 @@ export class CandidateProfileComponent {
   activity         = signal<CandidateActivity[]>([]);
   activityLoading  = signal(false);
   activityLoaded   = false;
+
+  // Translation state signals
+  translatedBio = signal<string>('');
+  isTranslatingBio = signal(false);
+  currentLanguage = signal<string>('en');
 
   readonly cvFormatLabels: Record<string, string> = {
     uk_format:         'UK Format',
@@ -935,6 +972,54 @@ export class CandidateProfileComponent {
     { id: 'documents',   label: 'Documents',   icon: 'bi-folder2-open'      },
     { id: 'activity',    label: 'Activity',    icon: 'bi-clock-history'     },
   ];
+
+  ngOnInit(): void {
+    // Listen to language changes
+    this.translate.onLangChange
+      .pipe(takeUntil(this.destroy$))
+      .subscribe((event) => {
+        this.currentLanguage.set(event.lang);
+        // Auto-translate bio when language changes (if not English)
+        if (event.lang !== 'en' && this.candidate?.bio) {
+          this.translateBioToCurrentLanguage();
+        } else if (event.lang === 'en') {
+          this.translatedBio.set('');
+        }
+      });
+
+    // Set initial language
+    this.currentLanguage.set(this.translate.currentLang || 'en');
+
+    // If not English, translate bio on init
+    if (this.currentLanguage() !== 'en' && this.candidate?.bio) {
+      this.translateBioToCurrentLanguage();
+    }
+  }
+
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
+  }
+
+  async translateBioToCurrentLanguage(): Promise<void> {
+    if (!this.candidate?.bio || this.currentLanguage() === 'en') {
+      return;
+    }
+
+    this.isTranslatingBio.set(true);
+    try {
+      const translated = await this.userDataTranslation.translateUserData(
+        this.candidate.bio,
+        this.currentLanguage()
+      );
+      this.translatedBio.set(translated);
+    } catch (error) {
+      console.error('Error translating bio:', error);
+      this.translatedBio.set('');
+    } finally {
+      this.isTranslatingBio.set(false);
+    }
+  }
 
   setTab(tab: Tab): void {
     this.activeTab.set(tab);
