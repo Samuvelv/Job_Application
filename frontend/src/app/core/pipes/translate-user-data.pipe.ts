@@ -24,16 +24,16 @@ import { map, catchError, startWith } from 'rxjs/operators';
   pure: false
 })
 export class TranslateUserDataPipe implements PipeTransform {
-  private lastValue: string = '';
+  private lastValue: string | null | undefined = '';
   private lastLang: string = '';
-  private lastResult$: Observable<string> | null = null;
+  private lastResult$: Observable<string | null | undefined> | null = null;
 
   constructor(
     private userDataTranslation: UserDataTranslationService,
     private translate: TranslateService
   ) {}
 
-  transform(value: string): Observable<string> {
+  transform(value: string | null | undefined): Observable<string | null | undefined> {
     // Return original if empty or English
     if (!value || this.translate.currentLang === 'en') {
       return of(value);

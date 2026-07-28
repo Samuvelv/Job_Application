@@ -67,9 +67,9 @@ type Tab = 'overview' | 'experience' | 'education' | 'documents' | 'activity';
             </div>
 
             <div class="profile-hero-v2__headline">
-              @if (candidate.job_title) { <span>{{ candidate.job_title }}</span> }
+              @if (candidate.job_title) { <span>{{ candidate.job_title | translateUserData | async }}</span> }
               @if (candidate.job_title && candidate.industry) { <span class="sep">·</span> }
-              @if (candidate.industry) { <span>{{ candidate.industry }}</span> }
+              @if (candidate.industry) { <span>{{ candidate.industry | translateUserData | async }}</span> }
               @if ((candidate.job_title || candidate.industry) && candidate.years_experience != null) {
                 <span class="sep">·</span>
               }
@@ -298,7 +298,7 @@ type Tab = 'overview' | 'experience' | 'education' | 'documents' | 'activity';
                       <span style="display:inline-flex;align-items:center;gap:.3rem;padding:.3rem .75rem;
                         background:var(--th-primary-soft);color:var(--th-primary);border-radius:999px;
                         font-size:.75rem;font-weight:600;border:1px solid rgba(99,102,241,.2)">
-                        {{ hobby }}
+                        {{ hobby | translateUserData | async }}
                       </span>
                     }
                   </div>
@@ -399,11 +399,11 @@ type Tab = 'overview' | 'experience' | 'education' | 'documents' | 'activity';
                     </p>
                     <p style="font-size:.8rem;color:var(--th-muted);margin:0.75rem 0 0 0;font-style:italic;padding:.5rem;
                       background:var(--th-surface-raised);border-radius:var(--th-radius);border-left:2px solid var(--th-primary)">
-                      Original: {{ candidate.bio }}
+                      Original: {{ candidate.bio | translateUserData | async }}
                     </p>
                   } @else {
                     <p style="font-size:.875rem;line-height:1.75;color:var(--th-text-secondary);margin:0">
-                      {{ candidate.bio }}
+                      {{ candidate.bio | translateUserData | async }}
                     </p>
                   }
                 </div>
@@ -530,7 +530,7 @@ type Tab = 'overview' | 'experience' | 'education' | 'documents' | 'activity';
                     @for (skill of candidate.skills; track skill.skill_name) {
                       <span class="skill-pill">
                         <span class="skill-pill__dot"></span>
-                        {{ skill.skill_name }}
+                        {{ skill.skill_name | translateUserData | async }}
                         @if (skill.proficiency) {
                           <span style="opacity:.6;font-size:.7rem">· {{ skill.proficiency }}</span>
                         }
@@ -570,10 +570,10 @@ type Tab = 'overview' | 'experience' | 'education' | 'documents' | 'activity';
               <div class="exp-timeline">
                 @for (exp of candidate.experience; track $index) {
                   <div class="exp-timeline__item">
-                    <div class="exp-timeline__title">{{ exp.job_title }}</div>
+                    <div class="exp-timeline__title">{{ exp.job_title | translateUserData | async }}</div>
                     <div class="exp-timeline__org">
                       <i class="bi bi-building" style="color:var(--th-muted);font-size:.8rem"></i>
-                      {{ exp.company_name }}
+                      {{ exp.company_name | translateUserData | async }}
                       @if (exp.location) {
                         <span class="dot">·</span>
                         <span>{{ exp.location }}</span>
@@ -586,7 +586,7 @@ type Tab = 'overview' | 'experience' | 'education' | 'documents' | 'activity';
                     </div>
                      @if (exp.description) {
                       <div class="exp-timeline__desc" style="display:flex;justify-content:space-between;align-items:flex-start;gap:1rem">
-                        <div style="flex:1">{{ exp.description }}</div>
+                        <div style="flex:1">{{ exp.description | translateUserData | async }}</div>
                         @if (currentLanguage() !== 'en') {
                           <span style="font-size:.65rem;color:var(--th-muted);font-style:italic;white-space:nowrap;margin-top:.2rem">
                             Translation available
@@ -597,7 +597,7 @@ type Tab = 'overview' | 'experience' | 'education' | 'documents' | 'activity';
                     @if (exp.reason_for_leaving) {
                       <div class="exp-timeline__period" style="margin-top:.35rem;opacity:.8">
                         <i class="bi bi-box-arrow-right"></i>
-                        Left: {{ exp.reason_for_leaving }}
+                        Left: {{ exp.reason_for_leaving | translateUserData | async }}
                       </div>
                     }
                   </div>
@@ -678,11 +678,11 @@ type Tab = 'overview' | 'experience' | 'education' | 'documents' | 'activity';
                     <div class="exp-timeline__item"
                       style="--exp-dot-bg:var(--th-emerald)">
                       <div class="exp-timeline__title">
-                        {{ edu.degree }}@if (edu.field_of_study) { <span style="font-weight:500;color:var(--th-text-secondary)"> in {{ edu.field_of_study }}</span> }
+                        {{ edu.degree | translateUserData | async }}@if (edu.field_of_study) { <span style="font-weight:500;color:var(--th-text-secondary)"> in {{ edu.field_of_study | translateUserData | async }}</span> }
                       </div>
                       <div class="exp-timeline__org">
                         <i class="bi bi-building" style="color:var(--th-muted);font-size:.8rem"></i>
-                        {{ edu.institution }}
+                        {{ edu.institution | translateUserData | async }}
                         @if (edu.location) {
                           <span class="dot">·</span>
                           <span>{{ edu.location }}</span>
@@ -745,9 +745,9 @@ type Tab = 'overview' | 'experience' | 'education' | 'documents' | 'activity';
                         </div>
                         <div class="flex-grow-1 overflow-hidden">
                           <div style="font-size:.8125rem;font-weight:600;color:var(--th-text)"
-                            class="text-truncate">{{ cert.name }}</div>
+                            class="text-truncate">{{ cert.name | translateUserData | async }}</div>
                           @if (cert.issuer) {
-                            <div style="font-size:.75rem;color:var(--th-muted)">{{ cert.issuer }}</div>
+                            <div style="font-size:.75rem;color:var(--th-muted)">{{ cert.issuer | translateUserData | async }}</div>
                           }
                           @if (cert.issue_date) {
                             <div style="font-size:.7rem;color:var(--th-muted)">
