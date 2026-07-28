@@ -1,14 +1,17 @@
 // src/app/features/candidate/volunteers/volunteer-public-profile.component.ts
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, signal, inject, OnDestroy } from '@angular/core';
 import { CommonModule }      from '@angular/common';
-import { TranslateModule } from '@ngx-translate/core';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { FormsModule }       from '@angular/forms';
 import { forkJoin, of }      from 'rxjs';
-import { catchError }        from 'rxjs/operators';
+import { catchError, takeUntil }        from 'rxjs/operators';
+import { Subject } from 'rxjs';
 
 import { VolunteerService }               from '../../../core/services/volunteer.service';
 import { VolunteerSupportRequestService } from '../../../core/services/volunteer-support-request.service';
+import { BulkTranslationService }        from '../../../core/services/bulk-translation.service';
+import { LanguageService }              from '../../../core/services/language.service';
 import { Volunteer }                      from '../../../core/models/volunteer.model';
 import { VolunteerSupportRequest }        from '../../../core/models/volunteer-support-request.model';
 
@@ -51,12 +54,16 @@ import { VolunteerSupportRequest }        from '../../../core/models/volunteer-s
             </div>
           }
 
-          <!-- Name + availability -->
-          <div class="flex-grow-1">
-            <h2 class="vpp-name mb-1">{{ volunteer.name }}</h2>
-            @if (volunteer.role) {
-              <p class="text-muted mb-2">{{ volunteer.role }}</p>
-            }
+           <!-- Name + availability -->
+           <div class="flex-grow-1">
+             <h2 class="vpp-name mb-1">{{ volunteer.name }}</h2>
+             @if (volunteer.role) {
+               @if (isTranslatingRole()) {
+                 <p class="text-muted mb-2" style="opacity:.6">Translating…</p>
+               } @else {
+                 <p class="text-muted mb-2">{{ translatedRole() || volunteer.role }}</p>
+               }
+             }
             <span class="badge"
               [class.bg-success]="volunteer.availability === 'Active'"
               [class.bg-warning]="volunteer.availability !== 'Active'"
@@ -113,17 +120,24 @@ import { VolunteerSupportRequest }        from '../../../core/models/volunteer-s
             </div>
           }
 
-          <!-- Success story -->
-          @if (volunteer.success_story) {
-            <div class="card mb-4">
-              <div class="card-header fw-semibold">
-                <i class="bi bi-chat-quote-fill me-2 text-primary"></i>Success Story
-              </div>
-              <div class="card-body">
-                <p class="vpp-story">{{ volunteer.success_story }}</p>
-              </div>
-            </div>
-          }
+           <!-- Success story -->
+           @if (volunteer.success_story) {
+             <div class="card mb-4">
+               <div class="card-header fw-semibold">
+                 <i class="bi bi-chat-quote-fill me-2 text-primary"></i>Success Story
+               </div>
+               <div class="card-body">
+                 @if (isTranslatingStory()) {
+                   <div style="display:flex;align-items:center;gap:.5rem;color:var(--th-muted);font-size:.875rem">
+                     <span style="display:inline-block;width:14px;height:14px;border:2px solid var(--th-primary);border-right:2px solid transparent;border-radius:50%;animation:spin .6s linear infinite"></span>
+                     Translating story…
+                   </div>
+                 } @else {
+                   <p class="vpp-story">{{ translatedStory() || volunteer.success_story }}</p>
+                 }
+               </div>
+             </div>
+           }
 
           <!-- Languages -->
           @if (volunteer.languages?.length) {
@@ -234,6 +248,9 @@ import { VolunteerSupportRequest }        from '../../../core/models/volunteer-s
     </ng-template>
   `,
   styles: [`
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
     .back-link {
       color: var(--bs-primary);
       text-decoration: none;
@@ -315,7 +332,7 @@ import { VolunteerSupportRequest }        from '../../../core/models/volunteer-s
     }
   `],
 })
-export class VolunteerPublicProfileComponent implements OnInit {
+export class VolunteerPublicProfileComponent implements OnInit, OnDestroy {
   volunteer:    Volunteer | null = null;
   myRequests:   VolunteerSupportRequest[] = [];
   loading = true;
@@ -326,6 +343,18 @@ export class VolunteerPublicProfileComponent implements OnInit {
   submitting  = false;
   submitError = '';
 
+  private bulkTranslation = inject(BulkTranslationService);
+  private languageService = inject(LanguageService);
+  private translate = inject(TranslateService);
+  private destroy$ = new Subject<void>();
+
+  // Translation state
+  currentLanguage = signal<string>('en');
+  translatedRole = signal<string>('');
+  translatedStory = signal<string>('');
+  isTranslatingRole = signal(false);
+  isTranslatingStory = signal(false);
+
   constructor(
     private route:          ActivatedRoute,
     private volunteerSvc:   VolunteerService,
@@ -333,6 +362,21 @@ export class VolunteerPublicProfileComponent implements OnInit {
   ) {}
 
   ngOnInit(): void {
+    // Listen to language changes
+    this.translate.onLangChange
+      .pipe(takeUntil(this.destroy$))
+      .subscribe((event) => {
+        this.currentLanguage.set(event.lang);
+        this.bulkTranslation.clearCache();
+        this.resetAllTranslations();
+        if (event.lang !== 'en' && this.volunteer) {
+          this.translateAllSections();
+        }
+      });
+
+    // Set initial language
+    this.currentLanguage.set(this.translate.currentLang || 'en');
+
     const id = this.route.snapshot.paramMap.get('id');
     if (!id) { this.error = 'Invalid volunteer ID.'; this.loading = false; return; }
 
@@ -344,12 +388,69 @@ export class VolunteerPublicProfileComponent implements OnInit {
         this.volunteer  = vol.volunteer;
         this.myRequests = mine.supportRequests;
         this.loading    = false;
+
+        // Translate if not English
+        if (this.currentLanguage() !== 'en') {
+          this.translateAllSections();
+        }
       },
       error: (err) => {
         this.error   = err?.error?.message ?? 'Failed to load volunteer profile.';
         this.loading = false;
       },
     });
+  }
+
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
+  }
+
+  private resetAllTranslations(): void {
+    this.translatedRole.set('');
+    this.translatedStory.set('');
+  }
+
+  private async translateAllSections(): Promise<void> {
+    if (this.currentLanguage() === 'en' || !this.volunteer) return;
+    await Promise.all([
+      this.translateRoleSection(),
+      this.translateStorySection(),
+    ]);
+  }
+
+  private async translateRoleSection(): Promise<void> {
+    if (!this.volunteer?.role || this.currentLanguage() === 'en') return;
+    
+    this.isTranslatingRole.set(true);
+    try {
+      const translated = await this.bulkTranslation.translateSection(
+        { role: this.volunteer.role },
+        this.currentLanguage()
+      );
+      this.translatedRole.set(translated['role'] || '');
+    } catch (error) {
+      console.error('Error translating role section:', error);
+    } finally {
+      this.isTranslatingRole.set(false);
+    }
+  }
+
+  private async translateStorySection(): Promise<void> {
+    if (!this.volunteer?.success_story || this.currentLanguage() === 'en') return;
+    
+    this.isTranslatingStory.set(true);
+    try {
+      const translated = await this.bulkTranslation.translateSection(
+        { story: this.volunteer.success_story },
+        this.currentLanguage()
+      );
+      this.translatedStory.set(translated['story'] || '');
+    } catch (error) {
+      console.error('Error translating success story:', error);
+    } finally {
+      this.isTranslatingStory.set(false);
+    }
   }
 
   /** True if an active (pending or connected) request exists for this volunteer */

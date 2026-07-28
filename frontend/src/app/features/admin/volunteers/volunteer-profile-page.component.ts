@@ -1,12 +1,16 @@
 // src/app/features/admin/volunteers/volunteer-profile-page.component.ts
-import { Component, OnInit, computed, signal } from '@angular/core';
+import { Component, OnInit, computed, signal, inject, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
+import { Subject } from 'rxjs';
+import { takeUntil } from 'rxjs/operators';
 import { VolunteerService } from '../../../core/services/volunteer.service';
 import { MasterDataService } from '../../../core/services/master-data.service';
 import { ToastService } from '../../../core/services/toast.service';
 import { ConfirmDialogService } from '../../../core/services/confirm-dialog.service';
+import { BulkTranslationService } from '../../../core/services/bulk-translation.service';
+import { LanguageService } from '../../../core/services/language.service';
 import { Volunteer } from '../../../core/models/volunteer.model';
 import { TranslateUserDataPipe } from '../../../core/pipes/translate-user-data.pipe';
 
@@ -93,9 +97,13 @@ type Tab = 'overview' | 'contact';
               </span>
             </div>
 
-            @if (volunteer.role) {
-              <div class="vp-hero__role">{{ volunteer.role }}</div>
-            }
+             @if (volunteer.role) {
+               @if (isTranslatingRole()) {
+                 <div class="vp-hero__role" style="opacity:.6">Translating…</div>
+               } @else {
+                 <div class="vp-hero__role">{{ translatedRole() || volunteer.role }}</div>
+               }
+             }
 
             <!-- Meta chips -->
             <div class="vp-hero__chips mt-2">
@@ -172,16 +180,23 @@ type Tab = 'overview' | 'contact';
           <!-- Left col -->
           <div class="vp-col">
 
-            @if (volunteer.success_story) {
-              <div class="section-card mb-3">
-                 <div class="section-card__header">
-                   <span class="section-card__title"><i class="bi bi-chat-quote-fill"></i> {{ 'VOLUNTEER_PROFILE.success_story' | translate }}</span>
+             @if (volunteer.success_story) {
+               <div class="section-card mb-3">
+                  <div class="section-card__header">
+                    <span class="section-card__title"><i class="bi bi-chat-quote-fill"></i> {{ 'VOLUNTEER_PROFILE.success_story' | translate }}</span>
+                  </div>
+                 <div class="section-card__body">
+                   @if (isTranslatingStory()) {
+                     <div style="display:flex;align-items:center;gap:.5rem;color:var(--th-muted);font-size:.875rem">
+                       <span style="display:inline-block;width:14px;height:14px;border:2px solid var(--th-primary);border-right:2px solid transparent;border-radius:50%;animation:spin .6s linear infinite"></span>
+                       Translating story…
+                     </div>
+                   } @else {
+                     <p class="vp-story-text">{{ translatedStory() || volunteer.success_story }}</p>
+                   }
                  </div>
-                <div class="section-card__body">
-                  <p class="vp-story-text">{{ volunteer.success_story }}</p>
-                </div>
-              </div>
-            }
+               </div>
+             }
 
             @if (volunteer.languages?.length) {
               <div class="section-card mb-3">
@@ -387,6 +402,9 @@ type Tab = 'overview' | 'contact';
     }
 
     <style>
+      @keyframes spin {
+        to { transform: rotate(360deg); }
+      }
       /* ── Hero ─────────────────────────── */
       .vp-hero {
         background: var(--th-surface, #fff);
@@ -562,11 +580,21 @@ type Tab = 'overview' | 'contact';
     </style>
   `,
 })
-export class VolunteerProfilePageComponent implements OnInit {
+export class VolunteerProfilePageComponent implements OnInit, OnDestroy {
   volunteer: Volunteer | null = null;
   loadError = '';
   toggling  = false;
   activeTab = signal<Tab>('overview');
+
+  // Translation state
+  private bulkTranslation = inject(BulkTranslationService);
+  private languageService = inject(LanguageService);
+  private destroy$ = new Subject<void>();
+  currentLanguage = signal<string>('en');
+  translatedRole = signal<string>('');
+  translatedStory = signal<string>('');
+  isTranslatingRole = signal(false);
+  isTranslatingStory = signal(false);
 
   private readonly flagMap = computed<Map<string, string>>(() => {
     const map = new Map<string, string>();
@@ -585,12 +613,84 @@ export class VolunteerProfilePageComponent implements OnInit {
   ) {}
 
   ngOnInit(): void {
+    // Listen to language changes
+    this.translate.onLangChange
+      .pipe(takeUntil(this.destroy$))
+      .subscribe((event) => {
+        this.currentLanguage.set(event.lang);
+        this.bulkTranslation.clearCache();
+        this.resetAllTranslations();
+        if (event.lang !== 'en' && this.volunteer) {
+          this.translateAllSections();
+        }
+      });
+
+    // Set initial language
+    this.currentLanguage.set(this.translate.currentLang || 'en');
+
     this.master.loadAll();
     const id = this.route.snapshot.paramMap.get('id')!;
     this.volunteerSvc.getById(id).subscribe({
-      next: (res) => (this.volunteer = res.volunteer),
+      next: (res) => {
+        this.volunteer = res.volunteer;
+        if (this.currentLanguage() !== 'en') {
+          this.translateAllSections();
+        }
+      },
       error: () => (this.loadError = 'Volunteer not found or failed to load.'),
     });
+  }
+
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
+  }
+
+  private resetAllTranslations(): void {
+    this.translatedRole.set('');
+    this.translatedStory.set('');
+  }
+
+  private async translateAllSections(): Promise<void> {
+    if (this.currentLanguage() === 'en' || !this.volunteer) return;
+    await Promise.all([
+      this.translateRoleSection(),
+      this.translateStorySection(),
+    ]);
+  }
+
+  private async translateRoleSection(): Promise<void> {
+    if (!this.volunteer?.role || this.currentLanguage() === 'en') return;
+    
+    this.isTranslatingRole.set(true);
+    try {
+      const translated = await this.bulkTranslation.translateSection(
+        { role: this.volunteer.role },
+        this.currentLanguage()
+      );
+      this.translatedRole.set(translated['role'] || '');
+    } catch (error) {
+      console.error('Error translating role section:', error);
+    } finally {
+      this.isTranslatingRole.set(false);
+    }
+  }
+
+  private async translateStorySection(): Promise<void> {
+    if (!this.volunteer?.success_story || this.currentLanguage() === 'en') return;
+    
+    this.isTranslatingStory.set(true);
+    try {
+      const translated = await this.bulkTranslation.translateSection(
+        { story: this.volunteer.success_story },
+        this.currentLanguage()
+      );
+      this.translatedStory.set(translated['story'] || '');
+    } catch (error) {
+      console.error('Error translating success story:', error);
+    } finally {
+      this.isTranslatingStory.set(false);
+    }
   }
 
   initials(name: string): string {

@@ -1,9 +1,13 @@
 // src/app/features/admin/recruiter-profile/recruiter-profile-page.component.ts
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
+import { Subject } from 'rxjs';
+import { takeUntil } from 'rxjs/operators';
 import { RecruiterService } from '../../../core/services/recruiter.service';
+import { BulkTranslationService } from '../../../core/services/bulk-translation.service';
+import { LanguageService } from '../../../core/services/language.service';
 import { Recruiter, ShortlistEntry } from '../../../core/models/recruiter.model';
 import { ToastService } from '../../../core/services/toast.service';
 import { ConfirmDialogService } from '../../../core/services/confirm-dialog.service';
@@ -570,17 +574,17 @@ import { TranslateUserDataPipe } from '../../../core/pipes/translate-user-data.p
                   <div class="sl-row__main">
                     <div class="sl-row__name">{{ entry.first_name }} {{ entry.last_name }}</div>
                     <div class="sl-row__email">{{ entry.email }}</div>
-                    <div class="sl-row__chips">
-                      @if (entry.job_title || entry.occupation) {
-                        <span class="sl-chip sl-chip--role">
-                          <i class="bi bi-briefcase-fill"></i>{{ entry.job_title || entry.occupation }}
-                        </span>
-                      }
-                      @if (entry.industry) {
-                        <span class="sl-chip sl-chip--industry">
-                          <i class="bi bi-building"></i>{{ entry.industry }}
-                        </span>
-                      }
+                     <div class="sl-row__chips">
+                       @if (entry.job_title || entry.occupation) {
+                         <span class="sl-chip sl-chip--role">
+                           <i class="bi bi-briefcase-fill"></i>{{ translatedShortlist()[$index]?.['job_title'] || entry.job_title || translatedShortlist()[$index]?.['occupation'] || entry.occupation }}
+                         </span>
+                       }
+                       @if (entry.industry) {
+                         <span class="sl-chip sl-chip--industry">
+                           <i class="bi bi-building"></i>{{ translatedShortlist()[$index]?.['industry'] || entry.industry }}
+                         </span>
+                       }
                       @if (entry.current_country) {
                         <span class="sl-chip sl-chip--location">
                           <i class="bi bi-geo-alt-fill"></i>{{ entry.current_city ? entry.current_city + ', ' : '' }}{{ entry.current_country }}
@@ -612,12 +616,20 @@ import { TranslateUserDataPipe } from '../../../core/pipes/translate-user-data.p
     }
   `,
 })
-export class RecruiterProfilePageComponent implements OnInit {
+export class RecruiterProfilePageComponent implements OnInit, OnDestroy {
   recruiterId = '';
   recruiter: Recruiter | null = null;
   shortlist: ShortlistEntry[] = [];
   loadError = '';
   shortlistLoading = false;
+
+  // Translation state
+  private bulkTranslation = inject(BulkTranslationService);
+  private languageService = inject(LanguageService);
+  private destroy$ = new Subject<void>();
+  currentLanguage = signal<string>('en');
+  translatedShortlist = signal<Record<number, Record<string, string>>>({});
+  isTranslatingShortlist = signal(false);
 
   constructor(
     private route: ActivatedRoute,
@@ -629,9 +641,57 @@ export class RecruiterProfilePageComponent implements OnInit {
   ) {}
 
   ngOnInit(): void {
+    // Listen to language changes
+    this.translate.onLangChange
+      .pipe(takeUntil(this.destroy$))
+      .subscribe((event) => {
+        this.currentLanguage.set(event.lang);
+        this.bulkTranslation.clearCache();
+        this.translatedShortlist.set({});
+        if (event.lang !== 'en' && this.shortlist.length > 0) {
+          this.translateShortlistSection();
+        }
+      });
+
+    // Set initial language
+    this.currentLanguage.set(this.translate.currentLang || 'en');
+
     this.recruiterId = this.route.snapshot.paramMap.get('id') ?? '';
     if (!this.recruiterId) { this.loadError = 'Invalid recruiter ID.'; return; }
     this.load();
+  }
+
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
+  }
+
+  private async translateShortlistSection(): Promise<void> {
+    if (this.shortlist.length === 0 || this.currentLanguage() === 'en') return;
+
+    this.isTranslatingShortlist.set(true);
+    try {
+      const translated: Record<number, Record<string, string>> = {};
+
+      // Translate each candidate's fields
+      for (let i = 0; i < this.shortlist.length; i++) {
+        const entry = this.shortlist[i];
+        const fields: Record<string, string | null | undefined> = {
+          job_title: entry.job_title,
+          occupation: entry.occupation,
+          industry: entry.industry,
+        };
+
+        const result = await this.bulkTranslation.translateSection(fields, this.currentLanguage());
+        translated[i] = result;
+      }
+
+      this.translatedShortlist.set(translated);
+    } catch (error) {
+      console.error('Error translating shortlist:', error);
+    } finally {
+      this.isTranslatingShortlist.set(false);
+    }
   }
 
   isExpired(dateStr: string): boolean {
@@ -657,7 +717,14 @@ export class RecruiterProfilePageComponent implements OnInit {
   private loadShortlist(): void {
     this.shortlistLoading = true;
     this.recruiterSvc.getShortlistById(this.recruiterId).subscribe({
-      next: (res) => { this.shortlist = res.shortlist; this.shortlistLoading = false; },
+      next: (res) => {
+        this.shortlist = res.shortlist;
+        this.shortlistLoading = false;
+        // Translate if not English
+        if (this.currentLanguage() !== 'en') {
+          this.translateShortlistSection();
+        }
+      },
       error: () => { this.shortlistLoading = false; },
     });
   }
