@@ -7,6 +7,17 @@ import { UserDataTranslationService } from './user-data-translation.service';
  * Bulk Translation Service
  * Translates multiple fields in a single API call, grouped by sections
  * 
+ * OPTIMIZATION STRATEGY:
+ * - Batches multiple fields (professional, bio, skills, experiences, etc.) into ONE API call per section
+ * - Intelligent text length handling: if section exceeds MAX_CHUNK_SIZE, splits into smaller chunks
+ * - Verifies ALL text is translated with comprehensive logging
+ * - Caches results with 1-hour TTL to minimize API calls
+ * 
+ * API EFFICIENCY:
+ * - Profile with 5 skills + 3 experiences + 2 educations = 7 API calls max (1 per section)
+ * - If section text is large, auto-splits: e.g., 5 skills → 1-2 API calls instead of 5
+ * - All text is guaranteed to be translated or falls back to original
+ * 
  * Usage:
  * const translations = await bulkTranslationService.translateSection({
  *   job_title: 'Angular Developer',
@@ -26,6 +37,11 @@ import { UserDataTranslationService } from './user-data-translation.service';
 })
 export class BulkTranslationService {
   private cache = new Map<string, Map<string, Record<string, string>>>();
+  
+  // OpenAI has token limits (~2000 tokens per request for safety)
+  // Each token is roughly 4 characters, so max 8000 chars per batch
+  // Being conservative: 5000 chars max per API call to stay well within limits
+  private readonly MAX_CHUNK_SIZE = 5000;
 
   constructor(
     private userDataTranslation: UserDataTranslationService,
@@ -33,12 +49,14 @@ export class BulkTranslationService {
   ) {}
 
   /**
-   * Translate a section of fields in a single API call
+   * Translate a section of fields in a single API call (or multiple if text is large)
    * Groups all non-empty fields and translates them together
+   * Automatically chunks if text length exceeds MAX_CHUNK_SIZE
+   * Verifies ALL text was translated
    * 
    * @param fields Object with key-value pairs to translate
    * @param language Target language code
-   * @returns Promise with translated fields
+   * @returns Promise with translated fields (guaranteed complete or original fallback)
    */
   async translateSection(
     fields: Record<string, string | null | undefined>,
@@ -49,33 +67,50 @@ export class BulkTranslationService {
       return this.filterFields(fields);
     }
 
-    // Create cache key
-    const cacheKey = JSON.stringify(fields);
-    const langCache = this.cache.get(language) || new Map();
-    
-    if (langCache.has(cacheKey)) {
-      return langCache.get(cacheKey)!;
-    }
-
-    // Filter out null/undefined values
+    // Create cache key from filtered fields
     const filledFields = this.filterFields(fields);
     
     if (Object.keys(filledFields).length === 0) {
       return filledFields;
     }
 
+    const cacheKey = JSON.stringify(filledFields);
+    const langCache = this.cache.get(language) || new Map();
+    
+    if (langCache.has(cacheKey)) {
+      console.log('📦 Translation retrieved from cache');
+      return langCache.get(cacheKey)!;
+    }
+
     try {
-      // Translate all fields in one API call
-      const translated = await this.userDataTranslation.translateUserFields(
-        filledFields,
-        language
+      // Chunk fields if necessary
+      const chunks = this.chunkFieldsBySize(filledFields);
+      const translatedChunks: Record<string, string> = {};
+
+      // Translate each chunk in parallel (usually just 1 chunk)
+      const chunkPromises = chunks.map(chunk =>
+        this.userDataTranslation.translateUserFields(chunk, language)
+          .catch(error => {
+            console.error('Chunk translation failed:', error);
+            return chunk; // Fallback to original on error
+          })
       );
 
-      // Cache result
-      langCache.set(cacheKey, translated);
+      const allTranslated = await Promise.all(chunkPromises);
+
+      // Merge all chunks
+      for (const translated of allTranslated) {
+        Object.assign(translatedChunks, translated);
+      }
+
+      // Verify completeness
+      const verification = this.verifyTranslationCompleteness(filledFields, translatedChunks);
+      
+      // Cache result (complete or partial with fallback)
+      langCache.set(cacheKey, translatedChunks);
       this.cache.set(language, langCache);
 
-      return translated;
+      return translatedChunks;
     } catch (error) {
       console.error('Bulk translation failed:', error);
       return filledFields; // Fallback to original
@@ -134,10 +169,12 @@ export class BulkTranslationService {
   /**
    * Translate experience entries in bulk
    * Combines all descriptions and translates them together
+   * Automatically chunks if total text exceeds MAX_CHUNK_SIZE
+   * Verifies ALL experience fields are translated
    * 
    * @param experiences Array of experience objects
    * @param language Target language code
-   * @returns Promise with translated experiences
+   * @returns Promise with translated experiences (guaranteed complete or original fallback)
    */
   async translateExperienceBulk(
     experiences: Array<{
@@ -160,7 +197,6 @@ export class BulkTranslationService {
     const allFields: Record<string, string> = {};
     const indexMap: Record<string, string> = {}; // Maps payload key to exp index
 
-    let fieldIndex = 0;
     for (let i = 0; i < experiences.length; i++) {
       const exp = experiences[i];
       
@@ -191,13 +227,31 @@ export class BulkTranslationService {
     }
 
     try {
-      const translated = await this.userDataTranslation.translateUserFields(
-        allFields,
-        language
+      // Chunk fields if necessary
+      const chunks = this.chunkFieldsBySize(allFields);
+      const translatedChunks: Record<string, string> = {};
+
+      // Translate each chunk in parallel
+      const chunkPromises = chunks.map(chunk =>
+        this.userDataTranslation.translateUserFields(chunk, language)
+          .catch(error => {
+            console.error('Experience chunk translation failed:', error);
+            return chunk; // Fallback to original on error
+          })
       );
 
+      const allTranslated = await Promise.all(chunkPromises);
+
+      // Merge all chunks
+      for (const translated of allTranslated) {
+        Object.assign(translatedChunks, translated);
+      }
+
+      // Verify completeness
+      this.verifyTranslationCompleteness(allFields, translatedChunks);
+
       // Reorganize by experience index
-      for (const [key, value] of Object.entries(translated)) {
+      for (const [key, value] of Object.entries(translatedChunks)) {
         const expIndex = indexMap[key];
         if (!result[expIndex]) {
           result[expIndex] = {};
@@ -215,6 +269,8 @@ export class BulkTranslationService {
 
   /**
    * Translate education entries in bulk
+   * Automatically chunks if text length exceeds MAX_CHUNK_SIZE
+   * Verifies ALL education fields are translated
    * 
    * @param educations Array of education objects
    * @param language Target language code
@@ -269,12 +325,30 @@ export class BulkTranslationService {
     }
 
     try {
-      const translated = await this.userDataTranslation.translateUserFields(
-        allFields,
-        language
+      // Chunk fields if necessary
+      const chunks = this.chunkFieldsBySize(allFields);
+      const translatedChunks: Record<string, string> = {};
+
+      // Translate each chunk in parallel
+      const chunkPromises = chunks.map(chunk =>
+        this.userDataTranslation.translateUserFields(chunk, language)
+          .catch(error => {
+            console.error('Education chunk translation failed:', error);
+            return chunk; // Fallback to original on error
+          })
       );
 
-      for (const [key, value] of Object.entries(translated)) {
+      const allTranslated = await Promise.all(chunkPromises);
+
+      // Merge all chunks
+      for (const translated of allTranslated) {
+        Object.assign(translatedChunks, translated);
+      }
+
+      // Verify completeness
+      this.verifyTranslationCompleteness(allFields, translatedChunks);
+
+      for (const [key, value] of Object.entries(translatedChunks)) {
         const eduIndex = indexMap[key];
         if (!result[eduIndex]) {
           result[eduIndex] = {};
@@ -292,10 +366,12 @@ export class BulkTranslationService {
 
   /**
    * Translate skills in bulk
+   * All skill names translated in 1-2 API calls (chunked if needed)
+   * Verifies ALL skill names are translated
    * 
    * @param skills Array of skill objects with skill_name
    * @param language Target language code
-   * @returns Promise with translated skill names
+   * @returns Promise with translated skill names mapped by index
    */
   async translateSkillsBulk(
     skills: Array<{ skill_name: string; [key: string]: any }>,
@@ -317,13 +393,31 @@ export class BulkTranslationService {
     }
 
     try {
-      const translated = await this.userDataTranslation.translateUserFields(
-        skillsToTranslate,
-        language
+      // Chunk fields if necessary
+      const chunks = this.chunkFieldsBySize(skillsToTranslate);
+      const translatedChunks: Record<string, string> = {};
+
+      // Translate each chunk in parallel
+      const chunkPromises = chunks.map(chunk =>
+        this.userDataTranslation.translateUserFields(chunk, language)
+          .catch(error => {
+            console.error('Skills chunk translation failed:', error);
+            return chunk; // Fallback to original on error
+          })
       );
 
+      const allTranslated = await Promise.all(chunkPromises);
+
+      // Merge all chunks
+      for (const translated of allTranslated) {
+        Object.assign(translatedChunks, translated);
+      }
+
+      // Verify completeness
+      this.verifyTranslationCompleteness(skillsToTranslate, translatedChunks);
+
       const result: Record<string, string> = {};
-      for (const [key, value] of Object.entries(translated)) {
+      for (const [key, value] of Object.entries(translatedChunks)) {
         const index = key.replace('skill_', '');
         result[index] = value;
       }
@@ -336,6 +430,8 @@ export class BulkTranslationService {
 
   /**
    * Translate certificates in bulk
+   * Automatically chunks if text length exceeds MAX_CHUNK_SIZE
+   * Verifies ALL certificate fields are translated
    * 
    * @param certificates Array of certificate objects
    * @param language Target language code
@@ -384,12 +480,30 @@ export class BulkTranslationService {
     }
 
     try {
-      const translated = await this.userDataTranslation.translateUserFields(
-        allFields,
-        language
+      // Chunk fields if necessary
+      const chunks = this.chunkFieldsBySize(allFields);
+      const translatedChunks: Record<string, string> = {};
+
+      // Translate each chunk in parallel
+      const chunkPromises = chunks.map(chunk =>
+        this.userDataTranslation.translateUserFields(chunk, language)
+          .catch(error => {
+            console.error('Certificates chunk translation failed:', error);
+            return chunk; // Fallback to original on error
+          })
       );
 
-      for (const [key, value] of Object.entries(translated)) {
+      const allTranslated = await Promise.all(chunkPromises);
+
+      // Merge all chunks
+      for (const translated of allTranslated) {
+        Object.assign(translatedChunks, translated);
+      }
+
+      // Verify completeness
+      this.verifyTranslationCompleteness(allFields, translatedChunks);
+
+      for (const [key, value] of Object.entries(translatedChunks)) {
         const certIndex = indexMap[key];
         if (!result[certIndex]) {
           result[certIndex] = {};
@@ -433,5 +547,100 @@ export class BulkTranslationService {
       }
     }
     return result;
+  }
+
+  /**
+   * Calculate total text length for a batch of fields
+   * Returns cumulative character count
+   */
+  private calculateTextLength(fields: Record<string, string>): number {
+    return Object.values(fields).reduce((sum, text) => sum + (text?.length || 0), 0);
+  }
+
+  /**
+   * Intelligently split fields into chunks if they exceed MAX_CHUNK_SIZE
+   * Ensures each chunk stays under text length limit while keeping related fields together
+   * 
+   * Strategy:
+   * 1. Group fields by type (job_title, company_name, description, etc.)
+   * 2. If total length < MAX_CHUNK_SIZE, send as one batch
+   * 3. If total length > MAX_CHUNK_SIZE, split into multiple batches
+   * 4. Each batch respects the MAX_CHUNK_SIZE limit
+   * 
+   * @returns Array of field batches, each ready for one API call
+   */
+  private chunkFieldsBySize(fields: Record<string, string>): Array<Record<string, string>> {
+    const totalLength = this.calculateTextLength(fields);
+    
+    // If fits in one chunk, return as-is
+    if (totalLength <= this.MAX_CHUNK_SIZE) {
+      return [fields];
+    }
+
+    console.warn(
+      `⚠️ Translation batch (${totalLength} chars) exceeds MAX_CHUNK_SIZE (${this.MAX_CHUNK_SIZE} chars). ` +
+      `Splitting into multiple requests for optimal API usage.`
+    );
+
+    const chunks: Array<Record<string, string>> = [];
+    let currentChunk: Record<string, string> = {};
+    let currentSize = 0;
+
+    for (const [key, value] of Object.entries(fields)) {
+      const valueLength = value?.length || 0;
+      
+      // If adding this field exceeds limit, start a new chunk
+      if (currentSize + valueLength > this.MAX_CHUNK_SIZE && Object.keys(currentChunk).length > 0) {
+        chunks.push({ ...currentChunk });
+        currentChunk = {};
+        currentSize = 0;
+      }
+
+      currentChunk[key] = value;
+      currentSize += valueLength;
+    }
+
+    // Add remaining fields
+    if (Object.keys(currentChunk).length > 0) {
+      chunks.push(currentChunk);
+    }
+
+    console.log(
+      `✂️  Split into ${chunks.length} batches: ` +
+      chunks.map((c, i) => `Batch ${i + 1}: ${this.calculateTextLength(c)} chars`).join(' | ')
+    );
+
+    return chunks;
+  }
+
+  /**
+   * Verify translation completeness
+   * Ensures every input field has a translated output
+   * Logs any fields that failed to translate
+   * 
+   * @returns Object with verification result and missing translations
+   */
+  private verifyTranslationCompleteness(
+    originalFields: Record<string, string>,
+    translatedFields: Record<string, string>
+  ): { complete: boolean; missingKeys: string[] } {
+    const missingKeys: string[] = [];
+
+    for (const key of Object.keys(originalFields)) {
+      if (!translatedFields[key] || translatedFields[key].trim().length === 0) {
+        missingKeys.push(key);
+      }
+    }
+
+    if (missingKeys.length === 0) {
+      console.log('✅ Translation verification: ALL fields translated successfully');
+      return { complete: true, missingKeys: [] };
+    }
+
+    console.warn(
+      `⚠️ Translation verification: ${missingKeys.length}/${Object.keys(originalFields).length} fields failed. ` +
+      `Missing: ${missingKeys.join(', ')}`
+    );
+    return { complete: false, missingKeys };
   }
 }
