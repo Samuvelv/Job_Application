@@ -4,9 +4,8 @@ import { CommonModule } from '@angular/common';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { Candidate } from '../../../core/models/candidate.model';
 import { CandidateService, CandidateActivity } from '../../../core/services/candidate.service';
-import { UserDataTranslationService } from '../../../core/services/user-data-translation.service';
+import { BulkTranslationService } from '../../../core/services/bulk-translation.service';
 import { LanguageService } from '../../../core/services/language.service';
-import { TranslateUserDataPipe } from '../../../core/pipes/translate-user-data.pipe';
 import { Subject } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
 
@@ -15,7 +14,7 @@ type Tab = 'overview' | 'experience' | 'education' | 'documents' | 'activity';
 @Component({
   selector: 'app-candidate-profile',
   standalone: true,
-  imports: [CommonModule, TranslateModule, TranslateUserDataPipe],
+  imports: [CommonModule, TranslateModule],
   template: `
     @if (!candidate) {
       <div class="loading-state">
@@ -67,9 +66,21 @@ type Tab = 'overview' | 'experience' | 'education' | 'documents' | 'activity';
             </div>
 
             <div class="profile-hero-v2__headline">
-              @if (candidate.job_title) { <span>{{ candidate.job_title | translateUserData | async }}</span> }
+              @if (candidate.job_title) { 
+                @if (isTranslatingProfessional()) {
+                  <span style="opacity:.6">Translating…</span>
+                } @else {
+                  <span>{{ translatedProfessional()['job_title'] || candidate.job_title }}</span>
+                }
+              }
               @if (candidate.job_title && candidate.industry) { <span class="sep">·</span> }
-              @if (candidate.industry) { <span>{{ candidate.industry | translateUserData | async }}</span> }
+              @if (candidate.industry) { 
+                @if (isTranslatingProfessional()) {
+                  <span style="opacity:.6">Translating…</span>
+                } @else {
+                  <span>{{ translatedProfessional()['industry'] || candidate.industry }}</span>
+                }
+              }
               @if ((candidate.job_title || candidate.industry) && candidate.years_experience != null) {
                 <span class="sep">·</span>
               }
@@ -293,15 +304,23 @@ type Tab = 'overview' | 'experience' | 'education' | 'documents' | 'activity';
                   <h6>Hobbies &amp; Interests</h6>
                 </div>
                 <div class="profile-section-card__body">
-                  <div class="d-flex flex-wrap gap-2">
-                    @for (hobby of candidate.hobbies; track hobby) {
-                      <span style="display:inline-flex;align-items:center;gap:.3rem;padding:.3rem .75rem;
-                        background:var(--th-primary-soft);color:var(--th-primary);border-radius:999px;
-                        font-size:.75rem;font-weight:600;border:1px solid rgba(99,102,241,.2)">
-                        {{ hobby | translateUserData | async }}
-                      </span>
-                    }
-                  </div>
+                  @if (isTranslatingHobbies()) {
+                    <div style="display:flex;align-items:center;gap:.5rem;color:var(--th-muted);font-size:.875rem">
+                      <span style="display:inline-block;width:14px;height:14px;border:2px solid var(--th-primary);
+                        border-right:2px solid transparent;border-radius:50%;animation:spin .6s linear infinite"></span>
+                      Translating hobbies…
+                    </div>
+                  } @else {
+                    <div class="d-flex flex-wrap gap-2">
+                      @for (hobby of candidate.hobbies; track $index) {
+                        <span style="display:inline-flex;align-items:center;gap:.3rem;padding:.3rem .75rem;
+                          background:var(--th-primary-soft);color:var(--th-primary);border-radius:999px;
+                          font-size:.75rem;font-weight:600;border:1px solid rgba(99,102,241,.2)">
+                          {{ translatedHobbies()[$index] || hobby }}
+                        </span>
+                      }
+                    </div>
+                  }
                 </div>
               </div>
             }
@@ -393,19 +412,19 @@ type Tab = 'overview' | 'experience' | 'education' | 'documents' | 'activity';
                         border-right:2px solid transparent;border-radius:50%;animation:spin .6s linear infinite"></span>
                       Translating…
                     </div>
-                  } @else if (translatedBio() && currentLanguage() !== 'en') {
-                    <p style="font-size:.875rem;line-height:1.75;color:var(--th-text-secondary);margin:0">
-                      {{ translatedBio() }}
-                    </p>
-                    <p style="font-size:.8rem;color:var(--th-muted);margin:0.75rem 0 0 0;font-style:italic;padding:.5rem;
-                      background:var(--th-surface-raised);border-radius:var(--th-radius);border-left:2px solid var(--th-primary)">
-                      Original: {{ candidate.bio | translateUserData | async }}
-                    </p>
-                  } @else {
-                    <p style="font-size:.875rem;line-height:1.75;color:var(--th-text-secondary);margin:0">
-                      {{ candidate.bio | translateUserData | async }}
-                    </p>
-                  }
+                   } @else if (translatedBio() && currentLanguage() !== 'en') {
+                     <p style="font-size:.875rem;line-height:1.75;color:var(--th-text-secondary);margin:0">
+                       {{ translatedBio() }}
+                     </p>
+                     <p style="font-size:.8rem;color:var(--th-muted);margin:0.75rem 0 0 0;font-style:italic;padding:.5rem;
+                       background:var(--th-surface-raised);border-radius:var(--th-radius);border-left:2px solid var(--th-primary)">
+                       Original: {{ candidate.bio }}
+                     </p>
+                   } @else {
+                     <p style="font-size:.875rem;line-height:1.75;color:var(--th-text-secondary);margin:0">
+                       {{ candidate.bio }}
+                     </p>
+                   }
                 </div>
               </div>
             }
@@ -426,13 +445,13 @@ type Tab = 'overview' | 'experience' | 'education' | 'documents' | 'activity';
                        border:1px solid var(--th-border)">
                        <div style="font-size:.7rem;text-transform:uppercase;letter-spacing:.06em;
                          color:var(--th-muted);font-weight:600;margin-bottom:.3rem">Occupation</div>
-                       <div style="font-size:.875rem;font-weight:600;color:var(--th-text)">
-                         @if (translatedProfessionalDetails()?.occupation && currentLanguage() !== 'en') {
-                           {{ translatedProfessionalDetails().occupation }}
-                         } @else {
-                           {{ candidate.occupation || '—' }}
-                         }
-                       </div>
+                        <div style="font-size:.875rem;font-weight:600;color:var(--th-text)">
+                          @if (translatedProfessional()['occupation'] && currentLanguage() !== 'en') {
+                            {{ translatedProfessional()['occupation'] }}
+                          } @else {
+                            {{ candidate.occupation || '—' }}
+                          }
+                        </div>
                      </div>
                    </div>
                    <div class="col-sm-6">
@@ -440,13 +459,13 @@ type Tab = 'overview' | 'experience' | 'education' | 'documents' | 'activity';
                        border:1px solid var(--th-border)">
                        <div style="font-size:.7rem;text-transform:uppercase;letter-spacing:.06em;
                          color:var(--th-muted);font-weight:600;margin-bottom:.3rem">Industry</div>
-                       <div style="font-size:.875rem;font-weight:600;color:var(--th-text)">
-                         @if (translatedProfessionalDetails()?.industry && currentLanguage() !== 'en') {
-                           {{ translatedProfessionalDetails().industry }}
-                         } @else {
-                           {{ candidate.industry || '—' }}
-                         }
-                       </div>
+                        <div style="font-size:.875rem;font-weight:600;color:var(--th-text)">
+                          @if (translatedProfessional()['industry'] && currentLanguage() !== 'en') {
+                            {{ translatedProfessional()['industry'] }}
+                          } @else {
+                            {{ candidate.industry || '—' }}
+                          }
+                        </div>
                      </div>
                    </div>
                   <div class="col-sm-6">
@@ -477,13 +496,13 @@ type Tab = 'overview' | 'experience' | 'education' | 'documents' | 'activity';
                        border:1px solid var(--th-border)">
                        <div style="font-size:.7rem;text-transform:uppercase;letter-spacing:.06em;
                          color:var(--th-muted);font-weight:600;margin-bottom:.3rem">Job Title</div>
-                       <div style="font-size:.875rem;font-weight:600;color:var(--th-text)">
-                         @if (translatedProfessionalDetails()?.job_title && currentLanguage() !== 'en') {
-                           {{ translatedProfessionalDetails().job_title }}
-                         } @else {
-                           {{ candidate.job_title || '—' }}
-                         }
-                       </div>
+                        <div style="font-size:.875rem;font-weight:600;color:var(--th-text)">
+                          @if (translatedProfessional()['job_title'] && currentLanguage() !== 'en') {
+                            {{ translatedProfessional()['job_title'] }}
+                          } @else {
+                            {{ candidate.job_title || '—' }}
+                          }
+                        </div>
                      </div>
                    </div>
                   <div class="col-sm-6">
@@ -526,17 +545,25 @@ type Tab = 'overview' | 'experience' | 'education' | 'documents' | 'activity';
                   </span>
                 </div>
                 <div class="profile-section-card__body">
-                  <div class="d-flex flex-wrap gap-2">
-                    @for (skill of candidate.skills; track skill.skill_name) {
-                      <span class="skill-pill">
-                        <span class="skill-pill__dot"></span>
-                        {{ skill.skill_name | translateUserData | async }}
-                        @if (skill.proficiency) {
-                          <span style="opacity:.6;font-size:.7rem">· {{ skill.proficiency }}</span>
-                        }
-                      </span>
-                    }
-                  </div>
+                  @if (isTranslatingSkills()) {
+                    <div style="display:flex;align-items:center;gap:.5rem;color:var(--th-muted);font-size:.875rem">
+                      <span style="display:inline-block;width:14px;height:14px;border:2px solid var(--th-primary);
+                        border-right:2px solid transparent;border-radius:50%;animation:spin .6s linear infinite"></span>
+                      Translating skills…
+                    </div>
+                  } @else {
+                    <div class="d-flex flex-wrap gap-2">
+                      @for (skill of candidate.skills; track $index) {
+                        <span class="skill-pill">
+                          <span class="skill-pill__dot"></span>
+                          {{ translatedSkills()[$index] || skill.skill_name }}
+                          @if (skill.proficiency) {
+                            <span style="opacity:.6;font-size:.7rem">· {{ skill.proficiency }}</span>
+                          }
+                        </span>
+                      }
+                    </div>
+                  }
                 </div>
               </div>
             }
@@ -567,42 +594,50 @@ type Tab = 'overview' | 'experience' | 'education' | 'documents' | 'activity';
               </span>
             </div>
             <div class="profile-section-card__body">
-              <div class="exp-timeline">
-                @for (exp of candidate.experience; track $index) {
-                  <div class="exp-timeline__item">
-                    <div class="exp-timeline__title">{{ exp.job_title | translateUserData | async }}</div>
-                    <div class="exp-timeline__org">
-                      <i class="bi bi-building" style="color:var(--th-muted);font-size:.8rem"></i>
-                      {{ exp.company_name | translateUserData | async }}
-                      @if (exp.location) {
-                        <span class="dot">·</span>
-                        <span>{{ exp.location }}</span>
-                      }
-                    </div>
-                    <div class="exp-timeline__period">
-                      <i class="bi bi-calendar3"></i>
-                      {{ exp.start_date | date:'MMM yyyy' }} —
-                      {{ exp.end_date ? (exp.end_date | date:'MMM yyyy') : 'Present' }}
-                    </div>
-                     @if (exp.description) {
-                      <div class="exp-timeline__desc" style="display:flex;justify-content:space-between;align-items:flex-start;gap:1rem">
-                        <div style="flex:1">{{ exp.description | translateUserData | async }}</div>
-                        @if (currentLanguage() !== 'en') {
-                          <span style="font-size:.65rem;color:var(--th-muted);font-style:italic;white-space:nowrap;margin-top:.2rem">
-                            Translation available
-                          </span>
+              @if (isTranslatingExperiences()) {
+                <div style="display:flex;align-items:center;gap:.5rem;color:var(--th-muted);font-size:.875rem">
+                  <span style="display:inline-block;width:14px;height:14px;border:2px solid var(--th-primary);
+                    border-right:2px solid transparent;border-radius:50%;animation:spin .6s linear infinite"></span>
+                  Translating experience…
+                </div>
+              } @else {
+                <div class="exp-timeline">
+                  @for (exp of candidate.experience; track $index) {
+                    <div class="exp-timeline__item">
+                      <div class="exp-timeline__title">{{ translatedExperiences()[$index]?.['job_title'] || exp.job_title }}</div>
+                      <div class="exp-timeline__org">
+                        <i class="bi bi-building" style="color:var(--th-muted);font-size:.8rem"></i>
+                        {{ translatedExperiences()[$index]?.['company_name'] || exp.company_name }}
+                        @if (exp.location) {
+                          <span class="dot">·</span>
+                          <span>{{ exp.location }}</span>
                         }
                       </div>
-                    }
-                    @if (exp.reason_for_leaving) {
-                      <div class="exp-timeline__period" style="margin-top:.35rem;opacity:.8">
-                        <i class="bi bi-box-arrow-right"></i>
-                        Left: {{ exp.reason_for_leaving | translateUserData | async }}
+                      <div class="exp-timeline__period">
+                        <i class="bi bi-calendar3"></i>
+                        {{ exp.start_date | date:'MMM yyyy' }} —
+                        {{ exp.end_date ? (exp.end_date | date:'MMM yyyy') : 'Present' }}
                       </div>
-                    }
-                  </div>
-                }
-              </div>
+                       @if (exp.description) {
+                        <div class="exp-timeline__desc" style="display:flex;justify-content:space-between;align-items:flex-start;gap:1rem">
+                          <div style="flex:1">{{ translatedExperiences()[$index]?.['description'] || exp.description }}</div>
+                          @if (currentLanguage() !== 'en') {
+                            <span style="font-size:.65rem;color:var(--th-muted);font-style:italic;white-space:nowrap;margin-top:.2rem">
+                              Translated
+                            </span>
+                          }
+                        </div>
+                      }
+                      @if (exp.reason_for_leaving) {
+                        <div class="exp-timeline__period" style="margin-top:.35rem;opacity:.8">
+                          <i class="bi bi-box-arrow-right"></i>
+                          Left: {{ translatedExperiences()[$index]?.['reason'] || exp.reason_for_leaving }}
+                        </div>
+                      }
+                    </div>
+                  }
+                </div>
+              }
             </div>
           </div>
         }
@@ -673,31 +708,39 @@ type Tab = 'overview' | 'experience' | 'education' | 'documents' | 'activity';
                 <h6>Education</h6>
               </div>
               <div class="profile-section-card__body">
-                <div class="exp-timeline" style="--th-primary:#10b981">
-                  @for (edu of candidate.education; track $index) {
-                    <div class="exp-timeline__item"
-                      style="--exp-dot-bg:var(--th-emerald)">
-                      <div class="exp-timeline__title">
-                        {{ edu.degree | translateUserData | async }}@if (edu.field_of_study) { <span style="font-weight:500;color:var(--th-text-secondary)"> in {{ edu.field_of_study | translateUserData | async }}</span> }
-                      </div>
-                      <div class="exp-timeline__org">
-                        <i class="bi bi-building" style="color:var(--th-muted);font-size:.8rem"></i>
-                        {{ edu.institution | translateUserData | async }}
-                        @if (edu.location) {
-                          <span class="dot">·</span>
-                          <span>{{ edu.location }}</span>
+                @if (isTranslatingEducations()) {
+                  <div style="display:flex;align-items:center;gap:.5rem;color:var(--th-muted);font-size:.875rem">
+                    <span style="display:inline-block;width:14px;height:14px;border:2px solid var(--th-primary);
+                      border-right:2px solid transparent;border-radius:50%;animation:spin .6s linear infinite"></span>
+                    Translating education…
+                  </div>
+                } @else {
+                  <div class="exp-timeline" style="--th-primary:#10b981">
+                    @for (edu of candidate.education; track $index) {
+                      <div class="exp-timeline__item"
+                        style="--exp-dot-bg:var(--th-emerald)">
+                        <div class="exp-timeline__title">
+                          {{ translatedEducations()[$index]?.['degree'] || edu.degree }}@if (edu.field_of_study) { <span style="font-weight:500;color:var(--th-text-secondary)"> in {{ translatedEducations()[$index]?.['field'] || edu.field_of_study }}</span> }
+                        </div>
+                        <div class="exp-timeline__org">
+                          <i class="bi bi-building" style="color:var(--th-muted);font-size:.8rem"></i>
+                          {{ translatedEducations()[$index]?.['institution'] || edu.institution }}
+                          @if (edu.location) {
+                            <span class="dot">·</span>
+                            <span>{{ edu.location }}</span>
+                          }
+                        </div>
+                        @if (edu.start_year || edu.end_year) {
+                          <div class="exp-timeline__period"
+                            style="background:var(--th-emerald-soft);border-color:rgba(16,185,129,.2)">
+                            <i class="bi bi-calendar3"></i>
+                            {{ formatEduDate(edu.start_month, edu.start_year) }} — {{ edu.end_year ? formatEduDate(edu.end_month, edu.end_year) : 'Present' }}
+                          </div>
                         }
                       </div>
-                      @if (edu.start_year || edu.end_year) {
-                        <div class="exp-timeline__period"
-                          style="background:var(--th-emerald-soft);border-color:rgba(16,185,129,.2)">
-                          <i class="bi bi-calendar3"></i>
-                          {{ formatEduDate(edu.start_month, edu.start_year) }} — {{ edu.end_year ? formatEduDate(edu.end_month, edu.end_year) : 'Present' }}
-                        </div>
-                      }
-                    </div>
-                  }
-                </div>
+                    }
+                  </div>
+                }
               </div>
             </div>
           } @else {
@@ -729,36 +772,43 @@ type Tab = 'overview' | 'experience' | 'education' | 'documents' | 'activity';
                 </span>
               </div>
               <div class="profile-section-card__body">
-                <div class="row g-2">
-                  @for (cert of candidate.certificates; track $index) {
-                    <div class="col-sm-6">
-                      <div style="padding:1rem;border:1px solid var(--th-border);border-radius:var(--th-radius-lg);
-                        background:var(--th-surface-raised);display:flex;align-items:center;gap:.75rem;
-                        transition:var(--th-transition)"
-                        onmouseover="this.style.borderColor='var(--th-amber)';this.style.background='var(--th-amber-soft)'"
-                        onmouseout="this.style.borderColor='var(--th-border)';this.style.background='var(--th-surface-raised)'">
-                        <div style="width:40px;height:40px;border-radius:var(--th-radius);
-                          background:var(--th-gradient-warning);display:flex;align-items:center;
-                          justify-content:center;color:#fff;font-size:1.1rem;flex-shrink:0;
-                          box-shadow:0 4px 10px rgba(245,158,11,.25)">
-                          <i class="bi bi-award-fill"></i>
-                        </div>
-                        <div class="flex-grow-1 overflow-hidden">
-                          <div style="font-size:.8125rem;font-weight:600;color:var(--th-text)"
-                            class="text-truncate">{{ cert.name | translateUserData | async }}</div>
-                          @if (cert.issuer) {
-                            <div style="font-size:.75rem;color:var(--th-muted)">{{ cert.issuer | translateUserData | async }}</div>
-                          }
-                          @if (cert.issue_date) {
-                            <div style="font-size:.7rem;color:var(--th-muted)">
-                              Issued: {{ cert.issue_date | date:'dd MMM yyyy' }}
-                            </div>
-                          }
-                          @if (cert.no_expiry) {
-                            <div style="font-size:.7rem;color:var(--th-success,#16a34a)">No Expiry</div>
-                          } @else if (cert.expiry_date) {
-                            <div style="font-size:.7rem;color:var(--th-muted)">
-                              Expires: {{ cert.expiry_date | date:'dd MMM yyyy' }}
+                @if (isTranslatingCertificates()) {
+                  <div style="display:flex;align-items:center;gap:.5rem;color:var(--th-muted);font-size:.875rem">
+                    <span style="display:inline-block;width:14px;height:14px;border:2px solid var(--th-primary);
+                      border-right:2px solid transparent;border-radius:50%;animation:spin .6s linear infinite"></span>
+                    Translating certificates…
+                  </div>
+                } @else {
+                  <div class="row g-2">
+                    @for (cert of candidate.certificates; track $index) {
+                      <div class="col-sm-6">
+                        <div style="padding:1rem;border:1px solid var(--th-border);border-radius:var(--th-radius-lg);
+                          background:var(--th-surface-raised);display:flex;align-items:center;gap:.75rem;
+                          transition:var(--th-transition)"
+                          onmouseover="this.style.borderColor='var(--th-amber)';this.style.background='var(--th-amber-soft)'"
+                          onmouseout="this.style.borderColor='var(--th-border)';this.style.background='var(--th-surface-raised)'">
+                          <div style="width:40px;height:40px;border-radius:var(--th-radius);
+                            background:var(--th-gradient-warning);display:flex;align-items:center;
+                            justify-content:center;color:#fff;font-size:1.1rem;flex-shrink:0;
+                            box-shadow:0 4px 10px rgba(245,158,11,.25)">
+                            <i class="bi bi-award-fill"></i>
+                          </div>
+                          <div class="flex-grow-1 overflow-hidden">
+                            <div style="font-size:.8125rem;font-weight:600;color:var(--th-text)"
+                              class="text-truncate">{{ translatedCertificates()[$index]?.['name'] || cert.name }}</div>
+                            @if (cert.issuer) {
+                              <div style="font-size:.75rem;color:var(--th-muted)">{{ translatedCertificates()[$index]?.['issuer'] || cert.issuer }}</div>
+                            }
+                            @if (cert.issue_date) {
+                              <div style="font-size:.7rem;color:var(--th-muted)">
+                                Issued: {{ cert.issue_date | date:'dd MMM yyyy' }}
+                              </div>
+                            }
+                            @if (cert.no_expiry) {
+                              <div style="font-size:.7rem;color:var(--th-success,#16a34a)">No Expiry</div>
+                            } @else if (cert.expiry_date) {
+                              <div style="font-size:.7rem;color:var(--th-muted)">
+                                Expires: {{ cert.expiry_date | date:'dd MMM yyyy' }}
                             </div>
                           }
                         </div>
@@ -777,6 +827,7 @@ type Tab = 'overview' | 'experience' | 'education' | 'documents' | 'activity';
                     </div>
                   }
                 </div>
+                }
               </div>
             </div>
           } @else {
@@ -957,7 +1008,7 @@ export class CandidateProfileComponent implements OnInit, OnDestroy {
   @Input() showAdminInfo = true;
 
   private candidateSvc = inject(CandidateService);
-  private userDataTranslation = inject(UserDataTranslationService);
+  private bulkTranslation = inject(BulkTranslationService);
   private languageService = inject(LanguageService);
   private translate = inject(TranslateService);
   private destroy$ = new Subject<void>();
@@ -970,12 +1021,25 @@ export class CandidateProfileComponent implements OnInit, OnDestroy {
   activityLoaded   = false;
 
   // Translation state signals
-  translatedBio = signal<string>('');
-  isTranslatingBio = signal(false);
   currentLanguage = signal<string>('en');
-  translatedExperience = signal<Map<number, any>>(new Map());
-  translatedProfessionalDetails = signal<any>(null);
+
+  // Translated data signals by section
+  translatedProfessional = signal<Record<string, string>>({});
+  translatedBio = signal<string>('');
+  translatedSkills = signal<Record<number, string>>({});
+  translatedExperiences = signal<Record<number, Record<string, string>>>({});
+  translatedEducations = signal<Record<number, Record<string, string>>>({});
+  translatedCertificates = signal<Record<number, Record<string, string>>>({});
+  translatedHobbies = signal<string[]>([]);
+
+  // Loading signals for each section
   isTranslatingProfessional = signal(false);
+  isTranslatingBio = signal(false);
+  isTranslatingSkills = signal(false);
+  isTranslatingExperiences = signal(false);
+  isTranslatingEducations = signal(false);
+  isTranslatingCertificates = signal(false);
+  isTranslatingHobbies = signal(false);
 
   readonly cvFormatLabels: Record<string, string> = {
     uk_format:         'UK Format',
@@ -1002,29 +1066,23 @@ export class CandidateProfileComponent implements OnInit, OnDestroy {
       .pipe(takeUntil(this.destroy$))
       .subscribe((event) => {
         this.currentLanguage.set(event.lang);
-        // Reset translations when language changes
-        this.translatedBio.set('');
-        this.translatedProfessionalDetails.set(null);
-        this.translatedExperience.set(new Map());
         
-        // Auto-translate bio and professional details when language changes (if not English)
-        if (event.lang !== 'en') {
-          if (this.candidate?.bio) {
-            this.translateBioToCurrentLanguage();
-          }
-          this.translateProfessionalDetails();
+        // Clear cache and reset all translations when language changes
+        this.bulkTranslation.clearCache();
+        this.resetAllTranslations();
+        
+        // Auto-translate all sections when language changes (if not English)
+        if (event.lang !== 'en' && this.candidate) {
+          this.translateAllSections();
         }
       });
 
     // Set initial language
     this.currentLanguage.set(this.translate.currentLang || 'en');
 
-    // If not English, translate bio and professional details on init
-    if (this.currentLanguage() !== 'en') {
-      if (this.candidate?.bio) {
-        this.translateBioToCurrentLanguage();
-      }
-      this.translateProfessionalDetails();
+    // If not English, translate all sections on init
+    if (this.currentLanguage() !== 'en' && this.candidate) {
+      this.translateAllSections();
     }
   }
 
@@ -1033,82 +1091,197 @@ export class CandidateProfileComponent implements OnInit, OnDestroy {
     this.destroy$.complete();
   }
 
-  async translateBioToCurrentLanguage(): Promise<void> {
-    if (!this.candidate?.bio || this.currentLanguage() === 'en') {
-      return;
+  /**
+   * Reset all translation signals
+   */
+  private resetAllTranslations(): void {
+    this.translatedProfessional.set({});
+    this.translatedBio.set('');
+    this.translatedSkills.set({});
+    this.translatedExperiences.set({});
+    this.translatedEducations.set({});
+    this.translatedCertificates.set({});
+    this.translatedHobbies.set([]);
+  }
+
+  /**
+   * Translate all sections in parallel
+   */
+  async translateAllSections(): Promise<void> {
+    if (this.currentLanguage() === 'en' || !this.candidate) return;
+
+    await Promise.all([
+      this.translateProfessionalSection(),
+      this.translateBioSection(),
+      this.translateSkillsSection(),
+      this.translateExperiencesSection(),
+      this.translateEducationsSection(),
+      this.translateCertificatesSection(),
+      this.translateHobbiesSection()
+    ]);
+  }
+
+  /**
+   * Translate professional details: job_title, industry, occupation
+   */
+  async translateProfessionalSection(): Promise<void> {
+    if (!this.candidate || this.currentLanguage() === 'en') return;
+
+    this.isTranslatingProfessional.set(true);
+    try {
+      const fields: Record<string, string | null | undefined> = {
+        job_title: this.candidate.job_title,
+        industry: this.candidate.industry,
+        occupation: this.candidate.occupation
+      };
+
+      const translated = await this.bulkTranslation.translateSection(
+        fields,
+        this.currentLanguage()
+      );
+
+      this.translatedProfessional.set(translated);
+    } catch (error) {
+      console.error('Error translating professional section:', error);
+    } finally {
+      this.isTranslatingProfessional.set(false);
     }
+  }
+
+  /**
+   * Translate bio section
+   */
+  async translateBioSection(): Promise<void> {
+    if (!this.candidate?.bio || this.currentLanguage() === 'en') return;
 
     this.isTranslatingBio.set(true);
     try {
-      const translated = await this.userDataTranslation.translateUserData(
-        this.candidate.bio,
+      const translated = await this.bulkTranslation.translateSection(
+        { bio: this.candidate.bio },
         this.currentLanguage()
       );
-      this.translatedBio.set(translated);
+
+      this.translatedBio.set(translated['bio'] || '');
     } catch (error) {
-      console.error('Error translating bio:', error);
-      this.translatedBio.set('');
+      console.error('Error translating bio section:', error);
     } finally {
       this.isTranslatingBio.set(false);
     }
   }
 
-  async getTranslatedExperience(index: number): Promise<string> {
-    const cached = this.translatedExperience().get(index);
-    if (cached) {
-      return cached;
-    }
+  /**
+   * Translate all skills in bulk
+   */
+  async translateSkillsSection(): Promise<void> {
+    if (!this.candidate?.skills?.length || this.currentLanguage() === 'en') return;
 
-    if (!this.candidate?.experience || this.currentLanguage() === 'en') {
-      return '';
-    }
-
-    const exp = this.candidate.experience[index];
-    if (!exp || !exp.description) {
-      return '';
-    }
-
+    this.isTranslatingSkills.set(true);
     try {
-      const translated = await this.userDataTranslation.translateUserData(
-        exp.description,
+      const translated = await this.bulkTranslation.translateSkillsBulk(
+        this.candidate.skills,
         this.currentLanguage()
       );
-      // Cache the translation
-      const map = new Map(this.translatedExperience());
-      map.set(index, translated);
-      this.translatedExperience.set(map);
-      return translated;
+
+      this.translatedSkills.set(translated);
     } catch (error) {
-      console.error('Error translating experience:', error);
-      return '';
+      console.error('Error translating skills section:', error);
+    } finally {
+      this.isTranslatingSkills.set(false);
     }
   }
 
-  async translateProfessionalDetails(): Promise<void> {
-    if (!this.candidate || this.currentLanguage() === 'en') {
-      return;
-    }
+  /**
+   * Translate all experiences in bulk
+   */
+  async translateExperiencesSection(): Promise<void> {
+    if (!this.candidate?.experience?.length || this.currentLanguage() === 'en') return;
 
-    if (this.translatedProfessionalDetails()) {
-      return; // Already translated
-    }
-
-    this.isTranslatingProfessional.set(true);
+    this.isTranslatingExperiences.set(true);
     try {
-      const fields: any = {};
-      if (this.candidate.occupation) fields.occupation = this.candidate.occupation;
-      if (this.candidate.industry) fields.industry = this.candidate.industry;
-      if (this.candidate.job_title) fields.job_title = this.candidate.job_title;
-
-      const translated = await this.userDataTranslation.translateUserFields(
-        fields,
+      const translated = await this.bulkTranslation.translateExperienceBulk(
+        this.candidate.experience as any[],
         this.currentLanguage()
       );
-      this.translatedProfessionalDetails.set(translated);
+
+      this.translatedExperiences.set(translated);
     } catch (error) {
-      console.error('Error translating professional details:', error);
+      console.error('Error translating experiences section:', error);
     } finally {
-      this.isTranslatingProfessional.set(false);
+      this.isTranslatingExperiences.set(false);
+    }
+  }
+
+  /**
+   * Translate all educations in bulk
+   */
+  async translateEducationsSection(): Promise<void> {
+    if (!this.candidate?.education?.length || this.currentLanguage() === 'en') return;
+
+    this.isTranslatingEducations.set(true);
+    try {
+      const translated = await this.bulkTranslation.translateEducationBulk(
+        this.candidate.education as any[],
+        this.currentLanguage()
+      );
+
+      this.translatedEducations.set(translated);
+    } catch (error) {
+      console.error('Error translating educations section:', error);
+    } finally {
+      this.isTranslatingEducations.set(false);
+    }
+  }
+
+  /**
+   * Translate all certificates in bulk
+   */
+  async translateCertificatesSection(): Promise<void> {
+    if (!this.candidate?.certificates?.length || this.currentLanguage() === 'en') return;
+
+    this.isTranslatingCertificates.set(true);
+    try {
+      const translated = await this.bulkTranslation.translateCertificatesBulk(
+        this.candidate.certificates as any[],
+        this.currentLanguage()
+      );
+
+      this.translatedCertificates.set(translated);
+    } catch (error) {
+      console.error('Error translating certificates section:', error);
+    } finally {
+      this.isTranslatingCertificates.set(false);
+    }
+  }
+
+  /**
+   * Translate all hobbies in bulk
+   */
+  async translateHobbiesSection(): Promise<void> {
+    if (!this.candidate?.hobbies?.length || this.currentLanguage() === 'en') return;
+
+    this.isTranslatingHobbies.set(true);
+    try {
+      const hobbiesFields: Record<string, string> = {};
+      this.candidate.hobbies.forEach((hobby, index) => {
+        hobbiesFields[`hobby_${index}`] = hobby;
+      });
+
+      const translated = await this.bulkTranslation.translateSection(
+        hobbiesFields,
+        this.currentLanguage()
+      );
+
+      // Convert back to array
+      const translatedArray: string[] = [];
+      for (let i = 0; i < this.candidate.hobbies.length; i++) {
+        translatedArray.push(translated[`hobby_${i}`] || this.candidate.hobbies[i]);
+      }
+
+      this.translatedHobbies.set(translatedArray);
+    } catch (error) {
+      console.error('Error translating hobbies section:', error);
+    } finally {
+      this.isTranslatingHobbies.set(false);
     }
   }
 
