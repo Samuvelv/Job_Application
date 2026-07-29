@@ -23,7 +23,7 @@ import { VolunteerSupportRequest }        from '../../../core/models/volunteer-s
     <!-- Back link -->
     <div class="mb-4">
       <a routerLink="/candidate/volunteers" class="back-link">
-        <i class="bi bi-arrow-left me-1"></i>Back to Volunteers
+        <i class="bi bi-arrow-left me-1"></i>{{ 'VOLUNTEER_PROFILE.back_to_volunteers' | translate }}
       </a>
     </div>
 
@@ -192,7 +192,7 @@ import { VolunteerSupportRequest }        from '../../../core/models/volunteer-s
                 <div class="mb-3">
                   <label class="form-label fw-medium">Message <span class="text-muted">(optional)</span></label>
                   <textarea class="form-control" rows="4"
-                    placeholder="Tell us a bit about what kind of support you're looking for…"
+                    [placeholder]="'VOLUNTEER_PAGE.support_request_placeholder' | translate"
                     [(ngModel)]="message" maxlength="500"></textarea>
                   <div class="form-text text-end">{{ message.length }}/500</div>
                 </div>

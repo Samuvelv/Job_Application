@@ -374,7 +374,7 @@ export class BulkTranslationService {
    * @returns Promise with translated skill names mapped by index
    */
   async translateSkillsBulk(
-    skills: Array<{ skill_name: string; [key: string]: any }>,
+    skills: Array<{ skill_name: string | null | undefined; [key: string]: any }>,
     language: string
   ): Promise<Record<string, string>> {
     if (language === 'en' || !skills?.length) {
@@ -588,7 +588,22 @@ export class BulkTranslationService {
 
     for (const [key, value] of Object.entries(fields)) {
       const valueLength = value?.length || 0;
-      
+
+      // A single field longer than MAX_CHUNK_SIZE can never fit in any chunk;
+      // send it alone, truncated to the limit, rather than silently exceeding the cap.
+      if (valueLength > this.MAX_CHUNK_SIZE) {
+        if (Object.keys(currentChunk).length > 0) {
+          chunks.push({ ...currentChunk });
+          currentChunk = {};
+          currentSize = 0;
+        }
+        console.warn(
+          `⚠️ Field "${key}" (${valueLength} chars) exceeds MAX_CHUNK_SIZE (${this.MAX_CHUNK_SIZE}) on its own; truncating.`
+        );
+        chunks.push({ [key]: value.slice(0, this.MAX_CHUNK_SIZE) });
+        continue;
+      }
+
       // If adding this field exceeds limit, start a new chunk
       if (currentSize + valueLength > this.MAX_CHUNK_SIZE && Object.keys(currentChunk).length > 0) {
         chunks.push({ ...currentChunk });

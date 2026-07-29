@@ -2,7 +2,6 @@
 import { Component, Input, Output, EventEmitter, OnInit, ViewChild, ElementRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
-import { TranslateUserDataPipe } from '../../../core/pipes/translate-user-data.pipe';
 
 interface TranslatedCandidate {
   firstName: string;
@@ -35,7 +34,7 @@ interface TranslatedCandidate {
 @Component({
   selector: 'app-translation-modal',
   standalone: true,
-  imports: [CommonModule, TranslateModule, TranslateUserDataPipe],
+  imports: [CommonModule, TranslateModule],
   templateUrl: './translation-modal.component.html',
   styleUrls: ['./translation-modal.component.scss'],
 })

@@ -3,7 +3,9 @@
 // Route: /admin/master?table=<key>
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { TranslateModule } from '@ngx-translate/core';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
+import { LocaleDatePipe } from '../../../core/pipes/locale-date.pipe';
+import { LocaleNumberPipe } from '../../../core/pipes/locale-number.pipe';
 import { ReactiveFormsModule, FormControl } from '@angular/forms';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { Subject } from 'rxjs';
@@ -20,7 +22,7 @@ import { ConfirmDialogService } from '../../../core/services/confirm-dialog.serv
 @Component({
   selector: 'app-master-management',
   standalone: true,
-  imports: [
+  imports: [LocaleDatePipe, LocaleNumberPipe,
     CommonModule, TranslateModule,
     ReactiveFormsModule,
     RouterModule,
@@ -52,7 +54,7 @@ import { ConfirmDialogService } from '../../../core/services/confirm-dialog.serv
               @if (countsLoading) {
                 <span class="md-card__count--loading"></span>
               } @else {
-                {{ counts[cfg.table] | number }}
+                {{ counts[cfg.table] | localeNumber }}
               }
             </div>
           </div>
@@ -75,7 +77,7 @@ import { ConfirmDialogService } from '../../../core/services/confirm-dialog.serv
             <i class="bi {{ selectedConfig.icon }}" style="color:var(--th-primary);font-size:1.1rem"></i>
             <h6 class="mb-0 fw-semibold">{{ selectedConfig.label }}</h6>
             <span class="badge rounded-pill" style="background:var(--th-primary-soft);color:var(--th-primary);font-size:.72rem">
-              {{ pagination.total | number }} records
+              {{ pagination.total | localeNumber }} records
             </span>
           </div>
            <div class="d-flex gap-2">
@@ -202,7 +204,7 @@ import { ConfirmDialogService } from '../../../core/services/confirm-dialog.serv
                          }
                        </td>
                       <td class="text-muted text-nowrap" style="font-size:.75rem">
-                        {{ rec.created_at ? (rec.created_at | date:'dd MMM yyyy') : '—' }}
+                        {{ rec.created_at ? (rec.created_at | localeDate:'dd MMM yyyy') : '—' }}
                       </td>
                        <td class="text-end">
                          <div class="d-flex gap-1 justify-content-end">
@@ -314,6 +316,7 @@ export class MasterManagementComponent implements OnInit, OnDestroy {
     private masterData: MasterDataService,
     private toast:      ToastService,
     private confirm:    ConfirmDialogService,
+    private translate:  TranslateService,
   ) {}
 
   ngOnInit(): void {
@@ -384,7 +387,7 @@ export class MasterManagementComponent implements OnInit, OnDestroy {
         this.loading    = false;
       },
       error: () => {
-        this.toast.show('Failed to load records.', 'error');
+        this.toast.show(this.translate.instant('MASTER.load_failed'), 'error');
         this.loading = false;
       },
     });
@@ -450,9 +453,9 @@ export class MasterManagementComponent implements OnInit, OnDestroy {
     if (!this.selectedConfig) return;
     const label = rec[this.selectedConfig.displayField] ?? `#${rec.id}`;
     const result = await this.confirm.confirm({
-      title:        'Delete Record',
-      message:      `Are you sure you want to delete "${label}"? It will be soft-deleted and can be restored later.`,
-      confirmLabel: 'Delete',
+      title:        this.translate.instant('MASTER.delete_record_title'),
+      message:      this.translate.instant('MASTER.delete_record_msg', { label }),
+      confirmLabel: this.translate.instant('COMMON.delete'),
       confirmClass: 'btn-danger',
       icon:         'bi-trash-fill',
     });
@@ -460,11 +463,11 @@ export class MasterManagementComponent implements OnInit, OnDestroy {
 
     this.adminSvc.delete(this.selectedConfig.table, rec.id).subscribe({
       next: () => {
-        this.toast.show(`"${label}" deleted.`, 'success');
+        this.toast.show(this.translate.instant('MASTER.record_deleted', { label }), 'success');
         this.load();
         this.adminSvc.getCounts().subscribe((c) => { this.counts = c; });
       },
-      error: (err) => this.toast.show(err?.error?.message ?? 'Delete failed.', 'error'),
+      error: (err) => this.toast.show(err?.error?.message ?? this.translate.instant('MASTER.delete_record_failed'), 'error'),
     });
   }
 
@@ -474,9 +477,9 @@ export class MasterManagementComponent implements OnInit, OnDestroy {
     if (!this.selectedConfig) return;
     const label = rec[this.selectedConfig.displayField] ?? `#${rec.id}`;
     const result = await this.confirm.confirm({
-      title:        'Restore Record',
-      message:      `Restore "${label}" and make it active again?`,
-      confirmLabel: 'Restore',
+      title:        this.translate.instant('MASTER.restore_record_title'),
+      message:      this.translate.instant('MASTER.restore_record_msg', { label }),
+      confirmLabel: this.translate.instant('COMMON.restore'),
       confirmClass: 'btn-success',
       icon:         'bi-arrow-counterclockwise',
     });
@@ -484,11 +487,11 @@ export class MasterManagementComponent implements OnInit, OnDestroy {
 
     this.adminSvc.restore(this.selectedConfig.table, rec.id).subscribe({
       next: () => {
-        this.toast.show(`"${label}" restored.`, 'success');
+        this.toast.show(this.translate.instant('MASTER.record_restored', { label }), 'success');
         this.load();
         this.adminSvc.getCounts().subscribe((c) => { this.counts = c; });
       },
-      error: (err) => this.toast.show(err?.error?.message ?? 'Restore failed.', 'error'),
+      error: (err) => this.toast.show(err?.error?.message ?? this.translate.instant('MASTER.restore_record_failed'), 'error'),
     });
   }
 }

@@ -2,6 +2,7 @@
 import { Component, signal, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { TranslateModule } from '@ngx-translate/core';
+import { LocaleDatePipe } from '../../../core/pipes/locale-date.pipe';
 import { ContactSubmissionService } from '../../../core/services/contact-submission.service';
 import { ContactSubmission } from '../../../core/models/contact-submission.model';
 import { PageHeaderComponent } from '../../../shared/components/page-header/page-header.component';
@@ -10,7 +11,7 @@ import { NotificationService } from '../../../core/services/notification.service
 @Component({
   selector: 'app-contact-submissions-page',
   standalone: true,
-  imports: [CommonModule, TranslateModule, PageHeaderComponent],
+  imports: [LocaleDatePipe, CommonModule, TranslateModule, PageHeaderComponent],
   template: `
     <app-page-header
       [title]="'CONTACT_SUBMISSIONS.title' | translate"
@@ -92,7 +93,7 @@ import { NotificationService } from '../../../core/services/notification.service
                     }
                   </td>
                   <td class="text-muted text-nowrap" style="font-size:.72rem">
-                    {{ s.submitted_at | date:'dd MMM yyyy, HH:mm' }}
+                    {{ s.submitted_at | localeDate:'dd MMM yyyy, HH:mm' }}
                   </td>
                   <td>
                      @if (!s.is_read) {

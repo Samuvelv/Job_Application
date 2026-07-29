@@ -2,6 +2,7 @@
 import { Component, Input, signal, inject, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
+import { LocaleDatePipe } from '../../../core/pipes/locale-date.pipe';
 import { Candidate } from '../../../core/models/candidate.model';
 import { CandidateService, CandidateActivity } from '../../../core/services/candidate.service';
 import { BulkTranslationService } from '../../../core/services/bulk-translation.service';
@@ -14,7 +15,7 @@ type Tab = 'overview' | 'experience' | 'education' | 'documents' | 'activity';
 @Component({
   selector: 'app-candidate-profile',
   standalone: true,
-  imports: [CommonModule, TranslateModule],
+  imports: [LocaleDatePipe, CommonModule, TranslateModule],
   template: `
     @if (!candidate) {
       <div class="loading-state">
@@ -39,7 +40,7 @@ type Tab = 'overview' | 'experience' | 'education' | 'documents' | 'activity';
               </div>
             }
             @if (candidate.profile_status === 'active') {
-              <div class="profile-hero-v2__online-dot" title="Active"></div>
+              <div class="profile-hero-v2__online-dot" [title]="'COMMON.active' | translate"></div>
             }
           </div>
 
@@ -53,7 +54,7 @@ type Tab = 'overview' | 'experience' | 'education' | 'documents' | 'activity';
                 <span class="autocode-badge autocode-badge--lg">{{ candidate.candidate_number }}</span>
               }
               @if (candidate.login_id) {
-                <span class="autocode-badge autocode-badge--login-id" title="Your Candidate Login ID — use this to sign in">
+                <span class="autocode-badge autocode-badge--login-id" [title]="'CANDIDATE_PROFILE.login_id_tooltip' | translate">
                   <i class="bi bi-key-fill" style="font-size:.75rem;margin-right:.25rem"></i>{{ candidate.login_id }}
                 </span>
               }
@@ -246,7 +247,7 @@ type Tab = 'overview' | 'experience' | 'education' | 'documents' | 'activity';
                   <div class="info-pill-row">
                     <div class="info-pill-row__icon"><i class="bi bi-calendar3"></i></div>
                     <div class="info-pill-row__label">Birthday</div>
-                    <div class="info-pill-row__value">{{ candidate.date_of_birth | date:'mediumDate' }}</div>
+                    <div class="info-pill-row__value">{{ candidate.date_of_birth | localeDate:'mediumDate' }}</div>
                   </div>
                 }
                 @if (candidate.gender) {
@@ -615,8 +616,8 @@ type Tab = 'overview' | 'experience' | 'education' | 'documents' | 'activity';
                       </div>
                       <div class="exp-timeline__period">
                         <i class="bi bi-calendar3"></i>
-                        {{ exp.start_date | date:'MMM yyyy' }} —
-                        {{ exp.end_date ? (exp.end_date | date:'MMM yyyy') : 'Present' }}
+                        {{ exp.start_date | localeDate:'MMM yyyy' }} —
+                        {{ exp.end_date ? (exp.end_date | localeDate:'MMM yyyy') : 'Present' }}
                       </div>
                        @if (exp.description) {
                         <div class="exp-timeline__desc" style="display:flex;justify-content:space-between;align-items:flex-start;gap:1rem">
@@ -801,14 +802,14 @@ type Tab = 'overview' | 'experience' | 'education' | 'documents' | 'activity';
                             }
                             @if (cert.issue_date) {
                               <div style="font-size:.7rem;color:var(--th-muted)">
-                                Issued: {{ cert.issue_date | date:'dd MMM yyyy' }}
+                                Issued: {{ cert.issue_date | localeDate:'dd MMM yyyy' }}
                               </div>
                             }
                             @if (cert.no_expiry) {
                               <div style="font-size:.7rem;color:var(--th-success,#16a34a)">No Expiry</div>
                             } @else if (cert.expiry_date) {
                               <div style="font-size:.7rem;color:var(--th-muted)">
-                                Expires: {{ cert.expiry_date | date:'dd MMM yyyy' }}
+                                Expires: {{ cert.expiry_date | localeDate:'dd MMM yyyy' }}
                             </div>
                           }
                         </div>
@@ -940,7 +941,7 @@ type Tab = 'overview' | 'experience' | 'education' | 'documents' | 'activity';
                     <div class="activity-item__body">
                       <div class="activity-item__desc">{{ item.description }}</div>
                       <div class="activity-item__date">
-                        {{ item.created_at | date:'dd MMM yyyy, HH:mm' }}
+                        {{ item.created_at | localeDate:'dd MMM yyyy, HH:mm' }}
                       </div>
                     </div>
                   </div>
@@ -1127,6 +1128,7 @@ export class CandidateProfileComponent implements OnInit, OnDestroy {
   async translateProfessionalSection(): Promise<void> {
     if (!this.candidate || this.currentLanguage() === 'en') return;
 
+    const requestedLang = this.currentLanguage();
     this.isTranslatingProfessional.set(true);
     try {
       const fields: Record<string, string | null | undefined> = {
@@ -1137,14 +1139,15 @@ export class CandidateProfileComponent implements OnInit, OnDestroy {
 
       const translated = await this.bulkTranslation.translateSection(
         fields,
-        this.currentLanguage()
+        requestedLang
       );
 
+      if (this.currentLanguage() !== requestedLang) return;
       this.translatedProfessional.set(translated);
     } catch (error) {
       console.error('Error translating professional section:', error);
     } finally {
-      this.isTranslatingProfessional.set(false);
+      if (this.currentLanguage() === requestedLang) this.isTranslatingProfessional.set(false);
     }
   }
 
@@ -1154,18 +1157,20 @@ export class CandidateProfileComponent implements OnInit, OnDestroy {
   async translateBioSection(): Promise<void> {
     if (!this.candidate?.bio || this.currentLanguage() === 'en') return;
 
+    const requestedLang = this.currentLanguage();
     this.isTranslatingBio.set(true);
     try {
       const translated = await this.bulkTranslation.translateSection(
         { bio: this.candidate.bio },
-        this.currentLanguage()
+        requestedLang
       );
 
+      if (this.currentLanguage() !== requestedLang) return;
       this.translatedBio.set(translated['bio'] || '');
     } catch (error) {
       console.error('Error translating bio section:', error);
     } finally {
-      this.isTranslatingBio.set(false);
+      if (this.currentLanguage() === requestedLang) this.isTranslatingBio.set(false);
     }
   }
 
@@ -1175,18 +1180,20 @@ export class CandidateProfileComponent implements OnInit, OnDestroy {
   async translateSkillsSection(): Promise<void> {
     if (!this.candidate?.skills?.length || this.currentLanguage() === 'en') return;
 
+    const requestedLang = this.currentLanguage();
     this.isTranslatingSkills.set(true);
     try {
       const translated = await this.bulkTranslation.translateSkillsBulk(
         this.candidate.skills,
-        this.currentLanguage()
+        requestedLang
       );
 
+      if (this.currentLanguage() !== requestedLang) return;
       this.translatedSkills.set(translated);
     } catch (error) {
       console.error('Error translating skills section:', error);
     } finally {
-      this.isTranslatingSkills.set(false);
+      if (this.currentLanguage() === requestedLang) this.isTranslatingSkills.set(false);
     }
   }
 
@@ -1196,18 +1203,20 @@ export class CandidateProfileComponent implements OnInit, OnDestroy {
   async translateExperiencesSection(): Promise<void> {
     if (!this.candidate?.experience?.length || this.currentLanguage() === 'en') return;
 
+    const requestedLang = this.currentLanguage();
     this.isTranslatingExperiences.set(true);
     try {
       const translated = await this.bulkTranslation.translateExperienceBulk(
         this.candidate.experience as any[],
-        this.currentLanguage()
+        requestedLang
       );
 
+      if (this.currentLanguage() !== requestedLang) return;
       this.translatedExperiences.set(translated);
     } catch (error) {
       console.error('Error translating experiences section:', error);
     } finally {
-      this.isTranslatingExperiences.set(false);
+      if (this.currentLanguage() === requestedLang) this.isTranslatingExperiences.set(false);
     }
   }
 
@@ -1217,18 +1226,20 @@ export class CandidateProfileComponent implements OnInit, OnDestroy {
   async translateEducationsSection(): Promise<void> {
     if (!this.candidate?.education?.length || this.currentLanguage() === 'en') return;
 
+    const requestedLang = this.currentLanguage();
     this.isTranslatingEducations.set(true);
     try {
       const translated = await this.bulkTranslation.translateEducationBulk(
         this.candidate.education as any[],
-        this.currentLanguage()
+        requestedLang
       );
 
+      if (this.currentLanguage() !== requestedLang) return;
       this.translatedEducations.set(translated);
     } catch (error) {
       console.error('Error translating educations section:', error);
     } finally {
-      this.isTranslatingEducations.set(false);
+      if (this.currentLanguage() === requestedLang) this.isTranslatingEducations.set(false);
     }
   }
 
@@ -1238,18 +1249,20 @@ export class CandidateProfileComponent implements OnInit, OnDestroy {
   async translateCertificatesSection(): Promise<void> {
     if (!this.candidate?.certificates?.length || this.currentLanguage() === 'en') return;
 
+    const requestedLang = this.currentLanguage();
     this.isTranslatingCertificates.set(true);
     try {
       const translated = await this.bulkTranslation.translateCertificatesBulk(
         this.candidate.certificates as any[],
-        this.currentLanguage()
+        requestedLang
       );
 
+      if (this.currentLanguage() !== requestedLang) return;
       this.translatedCertificates.set(translated);
     } catch (error) {
       console.error('Error translating certificates section:', error);
     } finally {
-      this.isTranslatingCertificates.set(false);
+      if (this.currentLanguage() === requestedLang) this.isTranslatingCertificates.set(false);
     }
   }
 
@@ -1259,6 +1272,7 @@ export class CandidateProfileComponent implements OnInit, OnDestroy {
   async translateHobbiesSection(): Promise<void> {
     if (!this.candidate?.hobbies?.length || this.currentLanguage() === 'en') return;
 
+    const requestedLang = this.currentLanguage();
     this.isTranslatingHobbies.set(true);
     try {
       const hobbiesFields: Record<string, string> = {};
@@ -1268,8 +1282,10 @@ export class CandidateProfileComponent implements OnInit, OnDestroy {
 
       const translated = await this.bulkTranslation.translateSection(
         hobbiesFields,
-        this.currentLanguage()
+        requestedLang
       );
+
+      if (this.currentLanguage() !== requestedLang) return;
 
       // Convert back to array
       const translatedArray: string[] = [];
@@ -1281,7 +1297,7 @@ export class CandidateProfileComponent implements OnInit, OnDestroy {
     } catch (error) {
       console.error('Error translating hobbies section:', error);
     } finally {
-      this.isTranslatingHobbies.set(false);
+      if (this.currentLanguage() === requestedLang) this.isTranslatingHobbies.set(false);
     }
   }
 

@@ -16,7 +16,6 @@ import { PageHeaderComponent } from '../../../shared/components/page-header/page
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { CandidateProfileComponent } from '../../../shared/components/candidate-profile/candidate-profile.component';
 import { SearchableSelectComponent, SelectOption } from '../../../shared/components/searchable-select/searchable-select.component';
-import { TranslateUserDataPipe } from '../../../core/pipes/translate-user-data.pipe';
 import {
   CandidateTranslationService,
   TRANSLATE_LANGUAGES,
@@ -26,7 +25,7 @@ import {
 @Component({
   selector: 'app-recruiter-candidate-profile',
   standalone: true,
-  imports: [CommonModule, RouterLink, FormsModule, PageHeaderComponent, CandidateProfileComponent, SearchableSelectComponent, TranslateModule, TranslateUserDataPipe],
+  imports: [CommonModule, RouterLink, FormsModule, PageHeaderComponent, CandidateProfileComponent, SearchableSelectComponent, TranslateModule],
   styles: [`
     .interest-panel {
       background: var(--th-surface);
@@ -333,7 +332,7 @@ import {
                     [(ngModel)]="requestReason"
                     [class.is-invalid]="reasonTouched && !requestReason.trim()"
                     (blur)="reasonTouched = true"
-                    placeholder="Briefly describe why you need this candidate's contact information…"></textarea>
+                    [placeholder]="'CONTACT_STATUS.reason_placeholder' | translate"></textarea>
                   @if (reasonTouched && !requestReason.trim()) {
                     <div style="font-size:.75rem;color:var(--th-danger,#f43f5e);margin-top:.25rem;">
                       <i class="bi bi-exclamation-circle me-1"></i>{{ 'CONTACT_STATUS.reason_required' | translate }}
@@ -373,7 +372,7 @@ import {
                     [(ngModel)]="requestReason"
                     [class.is-invalid]="reasonTouched && !requestReason.trim()"
                     (blur)="reasonTouched = true"
-                    placeholder="Briefly describe why you need this candidate's contact information…"></textarea>
+                    [placeholder]="'CONTACT_STATUS.reason_placeholder' | translate"></textarea>
                   @if (reasonTouched && !requestReason.trim()) {
                     <div style="font-size:.75rem;color:var(--th-danger,#f43f5e);margin-top:.25rem;">
                       <i class="bi bi-exclamation-circle me-1"></i>{{ 'CONTACT_STATUS.reason_required' | translate }}
@@ -403,7 +402,7 @@ import {
                     [(ngModel)]="requestReason"
                     [class.is-invalid]="reasonTouched && !requestReason.trim()"
                     (blur)="reasonTouched = true"
-                    placeholder="Briefly describe why you need this candidate's contact information…"></textarea>
+                    [placeholder]="'CONTACT_STATUS.reason_placeholder' | translate"></textarea>
                   @if (reasonTouched && !requestReason.trim()) {
                     <div style="font-size:.75rem;color:var(--th-danger,#f43f5e);margin-top:.25rem;">
                       <i class="bi bi-exclamation-circle me-1"></i>{{ 'CONTACT_STATUS.reason_required' | translate }}
@@ -511,7 +510,7 @@ import {
                 [ngModel]="interestForm.sector"
                 (ngModelChange)="interestForm.sector = $event"
                 [options]="industryOptions()"
-                placeholder="Select sector…"
+                [placeholder]="'INTEREST_REQUESTS.sector_placeholder' | translate"
                 [allowClear]="true">
               </app-searchable-select>
             </div>
@@ -521,14 +520,14 @@ import {
                 [ngModel]="interestForm.country"
                 (ngModelChange)="interestForm.country = $event"
                 [options]="countryOptions()"
-                placeholder="Select country…"
+                [placeholder]="'INTEREST_REQUESTS.country_placeholder' | translate"
                 [allowClear]="true">
               </app-searchable-select>
             </div>
             <div class="col-12">
               <div class="interest-panel__label">{{ 'INTEREST_REQUESTS.message_to_admin_label' | translate }} *</div>
               <textarea class="interest-panel__textarea" rows="4" [(ngModel)]="interestForm.message"
-                placeholder="Describe the role, why this candidate is a good fit, and any relevant details…"
+                [placeholder]="'INTEREST_REQUESTS.message_placeholder' | translate"
                 maxlength="2000"></textarea>
               <div class="text-end small" style="color:var(--th-muted);">{{ interestForm.message.length }}/2000</div>
             </div>
@@ -646,6 +645,7 @@ export class RecruiterCandidateProfileComponent implements OnInit {
     private interestRequestService: InterestRequestService,
     private toast: ToastService,
     private translationService: CandidateTranslationService,
+    private translate: TranslateService,
   ) {}
 
   backLink = '/recruiter/candidates';
@@ -742,7 +742,7 @@ export class RecruiterCandidateProfileComponent implements OnInit {
       },
       error: (err) => {
         this.translating.set(false);
-        const msg = err?.error?.message ?? 'Translation failed. Please try again.';
+        const msg = err?.error?.message ?? this.translate.instant('RECRUITER_CANDIDATES.translation_failed');
         this.toast.error(msg);
       },
     });
@@ -767,11 +767,11 @@ export class RecruiterCandidateProfileComponent implements OnInit {
         this.reasonTouched        = false;
         this.contactRequest       = res.request;
         this.contactRequestStatus = 'pending';
-        this.toast.success('Contact info request submitted. Awaiting admin approval.');
+        this.toast.success(this.translate.instant('CONTACT_STATUS.request_submitted'));
       },
       error: (err) => {
         this.requesting = false;
-        this.toast.error(err?.error?.message ?? 'Failed to submit request');
+        this.toast.error(err?.error?.message ?? this.translate.instant('CONTACT_STATUS.request_submit_failed'));
       },
     });
   }
@@ -779,7 +779,7 @@ export class RecruiterCandidateProfileComponent implements OnInit {
   submitInterestRequest(): void {
     const { sector, country, message } = this.interestForm;
     if (!sector.trim() || !country.trim() || message.trim().length < 10) {
-      this.toast.error('Please fill in all fields (message must be at least 10 characters).');
+      this.toast.error(this.translate.instant('RECRUITER_CANDIDATES.fill_all_fields'));
       return;
     }
     this.submittingInterest = true;
@@ -787,11 +787,11 @@ export class RecruiterCandidateProfileComponent implements OnInit {
       next: (res) => {
         this.submittingInterest = false;
         this.interestRequest    = res.request;
-        this.toast.success('Interest request submitted. Awaiting admin review.');
+        this.toast.success(this.translate.instant('RECRUITER_CANDIDATES.interest_review_submitted'));
       },
       error: (err) => {
         this.submittingInterest = false;
-        this.toast.error(err?.error?.message ?? 'Failed to submit interest request');
+        this.toast.error(err?.error?.message ?? this.translate.instant('RECRUITER_CANDIDATES.interest_review_failed'));
       },
     });
   }
@@ -808,11 +808,11 @@ export class RecruiterCandidateProfileComponent implements OnInit {
       next: () => {
         this.shortlisting = false;
         this.shortlisted  = true;
-        this.toast.success(`${this.candidate!.first_name} ${this.candidate!.last_name} added to shortlist`);
+        this.toast.success(this.translate.instant('SHORTLIST.added_success', { name: `${this.candidate!.first_name} ${this.candidate!.last_name}` }));
       },
       error: (err) => {
         this.shortlisting = false;
-        this.toast.error(err?.error?.message ?? 'Failed to shortlist');
+        this.toast.error(err?.error?.message ?? this.translate.instant('SHORTLIST.add_failed'));
       },
     });
   }

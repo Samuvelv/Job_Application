@@ -26,7 +26,7 @@ import { CookieConsentService } from '../../../core/services/cookie-consent.serv
       <div class="ccb-overlay" aria-hidden="true"></div>
 
       <!-- Banner -->
-      <div class="ccb" role="region" aria-label="Cookie consent" aria-live="polite">
+      <div class="ccb" role="region" [attr.aria-label]="'COOKIE_CONSENT.manage_cookies' | translate" aria-live="polite">
         <div class="ccb__inner">
 
           <!-- Icon + Text -->

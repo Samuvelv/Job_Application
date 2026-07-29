@@ -1,7 +1,8 @@
 // src/app/features/admin/recruiter-list/recruiter-list.component.ts
 import { Component, OnInit, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { TranslateModule } from '@ngx-translate/core';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
+import { LocaleDatePipe } from '../../../core/pipes/locale-date.pipe';
 import { ReactiveFormsModule, FormBuilder, FormGroup, FormControl, Validators, AbstractControl, ValidationErrors, ValidatorFn } from '@angular/forms';
 import { RouterLink, ActivatedRoute } from '@angular/router';
 import { catchError, of, distinctUntilChanged, skip } from 'rxjs';
@@ -98,7 +99,7 @@ function websiteValidator(): ValidatorFn {
 @Component({
   selector: 'app-recruiter-list',
   standalone: true,
-  imports: [CommonModule, TranslateModule, ReactiveFormsModule, RouterLink, PageHeaderComponent, EmptyStateComponent, RecruiterCardComponent, SearchableSelectComponent, ChipMultiSelectComponent],
+  imports: [LocaleDatePipe, CommonModule, TranslateModule, ReactiveFormsModule, RouterLink, PageHeaderComponent, EmptyStateComponent, RecruiterCardComponent, SearchableSelectComponent, ChipMultiSelectComponent],
   template: `
     <!-- Header -->
      <app-page-header
@@ -145,7 +146,7 @@ function websiteValidator(): ValidatorFn {
         </button>
         <button type="button" class="cfs-export-btn"
           (click)="exportCsv()" [disabled]="exporting"
-          title="Export filtered recruiters to CSV">
+          [title]="'RECRUITER_LIST.export_filtered_title' | translate">
           @if (exporting) {
             <span class="spinner-border spinner-border-sm" role="status"></span>
           } @else {
@@ -156,12 +157,12 @@ function websiteValidator(): ValidatorFn {
         <div class="cl-view-toggle">
           <button type="button" class="cl-view-toggle__btn"
             [class.cl-view-toggle__btn--active]="viewMode === 'list'"
-            (click)="viewMode = 'list'" title="List view">
+            (click)="viewMode = 'list'" [title]="'VOLUNTEERS.list_view' | translate">
             <i class="bi bi-list-ul"></i>
           </button>
           <button type="button" class="cl-view-toggle__btn"
             [class.cl-view-toggle__btn--active]="viewMode === 'grid'"
-            (click)="viewMode = 'grid'" title="Grid view">
+            (click)="viewMode = 'grid'" [title]="'VOLUNTEERS.grid_view' | translate">
             <i class="bi bi-grid-3x3-gap-fill"></i>
           </button>
         </div>
@@ -185,19 +186,19 @@ function websiteValidator(): ValidatorFn {
               <div class="col-sm-6 col-md-4 col-lg-3">
                 <label class="filter-card__section-label">Company Name</label>
                 <input type="text" class="form-control form-control-sm"
-                  formControlName="company" placeholder="e.g. Acme Corp">
+                  formControlName="company" [placeholder]="'RECRUITER_LIST.company_placeholder' | translate">
               </div>
               <div class="col-sm-6 col-md-4 col-lg-3">
                 <label class="filter-card__section-label">Company Country</label>
                 <input type="text" class="form-control form-control-sm"
-                  formControlName="companyCountry" placeholder="e.g. United Kingdom">
+                  formControlName="companyCountry" [placeholder]="'RECRUITER_LIST.country_placeholder' | translate">
               </div>
               <div class="col-sm-6 col-md-4 col-lg-3">
                 <label class="filter-card__section-label">Industry / Sector</label>
                 <app-searchable-select
                   formControlName="industry"
                   [options]="INDUSTRY_SELECT_OPTS"
-                  placeholder="All Industries"
+                  [placeholder]="'RECRUITER_LIST.all_industries' | translate"
                   [allowClear]="true">
                 </app-searchable-select>
               </div>
@@ -211,7 +212,7 @@ function websiteValidator(): ValidatorFn {
                 <app-searchable-select
                   formControlName="hasSponsorLicence"
                   [options]="LICENCE_OPTS"
-                  placeholder="Any"
+                  [placeholder]="'RECRUITER_LIST.any' | translate"
                   [allowClear]="true">
                 </app-searchable-select>
               </div>
@@ -220,7 +221,7 @@ function websiteValidator(): ValidatorFn {
                 <app-searchable-select
                   formControlName="sponsorCountry"
                   [options]="SPONSOR_COUNTRY_OPTS"
-                  placeholder="Any Country"
+                  [placeholder]="'RECRUITER_LIST.any_country' | translate"
                   [allowClear]="true">
                 </app-searchable-select>
               </div>
@@ -234,7 +235,7 @@ function websiteValidator(): ValidatorFn {
                 <app-searchable-select
                   formControlName="accountStatus"
                   [options]="ACCOUNT_STATUS_OPTS"
-                  placeholder="All Statuses"
+                  [placeholder]="'RECRUITER_LIST.all_statuses' | translate"
                   [allowClear]="true">
                 </app-searchable-select>
               </div>
@@ -243,7 +244,7 @@ function websiteValidator(): ValidatorFn {
                 <app-searchable-select
                   formControlName="lastActive"
                   [options]="LAST_ACTIVE_OPTS"
-                  placeholder="Any Time"
+                  [placeholder]="'RECRUITER_LIST.any_time' | translate"
                   [allowClear]="true">
                 </app-searchable-select>
               </div>
@@ -285,7 +286,7 @@ function websiteValidator(): ValidatorFn {
         <div class="cl-bulk-bar__actions">
           <button type="button" class="btn btn-sm btn-outline-secondary"
             (click)="bulkExportCsv()" [disabled]="bulkProcessing"
-            title="Export selected to CSV">
+            [title]="'RECRUITER_LIST.export_selected_title' | translate">
             <i class="bi bi-download me-1"></i>Export
           </button>
           <button type="button" class="btn btn-sm btn-success"
@@ -308,14 +309,14 @@ function websiteValidator(): ValidatorFn {
     @if (loading) {
       <div class="loading-state">
         <div class="spinner-border"></div>
-        <div class="loading-state__text">Loading recruiters…</div>
+        <div class="loading-state__text">{{ 'RECRUITER_LIST.loading' | translate }}</div>
       </div>
     } @else if (recruiters.length === 0) {
       <app-empty-state
         icon="bi-people"
-        title="No recruiters yet"
-        subtitle="Get started by adding your first recruiter."
-        actionLabel="Add your first recruiter"
+        [title]="'RECRUITER_LIST.no_recruiters' | translate"
+        [subtitle]="'RECRUITER_LIST.no_recruiters_sub' | translate"
+        [actionLabel]="'RECRUITER_LIST.add_first_recruiter' | translate"
         actionRoute="/admin/recruiters/create"
       />
     } @else {
@@ -370,7 +371,7 @@ function websiteValidator(): ValidatorFn {
                     <td class="small">
                       <span [class.text-danger]="isExpired(rec.access_expires_at)"
                             [class.text-muted]="!isExpired(rec.access_expires_at)">
-                        {{ rec.access_expires_at | date:'dd MMM yyyy' }}
+                        {{ rec.access_expires_at | localeDate:'dd MMM yyyy' }}
                          @if (isExpired(rec.access_expires_at)) {
                            <span class="badge bg-danger ms-1">{{ 'COMMON.expired' | translate }}</span>
                          }
@@ -387,23 +388,23 @@ function websiteValidator(): ValidatorFn {
                       <div class="tbl-actions">
                         <a [routerLink]="['/admin/recruiters', rec.id]"
                           class="tbl-actions__btn tbl-actions__btn--view tbl-actions__btn--icon"
-                          title="View recruiter">
+                          [title]="'RECRUITER_LIST.view_recruiter' | translate">
                           <i class="bi bi-eye"></i>
                         </a>
                         <button class="tbl-actions__btn tbl-actions__btn--edit tbl-actions__btn--icon"
-                          (click)="openEdit(rec)" title="Edit recruiter">
+                          (click)="openEdit(rec)" [title]="'RECRUITER_LIST.edit_recruiter' | translate">
                           <i class="bi bi-pencil"></i>
                         </button>
                         <div class="tbl-actions__sep"></div>
                         <button class="tbl-actions__btn tbl-actions__btn--token"
                           (click)="resendCredentials(rec)"
-                          title="Resend login credentials">
+                          [title]="'RECRUITER_LIST.resend_login_credentials' | translate">
                           <i class="bi bi-envelope"></i>
-                          Resend
+                          {{ 'RECRUITER_LIST.resend' | translate }}
                         </button>
                         <div class="tbl-actions__sep"></div>
                         <button class="tbl-actions__btn tbl-actions__btn--danger tbl-actions__btn--icon"
-                          (click)="deleteRecruiter(rec)" title="Delete recruiter">
+                          (click)="deleteRecruiter(rec)" [title]="'RECRUITER_LIST.delete_recruiter_title' | translate">
                           <i class="bi bi-trash"></i>
                         </button>
                       </div>
@@ -483,7 +484,7 @@ function websiteValidator(): ValidatorFn {
                   <div class="text-muted small">{{ editingRecruiter.contact_name }}</div>
                 </div>
               </div>
-              <button type="button" class="btn-close" (click)="closeEdit()" aria-label="Close"></button>
+              <button type="button" class="btn-close" (click)="closeEdit()" [attr.aria-label]="'COMMON.close' | translate"></button>
             </div>
 
             <!-- ── Modal Body ── -->
@@ -499,7 +500,7 @@ function websiteValidator(): ValidatorFn {
                   <div class="col-md-6">
                     <label class="form-label fw-semibold">Full Name <span class="text-danger">*</span></label>
                     <input formControlName="contact_name" class="form-control"
-                      [class.is-invalid]="editInvalid('contact_name')" placeholder="Jane Smith">
+                      [class.is-invalid]="editInvalid('contact_name')" [placeholder]="'RECRUITER_CREATE.name_placeholder' | translate">
                     @if (editInvalid('contact_name')) {
                       @if (editCtrl('contact_name').hasError('required')) {
                         <div class="invalid-feedback">Full name is required.</div>
@@ -519,14 +520,14 @@ function websiteValidator(): ValidatorFn {
                       formControlName="type"
                       [options]="RECRUITER_TYPE_OPTS"
                       [allowClear]="false"
-                      placeholder="Select type" />
+                      [placeholder]="'RECRUITER_CREATE.select_type' | translate" />
                   </div>
 
                   <div class="col-md-6">
                     <label class="form-label fw-semibold">Job Title / Role</label>
                     <input formControlName="contact_job_title" class="form-control"
                       [class.is-invalid]="editInvalid('contact_job_title')"
-                      placeholder="e.g. HR Manager, Director, Owner">
+                      [placeholder]="'RECRUITER_CREATE.job_title_placeholder' | translate">
                     @if (editInvalid('contact_job_title')) {
                       @if (editCtrl('contact_job_title').hasError('minlength')) {
                         <div class="invalid-feedback">Job title must be at least 2 characters.</div>
@@ -539,7 +540,7 @@ function websiteValidator(): ValidatorFn {
                   <div class="col-md-6">
                     <label class="form-label fw-semibold">Work Email <span class="text-danger">*</span></label>
                     <input formControlName="email" type="email" class="form-control"
-                      [class.is-invalid]="editInvalid('email')" placeholder="recruiter@company.com">
+                      [class.is-invalid]="editInvalid('email')" [placeholder]="'RECRUITER_CREATE.email_placeholder' | translate">
                     @if (editInvalid('email')) {
                       @if (editCtrl('email').hasError('required')) {
                         <div class="invalid-feedback">Work email is required.</div>
@@ -616,7 +617,7 @@ function websiteValidator(): ValidatorFn {
                   <div class="col-md-6">
                     <label class="form-label fw-semibold">Company Name</label>
                     <input formControlName="company_name" class="form-control"
-                      [class.is-invalid]="editInvalid('company_name')" placeholder="Acme Recruiting Ltd">
+                      [class.is-invalid]="editInvalid('company_name')" [placeholder]="'RECRUITER_CREATE.company_name_placeholder' | translate">
                     @if (editInvalid('company_name')) {
                       @if (editCtrl('company_name').hasError('minlength')) {
                         <div class="text-danger mt-1" style="font-size:.875em">Company name must be at least 2 characters.</div>
@@ -643,7 +644,7 @@ function websiteValidator(): ValidatorFn {
                     <app-searchable-select
                       formControlName="company_country"
                       [options]="countryOpts()"
-                      placeholder="Select country" />
+                      [placeholder]="'CANDIDATE_PROFILE.select_country' | translate" />
                   </div>
 
                   <div class="col-md-6">
@@ -651,7 +652,7 @@ function websiteValidator(): ValidatorFn {
                     <app-searchable-select
                       formControlName="company_city"
                       [options]="editCityOpts()"
-                      placeholder="Select city" />
+                      [placeholder]="'RECRUITER_CREATE.select_city' | translate" />
                     <div class="form-text">Select a country first to load cities.</div>
                   </div>
 
@@ -661,7 +662,7 @@ function websiteValidator(): ValidatorFn {
                       formControlName="industry"
                       [options]="EDIT_INDUSTRY_OPTS"
                       [allowClear]="true"
-                      placeholder="— Select industry —" />
+                      [placeholder]="'RECRUITER_CREATE.select_industry' | translate" />
                   </div>
 
                   <div class="col-md-6">
@@ -670,7 +671,7 @@ function websiteValidator(): ValidatorFn {
                       formControlName="company_size"
                       [options]="COMPANY_SIZE_OPTS"
                       [allowClear]="true"
-                      placeholder="— Select size —" />
+                      [placeholder]="'RECRUITER_CREATE.select_size' | translate" />
                   </div>
 
                 </div>
@@ -684,12 +685,12 @@ function websiteValidator(): ValidatorFn {
                     <div class="col-12">
                       <label class="form-label fw-semibold">Sectors They Recruit For</label>
                       <app-chip-multi-select formControlName="sectors_recruit_for"
-                        [options]="industryChipOpts()" placeholder="Select sectors" />
+                        [options]="industryChipOpts()" [placeholder]="'RECRUITER_CREATE.select_sectors' | translate" />
                     </div>
                     <div class="col-12">
                       <label class="form-label fw-semibold">Countries They Place In</label>
                       <app-chip-multi-select formControlName="countries_place_in"
-                        [options]="nationalityOpts()" placeholder="Select countries" />
+                        [options]="nationalityOpts()" [placeholder]="'RECRUITER_CREATE.select_countries' | translate" />
                     </div>
                   </div>
                 }
@@ -707,7 +708,7 @@ function websiteValidator(): ValidatorFn {
                       formControlName="has_sponsor_licence"
                       [options]="SPONSOR_LICENCE_EDIT_OPTS"
                       [allowClear]="true"
-                      placeholder="— Select —" />
+                      [placeholder]="'RECRUITER_CREATE.select_dash' | translate" />
                   </div>
 
                   @if (editSponsorYes) {
@@ -731,7 +732,7 @@ function websiteValidator(): ValidatorFn {
                     <div class="col-12">
                       <label class="form-label fw-semibold">Sponsor Licence Countries</label>
                       <app-chip-multi-select formControlName="sponsor_licence_countries"
-                        [options]="sponsorCountryChipOpts" placeholder="Select countries covered by licence" />
+                        [options]="sponsorCountryChipOpts" [placeholder]="'RECRUITER_CREATE.select_licence_countries' | translate" />
                     </div>
 
                     <div class="col-md-6">
@@ -740,7 +741,7 @@ function websiteValidator(): ValidatorFn {
                         formControlName="licence_rating"
                         [options]="LICENCE_RATING_OPTS"
                         [allowClear]="true"
-                        placeholder="— Select rating —" />
+                        [placeholder]="'RECRUITER_CREATE.select_rating' | translate" />
                       @if (editLicenceRatingA) {
                         <div class="form-text text-success fw-semibold">
                           <i class="bi bi-check-circle-fill me-1"></i>A-Rating — valid for approvals
@@ -783,17 +784,17 @@ function websiteValidator(): ValidatorFn {
                   <div class="col-12">
                     <label class="form-label fw-semibold">Which Nationalities Looking to Hire</label>
                     <app-chip-multi-select formControlName="target_nationalities"
-                      [options]="nationalityOpts()" placeholder="Select nationalities to hire" />
+                      [options]="nationalityOpts()" [placeholder]="'RECRUITER_CREATE.select_nationalities' | translate" />
                   </div>
                   <div class="col-12">
                     <label class="form-label fw-semibold">Target Candidate Countries</label>
                     <app-chip-multi-select formControlName="countries_place_in"
-                      [options]="nationalityOpts()" placeholder="Where they want candidates from" />
+                      [options]="nationalityOpts()" [placeholder]="'RECRUITER_CREATE.where_candidates_from' | translate" />
                   </div>
                   <div class="col-12">
                     <label class="form-label fw-semibold">Sectors Hiring For</label>
                     <app-chip-multi-select formControlName="sectors_recruit_for"
-                      [options]="industryChipOpts()" placeholder="Select sectors" />
+                      [options]="industryChipOpts()" [placeholder]="'RECRUITER_CREATE.select_sectors' | translate" />
                   </div>
                   <div class="col-md-6">
                     <label class="form-label fw-semibold">Typical Hires Per Year</label>
@@ -801,12 +802,12 @@ function websiteValidator(): ValidatorFn {
                       formControlName="hires_per_year"
                       [options]="HIRES_PER_YEAR_OPTS"
                       [allowClear]="true"
-                      placeholder="— Select —" />
+                      [placeholder]="'RECRUITER_CREATE.select_dash' | translate" />
                   </div>
                   <div class="col-md-6">
                     <label class="form-label fw-semibold">Job Types Offered</label>
                     <app-chip-multi-select formControlName="job_types"
-                      [options]="jobTypeChipOpts" placeholder="Select job types" />
+                      [options]="jobTypeChipOpts" [placeholder]="'RECRUITER_CREATE.select_job_types' | translate" />
                   </div>
                 </div>
 
@@ -822,7 +823,7 @@ function websiteValidator(): ValidatorFn {
                       formControlName="is_active_str"
                       [options]="ACCOUNT_STATUS_EDIT_OPTS"
                       [allowClear]="false"
-                      placeholder="Select status" />
+                      [placeholder]="'RECRUITER_CREATE.select_status' | translate" />
                   </div>
 
                   <div class="col-12">
@@ -838,7 +839,7 @@ function websiteValidator(): ValidatorFn {
                           formControlName="duration_unit"
                           [options]="DURATION_UNIT_OPTS"
                           [allowClear]="false"
-                          placeholder="— Unit —" />
+                          [placeholder]="'RECRUITER_CREATE.select_unit' | translate" />
                       </div>
                     </div>
                     @if (expiryPreview) {
@@ -849,7 +850,7 @@ function websiteValidator(): ValidatorFn {
                       <div class="form-text mt-1"
                         [class.text-danger]="isExpired(editingRecruiter.access_expires_at)">
                         <i class="bi bi-calendar{{ isExpired(editingRecruiter.access_expires_at) ? '-x' : '2' }} me-1"></i>
-                        Current expiry: <strong>{{ editingRecruiter.access_expires_at | date:'dd MMM yyyy, HH:mm' }}</strong>
+                        Current expiry: <strong>{{ editingRecruiter.access_expires_at | localeDate:'dd MMM yyyy, HH:mm' }}</strong>
                         @if (isExpired(editingRecruiter.access_expires_at)) {
                           <span class="badge bg-danger ms-1" style="font-size:.65rem">Expired</span>
                         }
@@ -905,7 +906,7 @@ function websiteValidator(): ValidatorFn {
                         [value]="editingRecruiter.plain_password ?? ''" readonly>
                       <button type="button" class="btn btn-outline-secondary"
                         (click)="showCurrentPw = !showCurrentPw"
-                        [attr.aria-label]="showCurrentPw ? 'Hide password' : 'Show password'">
+                        [attr.aria-label]="showCurrentPw ? translate.instant('AUTH.hide_password') : translate.instant('AUTH.show_password')">
                         <i class="bi" [class.bi-eye]="!showCurrentPw" [class.bi-eye-slash]="showCurrentPw"></i>
                       </button>
                     </div>
@@ -920,11 +921,11 @@ function websiteValidator(): ValidatorFn {
                     <div class="input-group">
                       <input [type]="showNewPw ? 'text' : 'password'" formControlName="new_password"
                         class="form-control"
-                        placeholder="Min 8 chars, upper + lower + number"
+                        [placeholder]="'RECRUITER_CREATE.password_hint' | translate"
                         [class.is-invalid]="editCtrl('new_password').invalid && editCtrl('new_password').touched">
                       <button type="button" class="btn btn-outline-secondary"
                         (click)="showNewPw = !showNewPw"
-                        [attr.aria-label]="showNewPw ? 'Hide password' : 'Show password'">
+                        [attr.aria-label]="showNewPw ? translate.instant('AUTH.hide_password') : translate.instant('AUTH.show_password')">
                         <i class="bi" [class.bi-eye]="!showNewPw" [class.bi-eye-slash]="showNewPw"></i>
                       </button>
                     </div>
@@ -943,7 +944,7 @@ function websiteValidator(): ValidatorFn {
                     <div class="input-group">
                       <input [type]="showConfirmPw ? 'text' : 'password'" formControlName="confirm_password"
                         class="form-control"
-                        placeholder="Repeat new password"
+                        [placeholder]="'RECRUITER_LIST.repeat_new_password' | translate"
                         [class.is-invalid]="editForm.hasError('passwordsMismatch') && editCtrl('confirm_password').touched">
                       <button type="button" class="btn btn-outline-secondary"
                         (click)="showConfirmPw = !showConfirmPw"
@@ -964,7 +965,7 @@ function websiteValidator(): ValidatorFn {
                 </h6>
                 <div class="mb-4">
                   <textarea formControlName="admin_notes" class="form-control" rows="3"
-                    placeholder="Internal notes — not visible to the recruiter"></textarea>
+                    [placeholder]="'RECRUITER_CREATE.internal_notes_placeholder' | translate"></textarea>
                 </div>
 
                 <!-- Error alert -->
@@ -1160,6 +1161,7 @@ export class RecruiterListComponent implements OnInit {
     private toast: ToastService,
     private confirm: ConfirmDialogService,
     private route: ActivatedRoute,
+    protected translate: TranslateService,
   ) {
     this.filterForm = this.fb.group({
       company:            [''],
@@ -1328,19 +1330,19 @@ export class RecruiterListComponent implements OnInit {
   async bulkActivate(): Promise<void> {
     const ids = [...this.selectedIds];
     const ok = await this.confirm.confirm({
-      title: 'Activate Recruiters',
-      message: `Activate ${ids.length} recruiter${ids.length === 1 ? '' : 's'}?`,
-      confirmLabel: 'Activate', confirmClass: 'btn-success',
+      title: this.translate.instant('RECRUITER_LIST.activate_recruiters_title'),
+      message: this.translate.instant('RECRUITER_LIST.activate_recruiters_msg', { count: ids.length, plural: ids.length === 1 ? '' : 's' }),
+      confirmLabel: this.translate.instant('RECRUITER_LIST.activate_label'), confirmClass: 'btn-success',
     });
     if (!ok.confirmed) return;
     this.bulkProcessing = true;
     this.recruiterService.bulkStatus(ids, true).subscribe({
       next: (res) => {
-        this.toast.success(`${res.updated} recruiter${res.updated === 1 ? '' : 's'} activated`);
+        this.toast.success(this.translate.instant('RECRUITER_LIST.bulk_activated', { count: res.updated, plural: res.updated === 1 ? '' : 's' }));
         this.clearSelection(); this.bulkProcessing = false; this.load();
       },
       error: (err) => {
-        this.toast.error(err?.error?.message ?? 'Bulk activate failed');
+        this.toast.error(err?.error?.message ?? this.translate.instant('RECRUITER_LIST.bulk_activate_failed'));
         this.bulkProcessing = false;
       },
     });
@@ -1349,19 +1351,19 @@ export class RecruiterListComponent implements OnInit {
   async bulkDeactivate(): Promise<void> {
     const ids = [...this.selectedIds];
     const ok = await this.confirm.confirm({
-      title: 'Deactivate Recruiters',
-      message: `Deactivate ${ids.length} recruiter${ids.length === 1 ? '' : 's'}?`,
-      confirmLabel: 'Deactivate', confirmClass: 'btn-warning',
+      title: this.translate.instant('RECRUITER_LIST.deactivate_recruiters_title'),
+      message: this.translate.instant('RECRUITER_LIST.deactivate_recruiters_msg', { count: ids.length, plural: ids.length === 1 ? '' : 's' }),
+      confirmLabel: this.translate.instant('RECRUITER_LIST.deactivate_label'), confirmClass: 'btn-warning',
     });
     if (!ok.confirmed) return;
     this.bulkProcessing = true;
     this.recruiterService.bulkStatus(ids, false).subscribe({
       next: (res) => {
-        this.toast.success(`${res.updated} recruiter${res.updated === 1 ? '' : 's'} deactivated`);
+        this.toast.success(this.translate.instant('RECRUITER_LIST.bulk_deactivated', { count: res.updated, plural: res.updated === 1 ? '' : 's' }));
         this.clearSelection(); this.bulkProcessing = false; this.load();
       },
       error: (err) => {
-        this.toast.error(err?.error?.message ?? 'Bulk deactivate failed');
+        this.toast.error(err?.error?.message ?? this.translate.instant('RECRUITER_LIST.bulk_deactivate_failed'));
         this.bulkProcessing = false;
       },
     });
@@ -1375,7 +1377,7 @@ export class RecruiterListComponent implements OnInit {
         this._downloadBlob(blob, `recruiters-selected-${new Date().toISOString().slice(0, 10)}.csv`);
         this.bulkProcessing = false;
       },
-      error: () => { this.toast.error('Export failed. Please try again.'); this.bulkProcessing = false; },
+      error: () => { this.toast.error(this.translate.instant('MESSAGES.operation_failed')); this.bulkProcessing = false; },
     });
   }
 
@@ -1399,7 +1401,7 @@ export class RecruiterListComponent implements OnInit {
         this._downloadBlob(blob, `recruiters-${new Date().toISOString().slice(0, 10)}.csv`);
         this.exporting = false;
       },
-      error: () => { this.toast.error('Export failed. Please try again.'); this.exporting = false; },
+      error: () => { this.toast.error(this.translate.instant('MESSAGES.operation_failed')); this.exporting = false; },
     });
   }
 
@@ -1606,13 +1608,13 @@ export class RecruiterListComponent implements OnInit {
     this.recruiterService.update(this.editingRecruiter.id, payload as any).subscribe({
       next: () => {
         this.editSaving = false;
-        this.toast.success('Recruiter updated');
+        this.toast.success(this.translate.instant('RECRUITER_LIST.recruiter_updated'));
         this.closeEdit();
         this.load();
       },
       error: (err) => {
         this.editSaving = false;
-        this.editError  = err?.error?.message ?? 'Failed to update recruiter.';
+        this.editError  = err?.error?.message ?? this.translate.instant('RECRUITER_LIST.update_failed');
       },
     });
   }
@@ -1620,42 +1622,42 @@ export class RecruiterListComponent implements OnInit {
   // ── Other actions ────────────────────────────────────────────────────────────
   async resendCredentials(rec: Recruiter): Promise<void> {
     const ok = await this.confirm.confirm({
-      title: 'Resend Credentials',
-      message: `Resend login credentials to ${rec.email}?`,
-      confirmLabel: 'Send', confirmClass: 'btn-primary',
+      title: this.translate.instant('CANDIDATE_LIST.resend_credentials_title'),
+      message: this.translate.instant('CONFIRMATIONS.resend_credentials', { email: rec.email }),
+      confirmLabel: this.translate.instant('CONFIRMATIONS.send_label'), confirmClass: 'btn-primary',
     });
     if (!ok.confirmed) return;
     this.recruiterService.resendCredentials(rec.id).subscribe({
-      next: () => this.toast.success(`Credentials sent to ${rec.email}`),
-      error: (err) => this.toast.error(err?.error?.message ?? 'Failed to resend credentials'),
+      next: () => this.toast.success(this.translate.instant('RECRUITER_LIST.credentials_sent_to', { email: rec.email })),
+      error: (err) => this.toast.error(err?.error?.message ?? this.translate.instant('RECRUITER_LIST.resend_credentials_failed')),
     });
   }
 
   async deleteRecruiter(rec: Recruiter): Promise<void> {
     const ok = await this.confirm.confirm({
-      title: 'Delete Recruiter',
-      message: `Delete ${rec.contact_name}? This action is irreversible.`,
-      confirmLabel: 'Delete', confirmClass: 'btn-danger',
+      title: this.translate.instant('RECRUITER_PROFILE.delete_recruiter'),
+      message: this.translate.instant('RECRUITER_LIST.delete_recruiter_msg', { name: rec.contact_name }),
+      confirmLabel: this.translate.instant('CONFIRMATIONS.delete_label'), confirmClass: 'btn-danger',
     });
     if (!ok.confirmed) return;
     this.recruiterService.delete(rec.id).subscribe({
-      next: () => { this.toast.success('Recruiter deleted'); this.load(); },
-      error: (err) => this.toast.error(err?.error?.message ?? 'Failed to delete'),
+      next: () => { this.toast.success(this.translate.instant('RECRUITER_LIST.recruiter_deleted')); this.load(); },
+      error: (err) => this.toast.error(err?.error?.message ?? this.translate.instant('RECRUITER_LIST.delete_failed')),
     });
   }
 
   async toggleActive(rec: Recruiter): Promise<void> {
     const activate = !rec.is_active;
     const ok = await this.confirm.confirm({
-      title:        activate ? 'Activate Recruiter' : 'Deactivate Recruiter',
-      message:      `${activate ? 'Activate' : 'Deactivate'} ${rec.contact_name}?`,
-      confirmLabel: activate ? 'Activate' : 'Deactivate',
+      title:        activate ? this.translate.instant('RECRUITER_LIST.activate_recruiter_title') : this.translate.instant('RECRUITER_LIST.deactivate_recruiter_title'),
+      message:      this.translate.instant('RECRUITER_LIST.toggle_status_msg', { action: activate ? this.translate.instant('RECRUITER_LIST.activate_label') : this.translate.instant('RECRUITER_LIST.deactivate_label'), name: rec.contact_name }),
+      confirmLabel: activate ? this.translate.instant('RECRUITER_LIST.activate_label') : this.translate.instant('RECRUITER_LIST.deactivate_label'),
       confirmClass: activate ? 'btn-success' : 'btn-warning',
     });
     if (!ok.confirmed) return;
     this.recruiterService.update(rec.id, { is_active: activate }).subscribe({
-      next: () => { this.toast.success(`Recruiter ${activate ? 'activated' : 'deactivated'}`); this.load(); },
-      error: (err) => this.toast.error(err?.error?.message ?? 'Failed to update status'),
+      next: () => { this.toast.success(activate ? this.translate.instant('RECRUITER_LIST.recruiter_activated') : this.translate.instant('RECRUITER_LIST.recruiter_deactivated')); this.load(); },
+      error: (err) => this.toast.error(err?.error?.message ?? this.translate.instant('RECRUITER_LIST.status_update_failed')),
     });
   }
 }

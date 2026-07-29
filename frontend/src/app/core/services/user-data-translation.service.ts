@@ -3,7 +3,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { environment } from '../../../environments/environment';
-import { firstValueFrom, timeout, retry } from 'rxjs';
+import { firstValueFrom, timeout, retry, timer } from 'rxjs';
 
 interface BackendTranslationRequest {
   fields: Record<string, string>;
@@ -34,31 +34,8 @@ export class UserDataTranslationService {
   private translationCache = new Map<string, Map<string, { data: string; expires: number }>>();
   private readonly CACHE_TTL = 3600000; // 1 hour
 
-  // Map extended language codes to backend-supported codes
-  private readonly langCodeMap: Record<string, string> = {
-    'bg': 'ru',      // Bulgarian → Russian
-    'hr': 'ru',      // Croatian → Russian
-    'el': 'de',      // Greek → German
-    'cs': 'de',      // Czech → German
-    'hu': 'de',      // Hungarian → German
-    'sk': 'de',      // Slovak → German
-    'sl': 'de',      // Slovenian → German
-    'da': 'nl',      // Danish → Dutch
-    'et': 'nl',      // Estonian → Dutch
-    'fi': 'nl',      // Finnish → Dutch
-    'sv': 'nl',      // Swedish → Dutch
-    'lv': 'nl',      // Latvian → Dutch
-    'lt': 'nl',      // Lithuanian → Dutch
-    'no': 'nl',      // Norwegian → Dutch
-    'ga': 'en',      // Irish → English
-    'is': 'en',      // Icelandic → English
-    'lb': 'fr',      // Luxembourgish → French
-    'mt': 'it',      // Maltese → Italian
-    'ro': 'fr',      // Romanian → French
-    'rm': 'fr',      // Romansh → French
-  };
-
-  // Language name mappings for API
+  // Language name mappings for API — must match backend SUPPORTED_LANG_CODES
+  // and frontend LanguageService.SUPPORTED_LANGUAGES (34 UI languages).
   private readonly langNameMap: Record<string, string> = {
     'en': 'English',
     'fr': 'French',
@@ -75,6 +52,26 @@ export class UserDataTranslationService {
     'hi': 'Hindi',
     'tr': 'Turkish',
     'pl': 'Polish',
+    'bg': 'Bulgarian',
+    'hr': 'Croatian',
+    'el': 'Greek',
+    'cs': 'Czech',
+    'da': 'Danish',
+    'et': 'Estonian',
+    'fi': 'Finnish',
+    'sv': 'Swedish',
+    'hu': 'Hungarian',
+    'ga': 'Irish',
+    'lv': 'Latvian',
+    'lt': 'Lithuanian',
+    'lb': 'Luxembourgish',
+    'mt': 'Maltese',
+    'ro': 'Romanian',
+    'sk': 'Slovak',
+    'sl': 'Slovenian',
+    'no': 'Norwegian',
+    'rm': 'Romansh',
+    'is': 'Icelandic',
   };
 
   constructor(private http: HttpClient) {}
@@ -145,20 +142,17 @@ export class UserDataTranslationService {
    * Internal method to call the backend translation API
    */
   private async translateFields(fields: Record<string, string>, targetLang: string): Promise<Record<string, string>> {
-    // Map to supported language code if needed
-    const mappedLangCode = this.langCodeMap[targetLang] || targetLang;
-
-    if (!this.langNameMap[mappedLangCode]) {
+    if (!this.langNameMap[targetLang]) {
       console.warn(`Language ${targetLang} not supported, returning original`);
       return fields;
     }
 
-    const targetLangName = this.langNameMap[mappedLangCode];
+    const targetLangName = this.langNameMap[targetLang];
 
     const request: BackendTranslationRequest = {
       fields,
-      targetLang: mappedLangCode,
-      targetLangName: targetLangName,
+      targetLang,
+      targetLangName,
     };
 
     try {
@@ -176,7 +170,7 @@ export class UserDataTranslationService {
           }
         ).pipe(
           timeout(environment.translation.timeoutMs),
-          retry({ count: 2, delay: 1000 })
+          retry({ count: 2, delay: (_error, retryCount) => timer(1000 * retryCount) })
         )
       );
 

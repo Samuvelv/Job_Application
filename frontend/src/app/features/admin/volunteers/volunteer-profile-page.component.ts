@@ -2,6 +2,7 @@
 import { Component, OnInit, computed, signal, inject, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
+import { LocaleDatePipe } from '../../../core/pipes/locale-date.pipe';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { Subject } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
@@ -12,14 +13,13 @@ import { ConfirmDialogService } from '../../../core/services/confirm-dialog.serv
 import { BulkTranslationService } from '../../../core/services/bulk-translation.service';
 import { LanguageService } from '../../../core/services/language.service';
 import { Volunteer } from '../../../core/models/volunteer.model';
-import { TranslateUserDataPipe } from '../../../core/pipes/translate-user-data.pipe';
 
 type Tab = 'overview' | 'contact';
 
 @Component({
   selector: 'app-volunteer-profile-page',
   standalone: true,
-  imports: [CommonModule, TranslateModule, RouterLink, TranslateUserDataPipe],
+  imports: [LocaleDatePipe, CommonModule, TranslateModule, RouterLink],
   template: `
     <!-- Back + actions -->
     <div class="d-flex align-items-center justify-content-between mb-4 gap-2 flex-wrap">
@@ -49,7 +49,7 @@ type Tab = 'overview' | 'contact';
           </button>
           <div class="tbl-actions__sep"></div>
           <button class="tbl-actions__btn tbl-actions__btn--danger tbl-actions__btn--icon"
-            (click)="deleteVolunteer()" title="Delete volunteer">
+            (click)="deleteVolunteer()" [title]="'VOLUNTEER_PROFILE.delete_volunteer' | translate">
             <i class="bi bi-trash"></i>
           </button>
         </div>
@@ -153,7 +153,7 @@ type Tab = 'overview' | 'contact';
                <div class="vp-stat__label">{{ 'VOLUNTEER_PROFILE.languages' | translate }}</div>
              </div>
              <div class="vp-stat">
-               <div class="vp-stat__val">{{ volunteer.created_at | date:'yyyy' }}</div>
+               <div class="vp-stat__val">{{ volunteer.created_at | localeDate:'yyyy' }}</div>
                <div class="vp-stat__label">{{ 'VOLUNTEER_PROFILE.since' | translate }}</div>
              </div>
           </div>
@@ -366,12 +366,12 @@ type Tab = 'overview' | 'contact';
                 <div class="vp-info-list">
                   <div class="vp-info-row">
                     <span class="vp-info-label">Added on</span>
-                    <span class="vp-info-val">{{ volunteer.created_at | date:'dd MMM yyyy' }}</span>
+                    <span class="vp-info-val">{{ volunteer.created_at | localeDate:'dd MMM yyyy' }}</span>
                   </div>
                   <div class="vp-info-row">
                     <span class="vp-info-label">Last updated</span>
                     <span class="vp-info-val">
-                      {{ volunteer.updated_at ? (volunteer.updated_at | date:'dd MMM yyyy') : '—' }}
+                      {{ volunteer.updated_at ? (volunteer.updated_at | localeDate:'dd MMM yyyy') : '—' }}
                     </span>
                   </div>
                   <div class="vp-info-row">

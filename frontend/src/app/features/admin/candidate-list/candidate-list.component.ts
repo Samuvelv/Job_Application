@@ -3,7 +3,7 @@ import { Component, OnInit, ViewChild, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
-import { TranslateModule } from '@ngx-translate/core';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { distinctUntilChanged, skip } from 'rxjs';
 import { CandidateService } from '../../../core/services/candidate.service';
 import { MasterDataService } from '../../../core/services/master-data.service';
@@ -583,6 +583,7 @@ export class CandidateListComponent implements OnInit {
     private confirm: ConfirmDialogService,
     private master: MasterDataService,
     private router: Router,
+    private translate: TranslateService,
   ) {}
 
   ngOnInit(): void {
@@ -628,9 +629,9 @@ export class CandidateListComponent implements OnInit {
   bulkMarkFeePaid(): void {
     const ids = Array.from(this.selectedIds);
     this.confirm.confirm({
-      title: 'Mark Fee as Paid',
-      message: `Mark registration fee as Paid for ${ids.length} candidate${ids.length === 1 ? '' : 's'}?`,
-      confirmLabel: 'Mark Paid',
+      title: this.translate.instant('CANDIDATE_LIST.mark_fee_paid_title'),
+      message: this.translate.instant('CONFIRMATIONS.mark_fee_paid', { count: ids.length, plural: ids.length === 1 ? '' : 's' }),
+      confirmLabel: this.translate.instant('CONFIRMATIONS.mark_paid_label'),
       confirmClass: 'btn-success',
     }).then(ok => {
       if (!ok.confirmed) return;
@@ -643,7 +644,7 @@ export class CandidateListComponent implements OnInit {
           this.loadCandidates();
         },
         error: (err) => {
-          this.toast.show(err?.error?.message ?? 'Bulk update failed', 'error');
+          this.toast.show(err?.error?.message ?? this.translate.instant('CANDIDATE_LIST.bulk_update_failed'), 'error');
           this.bulkProcessing = false;
         },
       });
@@ -655,9 +656,9 @@ export class CandidateListComponent implements OnInit {
     const ids = Array.from(this.selectedIds);
     const label = this.PROFILE_STATUSES.find(s => s.value === status)?.label ?? status;
     this.confirm.confirm({
-      title: 'Change Profile Status',
-      message: `Set status to "${label}" for ${ids.length} candidate${ids.length === 1 ? '' : 's'}?`,
-      confirmLabel: 'Apply',
+      title: this.translate.instant('CANDIDATE_LIST.change_status_title'),
+      message: this.translate.instant('CONFIRMATIONS.change_status', { status: label, count: ids.length, plural: ids.length === 1 ? '' : 's' }),
+      confirmLabel: this.translate.instant('CONFIRMATIONS.apply_label'),
       confirmClass: 'btn-primary',
     }).then(ok => {
       if (!ok.confirmed) return;
@@ -670,7 +671,7 @@ export class CandidateListComponent implements OnInit {
           this.loadCandidates();
         },
         error: (err) => {
-          this.toast.show(err?.error?.message ?? 'Bulk update failed', 'error');
+          this.toast.show(err?.error?.message ?? this.translate.instant('CANDIDATE_LIST.bulk_update_failed'), 'error');
           this.bulkProcessing = false;
         },
       });
@@ -755,7 +756,7 @@ export class CandidateListComponent implements OnInit {
         this.exporting = false;
       },
       error: () => {
-        this.toast.show('Export failed. Please try again.', 'error');
+        this.toast.show(this.translate.instant('MESSAGES.operation_failed'), 'error');
         this.exporting = false;
       },
     });
@@ -811,35 +812,35 @@ export class CandidateListComponent implements OnInit {
 
   // ── Actions ──────────────────────────────────────────────────────────────────
   forwardToEmployer(emp: Candidate): void {
-    this.toast.show(`Shortlisting ${emp.first_name} ${emp.last_name} — coming soon.`, 'info');
+    this.toast.show(this.translate.instant('CANDIDATE_LIST.shortlisting_coming_soon', { name: `${emp.first_name} ${emp.last_name}` }), 'info');
   }
 
   resendCreds(emp: Candidate): void {
     this.confirm.confirm({
-      title: 'Resend Credentials',
-      message: `Resend login credentials to ${emp.email}?`,
-      confirmLabel: 'Send',
+      title: this.translate.instant('CANDIDATE_LIST.resend_credentials_title'),
+      message: this.translate.instant('CONFIRMATIONS.resend_credentials', { email: emp.email }),
+      confirmLabel: this.translate.instant('CONFIRMATIONS.send_label'),
       confirmClass: 'btn-primary',
     }).then(ok => {
       if (!ok.confirmed) return;
       this.empSvc.resendCredentials(emp.id).subscribe({
-        next:  () => this.toast.show('Credentials sent!', 'success'),
-        error: (err) => this.toast.show(err?.error?.message ?? 'Failed to send', 'error'),
+        next:  () => this.toast.show(this.translate.instant('CANDIDATE_LIST.credentials_sent'), 'success'),
+        error: (err) => this.toast.show(err?.error?.message ?? this.translate.instant('CANDIDATE_LIST.credentials_send_failed'), 'error'),
       });
     });
   }
 
   deleteCandidate(emp: Candidate): void {
     this.confirm.confirm({
-      title: 'Delete Candidate',
-      message: `Delete ${emp.first_name} ${emp.last_name}? This cannot be undone.`,
-      confirmLabel: 'Delete',
+      title: this.translate.instant('CANDIDATE_LIST.delete_candidate_title'),
+      message: this.translate.instant('CONFIRMATIONS.delete_candidate', { name: `${emp.first_name} ${emp.last_name}` }),
+      confirmLabel: this.translate.instant('CONFIRMATIONS.delete_label'),
       confirmClass: 'btn-danger',
     }).then(ok => {
       if (!ok.confirmed) return;
       this.empSvc.delete(emp.id).subscribe({
-        next:  () => { this.toast.show('Candidate deleted', 'success'); this.loadCandidates(); },
-        error: (err) => this.toast.show(err?.error?.message ?? 'Delete failed', 'error'),
+        next:  () => { this.toast.show(this.translate.instant('CANDIDATE_PROFILE_ADMIN.candidate_deleted'), 'success'); this.loadCandidates(); },
+        error: (err) => this.toast.show(err?.error?.message ?? this.translate.instant('CANDIDATE_LIST.delete_failed'), 'error'),
       });
     });
   }
@@ -850,7 +851,7 @@ export class CandidateListComponent implements OnInit {
     this.empSvc.inviteVolunteer(emp.id).subscribe({
       next: (res) => {
         this.invitingId = null;
-        this.toast.show(res.message ?? 'Invitation sent!', 'success');
+        this.toast.show(res.message ?? this.translate.instant('CANDIDATE_PROFILE_ADMIN.invitation_sent'), 'success');
         // Update local row state so icon flips immediately
         const idx = this.candidates.findIndex(c => c.id === emp.id);
         if (idx !== -1) {
@@ -859,7 +860,7 @@ export class CandidateListComponent implements OnInit {
       },
       error: (err) => {
         this.invitingId = null;
-        this.toast.show(err?.error?.message ?? 'Failed to send invitation.', 'error');
+        this.toast.show(err?.error?.message ?? this.translate.instant('CANDIDATE_PROFILE_ADMIN.invitation_send_failed'), 'error');
       },
     });
   }

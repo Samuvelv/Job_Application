@@ -1,6 +1,7 @@
 // src/app/shared/components/contact-request-card/contact-request-card.component.ts
 import { Component, Input, Output, EventEmitter, OnInit } from '@angular/core';
 import { TranslateModule } from '@ngx-translate/core';
+import { LocaleDatePipe } from '../../../core/pipes/locale-date.pipe';
 import { CommonModule } from '@angular/common';
 import { ContactRequest } from '../../../core/models/contact-request.model';
 import { ConfirmDialogService } from '../../../core/services/confirm-dialog.service';
@@ -8,7 +9,7 @@ import { ConfirmDialogService } from '../../../core/services/confirm-dialog.serv
 @Component({
   selector: 'app-contact-request-card',
   standalone: true,
-  imports: [CommonModule, TranslateModule],
+  imports: [LocaleDatePipe, CommonModule, TranslateModule],
   template: `
     <div class="contact-request-card" [class.is-selected]="selected">
       <!-- Card Header -->
@@ -87,7 +88,7 @@ import { ConfirmDialogService } from '../../../core/services/confirm-dialog.serv
          <div class="audit-trail__rows">
            <div class="audit-trail__row">
              <span class="audit-trail__label">{{ 'COMMON.date' | translate }}</span>
-             <span class="audit-trail__value">{{ request.created_at | date:'dd MMM yyyy, HH:mm' }}</span>
+             <span class="audit-trail__value">{{ request.created_at | localeDate:'dd MMM yyyy, HH:mm' }}</span>
            </div>
            @if (request.status !== 'pending' && request.status !== 'revoked') {
              <div class="audit-trail__row">
@@ -103,7 +104,7 @@ import { ConfirmDialogService } from '../../../core/services/confirm-dialog.serv
              </div>
              <div class="audit-trail__row">
                <span class="audit-trail__label">{{ 'COMMON.date' | translate }}</span>
-               <span class="audit-trail__value">{{ request.reviewed_at | date:'dd MMM yyyy, HH:mm' }}</span>
+               <span class="audit-trail__value">{{ request.reviewed_at | localeDate:'dd MMM yyyy, HH:mm' }}</span>
              </div>
            }
            @if (request.status === 'revoked') {
@@ -120,7 +121,7 @@ import { ConfirmDialogService } from '../../../core/services/confirm-dialog.serv
              </div>
              <div class="audit-trail__row">
                <span class="audit-trail__label">{{ 'COMMON.date' | translate }}</span>
-               <span class="audit-trail__value">{{ request.revoked_at | date:'dd MMM yyyy, HH:mm' }}</span>
+               <span class="audit-trail__value">{{ request.revoked_at | localeDate:'dd MMM yyyy, HH:mm' }}</span>
              </div>
            }
          </div>

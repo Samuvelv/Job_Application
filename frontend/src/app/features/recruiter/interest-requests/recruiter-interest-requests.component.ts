@@ -3,6 +3,7 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
+import { LocaleDatePipe } from '../../../core/pipes/locale-date.pipe';
 import { forkJoin, of } from 'rxjs';
 import { catchError } from 'rxjs/operators';
 import { InterestRequestService, InterestRequest } from '../../../core/services/interest-request.service';
@@ -14,7 +15,7 @@ import { PageHeaderComponent } from '../../../shared/components/page-header/page
 @Component({
   selector: 'app-recruiter-interest-requests',
   standalone: true,
-  imports: [CommonModule, RouterLink, TranslateModule, EmptyStateComponent, PageHeaderComponent],
+  imports: [LocaleDatePipe, CommonModule, RouterLink, TranslateModule, EmptyStateComponent, PageHeaderComponent],
   styles: [`
     .ir-card {
       background: var(--th-surface);
@@ -217,7 +218,7 @@ import { PageHeaderComponent } from '../../../shared/components/page-header/page
                 }
               </div>
               <span class="ir-card__date">
-                <i class="bi bi-clock me-1"></i>{{ r.created_at | date:'dd MMM yyyy, HH:mm' }}
+                <i class="bi bi-clock me-1"></i>{{ r.created_at | localeDate:'dd MMM yyyy, HH:mm' }}
               </span>
             </div>
 
@@ -231,7 +232,7 @@ import { PageHeaderComponent } from '../../../shared/components/page-header/page
               </div>
               @if (r.reviewed_at) {
                 <div class="ir-card__field">
-                  <strong>{{ 'INTEREST_REQUESTS.reviewed_label' | translate }}:</strong> {{ r.reviewed_at | date:'dd MMM yyyy' }}
+                  <strong>{{ 'INTEREST_REQUESTS.reviewed_label' | translate }}:</strong> {{ r.reviewed_at | localeDate:'dd MMM yyyy' }}
                 </div>
               }
             </div>

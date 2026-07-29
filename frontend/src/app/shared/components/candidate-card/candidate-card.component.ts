@@ -3,13 +3,14 @@ import { Component, Input, Output, EventEmitter, computed } from '@angular/core'
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
+import { LocaleDatePipe } from '../../../core/pipes/locale-date.pipe';
 import { Candidate } from '../../../core/models/candidate.model';
 import { MasterDataService } from '../../../core/services/master-data.service';
 
 @Component({
   selector: 'app-candidate-card',
   standalone: true,
-  imports: [CommonModule, RouterLink, TranslateModule],
+  imports: [LocaleDatePipe, CommonModule, RouterLink, TranslateModule],
   styles: [':host { display: block; height: 100%; }'],
   template: `
     <div class="cl-card" [class.cl-card--selected]="selected">
@@ -138,7 +139,7 @@ import { MasterDataService } from '../../../core/services/master-data.service';
       <!-- ── Last updated ── -->
       <div class="cl-card__updated">
         <i class="bi bi-calendar3 me-1"></i>
-        {{ (candidate.updated_at || candidate.created_at) | date:'mediumDate' }}
+        {{ (candidate.updated_at || candidate.created_at) | localeDate:'mediumDate' }}
       </div>
 
        <!-- ── Actions footer ── -->

@@ -4,6 +4,7 @@ import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { ReactiveFormsModule, FormBuilder, FormGroup } from '@angular/forms';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
+import { LocaleDatePipe } from '../../../core/pipes/locale-date.pipe';
 import { RecruiterService } from '../../../core/services/recruiter.service';
 import { ShortlistEntry } from '../../../core/models/recruiter.model';
 import { ToastService } from '../../../core/services/toast.service';
@@ -13,7 +14,7 @@ import { EmptyStateComponent } from '../../../shared/components/empty-state/empt
 @Component({
   selector: 'app-shortlist',
   standalone: true,
-  imports: [CommonModule, RouterLink, ReactiveFormsModule, TranslateModule, PageHeaderComponent, EmptyStateComponent],
+  imports: [LocaleDatePipe, CommonModule, RouterLink, ReactiveFormsModule, TranslateModule, PageHeaderComponent, EmptyStateComponent],
   template: `
     <app-page-header
       [title]="'SHORTLIST.title' | translate"
@@ -64,12 +65,12 @@ import { EmptyStateComponent } from '../../../shared/components/empty-state/empt
                 <div class="col-sm-6 col-md-4 col-lg-3">
                   <label class="filter-card__section-label">{{ 'SHORTLIST.industry_label' | translate }}</label>
                   <input type="text" class="form-control form-control-sm"
-                    formControlName="industry" placeholder="e.g. Technology">
+                    formControlName="industry" [placeholder]="'CANDIDATE_EDIT_REQUEST.eg_technology' | translate">
                 </div>
                 <div class="col-sm-6 col-md-4 col-lg-3">
                   <label class="filter-card__section-label">{{ 'SHORTLIST.country_label' | translate }}</label>
                   <input type="text" class="form-control form-control-sm"
-                    formControlName="currentCountry" placeholder="e.g. Australia">
+                    formControlName="currentCountry" [placeholder]="'SHORTLIST.country_example' | translate">
                 </div>
                 <div class="col-sm-6 col-md-4 col-lg-3">
                   <label class="filter-card__section-label">{{ 'SHORTLIST.min_experience' | translate }}</label>
@@ -127,7 +128,7 @@ import { EmptyStateComponent } from '../../../shared/components/empty-state/empt
               background:var(--th-surface-alt);color:var(--th-text-muted);
               border:1px solid var(--th-border);
               pointer-events:none;z-index:1;">
-              <i class="bi bi-calendar3"></i> {{ entry.shortlisted_at | date:'dd MMM yyyy' }}
+              <i class="bi bi-calendar3"></i> {{ entry.shortlisted_at | localeDate:'dd MMM yyyy' }}
             </span>
 
             <!-- Shortlisted badge (top-right) -->

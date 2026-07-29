@@ -4,7 +4,7 @@ import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, FormControl, FormGroup, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
 import { catchError, forkJoin, of } from 'rxjs';
-import { TranslateModule } from '@ngx-translate/core';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { CandidateService, PaginatedCandidates } from '../../../core/services/candidate.service';
 import { RecruiterService } from '../../../core/services/recruiter.service';
 import { InterestRequestService, InterestRequest } from '../../../core/services/interest-request.service';
@@ -207,6 +207,7 @@ export class CandidatesComponent implements OnInit {
     private recruiterService: RecruiterService,
     private interestRequestService: InterestRequestService,
     private toast: ToastService,
+    private translate: TranslateService,
   ) {
     this.requestForm = this.fb.group({
       sector:  ['', Validators.required],
@@ -312,20 +313,20 @@ export class CandidatesComponent implements OnInit {
           const updated = new Set(this.shortlistedIds);
           updated.delete(emp.id);
           this.shortlistedIds = updated;
-          this.toast.success(`${emp.first_name} ${emp.last_name} removed from shortlist`);
+          this.toast.success(this.translate.instant('SHORTLIST.removed_success', { name: `${emp.first_name} ${emp.last_name}` }));
         },
         error: (err) => {
-          this.toast.error(err?.error?.message ?? 'Failed to remove from shortlist');
+          this.toast.error(err?.error?.message ?? this.translate.instant('SHORTLIST.remove_failed'));
         },
       });
     } else {
       this.recruiterService.addToShortlist(emp.id).subscribe({
         next: () => {
           this.shortlistedIds = new Set([...this.shortlistedIds, emp.id]);
-          this.toast.success(`${emp.first_name} ${emp.last_name} added to shortlist`);
+          this.toast.success(this.translate.instant('SHORTLIST.added_success', { name: `${emp.first_name} ${emp.last_name}` }));
         },
         error: (err) => {
-          this.toast.error(err?.error?.message ?? 'Failed to shortlist');
+          this.toast.error(err?.error?.message ?? this.translate.instant('SHORTLIST.add_failed'));
         },
       });
     }
@@ -356,12 +357,12 @@ export class CandidatesComponent implements OnInit {
         this.submitting = false;
         // Add the new request to the map so the card immediately shows "Pending"
         this.interestMap.set(res.request.candidate_id, res.request);
-        this.toast.success('Interest request submitted. Awaiting admin approval.');
+        this.toast.success(this.translate.instant('RECRUITER_CANDIDATES.interest_submitted'));
         this.closeModal();
       },
       error: (err) => {
         this.submitting = false;
-        this.toast.error(err?.error?.message ?? 'Failed to submit request');
+        this.toast.error(err?.error?.message ?? this.translate.instant('RECRUITER_CANDIDATES.interest_submit_failed'));
       },
     });
   }

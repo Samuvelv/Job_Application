@@ -1,7 +1,7 @@
 // src/app/features/admin/recruiter-create/recruiter-create.component.ts
 import { Component, OnInit, OnDestroy, computed, signal, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { TranslateModule } from '@ngx-translate/core';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { ReactiveFormsModule, FormBuilder, FormGroup, Validators, AbstractControl, ValidationErrors, ValidatorFn } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { Subscription, debounceTime } from 'rxjs';
@@ -160,7 +160,7 @@ function emailValidator(): ValidatorFn {
              <div class="col-md-6">
               <label class="form-label fw-semibold">{{ 'COMMON.full_name' | translate }} <span class="text-danger">*</span></label>
               <input formControlName="contact_name" class="form-control"
-                [class.is-invalid]="invalid('contact_name')" placeholder="Jane Smith">
+                [class.is-invalid]="invalid('contact_name')" [placeholder]="'RECRUITER_CREATE.name_placeholder' | translate">
               @if (invalid('contact_name')) {
                 @if (ctrl('contact_name').hasError('required')) {
                   <div class="invalid-feedback">{{ 'RECRUITER_CREATE.full_name_required' | translate }}</div>
@@ -180,14 +180,14 @@ function emailValidator(): ValidatorFn {
                 formControlName="type"
                 [options]="RECRUITER_TYPE_OPTS"
                 [allowClear]="false"
-                placeholder="Select type" />
+                [placeholder]="'RECRUITER_CREATE.select_type' | translate" />
             </div>
 
             <div class="col-md-6">
               <label class="form-label fw-semibold">Job Title / Role</label>
               <input formControlName="contact_job_title" class="form-control"
                 [class.is-invalid]="invalid('contact_job_title')"
-                placeholder="e.g. HR Manager, Director, Owner">
+                [placeholder]="'RECRUITER_CREATE.job_title_placeholder' | translate">
               @if (invalid('contact_job_title')) {
                 @if (ctrl('contact_job_title').hasError('minlength')) {
                   <div class="invalid-feedback">Job title must be at least 2 characters.</div>
@@ -200,7 +200,7 @@ function emailValidator(): ValidatorFn {
             <div class="col-md-6">
               <label class="form-label fw-semibold">Work Email <span class="text-danger">*</span></label>
               <input formControlName="email" type="email" class="form-control"
-                [class.is-invalid]="invalid('email')" placeholder="recruiter@company.com">
+                [class.is-invalid]="invalid('email')" [placeholder]="'RECRUITER_CREATE.email_placeholder' | translate">
               @if (invalid('email')) {
                 @if (ctrl('email').hasError('required')) {
                   <div class="invalid-feedback">Work email is required.</div>
@@ -277,7 +277,7 @@ function emailValidator(): ValidatorFn {
             <div class="col-md-6">
               <label class="form-label fw-semibold">Company Name</label>
               <input formControlName="company_name" class="form-control"
-                [class.is-invalid]="invalid('company_name')" placeholder="Acme Recruiting Ltd">
+                [class.is-invalid]="invalid('company_name')" [placeholder]="'RECRUITER_CREATE.company_name_placeholder' | translate">
               @if (invalid('company_name')) {
                 @if (ctrl('company_name').hasError('minlength')) {
                   <div class="text-danger mt-1" style="font-size:.875em">Company name must be at least 2 characters.</div>
@@ -304,7 +304,7 @@ function emailValidator(): ValidatorFn {
               <app-searchable-select
                 formControlName="company_country"
                 [options]="countryOpts()"
-                placeholder="Select country" />
+                [placeholder]="'CANDIDATE_PROFILE.select_country' | translate" />
             </div>
 
             <div class="col-md-6">
@@ -312,7 +312,7 @@ function emailValidator(): ValidatorFn {
               <app-searchable-select
                 formControlName="company_city"
                 [options]="companyCityOpts()"
-                placeholder="Select city" />
+                [placeholder]="'RECRUITER_CREATE.select_city' | translate" />
               <div class="form-text">Select a country first to load cities.</div>
             </div>
 
@@ -322,7 +322,7 @@ function emailValidator(): ValidatorFn {
                 formControlName="industry"
                 [options]="INDUSTRY_OPTS"
                 [allowClear]="true"
-                placeholder="— Select industry —" />
+                [placeholder]="'RECRUITER_CREATE.select_industry' | translate" />
             </div>
 
             <div class="col-md-6">
@@ -331,7 +331,7 @@ function emailValidator(): ValidatorFn {
                 formControlName="company_size"
                 [options]="COMPANY_SIZE_OPTS"
                 [allowClear]="true"
-                placeholder="— Select size —" />
+                [placeholder]="'RECRUITER_CREATE.select_size' | translate" />
             </div>
 
           </div>
@@ -348,7 +348,7 @@ function emailValidator(): ValidatorFn {
                 <app-chip-multi-select
                   formControlName="sectors_recruit_for"
                   [options]="industryChipOpts"
-                  placeholder="Select sectors" />
+                  [placeholder]="'RECRUITER_CREATE.select_sectors' | translate" />
               </div>
 
               <div class="col-12">
@@ -356,7 +356,7 @@ function emailValidator(): ValidatorFn {
                 <app-chip-multi-select
                   formControlName="countries_place_in"
                   [options]="nationalityOpts()"
-                  placeholder="Select countries" />
+                  [placeholder]="'RECRUITER_CREATE.select_countries' | translate" />
               </div>
 
             </div>
@@ -375,7 +375,7 @@ function emailValidator(): ValidatorFn {
                 formControlName="has_sponsor_licence"
                 [options]="SPONSOR_LICENCE_OPTS"
                 [allowClear]="true"
-                placeholder="— Select —" />
+                [placeholder]="'RECRUITER_CREATE.select_dash' | translate" />
             </div>
 
             @if (sponsorYes) {
@@ -401,7 +401,7 @@ function emailValidator(): ValidatorFn {
                 <app-chip-multi-select
                   formControlName="sponsor_licence_countries"
                   [options]="sponsorCountryOpts"
-                  placeholder="Select countries covered by licence" />
+                  [placeholder]="'RECRUITER_CREATE.select_licence_countries' | translate" />
               </div>
 
               <div class="col-md-6">
@@ -410,7 +410,7 @@ function emailValidator(): ValidatorFn {
                   formControlName="licence_rating"
                   [options]="LICENCE_RATING_OPTS"
                   [allowClear]="true"
-                  placeholder="— Select rating —" />
+                  [placeholder]="'RECRUITER_CREATE.select_rating' | translate" />
                 @if (licenceRatingA) {
                   <div class="form-text text-success fw-semibold">
                     <i class="bi bi-check-circle-fill me-1"></i>A-Rating — valid for approvals
@@ -456,7 +456,7 @@ function emailValidator(): ValidatorFn {
               <app-chip-multi-select
                 formControlName="target_nationalities"
                 [options]="nationalityOpts()"
-                placeholder="Select nationalities to hire" />
+                [placeholder]="'RECRUITER_CREATE.select_nationalities' | translate" />
             </div>
 
             <div class="col-12">
@@ -464,7 +464,7 @@ function emailValidator(): ValidatorFn {
               <app-chip-multi-select
                 formControlName="countries_place_in"
                 [options]="nationalityOpts()"
-                placeholder="Where they want candidates from" />
+                [placeholder]="'RECRUITER_CREATE.where_candidates_from' | translate" />
             </div>
 
             <div class="col-12">
@@ -472,7 +472,7 @@ function emailValidator(): ValidatorFn {
               <app-chip-multi-select
                 formControlName="sectors_recruit_for"
                 [options]="industryChipOpts"
-                placeholder="Select sectors" />
+                [placeholder]="'RECRUITER_CREATE.select_sectors' | translate" />
             </div>
 
             <div class="col-md-6">
@@ -481,7 +481,7 @@ function emailValidator(): ValidatorFn {
                 formControlName="hires_per_year"
                 [options]="HIRES_PER_YEAR_OPTS"
                 [allowClear]="true"
-                placeholder="— Select —" />
+                [placeholder]="'RECRUITER_CREATE.select_dash' | translate" />
             </div>
 
             <div class="col-md-6">
@@ -489,7 +489,7 @@ function emailValidator(): ValidatorFn {
               <app-chip-multi-select
                 formControlName="job_types"
                 [options]="jobTypeOpts"
-                placeholder="Select job types" />
+                [placeholder]="'RECRUITER_CREATE.select_job_types' | translate" />
             </div>
 
           </div>
@@ -505,10 +505,10 @@ function emailValidator(): ValidatorFn {
               <div class="input-group">
                 <input [type]="showPw ? 'text' : 'password'" formControlName="password"
                   class="form-control"
-                  placeholder="Min 8 chars, upper + lower + number"
+                  [placeholder]="'RECRUITER_CREATE.password_hint' | translate"
                   [class.is-invalid]="ctrl('password').invalid && ctrl('password').touched">
                 <button type="button" class="btn btn-outline-secondary" (click)="showPw = !showPw"
-                  [attr.aria-label]="showPw ? 'Hide password' : 'Show password'">
+                  [attr.aria-label]="showPw ? translate.instant('AUTH.hide_password') : translate.instant('AUTH.show_password')">
                   <i class="bi" [class.bi-eye]="!showPw" [class.bi-eye-slash]="showPw"></i>
                 </button>
               </div>
@@ -529,7 +529,7 @@ function emailValidator(): ValidatorFn {
                 formControlName="account_status"
                 [options]="ACCOUNT_STATUS_OPTS"
                 [allowClear]="false"
-                placeholder="Select status" />
+                [placeholder]="'RECRUITER_CREATE.select_status' | translate" />
             </div>
 
             <div class="col-md-6">
@@ -549,7 +549,7 @@ function emailValidator(): ValidatorFn {
                     [options]="DURATION_UNIT_OPTS"
                     [allowClear]="false"
                     [invalid]="submitted && form.hasError('durationRequired')"
-                    placeholder="— Unit —" />
+                    [placeholder]="'RECRUITER_CREATE.select_unit' | translate" />
                 </div>
               </div>
               @if (submitted && form.hasError('durationRequired')) {
@@ -601,7 +601,7 @@ function emailValidator(): ValidatorFn {
           </h6>
           <div class="mb-4">
             <textarea formControlName="admin_notes" class="form-control" rows="3"
-              placeholder="Internal notes — not visible to the recruiter"></textarea>
+              [placeholder]="'RECRUITER_CREATE.internal_notes_placeholder' | translate"></textarea>
           </div>
 
           <!-- ── Section 8: Verification Checklist ──────────────────── -->
@@ -931,6 +931,7 @@ export class RecruiterCreateComponent implements OnInit, OnDestroy, HasUnsavedCh
     private master: MasterDataService,
     private auth: AuthService,
     private toast: ToastService,
+    protected translate: TranslateService,
   ) {
     this.form = this.fb.group({
       // Section 1: Contact
@@ -1251,7 +1252,7 @@ export class RecruiterCreateComponent implements OnInit, OnDestroy, HasUnsavedCh
 
         const name    = this.createdContactName;
         const company = this.createdCompanyName ? ` from ${this.createdCompanyName}` : '';
-        this.toast.success(`${name}${company} created successfully`);
+        this.toast.success(this.translate.instant('RECRUITER_CREATE.created_success', { name, company }));
 
         setTimeout(() => this.router.navigate(['/admin/recruiters']), 2000);
       },

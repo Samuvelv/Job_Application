@@ -10,7 +10,7 @@ import { TagInputComponent } from '../tag-input/tag-input.component';
 import { ChipMultiSelectComponent, ChipOption } from '../chip-multi-select/chip-multi-select.component';
 import { SearchableSelectComponent, SelectOption } from '../searchable-select/searchable-select.component';
 import { REGISTRATION_FEE_STATUS_OPTIONS, CV_FORMAT_OPTIONS, SOURCE_OPTIONS, PROFILE_STATUS_OPTIONS } from '../../../core/constants/candidate-options';
-import { TranslateModule } from '@ngx-translate/core';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
 
 export type FilterApplyEvent = CandidateFilters;
 
@@ -129,7 +129,7 @@ const AVAILABILITY_OPTIONS: SelectOption[] = [
               {{ 'FILTER.clear_all' | translate }}
             </button>
           }
-          <button type="button" class="cfs-sidebar__close" aria-label="Close" (click)="closeSidebar()">
+          <button type="button" class="cfs-sidebar__close" [attr.aria-label]="'COMMON.close' | translate" (click)="closeSidebar()">
             <i class="bi bi-x-lg"></i>
           </button>
         </div>
@@ -485,7 +485,7 @@ export class CandidateFilterSidebarComponent implements OnInit, OnDestroy {
   private lastAppliedSnapshot: any = null;
   private destroy$ = new Subject<void>();
 
-  constructor(private fb: FormBuilder) {}
+  constructor(private fb: FormBuilder, private translate: TranslateService) {}
 
   ngOnInit(): void {
     this.form = this.fb.group({

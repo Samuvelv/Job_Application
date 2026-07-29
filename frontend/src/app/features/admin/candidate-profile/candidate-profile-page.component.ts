@@ -1,7 +1,8 @@
 // src/app/features/admin/candidate-profile/candidate-profile-page.component.ts
 import { Component, OnInit, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { TranslateModule } from '@ngx-translate/core';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
+import { LocaleDatePipe } from '../../../core/pipes/locale-date.pipe';
 import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { NgbModal, NgbModalRef } from '@ng-bootstrap/ng-bootstrap';
@@ -10,7 +11,6 @@ import { CandidateService } from '../../../core/services/candidate.service';
 import { AgencyReferralService, ReferralPayload } from '../../../core/services/agency-referral.service';
 import { MasterDataService } from '../../../core/services/master-data.service';
 import { ToastService } from '../../../core/services/toast.service';
-import { TranslateUserDataPipe } from '../../../core/pipes/translate-user-data.pipe';
 
 import { Candidate } from '../../../core/models/candidate.model';
 import { AgencyReferral, ReferralStatus } from '../../../core/models/agency-referral.model';
@@ -28,7 +28,7 @@ const STATUS_CONFIG: Record<ReferralStatus, { label: string; badgeClass: string 
 @Component({
   selector: 'app-candidate-profile-page',
   standalone: true,
-  imports: [CommonModule, TranslateModule, ReactiveFormsModule, RouterLink, CandidateProfileComponent, SearchableSelectComponent, TranslateUserDataPipe],
+  imports: [LocaleDatePipe, CommonModule, TranslateModule, ReactiveFormsModule, RouterLink, CandidateProfileComponent, SearchableSelectComponent],
   template: `
     <!-- Header row: back + actions -->
     <div class="d-flex align-items-center justify-content-between mb-3 gap-2">
@@ -126,7 +126,7 @@ const STATUS_CONFIG: Record<ReferralStatus, { label: string; badgeClass: string 
                     <div>
                    <div class="fw-semibold">
                          {{ 'CANDIDATE_PROFILE.referred_to' | translate: { agency: ref.agency_name, employer: ref.employer_name, country: ref.country } }}
-                         — {{ ref.referral_date | date:'dd MMM yyyy' }}
+                         — {{ ref.referral_date | localeDate:'dd MMM yyyy' }}
                        </div>
                       @if (ref.notes) {
                         <div class="text-muted small mt-1">{{ ref.notes }}</div>
@@ -292,6 +292,7 @@ export class CandidateProfilePageComponent implements OnInit {
     private modalService: NgbModal,
     private fb: FormBuilder,
     private toast: ToastService,
+    private translate: TranslateService,
   ) {}
 
   ngOnInit(): void {
@@ -318,7 +319,7 @@ export class CandidateProfilePageComponent implements OnInit {
         this.referralsLoading.set(false);
       },
       error: (err) => {
-        this.referralError.set(err?.error?.message ?? 'Failed to load referrals.');
+        this.referralError.set(err?.error?.message ?? this.translate.instant('CANDIDATE_PROFILE_ADMIN.referrals_load_failed'));
         this.referralsLoading.set(false);
       },
     });
@@ -330,7 +331,7 @@ export class CandidateProfilePageComponent implements OnInit {
     this.candidateService.inviteVolunteer(this.candidate.id).subscribe({
       next: (res) => {
         this.inviting.set(false);
-        this.toast.success(res.message ?? 'Invitation sent!');
+        this.toast.success(res.message ?? this.translate.instant('CANDIDATE_PROFILE_ADMIN.invitation_sent'));
         // Update local state so button switches to "Invitation Sent" immediately
         if (this.candidate) {
           this.candidate = { ...this.candidate, volunteer_invite_status: 'invited' };
@@ -338,7 +339,7 @@ export class CandidateProfilePageComponent implements OnInit {
       },
       error: (err) => {
         this.inviting.set(false);
-        this.toast.error(err?.error?.message ?? 'Failed to send invitation.');
+        this.toast.error(err?.error?.message ?? this.translate.instant('CANDIDATE_PROFILE_ADMIN.invitation_send_failed'));
       },
     });
   }

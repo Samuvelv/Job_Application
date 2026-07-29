@@ -9,12 +9,9 @@ export const environment = {
     companyName: 'NTL Career Nexus',
   },
   
-  // Real-time Translation API Configuration
+  // Dynamic (candidate-data) translation request settings — actual translation
+  // happens server-side via the backend /translate endpoint, not from the browser.
   translation: {
-    // API key should be set via environment variable or config service
-    apiKey: '',
-    apiEndpoint: 'https://api.openai.com/v1/chat/completions',
-    model: 'gpt-3.5-turbo',
     timeoutMs: 10000,
     cacheTtlMs: 3600000, // 1 hour
   }

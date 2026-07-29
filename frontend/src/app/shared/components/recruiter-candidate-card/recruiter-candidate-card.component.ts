@@ -2,7 +2,7 @@
 import { Component, Input, Output, EventEmitter, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
-import { TranslateModule } from '@ngx-translate/core';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { Candidate } from '../../../core/models/candidate.model';
 import { InterestRequest } from '../../../core/services/interest-request.service';
 import { MasterDataService } from '../../../core/services/master-data.service';
@@ -161,7 +161,7 @@ import { MasterDataService } from '../../../core/services/master-data.service';
         } @else {
           <button class="cl-card__action cl-card__action--forward"
             (click)="requestInterest.emit()"
-            title="Request interest">
+            [title]="'CANDIDATE_CARD.request_interest_title' | translate">
             <i class="bi bi-send-fill"></i><span>{{ 'CANDIDATE_CARD.request' | translate }}</span>
           </button>
         }
@@ -177,7 +177,7 @@ export class RecruiterCandidateCardComponent {
   @Output() shortlist       = new EventEmitter<void>();
   @Output() requestInterest = new EventEmitter<void>();
 
-  constructor(private master: MasterDataService) {}
+  constructor(private master: MasterDataService, private translate: TranslateService) {}
 
   private readonly flagMap = computed<Map<string, string>>(() => {
     const map = new Map<string, string>();

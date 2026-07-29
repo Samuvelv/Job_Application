@@ -1,7 +1,7 @@
 // src/app/features/candidate/volunteers/volunteer-browse.component.ts
 import { Component, OnInit } from '@angular/core';
 import { CommonModule }      from '@angular/common';
-import { TranslateModule } from '@ngx-translate/core';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { RouterLink }        from '@angular/router';
 import { catchError, of }    from 'rxjs';
 import { VolunteerService }  from '../../../core/services/volunteer.service';
@@ -15,8 +15,8 @@ import { EmptyStateComponent }  from '../../../shared/components/empty-state/emp
   imports: [CommonModule, TranslateModule, RouterLink, PageHeaderComponent, EmptyStateComponent],
   template: `
     <app-page-header
-      title="Our Volunteers"
-      [subtitle]="pagination.total > 0 ? pagination.total + ' volunteers ready to help' : 'Volunteers'"
+      [title]="'VOLUNTEER_PAGE.browse_volunteers' | translate"
+      [subtitle]="pagination.total > 0 ? (pagination.total + ' ' + ('VOLUNTEER_PAGE.volunteers_ready_to_help' | translate)) : ('VOLUNTEER_PAGE.title' | translate)"
       icon="bi-people-fill">
     </app-page-header>
 
@@ -28,12 +28,12 @@ import { EmptyStateComponent }  from '../../../shared/components/empty-state/emp
           <input type="text" class="form-control form-control-sm"
             [value]="searchTerm"
             (input)="onSearch($event)"
-            placeholder="Search by name or role…">
+            [placeholder]="'VOLUNTEER_PAGE.search_placeholder' | translate">
         </div>
         <div class="filter-card__actions">
           @if (searchTerm) {
             <button type="button" class="filter-clear-btn" (click)="clearSearch()">
-              <i class="bi bi-x-lg"></i> Clear
+              <i class="bi bi-x-lg"></i> {{ 'COMMON.clear' | translate }}
             </button>
           }
         </div>
@@ -43,21 +43,21 @@ import { EmptyStateComponent }  from '../../../shared/components/empty-state/emp
     @if (loading) {
       <div class="loading-state">
         <div class="spinner-border"></div>
-        <div class="loading-state__text">Loading volunteers…</div>
+        <div class="loading-state__text">{{ 'VOLUNTEERS.loading' | translate }}</div>
       </div>
 
     } @else if (volunteers.length === 0) {
       @if (searchTerm) {
         <app-empty-state
           icon="bi-people"
-          title="No volunteers found"
-          subtitle="No volunteers match your search. Try a different keyword."
+          [title]="'VOLUNTEER_PAGE.no_volunteers_search_title' | translate"
+          [subtitle]="'VOLUNTEER_PAGE.no_volunteers_search_subtitle' | translate"
         />
       } @else {
         <app-empty-state
           icon="bi-people"
-          title="No volunteers yet"
-          subtitle="Volunteers are candidates who successfully secured jobs abroad through NTL Career Nexus and have chosen to give back by supporting new job seekers."
+          [title]="'VOLUNTEERS.no_volunteers_yet' | translate"
+          [subtitle]="'VOLUNTEER_PAGE.volunteers_give_back_desc' | translate"
         />
       }
 
@@ -122,7 +122,7 @@ import { EmptyStateComponent }  from '../../../shared/components/empty-state/emp
               <div class="mt-auto">
                 <a [routerLink]="['/candidate/volunteers', v.id]"
                    class="btn btn-outline-primary btn-sm w-100">
-                  <i class="bi bi-person-lines-fill me-1"></i>View Profile
+                  <i class="bi bi-person-lines-fill me-1"></i>{{ 'VOLUNTEER_PAGE.view_profile' | translate }}
                 </a>
               </div>
             </div>
@@ -198,7 +198,7 @@ export class VolunteerBrowseComponent implements OnInit {
   searchTerm = '';
   private searchTimer: any;
 
-  constructor(private volunteerSvc: VolunteerService) {}
+  constructor(private volunteerSvc: VolunteerService, private translate: TranslateService) {}
 
   ngOnInit(): void { this.load(); }
 

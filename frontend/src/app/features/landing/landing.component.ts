@@ -534,10 +534,10 @@ function makeOptionalPhoneValidator(dialCtrl: string, numCtrl: string): Validato
           <p class="lp-contact__tagline">{{ 'LANDING.contact_tagline' | translate }}</p>
 
           <div class="lp-contact__social">
-            <a class="lp-contact__social-btn" href="https://wa.me/919360454326" target="_blank" title="WhatsApp">
+            <a class="lp-contact__social-btn" href="https://wa.me/919360454326" target="_blank" [title]="'LANDING.contact_channel_whatsapp' | translate">
               <i class="bi bi-whatsapp"></i>
             </a>
-            <a class="lp-contact__social-btn" href="mailto:hello@ntlcareernexus.com" title="Email">
+            <a class="lp-contact__social-btn" href="mailto:hello@ntlcareernexus.com" [title]="'LANDING.contact_channel_email' | translate">
               <i class="bi bi-envelope-fill"></i>
             </a>
           </div>
@@ -695,6 +695,7 @@ function makeOptionalPhoneValidator(dialCtrl: string, numCtrl: string): Validato
 export class LandingComponent implements OnInit, OnDestroy {
   theme  = inject(ThemeService);
   private toast = inject(ToastService);
+  private translate = inject(TranslateService);
   private fb    = inject(FormBuilder);
   private statsService = inject(StatsService);
   private contactSvc   = inject(ContactSubmissionService);
@@ -953,11 +954,11 @@ export class LandingComponent implements OnInit, OnDestroy {
       next: () => {
         this.contactSending = false;
         this.contactForm.reset();
-        this.toast.success('Message received! We\'ll be in touch soon.');
+        this.toast.success(this.translate.instant('LANDING.contact_success'));
       },
       error: () => {
         this.contactSending = false;
-        this.toast.success('Message received! We\'ll be in touch soon.');
+        this.toast.success(this.translate.instant('LANDING.contact_success'));
       },
     });
   }

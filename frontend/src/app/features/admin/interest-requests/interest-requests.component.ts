@@ -1,7 +1,8 @@
 // src/app/features/admin/interest-requests/interest-requests.component.ts
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { TranslateModule } from '@ngx-translate/core';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
+import { LocaleDatePipe } from '../../../core/pipes/locale-date.pipe';
 import { ReactiveFormsModule, FormBuilder, FormGroup, FormsModule } from '@angular/forms';
 import { Subject, debounceTime, distinctUntilChanged, takeUntil } from 'rxjs';
 import { InterestRequestService, InterestRequest, InterestRequestCounts, PaginatedInterestRequests } from '../../../core/services/interest-request.service';
@@ -14,7 +15,7 @@ import { NotificationService } from '../../../core/services/notification.service
 @Component({
   selector: 'app-interest-requests',
   standalone: true,
-  imports: [CommonModule, TranslateModule, ReactiveFormsModule, FormsModule, PageHeaderComponent, EmptyStateComponent],
+  imports: [LocaleDatePipe, CommonModule, TranslateModule, ReactiveFormsModule, FormsModule, PageHeaderComponent, EmptyStateComponent],
   styles: [`
     /* ── Filter bar ───────────────────────────────────────────── */
     .filter-bar {
@@ -342,7 +343,7 @@ import { NotificationService } from '../../../core/services/notification.service
           <div class="request-card__header">
             <div class="request-card__info">
               <div class="request-card__agency">{{ r.recruiter_company }} <span style="font-weight:400;color:var(--th-muted);">({{ r.recruiter_name }})</span></div>
-              <div class="request-card__meta">{{ r.recruiter_email }} · Submitted {{ r.created_at | date:'dd MMM yyyy, HH:mm' }}</div>
+              <div class="request-card__meta">{{ r.recruiter_email }} · Submitted {{ r.created_at | localeDate:'dd MMM yyyy, HH:mm' }}</div>
             </div>
             <span class="status-badge status-badge--{{ r.status }}">
               <i class="bi"
@@ -376,7 +377,7 @@ import { NotificationService } from '../../../core/services/notification.service
             <div class="revocation-info">
               <i class="bi bi-slash-circle-fill"></i>
               <span>
-                <strong>{{ 'INTEREST_REQUESTS.revoked' | translate }}</strong> {{ r.revoked_at | date:'dd MMM yyyy, HH:mm' }}
+                <strong>{{ 'INTEREST_REQUESTS.revoked' | translate }}</strong> {{ r.revoked_at | localeDate:'dd MMM yyyy, HH:mm' }}
                 @if (r.revocation_reason) { · {{ r.revocation_reason }} }
               </span>
             </div>
@@ -489,6 +490,7 @@ export class InterestRequestsComponent implements OnInit, OnDestroy {
     private toast:         ToastService,
     private confirmDialog: ConfirmDialogService,
     private notifications: NotificationService,
+    private translate: TranslateService,
   ) {}
 
   ngOnInit(): void {
@@ -557,7 +559,7 @@ export class InterestRequestsComponent implements OnInit, OnDestroy {
         this.loading    = false;
       },
       error: () => {
-        this.toast.error('Failed to load interest requests');
+        this.toast.error(this.translate.instant('INTEREST_REQUESTS_ADMIN.load_failed'));
         this.loading = false;
       },
     });
@@ -596,7 +598,7 @@ export class InterestRequestsComponent implements OnInit, OnDestroy {
       .subscribe({
         next: () => {
           this.submitting = false;
-          this.toast.success(`Request ${this.reviewAction}`);
+          this.toast.success(this.reviewAction === 'approved' ? this.translate.instant('EDIT_REQUESTS_ADMIN.request_approved') : this.translate.instant('EDIT_REQUESTS_ADMIN.request_rejected'));
           this.closeModal();
           this.load();
           this.loadCounts();
@@ -604,7 +606,7 @@ export class InterestRequestsComponent implements OnInit, OnDestroy {
         },
         error: (err) => {
           this.submitting = false;
-          this.toast.error(err?.error?.message ?? 'Failed to review request');
+          this.toast.error(err?.error?.message ?? this.translate.instant('INTEREST_REQUESTS_ADMIN.review_failed'));
         },
       });
   }
@@ -612,28 +614,28 @@ export class InterestRequestsComponent implements OnInit, OnDestroy {
   // ── Revoke (confirm dialog) ───────────────────────────────────────────────
 
   onRevokeClick(r: InterestRequest): void {
-    const agencyLabel = r.recruiter_company ?? r.recruiter_name ?? 'this agency';
-    const candidateLabel = `${r.candidate_first_name ?? ''} ${r.candidate_last_name ?? ''}`.trim() || 'this candidate';
+    const agencyLabel = r.recruiter_company ?? r.recruiter_name ?? this.translate.instant('INTEREST_REQUESTS_ADMIN.this_agency');
+    const candidateLabel = `${r.candidate_first_name ?? ''} ${r.candidate_last_name ?? ''}`.trim() || this.translate.instant('INTEREST_REQUESTS_ADMIN.this_candidate');
 
     this.confirmDialog.confirm({
-      title:           'Revoke Agency Interest Request?',
-      message:         `Are you sure you want to revoke the approved interest request from ${agencyLabel} for ${candidateLabel}? The agency will be notified by email.`,
-      confirmLabel:    'Revoke',
-      cancelLabel:     'Cancel',
+      title:           this.translate.instant('INTEREST_REQUESTS_ADMIN.revoke_title'),
+      message:         this.translate.instant('INTEREST_REQUESTS_ADMIN.revoke_msg', { agency: agencyLabel, candidate: candidateLabel }),
+      confirmLabel:    this.translate.instant('INTEREST_REQUESTS.revoke'),
+      cancelLabel:     this.translate.instant('COMMON.cancel'),
       confirmClass:    'btn-danger',
       showNoteField:   true,
-      noteLabel:       'Reason for Revocation (Optional)',
-      notePlaceholder: 'Explain why this interest request is being revoked…',
+      noteLabel:       this.translate.instant('EDIT_REQUESTS_ADMIN.revocation_reason_optional'),
+      notePlaceholder: this.translate.instant('INTEREST_REQUESTS_ADMIN.revoke_explain_placeholder'),
     }).then(result => {
       if (!result.confirmed) return;
       this.svc.revoke(r.id, result.notes || undefined).subscribe({
         next: () => {
-          this.toast.success('Interest request revoked');
+          this.toast.success(this.translate.instant('INTEREST_REQUESTS_ADMIN.request_revoked'));
           this.load();
           this.loadCounts();
           this.notifications.refreshCounts();
         },
-        error: (err) => this.toast.error(err?.error?.message ?? 'Failed to revoke request'),
+        error: (err) => this.toast.error(err?.error?.message ?? this.translate.instant('INTEREST_REQUESTS_ADMIN.revoke_failed')),
       });
     });
   }
@@ -652,7 +654,7 @@ export class InterestRequestsComponent implements OnInit, OnDestroy {
       next: (blob) => {
         this.exporting = false;
         if (blob.size < 10) {
-          this.toast.error('No agency interest requests available to export.');
+          this.toast.error(this.translate.instant('INTEREST_REQUESTS_ADMIN.no_requests_to_export'));
           return;
         }
         const url = URL.createObjectURL(blob);
@@ -661,11 +663,11 @@ export class InterestRequestsComponent implements OnInit, OnDestroy {
         a.download = `agency-interest-requests-${new Date().toISOString().slice(0, 10)}.csv`;
         a.click();
         URL.revokeObjectURL(url);
-        this.toast.success('CSV exported successfully.');
+        this.toast.success(this.translate.instant('EDIT_REQUESTS_ADMIN.csv_exported'));
       },
       error: () => {
         this.exporting = false;
-        this.toast.error('Export failed. Please try again.');
+        this.toast.error(this.translate.instant('MESSAGES.operation_failed'));
       },
     });
   }

@@ -2,7 +2,8 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule, DatePipe } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, FormGroup } from '@angular/forms';
-import { TranslateModule } from '@ngx-translate/core';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
+import { LocaleDatePipe } from '../../../core/pipes/locale-date.pipe';
 import { debounceTime, distinctUntilChanged } from 'rxjs';
 import { AuditLogService } from '../../../core/services/audit-log.service';
 import { AuditLog } from '../../../core/models/audit-log.model';
@@ -12,7 +13,7 @@ import { ToastService } from '../../../core/services/toast.service';
 @Component({
   selector: 'app-audit-logs',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, TranslateModule, PageHeaderComponent],
+  imports: [LocaleDatePipe, CommonModule, ReactiveFormsModule, TranslateModule, PageHeaderComponent],
   providers: [DatePipe],
   template: `
     <!-- Header -->
@@ -112,7 +113,7 @@ import { ToastService } from '../../../core/services/toast.service';
                       style="font-size:.7rem"></i>
                   </td>
                   <td class="text-nowrap text-muted" style="font-size:.75rem">
-                    {{ log.created_at | date:'dd MMM yyyy, HH:mm:ss' }}
+                    {{ log.created_at | localeDate:'dd MMM yyyy, HH:mm:ss' }}
                   </td>
                    <td class="fw-semibold">
                      {{ log.user_name || ('AUDIT_LOGS.system' | translate) }}
@@ -158,9 +159,9 @@ import { ToastService } from '../../../core/services/toast.service';
                            <div class="audit-detail__field">
                              <div class="audit-detail__label">{{ 'AUDIT_LOGS.timestamp' | translate }}</div>
                              <div class="audit-detail__value">
-                               {{ log.created_at | date:'dd MMM yyyy' }}<br>
+                               {{ log.created_at | localeDate:'dd MMM yyyy' }}<br>
                                <span class="text-muted" style="font-size:.75rem">
-                                 {{ log.created_at | date:'HH:mm:ss' }} UTC
+                                 {{ log.created_at | localeDate:'HH:mm:ss' }} UTC
                                </span>
                              </div>
                            </div>
@@ -307,6 +308,7 @@ export class AuditLogsComponent implements OnInit {
     private fb: FormBuilder,
     private datePipe: DatePipe,
     private toast: ToastService,
+    private translate: TranslateService,
   ) {}
 
   ngOnInit(): void {
@@ -381,7 +383,7 @@ export class AuditLogsComponent implements OnInit {
 
   exportCsv(): void {
     if (this.logs.length === 0) {
-      this.toast.show('No audit logs available to export.', 'warning');
+      this.toast.show(this.translate.instant('AUDIT_LOGS.no_logs_to_export'), 'warning');
       return;
     }
     this.exporting = true;
@@ -400,7 +402,7 @@ export class AuditLogsComponent implements OnInit {
         this.exporting = false;
       },
       error: () => {
-        this.toast.show('Export failed. Please try again.', 'error');
+        this.toast.show(this.translate.instant('MESSAGES.operation_failed'), 'error');
         this.exporting = false;
       },
     });

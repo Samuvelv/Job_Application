@@ -3,13 +3,14 @@ import { Component, Input, Output, EventEmitter, computed } from '@angular/core'
 import { CommonModule, DatePipe } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
+import { LocaleDatePipe } from '../../../core/pipes/locale-date.pipe';
 import { Recruiter } from '../../../core/models/recruiter.model';
 import { MasterDataService } from '../../../core/services/master-data.service';
 
 @Component({
   selector: 'app-recruiter-card',
   standalone: true,
-  imports: [CommonModule, RouterLink, DatePipe, TranslateModule],
+  imports: [LocaleDatePipe, CommonModule, RouterLink, DatePipe, TranslateModule],
   template: `
     <div class="rc-card" [class.rc-card--inactive]="!recruiter.is_active || isExpired">
 
@@ -83,7 +84,7 @@ import { MasterDataService } from '../../../core/services/master-data.service';
           @if (recruiter.created_at) {
             <span>
               <i class="bi bi-calendar3"></i>
-              {{ 'COMMON.joined' | translate }} {{ recruiter.created_at | date:'MMM yyyy' }}
+              {{ 'COMMON.joined' | translate }} {{ recruiter.created_at | localeDate:'MMM yyyy' }}
             </span>
           }
           <span class="rc-card__dot">·</span>
@@ -91,7 +92,7 @@ import { MasterDataService } from '../../../core/services/master-data.service';
             <i class="bi bi-clock"></i>
             {{ 'RECRUITER.last_login' | translate }}:
             @if (recruiter.last_login_at) {
-              {{ recruiter.last_login_at | date:'dd MMM yyyy' }}
+              {{ recruiter.last_login_at | localeDate:'dd MMM yyyy' }}
             } @else {
               {{ 'COMMON.never' | translate }}
             }

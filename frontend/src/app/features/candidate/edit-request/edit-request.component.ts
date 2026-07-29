@@ -6,7 +6,8 @@ import {
   FormArray, Validators, AbstractControl, ValidationErrors, ValidatorFn,
 } from '@angular/forms';
 import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
-import { TranslateModule } from '@ngx-translate/core';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
+import { LocaleDatePipe } from '../../../core/pipes/locale-date.pipe';
 import { CandidateService } from '../../../core/services/candidate.service';
 import { EditRequestService } from '../../../core/services/edit-request.service';
 import { Candidate } from '../../../core/models/candidate.model';
@@ -199,7 +200,7 @@ function makePostalCodeGroupValidator(countryCtrl: string, postalCtrl: string): 
 @Component({
   selector: 'app-edit-request',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, TranslateModule, PageHeaderComponent, SearchableSelectComponent, ChipMultiSelectComponent],
+  imports: [LocaleDatePipe, CommonModule, ReactiveFormsModule, TranslateModule, PageHeaderComponent, SearchableSelectComponent, ChipMultiSelectComponent],
    template: `
      <app-page-header
        [title]="'CANDIDATE_EDIT_REQUEST.title' | translate"
@@ -225,9 +226,9 @@ function makePostalCodeGroupValidator(countryCtrl: string, postalCtrl: string): 
             @if (existingRequest.status === 'rejected') { {{ 'COMMON.rejected' | translate }} }
           </div>
           <div class="status-banner__text">
-            Submitted {{ existingRequest.created_at | date:'dd MMM yyyy' }}
+            Submitted {{ existingRequest.created_at | localeDate:'dd MMM yyyy' }}
             @if (existingRequest.reviewed_at) {
-              · reviewed {{ existingRequest.reviewed_at | date:'dd MMM yyyy' }}
+              · reviewed {{ existingRequest.reviewed_at | localeDate:'dd MMM yyyy' }}
             }
           </div>
           @if (existingRequest.admin_note) {
@@ -278,13 +279,13 @@ function makePostalCodeGroupValidator(countryCtrl: string, postalCtrl: string): 
                   <div class="media-upload-cell__actions">
                     <button type="button" class="media-upload-cell__action-btn"
                       (click)="openPreview('image', (staged['profiles'] ?? candidate.profile_photo_url)!, 'Profile Photo')"
-                      title="Preview">
+                      [title]="'CANDIDATE_EDIT.preview' | translate">
                       <i class="bi bi-eye"></i>
                     </button>
                     @if (staged['profiles']) {
                       <button type="button"
                         class="media-upload-cell__action-btn media-upload-cell__action-btn--danger"
-                        (click)="clearStaged('profiles')" title="Cancel staged change">
+                        (click)="clearStaged('profiles')" [title]="'CANDIDATE_EDIT_REQUEST.cancel_staged_change' | translate">
                         <i class="bi bi-x-lg"></i>
                       </button>
                     }
@@ -337,13 +338,13 @@ function makePostalCodeGroupValidator(countryCtrl: string, postalCtrl: string): 
                   <div class="media-upload-cell__actions">
                     <button type="button" class="media-upload-cell__action-btn"
                       (click)="openPreview('pdf', (staged['resumes'] ?? candidate.resume_url)!, 'Resume / CV')"
-                      title="Preview">
+                      [title]="'CANDIDATE_EDIT.preview' | translate">
                       <i class="bi bi-eye"></i>
                     </button>
                     @if (staged['resumes']) {
                       <button type="button"
                         class="media-upload-cell__action-btn media-upload-cell__action-btn--danger"
-                        (click)="clearStaged('resumes')" title="Cancel staged change">
+                        (click)="clearStaged('resumes')" [title]="'CANDIDATE_EDIT_REQUEST.cancel_staged_change' | translate">
                         <i class="bi bi-x-lg"></i>
                       </button>
                     }
@@ -393,13 +394,13 @@ function makePostalCodeGroupValidator(countryCtrl: string, postalCtrl: string): 
                   <div class="media-upload-cell__actions">
                     <button type="button" class="media-upload-cell__action-btn"
                       (click)="openPreview('video', (staged['videos'] ?? candidate.intro_video_url)!, 'Intro Video')"
-                      title="Preview">
+                      [title]="'CANDIDATE_EDIT.preview' | translate">
                       <i class="bi bi-eye"></i>
                     </button>
                     @if (staged['videos']) {
                       <button type="button"
                         class="media-upload-cell__action-btn media-upload-cell__action-btn--danger"
-                        (click)="clearStaged('videos')" title="Cancel staged change">
+                        (click)="clearStaged('videos')" [title]="'CANDIDATE_EDIT_REQUEST.cancel_staged_change' | translate">
                         <i class="bi bi-x-lg"></i>
                       </button>
                     }
@@ -491,7 +492,7 @@ function makePostalCodeGroupValidator(countryCtrl: string, postalCtrl: string): 
               <app-searchable-select
                 formControlName="gender"
                 [options]="genderOptions"
-                placeholder="Select gender…"
+                [placeholder]="'CANDIDATE_EDIT_REQUEST.select_gender' | translate"
                 [allowClear]="true"
                 [invalid]="!!(form!.get('gender')?.invalid && form!.get('gender')?.touched)">
               </app-searchable-select>
@@ -506,7 +507,7 @@ function makePostalCodeGroupValidator(countryCtrl: string, postalCtrl: string): 
               <app-searchable-select
                 formControlName="marital_status"
                 [options]="maritalStatusOptions"
-                placeholder="Select status…"
+                [placeholder]="'CANDIDATE_EDIT_REQUEST.select_status' | translate"
                 [allowClear]="true">
               </app-searchable-select>
             </div>
@@ -624,7 +625,7 @@ function makePostalCodeGroupValidator(countryCtrl: string, postalCtrl: string): 
               <app-searchable-select
                 formControlName="job_title"
                 [options]="jobTitleOptions()"
-                placeholder="e.g. Senior Developer"
+                [placeholder]="'CANDIDATE_EDIT_REQUEST.eg_senior_developer' | translate"
                 [allowClear]="true"
                 [invalid]="!!(form!.get('job_title')?.invalid && form!.get('job_title')?.touched)">
               </app-searchable-select>
@@ -638,7 +639,7 @@ function makePostalCodeGroupValidator(countryCtrl: string, postalCtrl: string): 
               <app-searchable-select
                 formControlName="occupation"
                 [options]="occupationOptions()"
-                placeholder="e.g. Software Engineer"
+                [placeholder]="'CANDIDATE_EDIT_REQUEST.eg_software_engineer' | translate"
                 [allowClear]="true"
                 [invalid]="!!(form!.get('occupation')?.invalid && form!.get('occupation')?.touched)">
               </app-searchable-select>
@@ -652,7 +653,7 @@ function makePostalCodeGroupValidator(countryCtrl: string, postalCtrl: string): 
               <app-searchable-select
                 formControlName="industry"
                 [options]="industryOptions()"
-                placeholder="e.g. Technology"
+                [placeholder]="'CANDIDATE_EDIT_REQUEST.eg_technology' | translate"
                 [allowClear]="true"
                 [invalid]="!!(form!.get('industry')?.invalid && form!.get('industry')?.touched)">
               </app-searchable-select>
@@ -666,7 +667,7 @@ function makePostalCodeGroupValidator(countryCtrl: string, postalCtrl: string): 
               <app-searchable-select
                 formControlName="employment_status"
                 [options]="employmentStatusOptions"
-                placeholder="Select status…"
+                [placeholder]="'CANDIDATE_EDIT_REQUEST.select_status' | translate"
                 [allowClear]="true"
                 [invalid]="!!(form!.get('employment_status')?.invalid && form!.get('employment_status')?.touched)">
               </app-searchable-select>
@@ -680,7 +681,7 @@ function makePostalCodeGroupValidator(countryCtrl: string, postalCtrl: string): 
               <app-searchable-select
                 formControlName="notice_period_id"
                 [options]="noticePeriodOptions()"
-                placeholder="Select notice period…"
+                [placeholder]="'CANDIDATE_EDIT_REQUEST.select_notice_period' | translate"
                 [allowClear]="true">
               </app-searchable-select>
             </div>
@@ -703,7 +704,7 @@ function makePostalCodeGroupValidator(countryCtrl: string, postalCtrl: string): 
               <app-searchable-select
                 formControlName="visa_status_select"
                 [options]="visaStatusOptions"
-                placeholder="Select visa status…"
+                [placeholder]="'CANDIDATE_EDIT_REQUEST.select_visa_status' | translate"
                 [allowClear]="true">
               </app-searchable-select>
             </div>
@@ -711,7 +712,7 @@ function makePostalCodeGroupValidator(countryCtrl: string, postalCtrl: string): 
               <div class="col-md-6">
                 <label class="form-label small fw-semibold">Specify Visa Status</label>
                 <input formControlName="visa_status_other" class="form-control form-control-sm"
-                  placeholder="Describe your visa/permit status…">
+                  [placeholder]="'CANDIDATE_EDIT_REQUEST.describe_visa_status' | translate">
               </div>
             }
 
@@ -730,7 +731,7 @@ function makePostalCodeGroupValidator(countryCtrl: string, postalCtrl: string): 
               <app-searchable-select
                 formControlName="current_country"
                 [options]="countryOptions()"
-                placeholder="Select country…"
+                [placeholder]="'CANDIDATE_PROFILE.select_country' | translate"
                 [allowClear]="true"
                 [invalid]="!!(form!.get('current_country')?.invalid && form!.get('current_country')?.touched)">
               </app-searchable-select>
@@ -744,7 +745,7 @@ function makePostalCodeGroupValidator(countryCtrl: string, postalCtrl: string): 
               <app-searchable-select
                 formControlName="current_city"
                 [options]="cityOptions()"
-                placeholder="Select city…"
+                [placeholder]="'RECRUITER_CREATE.select_city' | translate"
                 [allowClear]="true"
                 [invalid]="!!(form!.get('current_city')?.invalid && form!.get('current_city')?.touched)">
               </app-searchable-select>
@@ -757,7 +758,7 @@ function makePostalCodeGroupValidator(countryCtrl: string, postalCtrl: string): 
               <label class="form-label small fw-semibold">Postal / ZIP Code</label>
               <input formControlName="postal_code" class="form-control form-control-sm"
                 [class.is-invalid]="form!.get('postal_code')?.invalid && form!.get('postal_code')?.touched"
-                placeholder="Postal code">
+                [placeholder]="'CANDIDATE_EDIT_REQUEST.postal_code' | translate">
               @if (form!.get('postal_code')?.touched) {
                 @if (form!.get('postal_code')?.errors?.['postalCodeInvalid']) {
                   <div class="invalid-feedback d-block">{{ form!.get('postal_code')?.errors?.['postalCodeInvalid'] }}</div>
@@ -783,7 +784,7 @@ function makePostalCodeGroupValidator(countryCtrl: string, postalCtrl: string): 
               <app-searchable-select
                 formControlName="nationality"
                 [options]="countryOptions()"
-                placeholder="Select nationality…"
+                [placeholder]="'CANDIDATE_EDIT_REQUEST.select_nationality' | translate"
                 [allowClear]="true"
                 [invalid]="!!(form!.get('nationality')?.invalid && form!.get('nationality')?.touched)">
               </app-searchable-select>
@@ -824,7 +825,7 @@ function makePostalCodeGroupValidator(countryCtrl: string, postalCtrl: string): 
             <div [formGroup]="asGroup(ctrl)" class="row g-2 mb-2 align-items-center">
               <div class="col">
                 <input formControlName="skill_name" class="form-control form-control-sm"
-                  placeholder="e.g. Angular"
+                  [placeholder]="'CANDIDATE_EDIT_REQUEST.eg_skill' | translate"
                   [class.is-invalid]="asGroup(ctrl).get('skill_name')!.invalid && asGroup(ctrl).get('skill_name')!.touched">
                 @if (asGroup(ctrl).get('skill_name')!.invalid && asGroup(ctrl).get('skill_name')!.touched) {
                   <div class="invalid-feedback">Skill name is required.</div>
@@ -871,7 +872,7 @@ function makePostalCodeGroupValidator(countryCtrl: string, postalCtrl: string): 
                 <app-searchable-select
                   formControlName="language"
                   [options]="languageOptions()"
-                  placeholder="e.g. English"
+                  [placeholder]="'CANDIDATE_EDIT_REQUEST.eg_language' | translate"
                   [invalid]="asGroup(ctrl).get('language')!.invalid && asGroup(ctrl).get('language')!.touched">
                 </app-searchable-select>
                 @if (asGroup(ctrl).get('language')!.invalid && asGroup(ctrl).get('language')!.touched) {
@@ -915,7 +916,7 @@ function makePostalCodeGroupValidator(countryCtrl: string, postalCtrl: string): 
               <div class="row g-2">
                 <div class="col-md-6">
                   <label class="form-label form-label-sm">Job Title <span class="text-danger">*</span></label>
-                  <input formControlName="job_title" class="form-control form-control-sm" placeholder="Job Title"
+                  <input formControlName="job_title" class="form-control form-control-sm" [placeholder]="'RECRUITER_CANDIDATES.job_title' | translate"
                     [class.is-invalid]="asGroup(ctrl).get('job_title')!.invalid && asGroup(ctrl).get('job_title')!.touched">
                   @if (asGroup(ctrl).get('job_title')!.invalid && asGroup(ctrl).get('job_title')!.touched) {
                     <div class="invalid-feedback">Job title is required.</div>
@@ -923,7 +924,7 @@ function makePostalCodeGroupValidator(countryCtrl: string, postalCtrl: string): 
                 </div>
                 <div class="col-md-6">
                   <label class="form-label form-label-sm">Company <span class="text-danger">*</span></label>
-                  <input formControlName="company_name" class="form-control form-control-sm" placeholder="Company"
+                  <input formControlName="company_name" class="form-control form-control-sm" [placeholder]="'COMMON.company' | translate"
                     [class.is-invalid]="asGroup(ctrl).get('company_name')!.invalid && asGroup(ctrl).get('company_name')!.touched">
                   @if (asGroup(ctrl).get('company_name')!.invalid && asGroup(ctrl).get('company_name')!.touched) {
                     <div class="invalid-feedback">Company name is required.</div>
@@ -954,7 +955,7 @@ function makePostalCodeGroupValidator(countryCtrl: string, postalCtrl: string): 
                   <app-searchable-select
                     formControlName="location"
                     [options]="countryOptions()"
-                    placeholder="Country / City"
+                    [placeholder]="'CANDIDATE_EDIT_REQUEST.country_city' | translate"
                     [allowClear]="true"
                     [invalid]="asGroup(ctrl).get('location')!.invalid && asGroup(ctrl).get('location')!.touched">
                   </app-searchable-select>
@@ -965,7 +966,7 @@ function makePostalCodeGroupValidator(countryCtrl: string, postalCtrl: string): 
                 <div class="col-12">
                   <label class="form-label form-label-sm">Description</label>
                   <textarea formControlName="description" class="form-control form-control-sm"
-                    rows="2" placeholder="Brief description of responsibilities"></textarea>
+                    rows="2" [placeholder]="'CANDIDATE_EDIT_REQUEST.brief_description_responsibilities' | translate"></textarea>
                 </div>
                 <div class="col-md-6">
                   <label class="form-label form-label-sm">Reason for Leaving <span class="text-muted fw-normal" style="font-size:.7rem">(optional)</span></label>
@@ -979,7 +980,7 @@ function makePostalCodeGroupValidator(countryCtrl: string, postalCtrl: string): 
                 @if (asGroup(ctrl).get('reason_for_leaving_select')?.value === 'Other') {
                   <div class="col-md-6">
                     <label class="form-label form-label-sm">Please specify</label>
-                    <input formControlName="reason_for_leaving_other" class="form-control form-control-sm" placeholder="Briefly describe the reason…">
+                    <input formControlName="reason_for_leaving_other" class="form-control form-control-sm" [placeholder]="'CANDIDATE_EDIT_REQUEST.briefly_describe_reason' | translate">
                   </div>
                 }
               </div>
@@ -1004,7 +1005,7 @@ function makePostalCodeGroupValidator(countryCtrl: string, postalCtrl: string): 
               <div class="row g-2">
                 <div class="col-md-6">
                   <label class="form-label form-label-sm">Institution <span class="text-danger">*</span></label>
-                  <input formControlName="institution" class="form-control form-control-sm" placeholder="Institution"
+                  <input formControlName="institution" class="form-control form-control-sm" [placeholder]="'CANDIDATE_EDIT_REQUEST.institution' | translate"
                     [class.is-invalid]="asGroup(ctrl).get('institution')!.invalid && asGroup(ctrl).get('institution')!.touched">
                   @if (asGroup(ctrl).get('institution')!.invalid && asGroup(ctrl).get('institution')!.touched) {
                     <div class="invalid-feedback">Institution is required.</div>
@@ -1015,7 +1016,7 @@ function makePostalCodeGroupValidator(countryCtrl: string, postalCtrl: string): 
                   <app-searchable-select
                     formControlName="degree"
                     [options]="degreeOptions()"
-                    placeholder="e.g. Bachelor of Science"
+                    [placeholder]="'CANDIDATE_EDIT_REQUEST.eg_degree' | translate"
                     [allowClear]="true"
                     [invalid]="asGroup(ctrl).get('degree')!.invalid && asGroup(ctrl).get('degree')!.touched">
                   </app-searchable-select>
@@ -1028,7 +1029,7 @@ function makePostalCodeGroupValidator(countryCtrl: string, postalCtrl: string): 
                   <app-searchable-select
                     formControlName="field_of_study"
                     [options]="fieldOfStudyOptions()"
-                    placeholder="e.g. Computer Science"
+                    [placeholder]="'CANDIDATE_EDIT_REQUEST.eg_field_of_study' | translate"
                     [allowClear]="true"
                     [invalid]="asGroup(ctrl).get('field_of_study')!.invalid && asGroup(ctrl).get('field_of_study')!.touched">
                   </app-searchable-select>
@@ -1074,7 +1075,7 @@ function makePostalCodeGroupValidator(countryCtrl: string, postalCtrl: string): 
                   <app-searchable-select
                     formControlName="location"
                     [options]="countryOptions()"
-                    placeholder="Select country…"
+                    [placeholder]="'CANDIDATE_PROFILE.select_country' | translate"
                     [allowClear]="true"
                     [invalid]="asGroup(ctrl).get('location')!.invalid && asGroup(ctrl).get('location')!.touched">
                   </app-searchable-select>
@@ -1136,23 +1137,23 @@ function makePostalCodeGroupValidator(countryCtrl: string, postalCtrl: string): 
                   }
                   <div class="text-muted" style="font-size:.72rem">
                     @if (asGroup(ctrl).get('issue_date')?.value) {
-                      Issued: {{ asGroup(ctrl).get('issue_date')?.value | date:'dd MMM yyyy' }}
+                      Issued: {{ asGroup(ctrl).get('issue_date')?.value | localeDate:'dd MMM yyyy' }}
                     }
                     @if (asGroup(ctrl).get('no_expiry')?.value) { &nbsp;· No Expiry }
                     @else if (asGroup(ctrl).get('expiry_date')?.value) {
-                      &nbsp;· Expires: {{ asGroup(ctrl).get('expiry_date')?.value | date:'dd MMM yyyy' }}
+                      &nbsp;· Expires: {{ asGroup(ctrl).get('expiry_date')?.value | localeDate:'dd MMM yyyy' }}
                     }
                   </div>
                 </div>
                 <div class="d-flex gap-1 flex-shrink-0">
                   @if (asGroup(ctrl).get('file_url')?.value) {
                     <a [href]="asGroup(ctrl).get('file_url')?.value" target="_blank"
-                      class="btn btn-sm btn-outline-secondary py-1 px-2" title="View certificate">
+                      class="btn btn-sm btn-outline-secondary py-1 px-2" [title]="'CANDIDATE_EDIT_REQUEST.view_certificate' | translate">
                       <i class="bi bi-eye"></i>
                     </a>
                   }
                   <button type="button" class="btn btn-sm btn-outline-danger py-1 px-2"
-                    title="Remove certificate"
+                    [title]="'CANDIDATE_EDIT_REQUEST.remove_certificate' | translate"
                     [disabled]="certDeleting === asGroup(ctrl).get('id')?.value || existingRequest?.status === 'pending'"
                     (click)="deleteCert(asGroup(ctrl).value)">
                     @if (certDeleting === asGroup(ctrl).get('id')?.value) {
@@ -1185,14 +1186,14 @@ function makePostalCodeGroupValidator(countryCtrl: string, postalCtrl: string): 
                       Name <span class="text-danger">*</span>
                     </label>
                     <input type="text" class="form-control form-control-sm"
-                      placeholder="e.g. AWS Solutions Architect"
+                      [placeholder]="'CANDIDATE_EDIT_REQUEST.eg_certificate_name' | translate"
                       [value]="pendingNewCert.name"
                       (input)="pendingNewCert!.name = $any($event.target).value">
                   </div>
                   <div class="col-12 col-md-6">
                     <label class="form-label form-label-sm">Issuing Organisation</label>
                     <input type="text" class="form-control form-control-sm"
-                      placeholder="e.g. Amazon Web Services"
+                      [placeholder]="'CANDIDATE_EDIT_REQUEST.eg_certificate_issuer' | translate"
                       [value]="pendingNewCert.issuer"
                       (input)="pendingNewCert!.issuer = $any($event.target).value">
                   </div>
@@ -1418,6 +1419,7 @@ export class EditRequestComponent implements OnInit {
     private toast: ToastService,
     public master: MasterDataService,
     private sanitizer: DomSanitizer,
+    private translate: TranslateService,
   ) {}
 
   ngOnInit(): void {
@@ -1878,7 +1880,7 @@ export class EditRequestComponent implements OnInit {
   submitNewCert(): void {
     const c = this.pendingNewCert;
     if (!c || !c.file) {
-      this.toast.show('Please attach a certificate file.', 'error');
+      this.toast.show(this.translate.instant('CANDIDATE_EDIT_REQUEST.attach_cert_required'), 'error');
       return;
     }
     const candidateId = this.candidate!.id;
@@ -1894,7 +1896,7 @@ export class EditRequestComponent implements OnInit {
       next: () => {
         this.mediaLoading['certificates'] = false;
         this.pendingNewCert = null;
-        this.toast.show('Certificate uploaded successfully.', 'success');
+        this.toast.show(this.translate.instant('CANDIDATE_EDIT_REQUEST.cert_uploaded'), 'success');
         // Refresh profile so the new cert appears and snapshot stays in sync
         this.candidateService.getMyProfile().subscribe(r => {
           this.candidate = r.candidate;
@@ -1923,7 +1925,7 @@ export class EditRequestComponent implements OnInit {
       },
       error: (err) => {
         this.mediaLoading['certificates'] = false;
-        this.toast.show(err?.error?.message ?? 'Upload failed. Please try again.', 'error');
+        this.toast.show(err?.error?.message ?? this.translate.instant('CANDIDATE_EDIT_REQUEST.upload_failed_retry'), 'error');
       },
     });
   }
@@ -1934,7 +1936,7 @@ export class EditRequestComponent implements OnInit {
     this.candidateService.deleteMyCertificate(this.candidate.id, cert.id).subscribe({
       next: () => {
         this.certDeleting = null;
-        this.toast.show('Certificate removed.', 'success');
+        this.toast.show(this.translate.instant('CANDIDATE_EDIT_REQUEST.cert_removed'), 'success');
         // Remove from FormArray
         const certs = this.form!.get('certificates') as FormArray;
         const idx = certs.controls.findIndex(
@@ -1947,7 +1949,7 @@ export class EditRequestComponent implements OnInit {
       },
       error: (err) => {
         this.certDeleting = null;
-        this.toast.show(err?.error?.message ?? 'Failed to remove certificate.', 'error');
+        this.toast.show(err?.error?.message ?? this.translate.instant('CANDIDATE_EDIT_REQUEST.cert_remove_failed'), 'error');
       },
     });
   }
@@ -1975,7 +1977,7 @@ export class EditRequestComponent implements OnInit {
     const file = (event.target as HTMLInputElement).files?.[0];
     if (!file) return;
     if (type === 'videos' && file.size > 200 * 1024 * 1024) {
-      this.toast.show(`Video exceeds the 200 MB limit (selected: ${(file.size / (1024 * 1024)).toFixed(1)} MB). Please choose a smaller file.`, 'error');
+      this.toast.show(this.translate.instant('CANDIDATE_EDIT_REQUEST.video_size_exceeded', { size: (file.size / (1024 * 1024)).toFixed(1) }), 'error');
       (event.target as HTMLInputElement).value = '';
       return;
     }
@@ -1984,9 +1986,9 @@ export class EditRequestComponent implements OnInit {
       next: (res) => {
         this.stagedRelative[type] = res.relativePath;
         this.staged[type]         = res.url;
-        this.toast.show('File staged — will be applied on approval', 'success');
+        this.toast.show(this.translate.instant('CANDIDATE_EDIT_REQUEST.file_staged'), 'success');
       },
-      error:    (err) => this.toast.show(err?.error?.message ?? 'Upload failed', 'error'),
+      error:    (err) => this.toast.show(err?.error?.message ?? this.translate.instant('CANDIDATE_EDIT_REQUEST.upload_failed'), 'error'),
       complete: () => (this.mediaLoading[type] = false),
     });
   }
@@ -2088,7 +2090,7 @@ export class EditRequestComponent implements OnInit {
 
     if (Object.keys(changedPayload).length === 0) {
       this.submitting = false;
-      this.toast.show('No changes detected. Modify at least one field before submitting.', 'info');
+      this.toast.show(this.translate.instant('CANDIDATE_EDIT_REQUEST.no_changes'), 'info');
       return;
     }
 
@@ -2098,11 +2100,11 @@ export class EditRequestComponent implements OnInit {
         this.existingRequest = res.request;
         this.staged          = {};
         this.stagedRelative  = {};
-        this.toast.show('Edit request submitted — pending admin review.', 'success');
+        this.toast.show(this.translate.instant('CANDIDATE_EDIT_REQUEST.request_submitted'), 'success');
       },
       error: (err) => {
         this.submitting  = false;
-        this.submitError = err?.error?.message ?? 'Failed to submit request.';
+        this.submitError = err?.error?.message ?? this.translate.instant('CANDIDATE_EDIT_REQUEST.error');
       },
     });
   }

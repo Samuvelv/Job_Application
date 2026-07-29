@@ -3,6 +3,7 @@ import { Component, signal, OnInit, computed, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
+import { LocaleDatePipe } from '../../../core/pipes/locale-date.pipe';
 import { forkJoin, of } from 'rxjs';
 import { catchError } from 'rxjs/operators';
 import { AuthService } from '../../../core/services/auth.service';
@@ -13,7 +14,7 @@ import { Recruiter } from '../../../core/models/recruiter.model';
 @Component({
   selector: 'app-recruiter-dashboard',
   standalone: true,
-  imports: [CommonModule, RouterLink, TranslateModule],
+  imports: [LocaleDatePipe, CommonModule, RouterLink, TranslateModule],
   styles: [`
     /* ── Hero ─────────────────────────────────────────────────────────── */
     .rd-hero {
@@ -283,7 +284,7 @@ import { Recruiter } from '../../../core/models/recruiter.model';
             @if (isExpired()) {
               {{ 'RECRUITER_DASHBOARD.access_expired_chip' | translate }}
             } @else {
-              {{ 'RECRUITER_DASHBOARD.access_expires' | translate }} {{ profile()!.access_expires_at | date:'d MMM yyyy' }}
+              {{ 'RECRUITER_DASHBOARD.access_expires' | translate }} {{ profile()!.access_expires_at | localeDate:'d MMM yyyy' }}
             }
           </span>
         }

@@ -60,10 +60,10 @@ describe('BulkTranslationService', () => {
 
       const result = await service.translateSection(fields, 'fr');
 
-      expect(result.job_title).toBe('Développeur Angular');
-      expect(result.bio).toBe('Je suis développeur');
-      expect(result.industry).toBeUndefined();
-      expect(result.years_exp).toBeUndefined();
+      expect(result['job_title']).toBe('Développeur Angular');
+      expect(result['bio']).toBe('Je suis développeur');
+      expect(result['industry']).toBeUndefined();
+      expect(result['years_exp']).toBeUndefined();
     });
 
     it('should make one API call for small sections', async () => {
@@ -177,14 +177,12 @@ describe('BulkTranslationService', () => {
       }
 
       // Mock translation
-      const expectedResult: Record<string, Record<string, string>> = {};
+      const expectedResult: Record<string, string> = {};
       for (let i = 0; i < 20; i++) {
-        expectedResult[i] = {
-          job_title: `Rôle Senior ${i}`,
-          company_name: `Entreprise ${i}`,
-          description: 'Géré de grands projets...'.repeat(2),
-          reason_for_leaving: 'Opportunité de développement professionnel'
-        };
+        expectedResult[`exp_${i}_job_title`] = `Rôle Senior ${i}`;
+        expectedResult[`exp_${i}_company_name`] = `Entreprise ${i}`;
+        expectedResult[`exp_${i}_description`] = 'Géré de grands projets...'.repeat(2);
+        expectedResult[`exp_${i}_reason`] = 'Opportunité de développement professionnel';
       }
 
       userDataTranslationMock.translateUserFields.and.returnValue(
@@ -220,9 +218,9 @@ describe('BulkTranslationService', () => {
 
       // All fields should be present
       expect(Object.keys(result).length).toEqual(Object.keys(fields).length);
-      expect(result.job_title).toBeTruthy();
-      expect(result.industry).toBeTruthy();
-      expect(result.occupation).toBeTruthy();
+      expect(result['job_title']).toBeTruthy();
+      expect(result['industry']).toBeTruthy();
+      expect(result['occupation']).toBeTruthy();
     });
 
     it('should detect missing translations', async () => {
@@ -283,8 +281,8 @@ describe('BulkTranslationService', () => {
       const result = await service.translateEducationBulk(educations, 'fr');
 
       expect(Object.keys(result).length).toEqual(2);
-      expect(result[0].degree).toBe('Licence');
-      expect(result[1].field).toBe('Intelligence Artificielle');
+      expect(result[0]['degree']).toBe('Licence');
+      expect(result[1]['field']).toBe('Intelligence Artificielle');
     });
 
     it('should handle skills array bulk translation', async () => {
@@ -333,7 +331,7 @@ describe('BulkTranslationService', () => {
     });
 
     it('should gracefully handle null values in arrays', async () => {
-      const skills = [
+      const skills: Array<{ skill_name: string | null | undefined }> = [
         { skill_name: 'Angular' },
         { skill_name: null },
         { skill_name: undefined },

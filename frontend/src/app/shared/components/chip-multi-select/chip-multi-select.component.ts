@@ -52,7 +52,7 @@ export interface ChipOption {
               #searchEl
               class="ss-search"
               type="text"
-              placeholder="Search..."
+              [placeholder]="('COMMON.search' | translate) + '...'"
               [(ngModel)]="query"
               (ngModelChange)="onQuery($event)"
               (click)="$event.stopPropagation()"

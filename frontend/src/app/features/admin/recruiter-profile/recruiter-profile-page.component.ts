@@ -2,6 +2,7 @@
 import { Component, OnInit, OnDestroy, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
+import { LocaleDatePipe } from '../../../core/pipes/locale-date.pipe';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { Subject } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
@@ -11,12 +12,11 @@ import { LanguageService } from '../../../core/services/language.service';
 import { Recruiter, ShortlistEntry } from '../../../core/models/recruiter.model';
 import { ToastService } from '../../../core/services/toast.service';
 import { ConfirmDialogService } from '../../../core/services/confirm-dialog.service';
-import { TranslateUserDataPipe } from '../../../core/pipes/translate-user-data.pipe';
 
 @Component({
   selector: 'app-recruiter-profile-page',
   standalone: true,
-  imports: [CommonModule, TranslateModule, RouterLink, TranslateUserDataPipe],
+  imports: [LocaleDatePipe, CommonModule, TranslateModule, RouterLink],
   template: `
     <!-- Back + actions row -->
     <div class="d-flex align-items-center justify-content-between mb-4 gap-2 flex-wrap">
@@ -28,7 +28,7 @@ import { TranslateUserDataPipe } from '../../../core/pipes/translate-user-data.p
           <a [routerLink]="['/admin/recruiters']"
              [queryParams]="{ editId: recruiter.id }"
              class="tbl-actions__btn tbl-actions__btn--edit"
-             title="Edit recruiter in admin panel">
+             [title]="'RECRUITER_PROFILE.edit_recruiter_in_admin' | translate">
              <i class="bi bi-pencil me-1"></i> {{ 'COMMON.edit' | translate }}
            </a>
           <div class="tbl-actions__sep"></div>
@@ -39,7 +39,7 @@ import { TranslateUserDataPipe } from '../../../core/pipes/translate-user-data.p
            </button>
           <div class="tbl-actions__sep"></div>
           <button class="tbl-actions__btn tbl-actions__btn--danger tbl-actions__btn--icon"
-            (click)="deleteRecruiter()" title="Delete recruiter">
+            (click)="deleteRecruiter()" [title]="'RECRUITER_LIST.delete_recruiter_title' | translate">
             <i class="bi bi-trash"></i>
           </button>
         </div>
@@ -104,13 +104,13 @@ import { TranslateUserDataPipe } from '../../../core/pipes/translate-user-data.p
               }
                <span class="rp-hero__chip" [class.text-danger]="isExpired(recruiter.access_expires_at)">
                  <i class="bi bi-clock"></i>
-                 {{ 'RECRUITER_PROFILE.access_expires' | translate }}: {{ recruiter.access_expires_at | date:'dd MMM yyyy, HH:mm' }}
+                 {{ 'RECRUITER_PROFILE.access_expires' | translate }}: {{ recruiter.access_expires_at | localeDate:'dd MMM yyyy, HH:mm' }}
                  @if (isExpired(recruiter.access_expires_at)) {
                    <span class="badge bg-danger ms-1">{{ 'COMMON.expired' | translate }}</span>
                  }
                </span>
                <span class="rp-hero__chip">
-                 <i class="bi bi-calendar3"></i>{{ 'RECRUITER_PROFILE.joined' | translate }} {{ recruiter.created_at | date:'dd MMM yyyy' }}
+                 <i class="bi bi-calendar3"></i>{{ 'RECRUITER_PROFILE.joined' | translate }} {{ recruiter.created_at | localeDate:'dd MMM yyyy' }}
                </span>
             </div>
           </div>
@@ -471,7 +471,7 @@ import { TranslateUserDataPipe } from '../../../core/pipes/translate-user-data.p
                   <i class="bi bi-calendar-event"></i>
                   <div>
                      <div class="rp-info-card__label">{{ 'RECRUITER_PROFILE.access_start' | translate }}</div>
-                    <div class="rp-info-card__value">{{ recruiter.access_start_date | date:'dd MMM yyyy' }}</div>
+                    <div class="rp-info-card__value">{{ recruiter.access_start_date | localeDate:'dd MMM yyyy' }}</div>
                   </div>
                 </div>
               }
@@ -480,7 +480,7 @@ import { TranslateUserDataPipe } from '../../../core/pipes/translate-user-data.p
                 <div>
                    <div class="rp-info-card__label">{{ 'RECRUITER_PROFILE.access_expires_at' | translate }}</div>
                    <div class="rp-info-card__value" [class.text-danger]="isExpired(recruiter.access_expires_at)">
-                     {{ recruiter.access_expires_at | date:'dd MMM yyyy, HH:mm' }}
+                     {{ recruiter.access_expires_at | localeDate:'dd MMM yyyy, HH:mm' }}
                      @if (isExpired(recruiter.access_expires_at)) {
                        <span class="badge bg-danger ms-1">{{ 'COMMON.expired' | translate }}</span>
                      }
@@ -491,7 +491,7 @@ import { TranslateUserDataPipe } from '../../../core/pipes/translate-user-data.p
                 <i class="bi bi-calendar-check"></i>
                 <div>
                    <div class="rp-info-card__label">{{ 'COMMON.registered' | translate }}</div>
-                  <div class="rp-info-card__value">{{ recruiter.created_at | date:'dd MMM yyyy, HH:mm' }}</div>
+                  <div class="rp-info-card__value">{{ recruiter.created_at | localeDate:'dd MMM yyyy, HH:mm' }}</div>
                 </div>
               </div>
               <div class="rp-info-card__row">
@@ -599,7 +599,7 @@ import { TranslateUserDataPipe } from '../../../core/pipes/translate-user-data.p
                   </div>
                   <div class="sl-row__end">
                     <span class="sl-row__date">
-                      <i class="bi bi-bookmark-fill"></i>{{ entry.shortlisted_at | date:'dd MMM yyyy' }}
+                      <i class="bi bi-bookmark-fill"></i>{{ entry.shortlisted_at | localeDate:'dd MMM yyyy' }}
                     </span>
                      <a [routerLink]="['/admin/candidates', entry.candidate_id]"
                        class="sl-row__view-btn">

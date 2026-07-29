@@ -2,6 +2,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { BehaviorSubject, Observable } from 'rxjs';
+import { environment } from '../../../environments/environment';
 
 export interface CacheEntry {
   data: Record<string, string>;
@@ -53,7 +54,7 @@ export class CandidateTranslationService {
   private readonly CACHE_PREFIX = 'candidate_';
   private readonly CACHE_VERSION = 'v1';
   private readonly CACHE_TTL_MS = 24 * 60 * 60 * 1000; // 24 hours
-  private readonly API_ENDPOINT = '/api/v1/translate';
+  private readonly API_ENDPOINT = `${environment.apiUrl}/translate`;
 
   // Observables for UI state
   isTranslating$ = new BehaviorSubject<boolean>(false);
@@ -105,7 +106,7 @@ export class CandidateTranslationService {
       };
 
       this.http
-        .post<TranslationResponse>('/api/v1/translate', request)
+        .post<TranslationResponse>(this.API_ENDPOINT, request)
         .subscribe({
           next: (response) => {
             if (!response?.translated) {

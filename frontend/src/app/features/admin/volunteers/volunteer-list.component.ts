@@ -1,7 +1,7 @@
 // src/app/features/admin/volunteers/volunteer-list.component.ts
 import { Component, OnInit, computed, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { TranslateModule } from '@ngx-translate/core';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { ReactiveFormsModule, FormBuilder, FormControl, FormGroup, FormsModule, Validators } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { catchError, of } from 'rxjs';
@@ -426,7 +426,7 @@ import { SearchableSelectComponent, SelectOption } from '../../../shared/compone
                </div>
                <div class="rep-section">
                  <div class="rep-section__label"><i class="bi bi-chat-left-text"></i> {{ 'VOLUNTEERS.notes' | translate }}</div>
-                 <textarea formControlName="notes" class="form-control" rows="3" placeholder="Any relevant notes…"></textarea>
+                 <textarea formControlName="notes" class="form-control" rows="3" [placeholder]="'VOLUNTEERS.notes_placeholder' | translate"></textarea>
                </div>
                @if (saveError) {
                  <div class="alert alert-danger small py-2 mb-3">
@@ -641,6 +641,7 @@ export class VolunteerListComponent implements OnInit {
     private router: Router,
     private toast: ToastService,
     private confirm: ConfirmDialogService,
+    private translate: TranslateService,
   ) {}
 
   ngOnInit(): void {
@@ -706,7 +707,7 @@ export class VolunteerListComponent implements OnInit {
         a.click();
         URL.revokeObjectURL(url);
       },
-      error: () => { this.exporting = false; this.toast.error('Export failed'); },
+      error: () => { this.exporting = false; this.toast.error(this.translate.instant('MESSAGES.operation_failed')); },
     });
   }
 
@@ -753,11 +754,11 @@ export class VolunteerListComponent implements OnInit {
         this.toggling = null;
         const idx = this.volunteers.findIndex(x => x.id === v.id);
         if (idx !== -1) this.volunteers[idx] = res.volunteer;
-        this.toast.success(next === 'Active' ? 'Volunteer activated' : 'Volunteer deactivated');
+        this.toast.success(next === 'Active' ? this.translate.instant('VOLUNTEER_PROFILE.activated') : this.translate.instant('VOLUNTEER_PROFILE.deactivated'));
       },
       error: (err) => {
         this.toggling = null;
-        this.toast.error(err?.error?.message ?? 'Failed to update availability');
+        this.toast.error(err?.error?.message ?? this.translate.instant('VOLUNTEER_PROFILE.availability_update_failed'));
       },
     });
   }
@@ -784,8 +785,8 @@ export class VolunteerListComponent implements OnInit {
     };
 
     this.volunteerSvc.update(this.editingVolunteer!.id, payload).subscribe({
-      next: () => { this.saving = false; this.toast.success('Volunteer updated'); this.closePanel(); this.load(); },
-      error: (err) => { this.saving = false; this.saveError = err?.error?.message ?? 'Failed to save volunteer.'; },
+      next: () => { this.saving = false; this.toast.success(this.translate.instant('ADMIN_VOLUNTEERS.volunteer_updated')); this.closePanel(); this.load(); },
+      error: (err) => { this.saving = false; this.saveError = err?.error?.message ?? this.translate.instant('ADMIN_VOLUNTEERS.save_failed'); },
     });
   }
 }

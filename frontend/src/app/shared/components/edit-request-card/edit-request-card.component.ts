@@ -1,6 +1,7 @@
 // src/app/shared/components/edit-request-card/edit-request-card.component.ts
 import { Component, Input, Output, EventEmitter, OnInit } from '@angular/core';
 import { TranslateModule } from '@ngx-translate/core';
+import { LocaleDatePipe } from '../../../core/pipes/locale-date.pipe';
 import { CommonModule } from '@angular/common';
 import { EditRequest } from '../../../core/models/edit-request.model';
 import { ConfirmDialogService } from '../../../core/services/confirm-dialog.service';
@@ -16,7 +17,7 @@ interface FieldChange {
 @Component({
   selector: 'app-edit-request-card',
   standalone: true,
-  imports: [CommonModule, EditChangesModalComponent, TranslateModule],
+  imports: [LocaleDatePipe, CommonModule, EditChangesModalComponent, TranslateModule],
   template: `
     <div class="edit-request-card" [class.is-selected]="selected">
       <!-- Card Header -->
@@ -120,7 +121,7 @@ interface FieldChange {
          <div class="audit-trail__rows">
            <div class="audit-trail__row">
              <span class="audit-trail__label">{{ 'EDIT_REQUEST.submitted' | translate }}</span>
-             <span class="audit-trail__value">{{ request.created_at | date:'dd MMM yyyy, HH:mm' }}</span>
+             <span class="audit-trail__value">{{ request.created_at | localeDate:'dd MMM yyyy, HH:mm' }}</span>
            </div>
            @if (request.status !== 'pending') {
              <div class="audit-trail__row">
@@ -136,7 +137,7 @@ interface FieldChange {
              </div>
              <div class="audit-trail__row">
                <span class="audit-trail__label">{{ 'EDIT_REQUEST.reviewed' | translate }}</span>
-               <span class="audit-trail__value">{{ request.reviewed_at | date:'dd MMM yyyy, HH:mm' }}</span>
+               <span class="audit-trail__value">{{ request.reviewed_at | localeDate:'dd MMM yyyy, HH:mm' }}</span>
              </div>
            }
          </div>
