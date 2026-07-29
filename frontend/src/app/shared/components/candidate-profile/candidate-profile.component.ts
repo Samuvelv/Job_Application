@@ -132,7 +132,11 @@ type Tab = 'overview' | 'experience' | 'education' | 'documents' | 'activity';
 
           <!-- Action buttons -->
           <div class="profile-hero-v2__actions">
-            @if (candidate.resume_url) {
+            @if (contactLocked) {
+              <span class="profile-hero-v2__action-btn contact-locked-btn">
+                <i class="bi bi-lock-fill"></i>CV hidden
+              </span>
+            } @else if (candidate.resume_url) {
               <a [href]="candidate.resume_url" target="_blank"
                 class="profile-hero-v2__action-btn profile-hero-v2__action-btn--cv">
                 <i class="bi bi-file-earmark-person-fill"></i>Download CV
