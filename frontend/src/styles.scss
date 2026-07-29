@@ -6417,10 +6417,10 @@ body {
       &:hover { background: var(--th-gradient-primary); color: #fff; border-color: transparent; box-shadow: var(--th-shadow-primary); transform: translateY(-1px); }
     }
     &--video {
-      background: var(--th-rose-soft);
-      color: var(--th-rose);
-      border-color: rgba(244,63,94,.18);
-      &:hover { background: var(--th-gradient-rose); color: #fff; border-color: transparent; box-shadow: var(--th-shadow-danger); transform: translateY(-1px); }
+      background: var(--th-success-soft);
+      color: var(--th-success);
+      border-color: rgba(25,135,84,.18);
+      &:hover { background: var(--th-gradient-success); color: #fff; border-color: transparent; box-shadow: var(--th-shadow-success); transform: translateY(-1px); }
     }
     &--linkedin {
       background: var(--th-cyan-soft);
