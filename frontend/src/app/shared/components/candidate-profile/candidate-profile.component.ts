@@ -1,6 +1,6 @@
 // src/app/shared/components/candidate-profile/candidate-profile.component.ts
 import { Component, Input, signal, inject, OnInit, OnDestroy } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { CommonModule, formatDate } from '@angular/common';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { LocaleDatePipe } from '../../../core/pipes/locale-date.pipe';
 import { Candidate } from '../../../core/models/candidate.model';
@@ -1295,8 +1295,12 @@ export class CandidateProfileComponent implements OnInit, OnDestroy {
 
   formatEduDate(month?: number, year?: number): string {
     if (!year) return '';
-    const monthNames = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-    return month ? `${monthNames[month - 1]} ${year}` : `${year}`;
+    if (!month) return `${year}`;
+    try {
+      return formatDate(new Date(year, month - 1, 1), 'MMM yyyy', this.languageService.activeLocale());
+    } catch {
+      return formatDate(new Date(year, month - 1, 1), 'MMM yyyy', 'en-US');
+    }
   }
 }
 

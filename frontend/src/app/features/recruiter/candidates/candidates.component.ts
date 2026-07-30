@@ -1,9 +1,9 @@
 // src/app/features/recruiter/candidates/candidates.component.ts
-import { Component, OnInit, ViewChild } from '@angular/core';
+import { Component, OnInit, OnDestroy, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, FormControl, FormGroup, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
-import { catchError, forkJoin, of } from 'rxjs';
+import { catchError, forkJoin, of, Subject, takeUntil } from 'rxjs';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { CandidateService, PaginatedCandidates } from '../../../core/services/candidate.service';
 import { RecruiterService } from '../../../core/services/recruiter.service';
@@ -14,6 +14,7 @@ import { PageHeaderComponent } from '../../../shared/components/page-header/page
 import { EmptyStateComponent } from '../../../shared/components/empty-state/empty-state.component';
 import { CandidateFilterSidebarComponent } from '../../../shared/components/candidate-filter-sidebar/candidate-filter-sidebar.component';
 import { RecruiterCandidateCardComponent } from '../../../shared/components/recruiter-candidate-card/recruiter-candidate-card.component';
+import { BulkTranslationService } from '../../../core/services/bulk-translation.service';
 
 @Component({
   selector: 'app-candidates',
@@ -91,6 +92,7 @@ import { RecruiterCandidateCardComponent } from '../../../shared/components/recr
               [candidate]="emp"
               [interestRequest]="interestMap.get(emp.id) ?? null"
               [isShortlisted]="shortlistedIds.has(emp.id)"
+              [translated]="translatedCardsMap.get(emp.id) ?? null"
               (shortlist)="toggleShortlist(emp)"
               (requestInterest)="openRequestModal(emp)"
             />
@@ -177,7 +179,7 @@ import { RecruiterCandidateCardComponent } from '../../../shared/components/recr
     }
   `,
 })
-export class CandidatesComponent implements OnInit {
+export class CandidatesComponent implements OnInit, OnDestroy {
   @ViewChild('filterSidebar') filterSidebar!: CandidateFilterSidebarComponent;
 
   candidates: Candidate[] = [];
@@ -188,6 +190,10 @@ export class CandidatesComponent implements OnInit {
   sidebarVisible = true;
   sidebarActiveCount = 0;
   hasActiveFilters = false;
+
+  /** AI-translated preview fields per candidate ID, for the current UI language. */
+  translatedCardsMap = new Map<string, Record<string, string>>();
+  private destroy$ = new Subject<void>();
 
   /** Map of candidateId → most-recent InterestRequest for this recruiter */
   interestMap = new Map<string, InterestRequest>();
@@ -208,6 +214,7 @@ export class CandidatesComponent implements OnInit {
     private interestRequestService: InterestRequestService,
     private toast: ToastService,
     private translate: TranslateService,
+    private bulkTranslation: BulkTranslationService,
   ) {
     this.requestForm = this.fb.group({
       sector:  ['', Validators.required],
@@ -219,6 +226,66 @@ export class CandidatesComponent implements OnInit {
   ngOnInit(): void {
     this.loadShortlist();
     this.load();
+
+    this.translate.onLangChange
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(() => {
+        this.bulkTranslation.clearCache();
+        this.translatedCardsMap = new Map();
+        this.translateCandidateCards();
+      });
+  }
+
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
+  }
+
+  /**
+   * Translate the preview fields (job title, occupation, industry, city,
+   * country, top target location, first 4 skill names) shown on each
+   * candidate card in the current results page, in a single combined
+   * /translate call rather than one call per card.
+   */
+  private async translateCandidateCards(): Promise<void> {
+    const lang = this.translate.currentLang || 'en';
+    if (lang === 'en' || this.candidates.length === 0) return;
+
+    const requestedLang = lang;
+    const allFields: Record<string, string> = {};
+
+    for (const c of this.candidates) {
+      if (c.job_title)      allFields[`${c.id}__job_title`] = c.job_title;
+      if (c.occupation)     allFields[`${c.id}__occupation`] = c.occupation;
+      if (c.industry)       allFields[`${c.id}__industry`] = c.industry;
+      if (c.current_city)   allFields[`${c.id}__city`] = c.current_city;
+      if (c.current_country) allFields[`${c.id}__country`] = c.current_country;
+      const target = c.target_locations?.[0];
+      if (target) allFields[`${c.id}__target`] = target;
+      c.skills?.slice(0, 4).forEach((s, i) => {
+        if (s.skill_name) allFields[`${c.id}__skill_${i}`] = s.skill_name;
+      });
+    }
+
+    if (Object.keys(allFields).length === 0) return;
+
+    try {
+      const translated = await this.bulkTranslation.translateSection(allFields, requestedLang);
+      if ((this.translate.currentLang || 'en') !== requestedLang) return;
+
+      const map = new Map<string, Record<string, string>>();
+      for (const [key, value] of Object.entries(translated)) {
+        const idx = key.lastIndexOf('__');
+        if (idx === -1) continue;
+        const candidateId = key.slice(0, idx);
+        const field = key.slice(idx + 2);
+        if (!map.has(candidateId)) map.set(candidateId, {});
+        map.get(candidateId)![field] = value;
+      }
+      this.translatedCardsMap = map;
+    } catch (error) {
+      console.error('Error translating candidate card previews:', error);
+    }
   }
 
   toggleSidebar(): void {
@@ -282,6 +349,8 @@ export class CandidatesComponent implements OnInit {
       if (candidates) {
         this.candidates   = candidates.data;
         this.pagination   = candidates.pagination;
+        this.translatedCardsMap = new Map();
+        this.translateCandidateCards();
       }
       // Build map: candidateId → most-recent request (sorted by created_at desc)
       const sorted = [...(requests?.requests ?? [])].sort(

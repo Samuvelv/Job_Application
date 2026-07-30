@@ -79,7 +79,7 @@ export interface ChipOption {
                 {{ opt.label | translate }}
               </li>
             } @empty {
-              <li class="ss-empty">No results found</li>
+              <li class="ss-empty">{{ 'MESSAGES.no_results' | translate }}</li>
             }
           </ul>
         </div>

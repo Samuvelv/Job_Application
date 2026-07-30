@@ -170,7 +170,7 @@ const AVAILABILITY_OPTIONS: SelectOption[] = [
               <input type="number" class="form-control form-control-sm" formControlName="yearsExpMax"
                 [placeholder]="'FILTER.years_range_max' | translate" min="0" max="25">
             </div>
-            <div class="cfs-range-labels mt-1"><span>0 yrs</span><span>25 yrs</span></div>
+            <div class="cfs-range-labels mt-1"><span>0 {{ 'FILTER.yrs' | translate }}</span><span>25 {{ 'FILTER.yrs' | translate }}</span></div>
           </div>
         </div>
 

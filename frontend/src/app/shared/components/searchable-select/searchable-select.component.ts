@@ -43,7 +43,7 @@ export interface SelectOption {
               #searchInput
               class="ss-search"
               type="text"
-              [placeholder]="'Search ' + (placeholder || 'options') + '...'"
+              [placeholder]="(('COMMON.search' | translate) + ' ' + (placeholder || ('COMMON.options' | translate)) + '...')"
               [(ngModel)]="query"
               (ngModelChange)="onQuery($event)"
               (click)="$event.stopPropagation()"
@@ -60,7 +60,7 @@ export interface SelectOption {
           <ul class="ss-list">
             @if (allowClear && selectedValue() !== null && selectedValue() !== '') {
               <li class="ss-option ss-clear-option" (click)="select(null)">
-                <i class="bi bi-x-circle me-1"></i>Clear selection
+                <i class="bi bi-x-circle me-1"></i>{{ 'TOOLTIPS.clear_selection' | translate }}
               </li>
             }
             @for (opt of filteredOptions(); track opt.value) {
@@ -75,7 +75,7 @@ export interface SelectOption {
                 }
               </li>
             } @empty {
-              <li class="ss-empty">No results found</li>
+              <li class="ss-empty">{{ 'MESSAGES.no_results' | translate }}</li>
             }
           </ul>
         </div>

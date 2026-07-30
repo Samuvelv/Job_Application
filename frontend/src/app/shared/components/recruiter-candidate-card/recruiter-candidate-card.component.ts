@@ -44,7 +44,7 @@ import { MasterDataService } from '../../../core/services/master-data.service';
         </div>
         <div class="cl-card__name">{{ candidate.first_name }} {{ candidate.last_name }}</div>
         <div class="cl-card__job">
-          {{ candidate.job_title || candidate.occupation || '—' }}
+          {{ translated?.['job_title'] || translated?.['occupation'] || candidate.job_title || candidate.occupation || '—' }}
         </div>
       </div>
 
@@ -57,7 +57,7 @@ import { MasterDataService } from '../../../core/services/master-data.service';
               <i class="bi bi-building" style="font-size:.72rem;color:var(--th-primary);opacity:.8;"></i>{{ 'CANDIDATE_CARD.industry' | translate }}
               <span style="margin-left:auto;">:</span>
             </span>
-            <span style="font-size:.8rem;font-weight:500;color:var(--th-text);padding-left:.5rem;">{{ candidate.industry }}</span>
+            <span style="font-size:.8rem;font-weight:500;color:var(--th-text);padding-left:.5rem;">{{ translated?.['industry'] || candidate.industry }}</span>
           </div>
         }
 
@@ -77,7 +77,7 @@ import { MasterDataService } from '../../../core/services/master-data.service';
               <i class="bi bi-geo-alt-fill" style="font-size:.72rem;color:var(--th-primary);opacity:.8;"></i>{{ 'CANDIDATE_CARD.location' | translate }}
               <span style="margin-left:auto;">:</span>
             </span>
-            <span style="font-size:.8rem;font-weight:500;color:var(--th-text);padding-left:.5rem;">{{ candidate.current_city ? candidate.current_city + ', ' : '' }}{{ candidate.current_country }}</span>
+            <span style="font-size:.8rem;font-weight:500;color:var(--th-text);padding-left:.5rem;">{{ (translated?.['city'] || candidate.current_city) ? (translated?.['city'] || candidate.current_city) + ', ' : '' }}{{ translated?.['country'] || candidate.current_country }}</span>
           </div>
         }
 
@@ -87,7 +87,7 @@ import { MasterDataService } from '../../../core/services/master-data.service';
               <i class="bi bi-send-fill" style="font-size:.72rem;color:var(--th-primary);opacity:.8;"></i>{{ 'CANDIDATE_CARD.target' | translate }}
               <span style="margin-left:auto;">:</span>
             </span>
-            <span style="font-size:.8rem;font-weight:500;color:var(--th-text);padding-left:.5rem;">{{ firstTarget }}</span>
+            <span style="font-size:.8rem;font-weight:500;color:var(--th-text);padding-left:.5rem;">{{ translated?.['target'] || firstTarget }}</span>
           </div>
         }
 
@@ -96,8 +96,8 @@ import { MasterDataService } from '../../../core/services/master-data.service';
       <!-- ── Skills ── -->
       @if (candidate.skills?.length) {
         <div class="cl-card__location" style="flex-wrap:wrap;gap:.3rem;">
-          @for (s of candidate.skills!.slice(0, 4); track s.skill_name) {
-            <span class="cl-card__loc-chip" style="font-size:.68rem;">{{ s.skill_name }}</span>
+          @for (s of candidate.skills!.slice(0, 4); track s.skill_name; let $index = $index) {
+            <span class="cl-card__loc-chip" style="font-size:.68rem;">{{ translated?.['skill_' + $index] || s.skill_name }}</span>
           }
           @if (candidate.skills!.length > 4) {
             <span class="cl-card__loc-chip" style="font-size:.68rem;opacity:.7;">
@@ -174,6 +174,8 @@ export class RecruiterCandidateCardComponent {
   @Input({ required: true }) candidate!: Candidate;
   @Input() interestRequest: InterestRequest | null = null;
   @Input() isShortlisted = false;
+  /** AI-translated preview fields for this card (job_title, occupation, industry, city, country, target, skill_0..3), or null before/without translation. */
+  @Input() translated: Record<string, string> | null = null;
   @Output() shortlist       = new EventEmitter<void>();
   @Output() requestInterest = new EventEmitter<void>();
 

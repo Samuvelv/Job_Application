@@ -24,7 +24,7 @@ import { CommonModule } from '@angular/common';
         <span class="tag-chip">
           {{ tag }}
           @if (!isDisabled) {
-            <button type="button" class="tag-chip-remove" (click)="remove(tag)" [attr.aria-label]="'Remove ' + tag">
+            <button type="button" class="tag-chip-remove" (click)="remove(tag)" [attr.aria-label]="(('COMMON.remove' | translate) + ' ' + tag)">
               <i class="bi bi-x"></i>
             </button>
           }

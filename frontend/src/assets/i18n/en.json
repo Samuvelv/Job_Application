@@ -110,7 +110,8 @@
     "page": "Page",
     "previous": "Previous",
     "profile_photo": "Profile Photo",
-    "restore": "Restore"
+    "restore": "Restore",
+    "options": "options"
   },
   "NAV": {
     "dashboard": "Dashboard",
@@ -1304,7 +1305,8 @@
     "all_formats": "All formats",
     "select_sources": "Select sources…",
     "years_range_min": "Min years",
-    "years_range_max": "Max years"
+    "years_range_max": "Max years",
+    "yrs": "yrs"
   },
   "FILTER_OPTIONS": {
     "candidates": "candidates",
