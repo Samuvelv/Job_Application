@@ -1265,7 +1265,8 @@
     "remove_failed": "Entfernen fehlgeschlagen",
     "add_failed": "Vorauswahl fehlgeschlagen",
     "added_success": "{{name}} zur Vorauswahl hinzugefügt",
-    "country_example": "z. B. Australien"
+    "country_example": "z. B. Australien",
+    "min_experience_placeholder": "z. B. 3"
   },
   "OPTIONS": {
     "profile_status_active": "Aktiv",

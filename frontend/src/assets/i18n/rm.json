@@ -1265,7 +1265,8 @@
     "remove_failed": "Nagin tschernà",
     "add_failed": "Impussibel d'agiuntar a la preselecziun",
     "added_success": "{{name}} agiuntà a la preselecziun",
-    "country_example": "p.ex. Australia"
+    "country_example": "p.ex. Australia",
+    "min_experience_placeholder": "per exempl 3"
   },
   "OPTIONS": {
     "profile_status_active": "Activ",

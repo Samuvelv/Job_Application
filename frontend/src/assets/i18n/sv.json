@@ -1265,7 +1265,8 @@
     "remove_failed": "Det gick inte att ta bort",
     "add_failed": "Det gick inte att lägga till i urvalet",
     "added_success": "{{name}} har lagts till i urvalet",
-    "country_example": "t.ex. Australien"
+    "country_example": "t.ex. Australien",
+    "min_experience_placeholder": "t.ex. 3"
   },
   "OPTIONS": {
     "profile_status_active": "Aktiv",

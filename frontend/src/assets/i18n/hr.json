@@ -1265,7 +1265,8 @@
     "remove_failed": "Nije uspjelo uklanjanje",
     "add_failed": "Dodavanje u uži izbor nije uspjelo",
     "added_success": "{{name}} dodan u uži izbor",
-    "country_example": "npr. Australija"
+    "country_example": "npr. Australija",
+    "min_experience_placeholder": "npr. 3"
   },
   "OPTIONS": {
     "profile_status_active": "Aktivno",

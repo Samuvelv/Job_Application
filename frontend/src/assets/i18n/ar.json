@@ -1265,7 +1265,8 @@
     "remove_failed": "فشلت عملية الإزالة",
     "add_failed": "فشل الترشيح",
     "added_success": "تمت إضافة {{name}} إلى القائمة المختصرة",
-    "country_example": "مثال: أستراليا"
+    "country_example": "مثال: أستراليا",
+    "min_experience_placeholder": "مثال: 3"
   },
   "OPTIONS": {
     "profile_status_active": "نشط",

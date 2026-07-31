@@ -1265,7 +1265,8 @@
     "remove_failed": "제거 실패",
     "add_failed": "최종 후보 추가에 실패했습니다",
     "added_success": "{{name}}이(가) 최종 후보에 추가되었습니다",
-    "country_example": "예: 호주"
+    "country_example": "예: 호주",
+    "min_experience_placeholder": "예: 3"
   },
   "OPTIONS": {
     "profile_status_active": "활성",

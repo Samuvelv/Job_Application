@@ -86,6 +86,12 @@ import { BulkTranslationService } from '../../../core/services/bulk-translation.
           [subtitle]="'RECRUITER_CANDIDATES.no_candidates_sub' | translate"
         />
       } @else {
+        @if (cardsTranslating) {
+          <div class="d-flex align-items-center gap-2 mb-3" style="font-size:.8rem;color:var(--th-text-muted)">
+            <span class="spinner-border spinner-border-sm"></span>
+            {{ 'COMMON.translating' | translate }}…
+          </div>
+        }
         <div class="cl-grid">
           @for (emp of candidates; track emp.id) {
             <app-recruiter-candidate-card
@@ -193,7 +199,12 @@ export class CandidatesComponent implements OnInit, OnDestroy {
 
   /** AI-translated preview fields per candidate ID, for the current UI language. */
   translatedCardsMap = new Map<string, Record<string, string>>();
+  /** True while translateCandidateCards() has an in-flight /translate call. */
+  cardsTranslating = false;
   private destroy$ = new Subject<void>();
+  /** Monotonic token so a stale in-flight translation (from a prior page/filter/
+   *  language state) can never overwrite the result of a newer one that resolved first. */
+  private translateRequestId = 0;
 
   /** Map of candidateId → most-recent InterestRequest for this recruiter */
   interestMap = new Map<string, InterestRequest>();
@@ -248,6 +259,8 @@ export class CandidatesComponent implements OnInit, OnDestroy {
    * /translate call rather than one call per card.
    */
   private async translateCandidateCards(): Promise<void> {
+    const myRequestId = ++this.translateRequestId;
+
     const lang = this.translate.currentLang || 'en';
     if (lang === 'en' || this.candidates.length === 0) return;
 
@@ -269,9 +282,10 @@ export class CandidatesComponent implements OnInit, OnDestroy {
 
     if (Object.keys(allFields).length === 0) return;
 
+    this.cardsTranslating = true;
     try {
       const translated = await this.bulkTranslation.translateSection(allFields, requestedLang);
-      if ((this.translate.currentLang || 'en') !== requestedLang) return;
+      if (myRequestId !== this.translateRequestId) return; // a newer request superseded this one
 
       const map = new Map<string, Record<string, string>>();
       for (const [key, value] of Object.entries(translated)) {
@@ -285,6 +299,8 @@ export class CandidatesComponent implements OnInit, OnDestroy {
       this.translatedCardsMap = map;
     } catch (error) {
       console.error('Error translating candidate card previews:', error);
+    } finally {
+      if (myRequestId === this.translateRequestId) this.cardsTranslating = false;
     }
   }
 

@@ -1265,7 +1265,8 @@
     "remove_failed": "Theip ar an bhaint",
     "add_failed": "Theip ar chur leis an ngearrliosta",
     "added_success": "Cuireadh {{name}} leis an ngearrliosta",
-    "country_example": "m.sh. an Astráil"
+    "country_example": "m.sh. an Astráil",
+    "min_experience_placeholder": "m.sh. 3"
   },
   "OPTIONS": {
     "profile_status_active": "Gníomhach",

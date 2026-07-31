@@ -1265,7 +1265,8 @@
     "remove_failed": "Poisto epäonnistui",
     "add_failed": "Karsintaan lisääminen epäonnistui",
     "added_success": "{{name}} lisätty karsintaan",
-    "country_example": "esim. Australia"
+    "country_example": "esim. Australia",
+    "min_experience_placeholder": "esim. 3"
   },
   "OPTIONS": {
     "profile_status_active": "Aktiivinen",

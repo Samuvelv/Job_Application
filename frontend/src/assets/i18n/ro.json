@@ -1265,7 +1265,8 @@
     "remove_failed": "Nu s-a putut elimina",
     "add_failed": "Adăugarea la preselecție a eșuat",
     "added_success": "{{name}} adăugat la preselecție",
-    "country_example": "ex. Australia"
+    "country_example": "ex. Australia",
+    "min_experience_placeholder": "de ex. 3"
   },
   "OPTIONS": {
     "profile_status_active": "Activ",

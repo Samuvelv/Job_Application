@@ -1,5 +1,5 @@
 // src/app/features/recruiter/candidates/candidate-profile.component.ts
-import { Component, HostListener, OnInit, computed, inject, signal } from '@angular/core';
+import { Component, OnInit, computed, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, RouterLink, Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
@@ -16,11 +16,6 @@ import { PageHeaderComponent } from '../../../shared/components/page-header/page
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { CandidateProfileComponent } from '../../../shared/components/candidate-profile/candidate-profile.component';
 import { SearchableSelectComponent, SelectOption } from '../../../shared/components/searchable-select/searchable-select.component';
-import {
-  CandidateTranslationService,
-  TRANSLATE_LANGUAGES,
-  TranslateLanguage,
-} from '../../../core/services/candidate-translation.service';
 
 @Component({
   selector: 'app-recruiter-candidate-profile',
@@ -85,150 +80,6 @@ import {
       box-shadow: 0 0 0 3px color-mix(in srgb, var(--th-primary) 15%, transparent);
     }
 
-    /* ── Translation bar ──────────────────────────────────────────────────── */
-    .translate-bar {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      flex-wrap: wrap;
-    }
-
-    /* Trigger button — mirrors .lang-btn */
-    .tr-btn {
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      height: 30px;
-      padding: 0 10px;
-      border: 1px solid var(--th-border);
-      border-radius: var(--th-radius);
-      background: var(--th-surface);
-      color: var(--th-text);
-      font-size: 13px;
-      font-weight: 500;
-      cursor: pointer;
-      transition: border-color .15s, background .15s;
-      white-space: nowrap;
-    }
-    .tr-btn:hover:not(:disabled) {
-      border-color: var(--th-border-strong);
-      background: var(--th-surface-2, var(--th-surface));
-    }
-    .tr-btn:disabled { opacity: .6; cursor: not-allowed; }
-    .tr-btn__flag  { font-size: 15px; line-height: 1; }
-    .tr-btn__label { font-size: 13px; }
-    .tr-btn__caret { font-size: 10px; opacity: .6; transition: transform .2s; }
-    .tr-btn--open .tr-btn__caret { transform: rotate(180deg); }
-
-    /* Dropdown panel — mirrors .lang-dropdown */
-    .tr-dropdown-wrap { position: relative; }
-    .tr-dropdown {
-      position: absolute;
-      top: calc(100% + 6px);
-      left: 0;
-      min-width: 200px;
-      max-height: 320px;
-      overflow-y: auto;
-      background: var(--th-surface);
-      border: 1px solid var(--th-border);
-      border-radius: var(--th-radius-xl);
-      box-shadow: 0 8px 24px rgba(0,0,0,.12);
-      z-index: 1100;
-      padding: 6px;
-      animation: trFadeIn .15s ease;
-    }
-    @keyframes trFadeIn {
-      from { opacity: 0; transform: translateY(-6px); }
-      to   { opacity: 1; transform: translateY(0); }
-    }
-    .tr-dropdown__label {
-      font-size: 10px;
-      font-weight: 700;
-      letter-spacing: .08em;
-      text-transform: uppercase;
-      color: var(--th-muted);
-      padding: 4px 8px 6px;
-    }
-    .tr-option {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      padding: 8px 10px;
-      border-radius: var(--th-radius);
-      cursor: pointer;
-      border: none;
-      background: transparent;
-      width: 100%;
-      text-align: start;
-      color: var(--th-text);
-      font-size: 13px;
-      transition: background .12s;
-    }
-    .tr-option:hover { background: var(--th-surface-2, rgba(0,0,0,.05)); }
-    .tr-option--active {
-      background: var(--th-primary-soft, rgba(99,102,241,.1));
-      font-weight: 600;
-    }
-    .tr-option__flag  { font-size: 17px; line-height: 1; flex-shrink: 0; }
-    .tr-option__name  { flex: 1; }
-    .tr-option__check { color: var(--th-primary); font-size: 12px; flex-shrink: 0; }
-    .translate-btn {
-      display: inline-flex;
-      align-items: center;
-      gap: 5px;
-      height: 30px;
-      padding: 0 12px;
-      border-radius: 6px;
-      border: 1px solid var(--th-primary);
-      background: transparent;
-      color: var(--th-primary);
-      font-size: 13px;
-      font-weight: 600;
-      cursor: pointer;
-      transition: background .15s, color .15s;
-      white-space: nowrap;
-    }
-    .translate-btn:hover:not(:disabled) {
-      background: var(--th-primary);
-      color: #fff;
-    }
-    .translate-btn:disabled {
-      opacity: .6;
-      cursor: not-allowed;
-    }
-    .translated-badge {
-      display: inline-flex;
-      align-items: center;
-      gap: 5px;
-      padding: 3px 10px;
-      border-radius: 999px;
-      font-size: 11px;
-      font-weight: 700;
-      letter-spacing: .04em;
-      text-transform: uppercase;
-      background: color-mix(in srgb, var(--th-primary) 12%, transparent);
-      color: var(--th-primary);
-      border: 1px solid color-mix(in srgb, var(--th-primary) 30%, transparent);
-    }
-    .show-original-btn {
-      display: inline-flex;
-      align-items: center;
-      gap: 5px;
-      height: 26px;
-      padding: 0 10px;
-      border-radius: 6px;
-      border: 1px solid var(--th-border-strong);
-      background: transparent;
-      color: var(--th-muted);
-      font-size: 12px;
-      font-weight: 500;
-      cursor: pointer;
-      transition: border-color .15s, color .15s;
-    }
-    .show-original-btn:hover {
-      border-color: var(--th-text);
-      color: var(--th-text);
-    }
   `],
   template: `
     <!-- Back button + action bar -->
@@ -239,68 +90,6 @@ import {
 
       @if (candidate) {
         <div class="ms-auto d-flex align-items-center gap-2 flex-wrap">
-
-          <!-- ── Translation bar ─────────────────────────────────────────── -->
-          @if (canTranslate) {
-          <div class="translate-bar">
-            @if (!translated()) {
-              <!-- Language selector dropdown + Translate button -->
-              <div class="tr-dropdown-wrap" (click)="$event.stopPropagation()">
-                <button
-                  class="tr-btn"
-                  [class.tr-btn--open]="translateDropdownOpen()"
-                  [disabled]="translating()"
-                  (click)="toggleTranslateDropdown()"
-                  type="button">
-                  <span class="tr-btn__flag">{{ activeLangFlag() }}</span>
-                  <span class="tr-btn__label">{{ activeLangLabel() }}</span>
-                  <i class="bi bi-chevron-down tr-btn__caret"></i>
-                </button>
-                @if (translateDropdownOpen()) {
-                  <div class="tr-dropdown" role="listbox">
-                    <div class="tr-dropdown__label">Translate to</div>
-                    @for (lang of translateLanguages; track lang.code) {
-                      <button
-                        class="tr-option"
-                        [class.tr-option--active]="lang.code === selectedLangCode"
-                        role="option"
-                        [attr.aria-selected]="lang.code === selectedLangCode"
-                        type="button"
-                        (click)="selectTranslateLang(lang.code)">
-                        <span class="tr-option__flag">{{ lang.flag }}</span>
-                        <span class="tr-option__name">{{ lang.label }}</span>
-                        @if (lang.code === selectedLangCode) {
-                          <i class="bi bi-check2 tr-option__check"></i>
-                        }
-                      </button>
-                    }
-                  </div>
-                }
-              </div>
-              <button
-                class="translate-btn"
-                (click)="translateProfile()"
-                [disabled]="translating()">
-                @if (translating()) {
-                  <span class="spinner-border spinner-border-sm" style="width:.75rem;height:.75rem;border-width:2px;"></span>
-                  Translating…
-                } @else {
-                  <i class="bi bi-translate"></i> Translate
-                }
-              </button>
-            } @else {
-              <!-- Translated state: badge + show original -->
-              <span class="translated-badge">
-                <i class="bi bi-translate"></i>
-                Translated · {{ activeLangLabel() }}
-              </span>
-              <button class="show-original-btn" (click)="showOriginal()">
-                <i class="bi bi-arrow-counterclockwise"></i> Show Original
-              </button>
-            }
-          </div>
-          }
-          <!-- ── End translation bar ─────────────────────────────────────── -->
 
           <!-- Direct employer: contact request button -->
           @if (!isAgency) {
@@ -555,9 +344,10 @@ import {
       <div class="alert alert-danger">{{ error }}</div>
     } @else if (candidate) {
       <app-candidate-profile
-        [candidate]="displayCandidate()"
+        [candidate]="candidate"
         [contactLocked]="contactLocked"
-        [showAdminInfo]="false" />
+        [showAdminInfo]="false"
+        [showActivityTab]="false" />
     }
   `,
 })
@@ -583,45 +373,6 @@ export class RecruiterCandidateProfileComponent implements OnInit {
 
   private candidateId = '';
 
-  // ── Translation state ────────────────────────────────────────────────────────
-  /** Whether this recruiter has the translation permission enabled */
-  canTranslate = false;
-
-  /** All available translation languages (excludes English — no point translating to source) */
-  readonly translateLanguages: TranslateLanguage[] = TRANSLATE_LANGUAGES;
-
-  /** Currently selected language code in the dropdown */
-  selectedLangCode = 'fr';
-
-  /** Controls the custom language dropdown open/closed state */
-  translateDropdownOpen = signal(false);
-
-  /** Translated candidate object — null means show original */
-  private translatedCandidate = signal<Candidate | null>(null);
-
-  /** Whether a translation API call is in progress */
-  translating = signal(false);
-
-  /** Whether the profile is currently showing a translation */
-  translated = signal(false);
-
-  /** The candidate object shown in the profile — translated version if active, else original */
-  displayCandidate = computed<Candidate>(() =>
-    this.translatedCandidate() ?? this.candidate!
-  );
-
-  /** Flag emoji of the currently selected translation language */
-  activeLangFlag = computed<string>(() => {
-    const lang = this.translateLanguages.find(l => l.code === this.selectedLangCode);
-    return lang ? lang.flag : '🌐';
-  });
-
-  /** Label of the currently active translation language (shown in the badge and button) */
-  activeLangLabel = computed<string>(() => {
-    const lang = this.translateLanguages.find(l => l.code === this.selectedLangCode);
-    return lang ? lang.label : '';
-  });
-
   // ── Master data (inject before computed fields so this.master is available) ─
   private master = inject(MasterDataService);
 
@@ -644,7 +395,6 @@ export class RecruiterCandidateProfileComponent implements OnInit {
     private contactRequestService: ContactRequestService,
     private interestRequestService: InterestRequestService,
     private toast: ToastService,
-    private translationService: CandidateTranslationService,
     private translate: TranslateService,
   ) {}
 
@@ -683,7 +433,6 @@ export class RecruiterCandidateProfileComponent implements OnInit {
 
       if (myProfile) {
         this.isAgency    = (myProfile.recruiter as any).type === 'recruitment_agency';
-        this.canTranslate = myProfile.recruiter.enable_translation === true;
       }
 
       if (!this.isAgency && myRequests) {
@@ -707,50 +456,6 @@ export class RecruiterCandidateProfileComponent implements OnInit {
         if (ir) this.interestRequest = ir;
       }
     });
-  }
-
-  // ── Translation actions ──────────────────────────────────────────────────────
-
-  selectTranslateLang(code: string): void {
-    this.selectedLangCode = code;
-    this.translateDropdownOpen.set(false);
-  }
-
-  toggleTranslateDropdown(): void {
-    this.translateDropdownOpen.update(v => !v);
-  }
-
-  @HostListener('document:click')
-  onDocumentClick(): void { this.translateDropdownOpen.set(false); }
-
-  @HostListener('document:keydown.escape')
-  onEscape(): void { this.translateDropdownOpen.set(false); }
-
-  translateProfile(): void {
-    if (!this.candidate || this.translating()) return;
-
-    const lang = this.translateLanguages.find(l => l.code === this.selectedLangCode);
-    if (!lang) return;
-
-    this.translating.set(true);
-
-    this.translationService.translate(this.candidate, lang).subscribe({
-      next: (translated) => {
-        this.translatedCandidate.set(translated);
-        this.translated.set(true);
-        this.translating.set(false);
-      },
-      error: (err) => {
-        this.translating.set(false);
-        const msg = err?.error?.message ?? this.translate.instant('RECRUITER_CANDIDATES.translation_failed');
-        this.toast.error(msg);
-      },
-    });
-  }
-
-  showOriginal(): void {
-    this.translatedCandidate.set(null);
-    this.translated.set(false);
   }
 
   // ── Contact / shortlist actions ──────────────────────────────────────────────

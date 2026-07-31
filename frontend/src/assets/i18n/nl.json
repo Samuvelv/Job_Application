@@ -1265,7 +1265,8 @@
     "remove_failed": "Verwijderen mislukt",
     "add_failed": "Shortlisten mislukt",
     "added_success": "{{name}} toegevoegd aan shortlist",
-    "country_example": "bijv. Australië"
+    "country_example": "bijv. Australië",
+    "min_experience_placeholder": "bijv. 3"
   },
   "OPTIONS": {
     "profile_status_active": "Actief",

@@ -1265,7 +1265,8 @@
     "remove_failed": "Eemaldamine ebaõnnestus",
     "add_failed": "Eelvalikusse lisamine ebaõnnestus",
     "added_success": "{{name}} lisati eelvalikusse",
-    "country_example": "nt Austraalia"
+    "country_example": "nt Austraalia",
+    "min_experience_placeholder": "ntk. 3"
   },
   "OPTIONS": {
     "profile_status_active": "Aktiivne",

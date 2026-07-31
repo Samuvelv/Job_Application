@@ -1265,7 +1265,8 @@
     "remove_failed": "Nepavyko pašalinti",
     "add_failed": "Nepavyko pridėti į atranką",
     "added_success": "{{name}} pridėtas į atranką",
-    "country_example": "pvz., Australija"
+    "country_example": "pvz., Australija",
+    "min_experience_placeholder": "pvz. 3"
   },
   "OPTIONS": {
     "profile_status_active": "Aktyvus",

@@ -1265,7 +1265,8 @@
     "remove_failed": "Nie udało się usunąć",
     "add_failed": "Dodanie do krótkiej listy nie powiodło się",
     "added_success": "{{name}} dodany do krótkiej listy",
-    "country_example": "np. Australia"
+    "country_example": "np. Australia",
+    "min_experience_placeholder": "np. 3"
   },
   "OPTIONS": {
     "profile_status_active": "Aktywny",

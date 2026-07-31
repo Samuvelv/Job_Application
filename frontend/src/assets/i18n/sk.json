@@ -1265,7 +1265,8 @@
     "remove_failed": "Odstránenie zlyhalo",
     "add_failed": "Pridanie do užšieho výberu zlyhalo",
     "added_success": "{{name}} pridaný do užšieho výberu",
-    "country_example": "napr. Austrália"
+    "country_example": "napr. Austrália",
+    "min_experience_placeholder": "napr. 3"
   },
   "OPTIONS": {
     "profile_status_active": "Aktívne",

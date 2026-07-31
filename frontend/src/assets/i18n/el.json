@@ -1265,7 +1265,8 @@
     "remove_failed": "Αποτυχία αφαίρεσης",
     "add_failed": "Η προσθήκη στη λίστα προεπιλογής απέτυχε",
     "added_success": "Το {{name}} προστέθηκε στη λίστα προεπιλογής",
-    "country_example": "π.χ. Αυστραλία"
+    "country_example": "π.χ. Αυστραλία",
+    "min_experience_placeholder": "π.χ. 3"
   },
   "OPTIONS": {
     "profile_status_active": "Ενεργό",

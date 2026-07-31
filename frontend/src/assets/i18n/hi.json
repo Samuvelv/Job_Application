@@ -1265,7 +1265,8 @@
     "remove_failed": "हटाने में विफल रहा",
     "add_failed": "शॉर्टलिस्ट करने में विफल",
     "added_success": "{{name}} शॉर्टलिस्ट में जोड़ा गया",
-    "country_example": "उदा. ऑस्ट्रेलिया"
+    "country_example": "उदा. ऑस्ट्रेलिया",
+    "min_experience_placeholder": "जैसे 3"
   },
   "OPTIONS": {
     "profile_status_active": "सक्रिय",

@@ -1265,7 +1265,8 @@
     "remove_failed": "Impossibile rimuovere",
     "add_failed": "Preselezione non riuscita",
     "added_success": "{{name}} aggiunto alla preselezione",
-    "country_example": "es. Australia"
+    "country_example": "es. Australia",
+    "min_experience_placeholder": "es. 3"
   },
   "OPTIONS": {
     "profile_status_active": "Attivo",

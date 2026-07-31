@@ -1265,7 +1265,8 @@
     "remove_failed": "Échec de la suppression",
     "add_failed": "Échec de la présélection",
     "added_success": "{{name}} ajouté à la présélection",
-    "country_example": "ex. Australie"
+    "country_example": "ex. Australie",
+    "min_experience_placeholder": "ex. 3"
   },
   "OPTIONS": {
     "profile_status_active": "Actif",

@@ -1265,7 +1265,8 @@
     "remove_failed": "Neħħiet maħruġa",
     "add_failed": "Iż-żieda fl-għażla qasira falliet",
     "added_success": "{{name}} miżjud fl-għażla qasira",
-    "country_example": "eż. l-Awstralja"
+    "country_example": "eż. l-Awstralja",
+    "min_experience_placeholder": "eż. 3"
   },
   "OPTIONS": {
     "profile_status_active": "Attiva",

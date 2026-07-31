@@ -1265,7 +1265,8 @@
     "remove_failed": "Neizdevās noņemt",
     "add_failed": "Neizdevās pievienot atlasei",
     "added_success": "{{name}} pievienots atlasei",
-    "country_example": "piem., Austrālija"
+    "country_example": "piem., Austrālija",
+    "min_experience_placeholder": "piem. 3"
   },
   "OPTIONS": {
     "profile_status_active": "Aktīvs",

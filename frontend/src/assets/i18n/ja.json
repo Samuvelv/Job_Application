@@ -1265,7 +1265,8 @@
     "remove_failed": "削除に失敗しました",
     "add_failed": "ショートリストへの追加に失敗しました",
     "added_success": "{{name}} がショートリストに追加されました",
-    "country_example": "例：オーストラリア"
+    "country_example": "例：オーストラリア",
+    "min_experience_placeholder": "例えば、3"
   },
   "OPTIONS": {
     "profile_status_active": "アクティブ",

@@ -1173,7 +1173,8 @@
     "remove_failed": "Failed to remove",
     "added_success": "{{name}} added to shortlist",
     "add_failed": "Failed to shortlist",
-    "country_example": "e.g. Australia"
+    "country_example": "e.g. Australia",
+    "min_experience_placeholder": "e.g. 3"
   },
   "OPTIONS": {
     "profile_status_active": "Active",

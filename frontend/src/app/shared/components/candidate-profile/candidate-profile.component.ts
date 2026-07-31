@@ -26,7 +26,6 @@ type Tab = 'overview' | 'experience' | 'education' | 'documents' | 'activity';
 
       <!-- ══ Profile Hero V2 ══════════════════════════════════════════════ -->
       <div class="profile-hero-v2">
-        <div class="profile-hero-v2__cover"></div>
         <div class="profile-hero-v2__body">
 
           <!-- Avatar -->
@@ -166,7 +165,7 @@ type Tab = 'overview' | 'experience' | 'education' | 'documents' | 'activity';
 
       <!-- ══ Tab Nav V2 ════════════════════════════════════════════════════ -->
       <div class="profile-tabs-v2">
-        @for (tab of tabs; track tab.id) {
+        @for (tab of visibleTabs(); track tab.id) {
           <button class="profile-tab-v2"
             [class.active]="activeTab() === tab.id"
             (click)="setTab(tab.id)">
@@ -1011,6 +1010,7 @@ export class CandidateProfileComponent implements OnInit, OnDestroy {
   @Input() candidate: Candidate | null = null;
   @Input() contactLocked = false;
   @Input() showAdminInfo = true;
+  @Input() showActivityTab = true;
 
   private candidateSvc = inject(CandidateService);
   private bulkTranslation = inject(BulkTranslationService);
@@ -1073,6 +1073,10 @@ export class CandidateProfileComponent implements OnInit, OnDestroy {
     { id: 'documents',   labelKey: 'CANDIDATE_PROFILE.tab_documents',   icon: 'bi-folder2-open'      },
     { id: 'activity',    labelKey: 'CANDIDATE_PROFILE.tab_activity',    icon: 'bi-clock-history'     },
   ];
+
+  visibleTabs(): { id: Tab; labelKey: string; icon: string }[] {
+    return this.showActivityTab ? this.tabs : this.tabs.filter(t => t.id !== 'activity');
+  }
 
   ngOnInit(): void {
     // Listen to language changes

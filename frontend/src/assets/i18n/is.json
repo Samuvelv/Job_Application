@@ -1265,7 +1265,8 @@
     "remove_failed": "Mistókst að fjarlægja",
     "add_failed": "Ekki tókst að bæta við forval",
     "added_success": "{{name}} bætt við forval",
-    "country_example": "t.d. Ástralía"
+    "country_example": "t.d. Ástralía",
+    "min_experience_placeholder": "t.d. 3"
   },
   "OPTIONS": {
     "profile_status_active": "Virk",

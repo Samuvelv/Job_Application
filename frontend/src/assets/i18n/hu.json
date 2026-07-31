@@ -1265,7 +1265,8 @@
     "remove_failed": "Nem sikerült eltávolítani",
     "add_failed": "A szűkített listához adás sikertelen",
     "added_success": "{{name}} hozzáadva a szűkített listához",
-    "country_example": "pl. Ausztrália"
+    "country_example": "pl. Ausztrália",
+    "min_experience_placeholder": "pl. 3"
   },
   "OPTIONS": {
     "profile_status_active": "Aktív",

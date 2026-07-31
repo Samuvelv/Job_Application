@@ -1265,7 +1265,8 @@
     "remove_failed": "Odebrání se nezdařilo",
     "add_failed": "Přidání do užšího výběru se nezdařilo",
     "added_success": "{{name}} přidán do užšího výběru",
-    "country_example": "např. Austrálie"
+    "country_example": "např. Austrálie",
+    "min_experience_placeholder": "např. 3"
   },
   "OPTIONS": {
     "profile_status_active": "Aktivní",

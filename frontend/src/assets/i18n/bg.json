@@ -1265,7 +1265,8 @@
     "remove_failed": "Неуспешно премахване",
     "add_failed": "Неуспешно добавяне в предварителния подбор",
     "added_success": "{{name}} е добавен в предварителния подбор",
-    "country_example": "напр. Австралия"
+    "country_example": "напр. Австралия",
+    "min_experience_placeholder": "напр. 3"
   },
   "OPTIONS": {
     "profile_status_active": "Активен",

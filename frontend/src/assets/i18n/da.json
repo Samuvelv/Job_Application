@@ -1265,7 +1265,8 @@
     "remove_failed": "Fejl ved fjernelse",
     "add_failed": "Tilføjelse til udvælgelse mislykkedes",
     "added_success": "{{name}} tilføjet til udvælgelse",
-    "country_example": "f.eks. Australien"
+    "country_example": "f.eks. Australien",
+    "min_experience_placeholder": "f.eks. 3"
   },
   "OPTIONS": {
     "profile_status_active": "Aktiv",

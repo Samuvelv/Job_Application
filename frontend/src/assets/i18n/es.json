@@ -1265,7 +1265,8 @@
     "remove_failed": "Error al eliminar",
     "add_failed": "Error al preseleccionar",
     "added_success": "{{name}} añadido a la preselección",
-    "country_example": "ej. Australia"
+    "country_example": "ej. Australia",
+    "min_experience_placeholder": "por ejemplo, 3"
   },
   "OPTIONS": {
     "profile_status_active": "Activo",

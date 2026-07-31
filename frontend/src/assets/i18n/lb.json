@@ -1265,7 +1265,8 @@
     "remove_failed": "Konnt net ewechhuelen",
     "add_failed": "Feeler beim Derbäisetzen an d'Virauswiel",
     "added_success": "{{name}} an d'Virauswiel derbäigesat",
-    "country_example": "z.B. Australien"
+    "country_example": "z.B. Australien",
+    "min_experience_placeholder": "z.B. 3"
   },
   "OPTIONS": {
     "profile_status_active": "Aktiv",

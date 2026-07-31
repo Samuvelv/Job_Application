@@ -1265,7 +1265,8 @@
     "remove_failed": "移除失败",
     "add_failed": "入围失败",
     "added_success": "{{name}} 已加入入围名单",
-    "country_example": "例如：澳大利亚"
+    "country_example": "例如：澳大利亚",
+    "min_experience_placeholder": "例如 3"
   },
   "OPTIONS": {
     "profile_status_active": "活跃",

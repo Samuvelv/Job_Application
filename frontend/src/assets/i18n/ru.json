@@ -1265,7 +1265,8 @@
     "remove_failed": "Не удалось удалить",
     "add_failed": "Не удалось добавить в отбор",
     "added_success": "{{name}} добавлен(а) в отбор",
-    "country_example": "напр. Австралия"
+    "country_example": "напр. Австралия",
+    "min_experience_placeholder": "например, 3"
   },
   "OPTIONS": {
     "profile_status_active": "Активный",

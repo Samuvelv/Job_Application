@@ -1265,7 +1265,8 @@
     "remove_failed": "Çıkarma başarısız oldu",
     "add_failed": "Ön elemeye ekleme başarısız oldu",
     "added_success": "{{name}} ön elemeye eklendi",
-    "country_example": "örn. Avustralya"
+    "country_example": "örn. Avustralya",
+    "min_experience_placeholder": "örneğin 3"
   },
   "OPTIONS": {
     "profile_status_active": "Aktif",
