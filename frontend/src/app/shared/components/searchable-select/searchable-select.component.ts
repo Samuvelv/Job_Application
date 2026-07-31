@@ -28,7 +28,7 @@ export interface SelectOption {
       <!-- Trigger -->
       <div class="ss-trigger" (click)="toggle()" [class.ss-invalid]="invalid">
         <span class="ss-value" [class.ss-placeholder]="!displayLabel()">
-          {{ displayLabel() || placeholder }}
+          {{ (displayLabel() | translate) || placeholder }}
         </span>
         <i class="bi" [class.bi-chevron-down]="!open()" [class.bi-chevron-up]="open()"></i>
       </div>
@@ -97,11 +97,13 @@ export class SearchableSelectComponent implements OnChanges, OnInit, ControlValu
 
   filteredOptions = computed(() => this.filteredOpts());
 
+  /** Raw label (i18n key or literal) of the selected option — translated reactively
+   *  in the template via the `translate` pipe, since `TranslateService.instant()` is
+   *  not itself a signal read and wouldn't re-trigger this computed on language change. */
   displayLabel = computed(() => {
     const v = this.selectedValue();
     if (v === null || v === '') return '';
-    const raw = this.options.find((o) => String(o.value) === String(v))?.label ?? '';
-    return raw ? this.translate.instant(raw) : '';
+    return this.options.find((o) => String(o.value) === String(v))?.label ?? '';
   });
 
   private onChange: (v: any) => void = () => {};

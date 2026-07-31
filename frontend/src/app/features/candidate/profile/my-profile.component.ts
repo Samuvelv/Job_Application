@@ -2,7 +2,7 @@
 import { Component, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
-import { TranslateModule } from '@ngx-translate/core';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { CandidateService } from '../../../core/services/candidate.service';
 import { AuthService } from '../../../core/services/auth.service';
 import { Candidate } from '../../../core/models/candidate.model';
@@ -120,6 +120,7 @@ export class MyProfileComponent implements OnInit {
   constructor(
     private candidateService: CandidateService,
     private auth: AuthService,
+    private translate: TranslateService,
   ) {}
 
   ngOnInit(): void {
@@ -129,7 +130,7 @@ export class MyProfileComponent implements OnInit {
         this.isPlaced  = res.candidate.profile_status === 'placed';
         this.auth.setCandidateStatus(res.candidate.profile_status ?? 'active');
       },
-      error: (err) => (this.error = err?.error?.message ?? 'Failed to load profile.'),
+      error: (err) => (this.error = err?.error?.message ?? this.translate.instant('MY_PROFILE.load_failed')),
     });
   }
 

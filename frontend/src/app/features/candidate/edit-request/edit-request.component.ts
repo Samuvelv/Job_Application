@@ -1,6 +1,6 @@
 // src/app/features/candidate/edit-request/edit-request.component.ts
-import { Component, OnInit, computed } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { Component, OnInit, computed, inject } from '@angular/core';
+import { CommonModule, formatDate } from '@angular/common';
 import {
   ReactiveFormsModule, FormBuilder, FormGroup,
   FormArray, Validators, AbstractControl, ValidationErrors, ValidatorFn,
@@ -18,6 +18,7 @@ import { SearchableSelectComponent, SelectOption } from '../../../shared/compone
 import { ChipMultiSelectComponent, ChipOption } from '../../../shared/components/chip-multi-select/chip-multi-select.component';
 import { EMPLOYMENT_STATUS_OPTIONS, VISA_STATUS_OPTIONS, REASON_FOR_LEAVING_OPTIONS } from '../../../core/constants/candidate-options';
 import { PageHeaderComponent } from '../../../shared/components/page-header/page-header.component';
+import { LanguageService } from '../../../core/services/language.service';
 
 // ── Validators ─────────────────────────────────────────────────────────────
 
@@ -226,9 +227,9 @@ function makePostalCodeGroupValidator(countryCtrl: string, postalCtrl: string): 
             @if (existingRequest.status === 'rejected') { {{ 'COMMON.rejected' | translate }} }
           </div>
           <div class="status-banner__text">
-            Submitted {{ existingRequest.created_at | localeDate:'dd MMM yyyy' }}
+            {{ 'CANDIDATE_EDIT_REQUEST.submitted_on' | translate }} {{ existingRequest.created_at | localeDate:'dd MMM yyyy' }}
             @if (existingRequest.reviewed_at) {
-              · reviewed {{ existingRequest.reviewed_at | localeDate:'dd MMM yyyy' }}
+              · {{ 'CANDIDATE_EDIT_REQUEST.reviewed_on' | translate }} {{ existingRequest.reviewed_at | localeDate:'dd MMM yyyy' }}
             }
           </div>
           @if (existingRequest.admin_note) {
@@ -293,24 +294,24 @@ function makePostalCodeGroupValidator(countryCtrl: string, postalCtrl: string): 
                 } @else {
                   <div class="media-upload-cell__empty">
                     <i class="bi bi-person-circle"></i>
-                    <span>No photo</span>
+                    <span>{{ 'MY_PROFILE.no_photo' | translate }}</span>
                   </div>
                 }
               </div>
               <label class="btn btn-sm btn-outline-secondary w-100 mt-2"
                 [class.disabled]="mediaLoading['profiles'] || existingRequest?.status === 'pending'">
                 @if (mediaLoading['profiles']) {
-                  <span class="spinner-border spinner-border-sm me-1"></span> Staging…
+                  <span class="spinner-border spinner-border-sm me-1"></span> {{ 'CANDIDATE_EDIT_REQUEST.staging' | translate }}
                 } @else {
                   <i class="bi bi-upload me-1"></i>
-                  {{ staged['profiles'] ? 'Change staged file' : (candidate.profile_photo_url ? 'Request replace' : 'Request upload') }}
+                  {{ staged['profiles'] ? ('CANDIDATE_EDIT_REQUEST.change_staged_file' | translate) : (candidate.profile_photo_url ? ('CANDIDATE_EDIT_REQUEST.request_replace' | translate) : ('CANDIDATE_EDIT_REQUEST.request_upload' | translate)) }}
                 }
                 <input type="file" class="d-none" accept="image/jpeg,image/png,image/webp"
                   [disabled]="existingRequest?.status === 'pending'"
                   (change)="stageFile('profiles', $event)">
               </label>
               <div class="form-text text-muted mt-2">
-                <i class="bi bi-info-circle me-1"></i>Please upload a clear, professional photo. Face should be clearly visible. Plain background preferred.
+                <i class="bi bi-info-circle me-1"></i>{{ 'CANDIDATE_EDIT_REQUEST.photo_guidance' | translate }}
               </div>
             </div>
           </div>
@@ -319,7 +320,7 @@ function makePostalCodeGroupValidator(countryCtrl: string, postalCtrl: string): 
           <div class="col-md-4">
             <div class="media-upload-cell">
               <div class="media-upload-cell__label">
-                <i class="bi bi-file-earmark-person me-1"></i> Resume / CV
+                <i class="bi bi-file-earmark-person me-1"></i> {{ 'MY_PROFILE.resume' | translate }}
               </div>
               <div class="media-upload-cell__preview">
                 @if (staged['resumes'] || candidate.resume_url) {
@@ -327,12 +328,12 @@ function makePostalCodeGroupValidator(countryCtrl: string, postalCtrl: string): 
                     <i class="bi bi-file-earmark-pdf-fill"
                       style="font-size:2rem;color:var(--th-rose)"></i>
                     <span class="media-upload-cell__doc-name">
-                      {{ staged['resumes'] ? 'New CV staged' : 'CV uploaded' }}
+                      {{ staged['resumes'] ? ('CANDIDATE_EDIT_REQUEST.new_cv_staged' | translate) : ('CANDIDATE_EDIT_REQUEST.cv_uploaded' | translate) }}
                     </span>
                   </div>
                   @if (staged['resumes']) {
                     <div class="media-upload-cell__staged-badge">
-                      <i class="bi bi-clock-fill me-1"></i>Pending approval
+                      <i class="bi bi-clock-fill me-1"></i>{{ 'CANDIDATE_EDIT_REQUEST.pending_approval' | translate }}
                     </div>
                   }
                   <div class="media-upload-cell__actions">
@@ -352,17 +353,17 @@ function makePostalCodeGroupValidator(countryCtrl: string, postalCtrl: string): 
                 } @else {
                   <div class="media-upload-cell__empty">
                     <i class="bi bi-file-earmark-person"></i>
-                    <span>No CV uploaded</span>
+                    <span>{{ 'MY_PROFILE.no_resume' | translate }}</span>
                   </div>
                 }
               </div>
               <label class="btn btn-sm btn-outline-secondary w-100 mt-2"
                 [class.disabled]="mediaLoading['resumes'] || existingRequest?.status === 'pending'">
                 @if (mediaLoading['resumes']) {
-                  <span class="spinner-border spinner-border-sm me-1"></span> Staging…
+                  <span class="spinner-border spinner-border-sm me-1"></span> {{ 'CANDIDATE_EDIT_REQUEST.staging' | translate }}
                 } @else {
                   <i class="bi bi-upload me-1"></i>
-                  {{ staged['resumes'] ? 'Change staged file' : (candidate.resume_url ? 'Request replace' : 'Request upload') }}
+                  {{ staged['resumes'] ? ('CANDIDATE_EDIT_REQUEST.change_staged_file' | translate) : (candidate.resume_url ? ('CANDIDATE_EDIT_REQUEST.request_replace' | translate) : ('CANDIDATE_EDIT_REQUEST.request_upload' | translate)) }}
                 }
                 <input type="file" class="d-none" accept="application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
                   [disabled]="existingRequest?.status === 'pending'"
@@ -375,7 +376,7 @@ function makePostalCodeGroupValidator(countryCtrl: string, postalCtrl: string): 
           <div class="col-md-4">
             <div class="media-upload-cell">
               <div class="media-upload-cell__label">
-                <i class="bi bi-camera-video me-1"></i> Intro Video
+                <i class="bi bi-camera-video me-1"></i> {{ 'CANDIDATE_PROFILE.intro_video' | translate }}
               </div>
               <div class="media-upload-cell__preview">
                 @if (staged['videos'] || candidate.intro_video_url) {
@@ -383,12 +384,12 @@ function makePostalCodeGroupValidator(countryCtrl: string, postalCtrl: string): 
                     <i class="bi bi-camera-video-fill"
                       style="font-size:2rem;color:var(--th-primary)"></i>
                     <span class="media-upload-cell__doc-name">
-                      {{ staged['videos'] ? 'New video staged' : 'Video uploaded' }}
+                      {{ staged['videos'] ? ('CANDIDATE_EDIT_REQUEST.new_video_staged' | translate) : ('CANDIDATE_EDIT_REQUEST.video_uploaded' | translate) }}
                     </span>
                   </div>
                   @if (staged['videos']) {
                     <div class="media-upload-cell__staged-badge">
-                      <i class="bi bi-clock-fill me-1"></i>Pending approval
+                      <i class="bi bi-clock-fill me-1"></i>{{ 'CANDIDATE_EDIT_REQUEST.pending_approval' | translate }}
                     </div>
                   }
                   <div class="media-upload-cell__actions">
@@ -408,17 +409,17 @@ function makePostalCodeGroupValidator(countryCtrl: string, postalCtrl: string): 
                 } @else {
                   <div class="media-upload-cell__empty">
                     <i class="bi bi-camera-video"></i>
-                    <span>No video uploaded</span>
+                    <span>{{ 'MY_PROFILE.no_video' | translate }}</span>
                   </div>
                 }
               </div>
               <label class="btn btn-sm btn-outline-secondary w-100 mt-2"
                 [class.disabled]="mediaLoading['videos'] || existingRequest?.status === 'pending'">
                 @if (mediaLoading['videos']) {
-                  <span class="spinner-border spinner-border-sm me-1"></span> Staging…
+                  <span class="spinner-border spinner-border-sm me-1"></span> {{ 'CANDIDATE_EDIT_REQUEST.staging' | translate }}
                 } @else {
                   <i class="bi bi-upload me-1"></i>
-                  {{ staged['videos'] ? 'Change staged file' : (candidate.intro_video_url ? 'Request replace' : 'Request upload') }}
+                  {{ staged['videos'] ? ('CANDIDATE_EDIT_REQUEST.change_staged_file' | translate) : (candidate.intro_video_url ? ('CANDIDATE_EDIT_REQUEST.request_replace' | translate) : ('CANDIDATE_EDIT_REQUEST.request_upload' | translate)) }}
                 }
                 <input type="file" class="d-none" accept="video/mp4,video/webm,video/quicktime"
                   [disabled]="existingRequest?.status === 'pending'"
@@ -435,60 +436,60 @@ function makePostalCodeGroupValidator(countryCtrl: string, postalCtrl: string): 
 
         <!-- ── Personal ───────────────────────────────────────────────────── -->
         <div class="form-card mb-4">
-          <h5 class="card-section-header"><i class="bi bi-person"></i> Personal Information</h5>
+          <h5 class="card-section-header"><i class="bi bi-person"></i> {{ 'CANDIDATE_EDIT_REQUEST.personal_information' | translate }}</h5>
           <div class="row g-3">
 
             <!-- First Name -->
             <div class="col-md-6">
-              <label class="form-label small fw-semibold">First Name <span class="text-danger">*</span></label>
+              <label class="form-label small fw-semibold">{{ 'MY_PROFILE.first_name' | translate }} <span class="text-danger">*</span></label>
               <input formControlName="first_name" class="form-control form-control-sm"
                 [class.is-invalid]="form!.get('first_name')?.invalid && form!.get('first_name')?.touched">
               @if (form!.get('first_name')?.touched && form!.get('first_name')?.errors) {
                 <div class="invalid-feedback d-block small">
-                  @if (form!.get('first_name')?.errors?.['required'])       { First name is required. }
-                  @else if (form!.get('first_name')?.errors?.['minlength']) { Minimum 3 characters required. }
-                  @else if (form!.get('first_name')?.errors?.['maxlength']) { Maximum 100 characters allowed. }
-                  @else if (form!.get('first_name')?.errors?.['pattern'])   { Only letters, spaces, hyphens and apostrophes are allowed. }
+                  @if (form!.get('first_name')?.errors?.['required'])       { {{ 'CANDIDATE_EDIT_REQUEST.first_name_required' | translate }} }
+                  @else if (form!.get('first_name')?.errors?.['minlength']) { {{ 'CANDIDATE_EDIT_REQUEST.min_3_chars' | translate }} }
+                  @else if (form!.get('first_name')?.errors?.['maxlength']) { {{ 'CANDIDATE_EDIT_REQUEST.max_100_chars' | translate }} }
+                  @else if (form!.get('first_name')?.errors?.['pattern'])   { {{ 'CANDIDATE_EDIT_REQUEST.name_pattern_invalid' | translate }} }
                 </div>
               }
             </div>
 
             <!-- Last Name -->
             <div class="col-md-6">
-              <label class="form-label small fw-semibold">Last Name <span class="text-danger">*</span></label>
+              <label class="form-label small fw-semibold">{{ 'MY_PROFILE.last_name' | translate }} <span class="text-danger">*</span></label>
               <input formControlName="last_name" class="form-control form-control-sm"
                 [class.is-invalid]="form!.get('last_name')?.invalid && form!.get('last_name')?.touched">
               @if (form!.get('last_name')?.touched && form!.get('last_name')?.errors) {
                 <div class="invalid-feedback d-block small">
-                  @if (form!.get('last_name')?.errors?.['required'])       { Last name is required. }
-                  @else if (form!.get('last_name')?.errors?.['minlength']) { Minimum 3 characters required. }
-                  @else if (form!.get('last_name')?.errors?.['maxlength']) { Maximum 100 characters allowed. }
-                  @else if (form!.get('last_name')?.errors?.['pattern'])   { Only letters, spaces, hyphens and apostrophes are allowed. }
+                  @if (form!.get('last_name')?.errors?.['required'])       { {{ 'CANDIDATE_EDIT_REQUEST.last_name_required' | translate }} }
+                  @else if (form!.get('last_name')?.errors?.['minlength']) { {{ 'CANDIDATE_EDIT_REQUEST.min_3_chars' | translate }} }
+                  @else if (form!.get('last_name')?.errors?.['maxlength']) { {{ 'CANDIDATE_EDIT_REQUEST.max_100_chars' | translate }} }
+                  @else if (form!.get('last_name')?.errors?.['pattern'])   { {{ 'CANDIDATE_EDIT_REQUEST.name_pattern_invalid' | translate }} }
                 </div>
               }
             </div>
 
             <!-- Date of Birth -->
             <div class="col-md-4">
-              <label class="form-label small fw-semibold">Date of Birth <span class="text-danger">*</span></label>
+              <label class="form-label small fw-semibold">{{ 'MY_PROFILE.date_of_birth' | translate }} <span class="text-danger">*</span></label>
               <input formControlName="date_of_birth" type="date" class="form-control form-control-sm"
                 [class.is-invalid]="form!.get('date_of_birth')?.invalid && form!.get('date_of_birth')?.touched"
                 [max]="(currentYear - 16) + '-12-31'"
                 [min]="(currentYear - 100) + '-01-01'">
               @if (form!.get('date_of_birth')?.touched && form!.get('date_of_birth')?.errors) {
                 <div class="invalid-feedback d-block small">
-                  @if (form!.get('date_of_birth')?.errors?.['required'])    { Date of birth is required. }
-                  @else if (form!.get('date_of_birth')?.errors?.['invalidDate'])  { Please enter a valid date. }
-                  @else if (form!.get('date_of_birth')?.errors?.['futureDate'])   { Date of birth cannot be in the future. }
-                  @else if (form!.get('date_of_birth')?.errors?.['tooYoung'])     { Must be at least 16 years old. }
-                  @else if (form!.get('date_of_birth')?.errors?.['tooOld'])       { Please enter a valid date of birth. }
+                  @if (form!.get('date_of_birth')?.errors?.['required'])    { {{ 'CANDIDATE_EDIT_REQUEST.dob_required' | translate }} }
+                  @else if (form!.get('date_of_birth')?.errors?.['invalidDate'])  { {{ 'FORMS.invalid_date' | translate }} }
+                  @else if (form!.get('date_of_birth')?.errors?.['futureDate'])   { {{ 'CANDIDATE_EDIT_REQUEST.dob_future' | translate }} }
+                  @else if (form!.get('date_of_birth')?.errors?.['tooYoung'])     { {{ 'CANDIDATE_EDIT_REQUEST.dob_too_young' | translate }} }
+                  @else if (form!.get('date_of_birth')?.errors?.['tooOld'])       { {{ 'CANDIDATE_EDIT_REQUEST.dob_invalid' | translate }} }
                 </div>
               }
             </div>
 
             <!-- Gender -->
             <div class="col-md-4">
-              <label class="form-label small fw-semibold">Gender <span class="text-danger">*</span></label>
+              <label class="form-label small fw-semibold">{{ 'FILTER.gender' | translate }} <span class="text-danger">*</span></label>
               <app-searchable-select
                 formControlName="gender"
                 [options]="genderOptions"
@@ -497,13 +498,13 @@ function makePostalCodeGroupValidator(countryCtrl: string, postalCtrl: string): 
                 [invalid]="!!(form!.get('gender')?.invalid && form!.get('gender')?.touched)">
               </app-searchable-select>
               @if (form!.get('gender')?.invalid && form!.get('gender')?.touched) {
-                <div class="text-danger small mt-1">Gender is required.</div>
+                <div class="text-danger small mt-1">{{ 'CANDIDATE_EDIT_REQUEST.gender_required' | translate }}</div>
               }
             </div>
 
             <!-- Marital Status -->
             <div class="col-md-4">
-              <label class="form-label small fw-semibold">Marital Status</label>
+              <label class="form-label small fw-semibold">{{ 'CANDIDATE_PROFILE.marital_status' | translate }}</label>
               <app-searchable-select
                 formControlName="marital_status"
                 [options]="maritalStatusOptions"
@@ -514,7 +515,7 @@ function makePostalCodeGroupValidator(countryCtrl: string, postalCtrl: string): 
 
             <!-- Phone -->
             <div class="col-md-6">
-              <label class="form-label small fw-semibold">Phone <span class="text-danger">*</span></label>
+              <label class="form-label small fw-semibold">{{ 'COMMON.phone' | translate }} <span class="text-danger">*</span></label>
               <div class="phone-input-group">
                 <app-searchable-select
                   formControlName="phone_dial_code"
@@ -523,12 +524,12 @@ function makePostalCodeGroupValidator(countryCtrl: string, postalCtrl: string): 
                   class="dial-select">
                 </app-searchable-select>
                 <input formControlName="phone_number" class="form-control form-control-sm phone-number-input"
-                  placeholder="e.g. 9876543210"
+                  [placeholder]="'CANDIDATE_EDIT_REQUEST.eg_phone_number' | translate"
                   [class.is-invalid]="form!.get('phone_number')?.invalid && form!.get('phone_number')?.touched">
               </div>
               @if (form!.get('phone_number')?.touched && form!.get('phone_number')?.errors) {
                 <div class="text-danger small mt-1">
-                  @if (form!.get('phone_number')?.errors?.['required'])         { Phone number is required. }
+                  @if (form!.get('phone_number')?.errors?.['required'])         { {{ 'CANDIDATE_EDIT_REQUEST.phone_required' | translate }} }
                   @else if (form!.get('phone_number')?.errors?.['phoneInvalid']) { {{ form!.get('phone_number')?.errors?.['phoneInvalid'] }} }
                 </div>
               }
@@ -536,7 +537,7 @@ function makePostalCodeGroupValidator(countryCtrl: string, postalCtrl: string): 
 
             <!-- WhatsApp -->
             <div class="col-md-6">
-              <label class="form-label small fw-semibold">WhatsApp <span class="text-danger">*</span></label>
+              <label class="form-label small fw-semibold">{{ 'CANDIDATE_EDIT_REQUEST.whatsapp_label' | translate }} <span class="text-danger">*</span></label>
               <div class="phone-input-group">
                 <app-searchable-select
                   formControlName="whatsapp_dial_code"
@@ -547,7 +548,7 @@ function makePostalCodeGroupValidator(countryCtrl: string, postalCtrl: string): 
                   [disabled]="form!.get('whatsapp_same_as_phone')?.value">
                 </app-searchable-select>
                 <input formControlName="whatsapp_number" class="form-control form-control-sm phone-number-input"
-                  placeholder="e.g. 9876543210"
+                  [placeholder]="'CANDIDATE_EDIT_REQUEST.eg_phone_number' | translate"
                   [class.bg-light]="form!.get('whatsapp_same_as_phone')?.value"
                   [class.is-invalid]="form!.get('whatsapp_number')?.invalid && form!.get('whatsapp_number')?.touched"
                   [attr.readonly]="form!.get('whatsapp_same_as_phone')?.value ? true : null">
@@ -555,11 +556,11 @@ function makePostalCodeGroupValidator(countryCtrl: string, postalCtrl: string): 
               <div class="form-check mt-1">
                 <input class="form-check-input" type="checkbox"
                   formControlName="whatsapp_same_as_phone" id="wa_same_er">
-                <label class="form-check-label small text-muted" for="wa_same_er">Same as phone</label>
+                <label class="form-check-label small text-muted" for="wa_same_er">{{ 'CANDIDATE_EDIT_REQUEST.same_as_phone' | translate }}</label>
               </div>
               @if (form!.get('whatsapp_number')?.touched && form!.get('whatsapp_number')?.errors) {
                 <div class="text-danger small mt-1">
-                  @if (form!.get('whatsapp_number')?.errors?.['required'])          { WhatsApp number is required. }
+                  @if (form!.get('whatsapp_number')?.errors?.['required'])          { {{ 'CANDIDATE_EDIT_REQUEST.whatsapp_required' | translate }} }
                   @else if (form!.get('whatsapp_number')?.errors?.['phoneInvalid']) { {{ form!.get('whatsapp_number')?.errors?.['phoneInvalid'] }} }
                 </div>
               }
@@ -567,45 +568,45 @@ function makePostalCodeGroupValidator(countryCtrl: string, postalCtrl: string): 
 
             <!-- Email Address -->
             <div class="col-md-6">
-              <label class="form-label small fw-semibold">Email Address <span class="text-danger">*</span></label>
+              <label class="form-label small fw-semibold">{{ 'MY_PROFILE.email' | translate }} <span class="text-danger">*</span></label>
               <input type="email" formControlName="email" class="form-control form-control-sm"
                 [class.is-invalid]="form!.get('email')?.invalid && form!.get('email')?.touched"
                 [attr.disabled]="existingRequest?.status === 'pending' ? true : null"
-                placeholder="email@example.com" autocomplete="off">
+                [placeholder]="'CANDIDATE_EDIT_REQUEST.eg_email' | translate" autocomplete="off">
               @if (form!.get('email')?.touched && form!.get('email')?.errors) {
                 <div class="invalid-feedback d-block small">
-                  @if (form!.get('email')?.errors?.['required'])          { Email address is required. }
-                  @else if (form!.get('email')?.errors?.['invalidEmail']) { Please enter a valid email address. }
+                  @if (form!.get('email')?.errors?.['required'])          { {{ 'CANDIDATE_EDIT_REQUEST.email_required' | translate }} }
+                  @else if (form!.get('email')?.errors?.['invalidEmail']) { {{ 'FORMS.invalid_email' | translate }} }
                 </div>
               }
             </div>
 
             <!-- LinkedIn -->
             <div class="col-12">
-              <label class="form-label small fw-semibold">LinkedIn URL</label>
+              <label class="form-label small fw-semibold">{{ 'CANDIDATE_EDIT_REQUEST.linkedin_url' | translate }}</label>
               <input formControlName="linkedin_url" class="form-control form-control-sm"
-                placeholder="https://linkedin.com/in/username"
+                [placeholder]="'CANDIDATE_EDIT_REQUEST.eg_linkedin_url' | translate"
                 [class.is-invalid]="form!.get('linkedin_url')?.invalid && form!.get('linkedin_url')?.touched">
               @if (form!.get('linkedin_url')?.invalid && form!.get('linkedin_url')?.touched) {
                 <div class="invalid-feedback d-block small">
-                  Enter a valid LinkedIn URL (e.g. https://linkedin.com/in/username).
+                  {{ 'CANDIDATE_EDIT_REQUEST.linkedin_invalid' | translate }}
                 </div>
               }
             </div>
 
             <!-- Bio -->
             <div class="col-12">
-              <label class="form-label small fw-semibold">Bio</label>
+              <label class="form-label small fw-semibold">{{ 'MY_PROFILE.bio' | translate }}</label>
               <textarea formControlName="bio" class="form-control form-control-sm" rows="3"
                 [class.is-invalid]="form!.get('bio')?.invalid && form!.get('bio')?.dirty"></textarea>
               <small class="d-block text-end mt-1"
                 [class.text-success]="bioWordCount <= BIO_WORD_LIMIT"
                 [class.text-danger]="bioWordCount > BIO_WORD_LIMIT">
-                {{ bioWordCount }} / {{ BIO_WORD_LIMIT }} words
+                {{ 'CANDIDATE_EDIT_REQUEST.word_count' | translate:{ count: bioWordCount, limit: BIO_WORD_LIMIT } }}
               </small>
               @if (form!.get('bio')?.errors?.['bioWordLimit'] && form!.get('bio')?.dirty) {
                 <div class="text-danger small mt-1">
-                  You have exceeded the maximum limit of 2000 words. Please reduce your text.
+                  {{ 'CANDIDATE_EDIT_REQUEST.bio_word_limit_exceeded' | translate }}
                 </div>
               }
             </div>
@@ -616,12 +617,12 @@ function makePostalCodeGroupValidator(countryCtrl: string, postalCtrl: string): 
         <!-- ── Professional ───────────────────────────────────────────────── -->
         <div class="form-card mb-4">
           <h5 class="card-section-header card-section-header--info">
-            <i class="bi bi-briefcase"></i> Professional
+            <i class="bi bi-briefcase"></i> {{ 'CANDIDATE_EDIT_REQUEST.professional' | translate }}
           </h5>
           <div class="row g-3">
 
             <div class="col-md-4">
-              <label class="form-label small fw-semibold">Job Title <span class="text-danger">*</span></label>
+              <label class="form-label small fw-semibold">{{ 'RECRUITER_CANDIDATES.job_title' | translate }} <span class="text-danger">*</span></label>
               <app-searchable-select
                 formControlName="job_title"
                 [options]="jobTitleOptions()"
@@ -630,12 +631,12 @@ function makePostalCodeGroupValidator(countryCtrl: string, postalCtrl: string): 
                 [invalid]="!!(form!.get('job_title')?.invalid && form!.get('job_title')?.touched)">
               </app-searchable-select>
               @if (form!.get('job_title')?.invalid && form!.get('job_title')?.touched) {
-                <div class="text-danger small mt-1">Job title is required.</div>
+                <div class="text-danger small mt-1">{{ 'CANDIDATE_EDIT_REQUEST.job_title_required' | translate }}</div>
               }
             </div>
 
             <div class="col-md-4">
-              <label class="form-label small fw-semibold">Occupation <span class="text-danger">*</span></label>
+              <label class="form-label small fw-semibold">{{ 'CANDIDATE_EDIT_REQUEST.occupation' | translate }} <span class="text-danger">*</span></label>
               <app-searchable-select
                 formControlName="occupation"
                 [options]="occupationOptions()"
@@ -644,12 +645,12 @@ function makePostalCodeGroupValidator(countryCtrl: string, postalCtrl: string): 
                 [invalid]="!!(form!.get('occupation')?.invalid && form!.get('occupation')?.touched)">
               </app-searchable-select>
               @if (form!.get('occupation')?.invalid && form!.get('occupation')?.touched) {
-                <div class="text-danger small mt-1">Occupation is required.</div>
+                <div class="text-danger small mt-1">{{ 'CANDIDATE_EDIT_REQUEST.occupation_required' | translate }}</div>
               }
             </div>
 
             <div class="col-md-4">
-              <label class="form-label small fw-semibold">Industry <span class="text-danger">*</span></label>
+              <label class="form-label small fw-semibold">{{ 'RECRUITER_CANDIDATES.industry' | translate }} <span class="text-danger">*</span></label>
               <app-searchable-select
                 formControlName="industry"
                 [options]="industryOptions()"
@@ -658,12 +659,12 @@ function makePostalCodeGroupValidator(countryCtrl: string, postalCtrl: string): 
                 [invalid]="!!(form!.get('industry')?.invalid && form!.get('industry')?.touched)">
               </app-searchable-select>
               @if (form!.get('industry')?.invalid && form!.get('industry')?.touched) {
-                <div class="text-danger small mt-1">Industry is required.</div>
+                <div class="text-danger small mt-1">{{ 'CANDIDATE_EDIT_REQUEST.industry_required' | translate }}</div>
               }
             </div>
 
             <div class="col-md-4">
-              <label class="form-label small fw-semibold">Employment Status <span class="text-danger">*</span></label>
+              <label class="form-label small fw-semibold">{{ 'CANDIDATE_PROFILE.employment_status' | translate }} <span class="text-danger">*</span></label>
               <app-searchable-select
                 formControlName="employment_status"
                 [options]="employmentStatusOptions"
@@ -672,12 +673,12 @@ function makePostalCodeGroupValidator(countryCtrl: string, postalCtrl: string): 
                 [invalid]="!!(form!.get('employment_status')?.invalid && form!.get('employment_status')?.touched)">
               </app-searchable-select>
               @if (form!.get('employment_status')?.invalid && form!.get('employment_status')?.touched) {
-                <div class="text-danger small mt-1">Employment status is required.</div>
+                <div class="text-danger small mt-1">{{ 'CANDIDATE_EDIT_REQUEST.employment_status_required' | translate }}</div>
               }
             </div>
 
             <div class="col-md-4">
-              <label class="form-label small fw-semibold">Notice Period</label>
+              <label class="form-label small fw-semibold">{{ 'CANDIDATE_EDIT_REQUEST.notice_period' | translate }}</label>
               <app-searchable-select
                 formControlName="notice_period_id"
                 [options]="noticePeriodOptions()"
@@ -687,20 +688,20 @@ function makePostalCodeGroupValidator(countryCtrl: string, postalCtrl: string): 
             </div>
 
             <div class="col-md-4">
-              <label class="form-label small fw-semibold">Years Experience
-                <span class="badge bg-primary ms-2">{{ form.get('years_experience')?.value ?? 0 }} yrs</span>
+              <label class="form-label small fw-semibold">{{ 'CANDIDATE_EDIT_REQUEST.years_experience' | translate }}
+                <span class="badge bg-primary ms-2">{{ form.get('years_experience')?.value ?? 0 }} {{ 'FILTER.yrs' | translate }}</span>
               </label>
               <input formControlName="years_experience" type="range" min="0" max="25" step="1"
                 class="experience-slider"
                 [style.--fill]="((form.get('years_experience')?.value ?? 0) / 25 * 100) + '%'">
               <div class="d-flex justify-content-between" style="font-size:.7rem;color:var(--th-text-secondary)">
-                <span>0 yrs</span><span>25 yrs</span>
+                <span>0 {{ 'FILTER.yrs' | translate }}</span><span>25 {{ 'FILTER.yrs' | translate }}</span>
               </div>
             </div>
 
             <!-- Visa Status -->
             <div class="col-md-6">
-              <label class="form-label small fw-semibold">Visa / Work Permit Status</label>
+              <label class="form-label small fw-semibold">{{ 'CANDIDATE_PROFILE.visa_work_permit' | translate }}</label>
               <app-searchable-select
                 formControlName="visa_status_select"
                 [options]="visaStatusOptions"
@@ -710,7 +711,7 @@ function makePostalCodeGroupValidator(countryCtrl: string, postalCtrl: string): 
             </div>
             @if (form!.get('visa_status_select')?.value === 'other') {
               <div class="col-md-6">
-                <label class="form-label small fw-semibold">Specify Visa Status</label>
+                <label class="form-label small fw-semibold">{{ 'CANDIDATE_EDIT_REQUEST.specify_visa_status' | translate }}</label>
                 <input formControlName="visa_status_other" class="form-control form-control-sm"
                   [placeholder]="'CANDIDATE_EDIT_REQUEST.describe_visa_status' | translate">
               </div>
@@ -722,12 +723,12 @@ function makePostalCodeGroupValidator(countryCtrl: string, postalCtrl: string): 
         <!-- ── Location ───────────────────────────────────────────────────── -->
         <div class="form-card mb-4">
           <h5 class="card-section-header card-section-header--success">
-            <i class="bi bi-geo-alt"></i> Location
+            <i class="bi bi-geo-alt"></i> {{ 'COMMON.location' | translate }}
           </h5>
           <div class="row g-3">
 
             <div class="col-md-4">
-              <label class="form-label small fw-semibold">Current Country <span class="text-danger">*</span></label>
+              <label class="form-label small fw-semibold">{{ 'CANDIDATE_EDIT_REQUEST.current_country' | translate }} <span class="text-danger">*</span></label>
               <app-searchable-select
                 formControlName="current_country"
                 [options]="countryOptions()"
@@ -736,12 +737,12 @@ function makePostalCodeGroupValidator(countryCtrl: string, postalCtrl: string): 
                 [invalid]="!!(form!.get('current_country')?.invalid && form!.get('current_country')?.touched)">
               </app-searchable-select>
               @if (form!.get('current_country')?.invalid && form!.get('current_country')?.touched) {
-                <div class="text-danger small mt-1">Current country is required.</div>
+                <div class="text-danger small mt-1">{{ 'CANDIDATE_EDIT_REQUEST.current_country_required' | translate }}</div>
               }
             </div>
 
             <div class="col-md-4">
-              <label class="form-label small fw-semibold">Current City <span class="text-danger">*</span></label>
+              <label class="form-label small fw-semibold">{{ 'CANDIDATE_EDIT_REQUEST.current_city' | translate }} <span class="text-danger">*</span></label>
               <app-searchable-select
                 formControlName="current_city"
                 [options]="cityOptions()"
@@ -750,12 +751,12 @@ function makePostalCodeGroupValidator(countryCtrl: string, postalCtrl: string): 
                 [invalid]="!!(form!.get('current_city')?.invalid && form!.get('current_city')?.touched)">
               </app-searchable-select>
               @if (form!.get('current_city')?.invalid && form!.get('current_city')?.touched) {
-                <div class="text-danger small mt-1">Current city is required.</div>
+                <div class="text-danger small mt-1">{{ 'CANDIDATE_EDIT_REQUEST.current_city_required' | translate }}</div>
               }
             </div>
 
             <div class="col-md-4">
-              <label class="form-label small fw-semibold">Postal / ZIP Code</label>
+              <label class="form-label small fw-semibold">{{ 'CANDIDATE_EDIT_REQUEST.postal_zip_code' | translate }}</label>
               <input formControlName="postal_code" class="form-control form-control-sm"
                 [class.is-invalid]="form!.get('postal_code')?.invalid && form!.get('postal_code')?.touched"
                 [placeholder]="'CANDIDATE_EDIT_REQUEST.postal_code' | translate">
@@ -770,16 +771,16 @@ function makePostalCodeGroupValidator(countryCtrl: string, postalCtrl: string): 
             <div class="col-12">
               <div class="form-check form-switch">
                 <input class="form-check-input" type="checkbox" formControlName="has_passport" id="er_has_passport">
-                <label class="form-check-label small fw-semibold" for="er_has_passport">I hold a valid passport</label>
+                <label class="form-check-label small fw-semibold" for="er_has_passport">{{ 'CANDIDATE_EDIT_REQUEST.has_valid_passport' | translate }}</label>
               </div>
             </div>
 
             <!-- Nationality -->
             <div class="col-md-4">
               <label class="form-label small fw-semibold">
-                Nationality
+                {{ 'MY_PROFILE.nationality' | translate }}
                 @if (form!.get('has_passport')?.value) { <span class="text-danger">*</span> }
-                @else { <span class="text-muted">(optional)</span> }
+                @else { <span class="text-muted">({{ 'FORMS.optional' | translate }})</span> }
               </label>
               <app-searchable-select
                 formControlName="nationality"
@@ -789,18 +790,18 @@ function makePostalCodeGroupValidator(countryCtrl: string, postalCtrl: string): 
                 [invalid]="!!(form!.get('nationality')?.invalid && form!.get('nationality')?.touched)">
               </app-searchable-select>
               @if (form!.get('nationality')?.invalid && form!.get('nationality')?.touched) {
-                <div class="text-danger small mt-1">Nationality is required when passport is selected.</div>
+                <div class="text-danger small mt-1">{{ 'CANDIDATE_EDIT_REQUEST.nationality_required_passport' | translate }}</div>
               }
             </div>
 
             <!-- Target Locations -->
             <div class="col-12">
-              <label class="form-label small fw-semibold">Target Locations</label>
+              <label class="form-label small fw-semibold">{{ 'CANDIDATE_PROFILE.target_locations' | translate }}</label>
               <app-chip-multi-select
                 formControlName="target_locations"
                 [options]="targetLocationChipOptions()">
               </app-chip-multi-select>
-              <small class="text-muted">Countries you are willing to relocate / work in.</small>
+              <small class="text-muted">{{ 'CANDIDATE_EDIT_REQUEST.target_locations_hint' | translate }}</small>
             </div>
 
           </div>
@@ -810,14 +811,14 @@ function makePostalCodeGroupValidator(countryCtrl: string, postalCtrl: string): 
         <div class="form-card mb-4">
           <div class="d-flex justify-content-between align-items-center mb-3">
             <h5 class="card-section-header card-section-header--purple mb-0">
-              <i class="bi bi-tools"></i> Skills
+              <i class="bi bi-tools"></i> {{ 'MY_PROFILE.skills' | translate }}
             </h5>
-            <button type="button" class="btn btn-sm btn-outline-primary" (click)="addSkill()">+ Add</button>
+            <button type="button" class="btn btn-sm btn-outline-primary" (click)="addSkill()">{{ 'CANDIDATE_EDIT_REQUEST.add_btn' | translate }}</button>
           </div>
           @if (skillsArray.length) {
             <div class="row g-2 mb-1">
-              <div class="col"><label class="form-label form-label-sm mb-0">Skill Name <span class="text-danger">*</span></label></div>
-              <div class="col"><label class="form-label form-label-sm mb-0">Proficiency</label></div>
+              <div class="col"><label class="form-label form-label-sm mb-0">{{ 'CANDIDATE_EDIT_REQUEST.skill_name' | translate }} <span class="text-danger">*</span></label></div>
+              <div class="col"><label class="form-label form-label-sm mb-0">{{ 'CANDIDATE_EDIT_REQUEST.proficiency' | translate }}</label></div>
               <div class="col-auto" style="width:5rem"></div>
             </div>
           }
@@ -828,19 +829,19 @@ function makePostalCodeGroupValidator(countryCtrl: string, postalCtrl: string): 
                   [placeholder]="'CANDIDATE_EDIT_REQUEST.eg_skill' | translate"
                   [class.is-invalid]="asGroup(ctrl).get('skill_name')!.invalid && asGroup(ctrl).get('skill_name')!.touched">
                 @if (asGroup(ctrl).get('skill_name')!.invalid && asGroup(ctrl).get('skill_name')!.touched) {
-                  <div class="invalid-feedback">Skill name is required.</div>
+                  <div class="invalid-feedback">{{ 'CANDIDATE_EDIT_REQUEST.skill_name_required' | translate }}</div>
                 }
               </div>
               <div class="col">
                 <app-searchable-select
                   formControlName="proficiency"
                   [options]="proficiencySkillOptions"
-                  placeholder="— Select —"
+                  [placeholder]="'CANDIDATE_EDIT_REQUEST.select_placeholder' | translate"
                   [allowClear]="false"
                   [invalid]="asGroup(ctrl).get('proficiency')!.invalid && asGroup(ctrl).get('proficiency')!.touched">
                 </app-searchable-select>
                 @if (asGroup(ctrl).get('proficiency')!.invalid && asGroup(ctrl).get('proficiency')!.touched) {
-                  <div class="text-danger" style="font-size:.875em;margin-top:.25rem">Select a proficiency level.</div>
+                  <div class="text-danger" style="font-size:.875em;margin-top:.25rem">{{ 'CANDIDATE_EDIT_REQUEST.select_proficiency_level' | translate }}</div>
                 }
               </div>
               <div class="col-auto" style="width:5rem">
@@ -855,14 +856,14 @@ function makePostalCodeGroupValidator(countryCtrl: string, postalCtrl: string): 
         <div class="form-card mb-4">
           <div class="d-flex justify-content-between align-items-center mb-3">
             <h5 class="card-section-header card-section-header--teal mb-0">
-              <i class="bi bi-translate"></i> Languages
+              <i class="bi bi-translate"></i> {{ 'MASTER_DATA.languages' | translate }}
             </h5>
-            <button type="button" class="btn btn-sm btn-outline-primary" (click)="addLanguage()">+ Add</button>
+            <button type="button" class="btn btn-sm btn-outline-primary" (click)="addLanguage()">{{ 'CANDIDATE_EDIT_REQUEST.add_btn' | translate }}</button>
           </div>
           @if (languagesArray.length) {
             <div class="row g-2 mb-1">
-              <div class="col"><label class="form-label form-label-sm mb-0">Language <span class="text-danger">*</span></label></div>
-              <div class="col"><label class="form-label form-label-sm mb-0">Proficiency</label></div>
+              <div class="col"><label class="form-label form-label-sm mb-0">{{ 'CANDIDATE_EDIT_REQUEST.language_label' | translate }} <span class="text-danger">*</span></label></div>
+              <div class="col"><label class="form-label form-label-sm mb-0">{{ 'CANDIDATE_EDIT_REQUEST.proficiency' | translate }}</label></div>
               <div class="col-auto" style="width:5rem"></div>
             </div>
           }
@@ -876,19 +877,19 @@ function makePostalCodeGroupValidator(countryCtrl: string, postalCtrl: string): 
                   [invalid]="asGroup(ctrl).get('language')!.invalid && asGroup(ctrl).get('language')!.touched">
                 </app-searchable-select>
                 @if (asGroup(ctrl).get('language')!.invalid && asGroup(ctrl).get('language')!.touched) {
-                  <div class="invalid-feedback d-block small">Language name is required.</div>
+                  <div class="invalid-feedback d-block small">{{ 'CANDIDATE_EDIT_REQUEST.language_name_required' | translate }}</div>
                 }
               </div>
               <div class="col">
                 <app-searchable-select
                   formControlName="proficiency"
                   [options]="proficiencyLangOptions"
-                  placeholder="— Select —"
+                  [placeholder]="'CANDIDATE_EDIT_REQUEST.select_placeholder' | translate"
                   [allowClear]="false"
                   [invalid]="asGroup(ctrl).get('proficiency')!.invalid && asGroup(ctrl).get('proficiency')!.touched">
                 </app-searchable-select>
                 @if (asGroup(ctrl).get('proficiency')!.invalid && asGroup(ctrl).get('proficiency')!.touched) {
-                  <div class="text-danger" style="font-size:.875em;margin-top:.25rem">Select a proficiency level.</div>
+                  <div class="text-danger" style="font-size:.875em;margin-top:.25rem">{{ 'CANDIDATE_EDIT_REQUEST.select_proficiency_level' | translate }}</div>
                 }
               </div>
               <div class="col-auto" style="width:5rem">
@@ -903,55 +904,55 @@ function makePostalCodeGroupValidator(countryCtrl: string, postalCtrl: string): 
         <div class="form-card mb-4">
           <div class="d-flex justify-content-between align-items-center mb-3">
             <h5 class="card-section-header card-section-header--orange mb-0">
-              <i class="bi bi-building"></i> Work Experience
+              <i class="bi bi-building"></i> {{ 'MY_PROFILE.experience' | translate }}
             </h5>
-            <button type="button" class="btn btn-sm btn-outline-primary" (click)="addExperience()">+ Add</button>
+            <button type="button" class="btn btn-sm btn-outline-primary" (click)="addExperience()">{{ 'CANDIDATE_EDIT_REQUEST.add_btn' | translate }}</button>
           </div>
           @for (ctrl of experienceArray.controls; track $index) {
             <div [formGroup]="asGroup(ctrl)" class="glass-card p-3 mb-3">
               <div class="d-flex justify-content-between align-items-center mb-2">
-                <span class="fw-semibold small text-muted"><i class="bi bi-briefcase me-1"></i> Experience #{{ $index + 1 }}</span>
-                <button type="button" class="btn btn-sm btn-outline-danger" (click)="removeExperience($index)">Remove</button>
+                <span class="fw-semibold small text-muted"><i class="bi bi-briefcase me-1"></i> {{ 'CANDIDATE_EDIT_REQUEST.experience_number' | translate:{ n: $index + 1 } }}</span>
+                <button type="button" class="btn btn-sm btn-outline-danger" (click)="removeExperience($index)">{{ 'BUTTONS.remove' | translate }}</button>
               </div>
               <div class="row g-2">
                 <div class="col-md-6">
-                  <label class="form-label form-label-sm">Job Title <span class="text-danger">*</span></label>
+                  <label class="form-label form-label-sm">{{ 'RECRUITER_CANDIDATES.job_title' | translate }} <span class="text-danger">*</span></label>
                   <input formControlName="job_title" class="form-control form-control-sm" [placeholder]="'RECRUITER_CANDIDATES.job_title' | translate"
                     [class.is-invalid]="asGroup(ctrl).get('job_title')!.invalid && asGroup(ctrl).get('job_title')!.touched">
                   @if (asGroup(ctrl).get('job_title')!.invalid && asGroup(ctrl).get('job_title')!.touched) {
-                    <div class="invalid-feedback">Job title is required.</div>
+                    <div class="invalid-feedback">{{ 'CANDIDATE_EDIT_REQUEST.job_title_required' | translate }}</div>
                   }
                 </div>
                 <div class="col-md-6">
-                  <label class="form-label form-label-sm">Company <span class="text-danger">*</span></label>
+                  <label class="form-label form-label-sm">{{ 'COMMON.company' | translate }} <span class="text-danger">*</span></label>
                   <input formControlName="company_name" class="form-control form-control-sm" [placeholder]="'COMMON.company' | translate"
                     [class.is-invalid]="asGroup(ctrl).get('company_name')!.invalid && asGroup(ctrl).get('company_name')!.touched">
                   @if (asGroup(ctrl).get('company_name')!.invalid && asGroup(ctrl).get('company_name')!.touched) {
-                    <div class="invalid-feedback">Company name is required.</div>
+                    <div class="invalid-feedback">{{ 'CANDIDATE_EDIT_REQUEST.company_required' | translate }}</div>
                   }
                 </div>
                 <div class="col-md-3">
-                  <label class="form-label form-label-sm">Start Date <span class="text-danger">*</span></label>
+                  <label class="form-label form-label-sm">{{ 'CANDIDATE_EDIT_REQUEST.start_date' | translate }} <span class="text-danger">*</span></label>
                   <input formControlName="start_date" type="date" class="form-control form-control-sm"
                     [class.is-invalid]="asGroup(ctrl).get('start_date')!.invalid && asGroup(ctrl).get('start_date')!.touched">
                   @if (asGroup(ctrl).get('start_date')!.invalid && asGroup(ctrl).get('start_date')!.touched) {
-                    <div class="invalid-feedback">Start date is required.</div>
+                    <div class="invalid-feedback">{{ 'CANDIDATE_EDIT_REQUEST.start_date_required' | translate }}</div>
                   }
                 </div>
                 <div class="col-md-3">
-                  <label class="form-label form-label-sm">End Date</label>
+                  <label class="form-label form-label-sm">{{ 'CANDIDATE_EDIT_REQUEST.end_date' | translate }}</label>
                   @if (!asGroup(ctrl).get('currently_working')?.value) {
                     <input formControlName="end_date" type="date" class="form-control form-control-sm">
                   } @else {
-                    <div class="form-control form-control-sm bg-success-subtle text-success fw-semibold">Present</div>
+                    <div class="form-control form-control-sm bg-success-subtle text-success fw-semibold">{{ 'COMMON.present' | translate }}</div>
                   }
                   <div class="form-check mt-1">
                     <input type="checkbox" class="form-check-input" formControlName="currently_working" id="erCw_{{$index}}">
-                    <label class="form-check-label small text-muted" for="erCw_{{$index}}">Currently here</label>
+                    <label class="form-check-label small text-muted" for="erCw_{{$index}}">{{ 'CANDIDATE_EDIT_REQUEST.currently_here' | translate }}</label>
                   </div>
                 </div>
                 <div class="col-md-6">
-                  <label class="form-label form-label-sm">Location <span class="text-danger">*</span></label>
+                  <label class="form-label form-label-sm">{{ 'COMMON.location' | translate }} <span class="text-danger">*</span></label>
                   <app-searchable-select
                     formControlName="location"
                     [options]="countryOptions()"
@@ -960,26 +961,26 @@ function makePostalCodeGroupValidator(countryCtrl: string, postalCtrl: string): 
                     [invalid]="asGroup(ctrl).get('location')!.invalid && asGroup(ctrl).get('location')!.touched">
                   </app-searchable-select>
                   @if (asGroup(ctrl).get('location')!.invalid && asGroup(ctrl).get('location')!.touched) {
-                    <div class="text-danger" style="font-size:.875em;margin-top:.25rem">Location is required.</div>
+                    <div class="text-danger" style="font-size:.875em;margin-top:.25rem">{{ 'CANDIDATE_EDIT_REQUEST.location_required' | translate }}</div>
                   }
                 </div>
                 <div class="col-12">
-                  <label class="form-label form-label-sm">Description</label>
+                  <label class="form-label form-label-sm">{{ 'CANDIDATE_EDIT_REQUEST.description' | translate }}</label>
                   <textarea formControlName="description" class="form-control form-control-sm"
                     rows="2" [placeholder]="'CANDIDATE_EDIT_REQUEST.brief_description_responsibilities' | translate"></textarea>
                 </div>
                 <div class="col-md-6">
-                  <label class="form-label form-label-sm">Reason for Leaving <span class="text-muted fw-normal" style="font-size:.7rem">(optional)</span></label>
+                  <label class="form-label form-label-sm">{{ 'CANDIDATE_EDIT_REQUEST.reason_for_leaving' | translate }} <span class="text-muted fw-normal" style="font-size:.7rem">({{ 'FORMS.optional' | translate }})</span></label>
                   <app-searchable-select
                     formControlName="reason_for_leaving_select"
                     [options]="reasonForLeavingOptions"
-                    placeholder="— Select —"
+                    [placeholder]="'CANDIDATE_EDIT_REQUEST.select_placeholder' | translate"
                     [allowClear]="true">
                   </app-searchable-select>
                 </div>
                 @if (asGroup(ctrl).get('reason_for_leaving_select')?.value === 'Other') {
                   <div class="col-md-6">
-                    <label class="form-label form-label-sm">Please specify</label>
+                    <label class="form-label form-label-sm">{{ 'CANDIDATE_EDIT_REQUEST.please_specify' | translate }}</label>
                     <input formControlName="reason_for_leaving_other" class="form-control form-control-sm" [placeholder]="'CANDIDATE_EDIT_REQUEST.briefly_describe_reason' | translate">
                   </div>
                 }
@@ -992,27 +993,27 @@ function makePostalCodeGroupValidator(countryCtrl: string, postalCtrl: string): 
         <div class="form-card mb-4">
           <div class="d-flex justify-content-between align-items-center mb-3">
             <h5 class="card-section-header card-section-header--success mb-0">
-              <i class="bi bi-mortarboard"></i> Education
+              <i class="bi bi-mortarboard"></i> {{ 'MY_PROFILE.education' | translate }}
             </h5>
-            <button type="button" class="btn btn-sm btn-outline-primary" (click)="addEducation()">+ Add</button>
+            <button type="button" class="btn btn-sm btn-outline-primary" (click)="addEducation()">{{ 'CANDIDATE_EDIT_REQUEST.add_btn' | translate }}</button>
           </div>
           @for (ctrl of educationArray.controls; track $index) {
             <div [formGroup]="asGroup(ctrl)" class="glass-card p-3 mb-3">
               <div class="d-flex justify-content-between align-items-center mb-2">
-                <span class="fw-semibold small text-muted"><i class="bi bi-mortarboard me-1"></i> Education #{{ $index + 1 }}</span>
-                <button type="button" class="btn btn-sm btn-outline-danger" (click)="removeEducation($index)">Remove</button>
+                <span class="fw-semibold small text-muted"><i class="bi bi-mortarboard me-1"></i> {{ 'CANDIDATE_EDIT_REQUEST.education_number' | translate:{ n: $index + 1 } }}</span>
+                <button type="button" class="btn btn-sm btn-outline-danger" (click)="removeEducation($index)">{{ 'BUTTONS.remove' | translate }}</button>
               </div>
               <div class="row g-2">
                 <div class="col-md-6">
-                  <label class="form-label form-label-sm">Institution <span class="text-danger">*</span></label>
+                  <label class="form-label form-label-sm">{{ 'CANDIDATE_EDIT_REQUEST.institution' | translate }} <span class="text-danger">*</span></label>
                   <input formControlName="institution" class="form-control form-control-sm" [placeholder]="'CANDIDATE_EDIT_REQUEST.institution' | translate"
                     [class.is-invalid]="asGroup(ctrl).get('institution')!.invalid && asGroup(ctrl).get('institution')!.touched">
                   @if (asGroup(ctrl).get('institution')!.invalid && asGroup(ctrl).get('institution')!.touched) {
-                    <div class="invalid-feedback">Institution is required.</div>
+                    <div class="invalid-feedback">{{ 'CANDIDATE_EDIT_REQUEST.institution_required' | translate }}</div>
                   }
                 </div>
                 <div class="col-md-6">
-                  <label class="form-label form-label-sm">Degree <span class="text-danger">*</span></label>
+                  <label class="form-label form-label-sm">{{ 'CANDIDATE_EDIT_REQUEST.degree' | translate }} <span class="text-danger">*</span></label>
                   <app-searchable-select
                     formControlName="degree"
                     [options]="degreeOptions()"
@@ -1021,11 +1022,11 @@ function makePostalCodeGroupValidator(countryCtrl: string, postalCtrl: string): 
                     [invalid]="asGroup(ctrl).get('degree')!.invalid && asGroup(ctrl).get('degree')!.touched">
                   </app-searchable-select>
                   @if (asGroup(ctrl).get('degree')!.invalid && asGroup(ctrl).get('degree')!.touched) {
-                    <div class="text-danger" style="font-size:.875em;margin-top:.25rem">Degree is required.</div>
+                    <div class="text-danger" style="font-size:.875em;margin-top:.25rem">{{ 'CANDIDATE_EDIT_REQUEST.degree_required' | translate }}</div>
                   }
                 </div>
                 <div class="col-md-6">
-                  <label class="form-label form-label-sm">Field of Study <span class="text-danger">*</span></label>
+                  <label class="form-label form-label-sm">{{ 'CANDIDATE_EDIT_REQUEST.field_of_study' | translate }} <span class="text-danger">*</span></label>
                   <app-searchable-select
                     formControlName="field_of_study"
                     [options]="fieldOfStudyOptions()"
@@ -1034,15 +1035,15 @@ function makePostalCodeGroupValidator(countryCtrl: string, postalCtrl: string): 
                     [invalid]="asGroup(ctrl).get('field_of_study')!.invalid && asGroup(ctrl).get('field_of_study')!.touched">
                   </app-searchable-select>
                   @if (asGroup(ctrl).get('field_of_study')!.invalid && asGroup(ctrl).get('field_of_study')!.touched) {
-                    <div class="text-danger" style="font-size:.875em;margin-top:.25rem">Field of study is required.</div>
+                    <div class="text-danger" style="font-size:.875em;margin-top:.25rem">{{ 'CANDIDATE_EDIT_REQUEST.field_of_study_required' | translate }}</div>
                   }
                 </div>
                 <div class="col-md-3">
-                  <label class="form-label form-label-sm">Start</label>
+                  <label class="form-label form-label-sm">{{ 'CANDIDATE_EDIT_REQUEST.start_label' | translate }}</label>
                   <div class="d-flex gap-1">
                     <select class="form-select form-select-sm" formControlName="start_month" style="width:80px">
                       @for (m of MONTHS; track m.value) {
-                        <option [ngValue]="m.value">{{ m.label }}</option>
+                        <option [ngValue]="m.value">{{ monthLabel(m.value) }}</option>
                       }
                     </select>
                     <input formControlName="start_year" type="number" class="form-control form-control-sm" placeholder="YYYY"
@@ -1053,11 +1054,11 @@ function makePostalCodeGroupValidator(countryCtrl: string, postalCtrl: string): 
                   }
                 </div>
                 <div class="col-md-3">
-                  <label class="form-label form-label-sm">End / Expected</label>
+                  <label class="form-label form-label-sm">{{ 'CANDIDATE_EDIT_REQUEST.end_expected' | translate }}</label>
                   <div class="d-flex gap-1">
                     <select class="form-select form-select-sm" formControlName="end_month" style="width:80px">
                       @for (m of MONTHS; track m.value) {
-                        <option [ngValue]="m.value">{{ m.label }}</option>
+                        <option [ngValue]="m.value">{{ monthLabel(m.value) }}</option>
                       }
                     </select>
                     <input formControlName="end_year" type="number" class="form-control form-control-sm" placeholder="YYYY"
@@ -1067,11 +1068,11 @@ function makePostalCodeGroupValidator(countryCtrl: string, postalCtrl: string): 
                     <div class="invalid-feedback d-block">{{ asGroup(ctrl).get('end_year')!.errors?.['eduYearInvalid'] }}</div>
                   }
                   @if (asGroup(ctrl).get('end_year')!.errors?.['endBeforeStart'] && asGroup(ctrl).get('end_year')!.touched) {
-                    <div class="invalid-feedback d-block">End date cannot be before start date.</div>
+                    <div class="invalid-feedback d-block">{{ 'CANDIDATE_EDIT_REQUEST.end_before_start' | translate }}</div>
                   }
                 </div>
                 <div class="col-md-6">
-                  <label class="form-label form-label-sm">Country of Institution <span class="text-danger">*</span></label>
+                  <label class="form-label form-label-sm">{{ 'CANDIDATE_EDIT_REQUEST.country_of_institution' | translate }} <span class="text-danger">*</span></label>
                   <app-searchable-select
                     formControlName="location"
                     [options]="countryOptions()"
@@ -1080,7 +1081,7 @@ function makePostalCodeGroupValidator(countryCtrl: string, postalCtrl: string): 
                     [invalid]="asGroup(ctrl).get('location')!.invalid && asGroup(ctrl).get('location')!.touched">
                   </app-searchable-select>
                   @if (asGroup(ctrl).get('location')!.invalid && asGroup(ctrl).get('location')!.touched) {
-                    <div class="text-danger" style="font-size:.875em;margin-top:.25rem">Location is required.</div>
+                    <div class="text-danger" style="font-size:.875em;margin-top:.25rem">{{ 'CANDIDATE_EDIT_REQUEST.location_required' | translate }}</div>
                   }
                 </div>
               </div>
@@ -1091,20 +1092,20 @@ function makePostalCodeGroupValidator(countryCtrl: string, postalCtrl: string): 
         <!-- ── Hobbies & Interests ─────────────────────────────────────────── -->
         <div class="form-card mb-4">
           <h5 class="card-section-header card-section-header--teal">
-            <i class="bi bi-stars"></i> Hobbies &amp; Interests
+            <i class="bi bi-stars"></i> {{ 'MY_PROFILE.hobbies_interests' | translate }}
           </h5>
           <app-chip-multi-select
             formControlName="hobbies"
             [options]="hobbyChipOptions()">
           </app-chip-multi-select>
-          <small class="text-muted mt-2 d-block">Select any hobbies or interests that represent you.</small>
+          <small class="text-muted mt-2 d-block">{{ 'CANDIDATE_EDIT_REQUEST.hobbies_hint' | translate }}</small>
         </div>
 
         <!-- ── Certificates ───────────────────────────────────────────────── -->
         <div class="form-card mb-4">
           <div class="d-flex justify-content-between align-items-center mb-3">
             <h5 class="card-section-header mb-0">
-              <i class="bi bi-patch-check"></i> Certificates
+              <i class="bi bi-patch-check"></i> {{ 'CANDIDATE_PROFILE.certificates' | translate }}
               @if (certificateArray.length) {
                 <span class="badge bg-secondary rounded-pill ms-2" style="font-size:.7rem">
                   {{ certificateArray.length }}
@@ -1115,7 +1116,7 @@ function makePostalCodeGroupValidator(countryCtrl: string, postalCtrl: string): 
               <button type="button" class="btn btn-sm btn-outline-primary"
                 [disabled]="existingRequest?.status === 'pending'"
                 (click)="initNewCert()">
-                <i class="bi bi-plus-lg me-1"></i>Add Certificate
+                <i class="bi bi-plus-lg me-1"></i>{{ 'CANDIDATE_EDIT_REQUEST.add_certificate' | translate }}
               </button>
             }
           </div>
@@ -1128,7 +1129,7 @@ function makePostalCodeGroupValidator(countryCtrl: string, postalCtrl: string): 
                 <i class="bi bi-file-earmark-check text-success flex-shrink-0 mt-1"></i>
                 <div class="flex-grow-1 overflow-hidden">
                   <div class="small fw-semibold text-truncate">
-                    {{ asGroup(ctrl).get('name')?.value || 'Certificate' }}
+                    {{ asGroup(ctrl).get('name')?.value || ('CANDIDATE_EDIT_REQUEST.certificate_fallback_name' | translate) }}
                   </div>
                   @if (asGroup(ctrl).get('issuer')?.value) {
                     <div class="text-muted" style="font-size:.75rem">
@@ -1137,11 +1138,11 @@ function makePostalCodeGroupValidator(countryCtrl: string, postalCtrl: string): 
                   }
                   <div class="text-muted" style="font-size:.72rem">
                     @if (asGroup(ctrl).get('issue_date')?.value) {
-                      Issued: {{ asGroup(ctrl).get('issue_date')?.value | localeDate:'dd MMM yyyy' }}
+                      {{ 'CANDIDATE_PROFILE.issued_prefix' | translate }} {{ asGroup(ctrl).get('issue_date')?.value | localeDate:'dd MMM yyyy' }}
                     }
-                    @if (asGroup(ctrl).get('no_expiry')?.value) { &nbsp;· No Expiry }
+                    @if (asGroup(ctrl).get('no_expiry')?.value) { &nbsp;· {{ 'CANDIDATE_PROFILE.no_expiry' | translate }} }
                     @else if (asGroup(ctrl).get('expiry_date')?.value) {
-                      &nbsp;· Expires: {{ asGroup(ctrl).get('expiry_date')?.value | localeDate:'dd MMM yyyy' }}
+                      &nbsp;· {{ 'COMMON.expires' | translate }}: {{ asGroup(ctrl).get('expiry_date')?.value | localeDate:'dd MMM yyyy' }}
                     }
                   </div>
                 </div>
@@ -1168,7 +1169,7 @@ function makePostalCodeGroupValidator(countryCtrl: string, postalCtrl: string): 
 
             @if (!certificateArray.length && !pendingNewCert) {
               <div class="text-muted small py-1">
-                No certificates yet — click <strong>Add Certificate</strong> to upload one.
+                {{ 'CANDIDATE_EDIT_REQUEST.no_certificates_yet' | translate }} <strong>{{ 'CANDIDATE_EDIT_REQUEST.add_certificate' | translate }}</strong> {{ 'CANDIDATE_EDIT_REQUEST.to_upload_one' | translate }}
               </div>
             }
           </div>
@@ -1178,12 +1179,12 @@ function makePostalCodeGroupValidator(countryCtrl: string, postalCtrl: string): 
             <div class="card border border-success mt-3">
               <div class="card-body p-3">
                 <div class="fw-semibold small text-success mb-2">
-                  <i class="bi bi-plus-circle me-1"></i>New Certificate
+                  <i class="bi bi-plus-circle me-1"></i>{{ 'CANDIDATE_EDIT_REQUEST.new_certificate' | translate }}
                 </div>
                 <div class="row g-2">
                   <div class="col-12 col-md-6">
                     <label class="form-label form-label-sm">
-                      Name <span class="text-danger">*</span>
+                      {{ 'FORMS.name' | translate }} <span class="text-danger">*</span>
                     </label>
                     <input type="text" class="form-control form-control-sm"
                       [placeholder]="'CANDIDATE_EDIT_REQUEST.eg_certificate_name' | translate"
@@ -1191,20 +1192,20 @@ function makePostalCodeGroupValidator(countryCtrl: string, postalCtrl: string): 
                       (input)="pendingNewCert!.name = $any($event.target).value">
                   </div>
                   <div class="col-12 col-md-6">
-                    <label class="form-label form-label-sm">Issuing Organisation</label>
+                    <label class="form-label form-label-sm">{{ 'CANDIDATE_EDIT_REQUEST.issuing_organisation' | translate }}</label>
                     <input type="text" class="form-control form-control-sm"
                       [placeholder]="'CANDIDATE_EDIT_REQUEST.eg_certificate_issuer' | translate"
                       [value]="pendingNewCert.issuer"
                       (input)="pendingNewCert!.issuer = $any($event.target).value">
                   </div>
                   <div class="col-6 col-md-3">
-                    <label class="form-label form-label-sm">Issue Date</label>
+                    <label class="form-label form-label-sm">{{ 'CANDIDATE_EDIT_REQUEST.issue_date' | translate }}</label>
                     <input type="date" class="form-control form-control-sm"
                       [value]="pendingNewCert.issue_date"
                       (input)="pendingNewCert!.issue_date = $any($event.target).value">
                   </div>
                   <div class="col-6 col-md-3">
-                    <label class="form-label form-label-sm">Expiry Date</label>
+                    <label class="form-label form-label-sm">{{ 'CANDIDATE_EDIT_REQUEST.expiry_date' | translate }}</label>
                     <input type="date" class="form-control form-control-sm"
                       [value]="pendingNewCert.expiry_date"
                       [disabled]="pendingNewCert.no_expiry"
@@ -1215,13 +1216,13 @@ function makePostalCodeGroupValidator(countryCtrl: string, postalCtrl: string): 
                       <input class="form-check-input" type="checkbox" id="new-cert-no-expiry"
                         [checked]="pendingNewCert.no_expiry"
                         (change)="toggleNewCertNoExpiry($event)">
-                      <label class="form-check-label small" for="new-cert-no-expiry">No Expiry</label>
+                      <label class="form-check-label small" for="new-cert-no-expiry">{{ 'CANDIDATE_PROFILE.no_expiry' | translate }}</label>
                     </div>
                   </div>
                   <div class="col-6 col-md-3 d-flex align-items-end">
                     <label class="btn btn-sm btn-outline-secondary w-100 mb-0" style="cursor:pointer">
                       <i class="bi bi-paperclip me-1"></i>
-                      {{ pendingNewCert.file ? pendingNewCert.file.name : 'Attach File *' }}
+                      {{ pendingNewCert.file ? pendingNewCert.file.name : ('CANDIDATE_EDIT_REQUEST.attach_file_required' | translate) }}
                       <input type="file" class="d-none"
                         accept=".pdf,image/jpeg,image/png"
                         (change)="onNewCertFileSelected($event)">
@@ -1233,15 +1234,15 @@ function makePostalCodeGroupValidator(countryCtrl: string, postalCtrl: string): 
                     [disabled]="mediaLoading['certificates']"
                     (click)="submitNewCert()">
                     @if (mediaLoading['certificates']) {
-                      <span class="spinner-border spinner-border-sm me-1"></span>Uploading…
+                      <span class="spinner-border spinner-border-sm me-1"></span>{{ 'MESSAGES.uploading' | translate }}
                     } @else {
-                      <i class="bi bi-cloud-upload me-1"></i>Upload
+                      <i class="bi bi-cloud-upload me-1"></i>{{ 'BUTTONS.upload' | translate }}
                     }
                   </button>
                   <button type="button" class="btn btn-sm btn-outline-secondary"
                     [disabled]="mediaLoading['certificates']"
                     (click)="cancelNewCert()">
-                    Cancel
+                    {{ 'COMMON.cancel' | translate }}
                   </button>
                 </div>
               </div>
@@ -1256,7 +1257,7 @@ function makePostalCodeGroupValidator(countryCtrl: string, postalCtrl: string): 
         <div class="d-flex gap-2 mb-5">
           <button type="submit" class="btn btn-primary px-4"
             [disabled]="submitting || existingRequest?.status === 'pending' || form!.get('bio')?.invalid">
-            {{ submitting ? 'Submitting…' : 'Submit for Review' }}
+            {{ submitting ? (('COMMON.submitting' | translate) + '…') : ('CANDIDATE_EDIT_REQUEST.submit_btn' | translate) }}
           </button>
         </div>
 
@@ -1286,7 +1287,7 @@ function makePostalCodeGroupValidator(countryCtrl: string, postalCtrl: string): 
               </iframe>
               <div style="text-align:center;margin-top:.5rem">
                 <a [href]="previewUrl" target="_blank" class="btn btn-sm btn-outline-primary">
-                  <i class="bi bi-box-arrow-up-right me-1"></i> Open in new tab
+                  <i class="bi bi-box-arrow-up-right me-1"></i> {{ 'COMMON.open_new_tab' | translate }}
                 </a>
               </div>
             }
@@ -1356,7 +1357,7 @@ export class EditRequestComponent implements OnInit {
     this.master.noticePeriods().map(n => ({ value: n.id, label: n.label })));
 
   readonly targetLocationChipOptions = computed<ChipOption[]>(() => [
-    { value: 'Any Location', label: '🌍 Any Location' },
+    { value: 'Any Location', label: 'CANDIDATE_EDIT_REQUEST.any_location' },
     ...this.master.countries().map(c => ({ value: c.name, label: `${c.flag_emoji} ${c.name}` })),
   ]);
 
@@ -1366,30 +1367,30 @@ export class EditRequestComponent implements OnInit {
   // ── Static option arrays ───────────────────────────────────────────────────
 
   readonly proficiencySkillOptions: SelectOption[] = [
-    { value: 'beginner',     label: 'Beginner'     },
-    { value: 'intermediate', label: 'Intermediate' },
-    { value: 'expert',       label: 'Expert'       },
+    { value: 'beginner',     label: 'CANDIDATE_FORM.proficiency_beginner'     },
+    { value: 'intermediate', label: 'CANDIDATE_FORM.proficiency_intermediate' },
+    { value: 'expert',       label: 'CANDIDATE_FORM.proficiency_expert'       },
   ];
   readonly proficiencyLangOptions: SelectOption[] = [
-    { value: 'A1',     label: 'A1 — Beginner'          },
-    { value: 'A2',     label: 'A2 — Elementary'         },
-    { value: 'B1',     label: 'B1 — Intermediate'       },
-    { value: 'B2',     label: 'B2 — Upper Intermediate' },
-    { value: 'C1',     label: 'C1 — Advanced'           },
-    { value: 'C2',     label: 'C2 — Proficient'         },
-    { value: 'native', label: 'Native'                   },
+    { value: 'A1',     label: 'CANDIDATE_EDIT_REQUEST.lang_level_a1'     },
+    { value: 'A2',     label: 'CANDIDATE_EDIT_REQUEST.lang_level_a2'     },
+    { value: 'B1',     label: 'CANDIDATE_EDIT_REQUEST.lang_level_b1'     },
+    { value: 'B2',     label: 'CANDIDATE_EDIT_REQUEST.lang_level_b2'     },
+    { value: 'C1',     label: 'CANDIDATE_EDIT_REQUEST.lang_level_c1'     },
+    { value: 'C2',     label: 'CANDIDATE_EDIT_REQUEST.lang_level_c2'     },
+    { value: 'native', label: 'CANDIDATE_EDIT_REQUEST.lang_level_native' },
   ];
   readonly genderOptions: SelectOption[] = [
-    { value: 'male',              label: 'Male'              },
-    { value: 'female',            label: 'Female'            },
-    { value: 'non-binary',        label: 'Non-binary'        },
-    { value: 'prefer_not_to_say', label: 'Prefer not to say' },
+    { value: 'male',              label: 'FILTER_OPTIONS.gen_male'       },
+    { value: 'female',            label: 'FILTER_OPTIONS.gen_female'     },
+    { value: 'non-binary',        label: 'FILTER_OPTIONS.gen_non_binary' },
+    { value: 'prefer_not_to_say', label: 'FILTER_OPTIONS.gen_prefer_not' },
   ];
   readonly maritalStatusOptions: SelectOption[] = [
-    { value: 'single',   label: 'Single'   },
-    { value: 'married',  label: 'Married'  },
-    { value: 'divorced', label: 'Divorced' },
-    { value: 'widowed',  label: 'Widowed'  },
+    { value: 'single',   label: 'CANDIDATE_EDIT_REQUEST.marital_single'   },
+    { value: 'married',  label: 'CANDIDATE_EDIT_REQUEST.marital_married'  },
+    { value: 'divorced', label: 'CANDIDATE_EDIT_REQUEST.marital_divorced' },
+    { value: 'widowed',  label: 'CANDIDATE_EDIT_REQUEST.marital_widowed'  },
   ];
   readonly employmentStatusOptions = EMPLOYMENT_STATUS_OPTIONS;
   readonly visaStatusOptions       = VISA_STATUS_OPTIONS;
@@ -1410,6 +1411,16 @@ export class EditRequestComponent implements OnInit {
 
   get safePreviewUrl(): SafeResourceUrl {
     return this.sanitizer.bypassSecurityTrustResourceUrl(this.previewUrl);
+  }
+
+  private languageService = inject(LanguageService);
+
+  monthLabel(monthNum: number): string {
+    try {
+      return formatDate(new Date(2000, monthNum - 1, 1), 'MMM', this.languageService.activeLocale());
+    } catch {
+      return formatDate(new Date(2000, monthNum - 1, 1), 'MMM', 'en-US');
+    }
   }
 
   constructor(

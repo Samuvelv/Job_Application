@@ -1,6 +1,6 @@
 // src/app/features/candidate/dashboard/candidate-dashboard.component.ts
-import { Component, signal, OnInit, computed } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { Component, signal, OnInit, computed, inject } from '@angular/core';
+import { CommonModule, formatDate } from '@angular/common';
 import { Router, RouterLink } from '@angular/router';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { forkJoin, of } from 'rxjs';
@@ -9,6 +9,7 @@ import { AuthService } from '../../../core/services/auth.service';
 import { StatsService, CandidateStats } from '../../../core/services/stats.service';
 import { CandidateService } from '../../../core/services/candidate.service';
 import { Candidate } from '../../../core/models/candidate.model';
+import { LanguageService } from '../../../core/services/language.service';
 
 interface CompletionSection {
   label: string;
@@ -16,7 +17,6 @@ interface CompletionSection {
   icon: string;
   done: boolean;
   weight: number;
-  translatedLabel?: string;  // computed translated label
 }
 
 @Component({
@@ -540,7 +540,7 @@ interface CompletionSection {
                     <i class="bi" [class.bi-check-lg]="sec.done" [class.bi-dash]="!sec.done"></i>
                   </div>
                   <div class="cd-section__info">
-                    <div class="cd-section__label">{{ sec.translatedLabel || (sec.labelKey | translate) }}</div>
+                    <div class="cd-section__label">{{ sec.labelKey | translate }}</div>
                     <div class="cd-section__sub">{{ sec.done ? ('CANDIDATE_DASHBOARD.complete' | translate) : ('CANDIDATE_DASHBOARD.incomplete' | translate) }}</div>
                   </div>
                   <span class="cd-section__weight">{{ sec.weight }}%</span>
@@ -696,12 +696,10 @@ export class CandidateDashboardComponent implements OnInit {
          weight: 5,
        },
      ];
-     // Translate each section's label
-     return sections.map(sec => ({
-       ...sec,
-       translatedLabel: this.translate.instant(sec.labelKey)
-     }));
+     return sections;
    });
+
+  private languageService = inject(LanguageService);
 
   constructor(
     private auth: AuthService,
@@ -741,6 +739,10 @@ export class CandidateDashboardComponent implements OnInit {
   }
 
   today(): string {
-    return new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' });
+    try {
+      return formatDate(new Date(), 'EEEE, MMMM d', this.languageService.activeLocale());
+    } catch {
+      return formatDate(new Date(), 'EEEE, MMMM d', 'en-US');
+    }
   }
 }

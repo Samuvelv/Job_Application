@@ -1,13 +1,14 @@
 // src/app/features/candidate/volunteers/volunteer-browse.component.ts
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule }      from '@angular/common';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { RouterLink }        from '@angular/router';
-import { catchError, of }    from 'rxjs';
+import { catchError, of, Subject, takeUntil } from 'rxjs';
 import { VolunteerService }  from '../../../core/services/volunteer.service';
 import { Volunteer }         from '../../../core/models/volunteer.model';
 import { PageHeaderComponent }  from '../../../shared/components/page-header/page-header.component';
 import { EmptyStateComponent }  from '../../../shared/components/empty-state/empty-state.component';
+import { BulkTranslationService } from '../../../core/services/bulk-translation.service';
 
 @Component({
   selector: 'app-volunteer-browse',
@@ -62,6 +63,12 @@ import { EmptyStateComponent }  from '../../../shared/components/empty-state/emp
       }
 
     } @else {
+      @if (cardsTranslating) {
+        <div class="d-flex align-items-center gap-2 mb-3" style="font-size:.8rem;color:var(--th-text-muted)">
+          <span class="spinner-border spinner-border-sm"></span>
+          {{ 'COMMON.translating' | translate }}…
+        </div>
+      }
       <!-- Volunteer cards grid -->
       <div class="vb-grid">
         @for (v of volunteers; track v.id) {
@@ -77,13 +84,13 @@ import { EmptyStateComponent }  from '../../../shared/components/empty-state/emp
                 }
                 <div>
                   <div class="fw-semibold text-dark">{{ v.name }}</div>
-                  @if (v.role) { <div class="text-muted small">{{ v.role }}</div> }
+                  @if (v.role) { <div class="text-muted small">{{ translatedMap.get(v.id)?.['role'] || v.role }}</div> }
                   <span class="badge mt-1"
                     [class.bg-success]="v.availability === 'Active'"
                     [class.bg-warning]="v.availability !== 'Active'"
                     [class.text-dark]="v.availability !== 'Active'"
                     style="font-size:10px;">
-                    {{ v.availability ?? 'Active' }}
+                    {{ (v.availability ?? 'Active') === 'Active' ? ('VOLUNTEERS.active' | translate) : ('VOLUNTEER_PROFILE.unavailable' | translate) }}
                   </span>
                 </div>
               </div>
@@ -92,13 +99,13 @@ import { EmptyStateComponent }  from '../../../shared/components/empty-state/emp
               @if (v.nationality || v.country_placed) {
                 <div class="vb-journey mb-3">
                   @if (v.nationality) {
-                    <span class="vb-journey__tag">{{ v.nationality }}</span>
+                    <span class="vb-journey__tag">{{ translatedMap.get(v.id)?.['nationality'] || v.nationality }}</span>
                     @if (v.country_placed) {
                       <i class="bi bi-arrow-right text-muted mx-1" style="font-size:11px;"></i>
                     }
                   }
                   @if (v.country_placed) {
-                    <span class="vb-journey__tag vb-journey__tag--placed">{{ v.country_placed }}</span>
+                    <span class="vb-journey__tag vb-journey__tag--placed">{{ translatedMap.get(v.id)?.['country_placed'] || v.country_placed }}</span>
                   }
                 </div>
               }
@@ -106,9 +113,9 @@ import { EmptyStateComponent }  from '../../../shared/components/empty-state/emp
               <!-- Languages -->
               @if (v.languages?.length) {
                 <div class="d-flex flex-wrap gap-1 mb-3">
-                  @for (lang of (v.languages ?? []).slice(0,3); track lang) {
+                  @for (lang of (v.languages ?? []).slice(0,3); track lang; let $index = $index) {
                     <span class="badge rounded-pill bg-primary-subtle text-primary-emphasis" style="font-size:10px;">
-                      {{ lang }}
+                      {{ translatedMap.get(v.id)?.['lang_' + $index] || lang }}
                     </span>
                   }
                   @if ((v.languages?.length ?? 0) > 3) {
@@ -191,16 +198,41 @@ import { EmptyStateComponent }  from '../../../shared/components/empty-state/emp
     }
   `],
 })
-export class VolunteerBrowseComponent implements OnInit {
+export class VolunteerBrowseComponent implements OnInit, OnDestroy {
   volunteers: Volunteer[] = [];
   pagination = { page: 1, limit: 20, total: 0, pages: 0 };
   loading    = false;
   searchTerm = '';
   private searchTimer: any;
 
-  constructor(private volunteerSvc: VolunteerService, private translate: TranslateService) {}
+  /** AI-translated preview fields (role, nationality, country_placed, lang_{i}) per volunteer ID. */
+  translatedMap = new Map<string, Record<string, string>>();
+  cardsTranslating = false;
+  private destroy$ = new Subject<void>();
+  private translateRequestId = 0;
 
-  ngOnInit(): void { this.load(); }
+  constructor(
+    private volunteerSvc: VolunteerService,
+    private translate: TranslateService,
+    private bulkTranslation: BulkTranslationService,
+  ) {}
+
+  ngOnInit(): void {
+    this.load();
+
+    this.translate.onLangChange
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(() => {
+        this.bulkTranslation.clearCache();
+        this.translatedMap = new Map();
+        this.translateCards();
+      });
+  }
+
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
+  }
 
   load(): void {
     this.loading = true;
@@ -210,8 +242,53 @@ export class VolunteerBrowseComponent implements OnInit {
       limit:  this.pagination.limit,
     }).pipe(catchError(() => of(null))).subscribe((res) => {
       this.loading = false;
-      if (res) { this.volunteers = res.data; this.pagination = res.pagination; }
+      if (res) {
+        this.volunteers = res.data;
+        this.pagination = res.pagination;
+        this.translatedMap = new Map();
+        this.translateCards();
+      }
     });
+  }
+
+  /** Translate role, nationality, country_placed, and spoken languages for every
+   *  volunteer on the current page, in a single combined /translate call. */
+  private async translateCards(): Promise<void> {
+    const myRequestId = ++this.translateRequestId;
+
+    const lang = this.translate.currentLang || 'en';
+    if (lang === 'en' || this.volunteers.length === 0) return;
+
+    const allFields: Record<string, string> = {};
+    for (const v of this.volunteers) {
+      if (v.role)           allFields[`${v.id}__role`] = v.role;
+      if (v.nationality)     allFields[`${v.id}__nationality`] = v.nationality;
+      if (v.country_placed)  allFields[`${v.id}__country_placed`] = v.country_placed;
+      v.languages?.slice(0, 3).forEach((l, i) => { if (l) allFields[`${v.id}__lang_${i}`] = l; });
+    }
+
+    if (Object.keys(allFields).length === 0) return;
+
+    this.cardsTranslating = true;
+    try {
+      const translated = await this.bulkTranslation.translateSection(allFields, lang);
+      if (myRequestId !== this.translateRequestId) return;
+
+      const map = new Map<string, Record<string, string>>();
+      for (const [key, value] of Object.entries(translated)) {
+        const idx = key.lastIndexOf('__');
+        if (idx === -1) continue;
+        const volunteerId = key.slice(0, idx);
+        const field = key.slice(idx + 2);
+        if (!map.has(volunteerId)) map.set(volunteerId, {});
+        map.get(volunteerId)![field] = value;
+      }
+      this.translatedMap = map;
+    } catch (error) {
+      console.error('Error translating volunteer card previews:', error);
+    } finally {
+      if (myRequestId === this.translateRequestId) this.cardsTranslating = false;
+    }
   }
 
   onSearch(e: Event): void {
