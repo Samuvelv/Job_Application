@@ -68,7 +68,7 @@ import { PageHeaderComponent } from '../../../shared/components/page-header/page
       }
 
       <!-- Profile (read-only) -->
-      <app-candidate-profile [candidate]="candidate" />
+      <app-candidate-profile [candidate]="candidate" [showActivityTab]="false" />
 
     }
 
