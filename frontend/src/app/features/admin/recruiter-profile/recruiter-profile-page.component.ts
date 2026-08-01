@@ -8,6 +8,7 @@ import { Subject } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
 import { RecruiterService } from '../../../core/services/recruiter.service';
 import { BulkTranslationService } from '../../../core/services/bulk-translation.service';
+import { MasterDataService, MasterCatalogCategory } from '../../../core/services/master-data.service';
 import { LanguageService } from '../../../core/services/language.service';
 import { Recruiter, ShortlistEntry } from '../../../core/models/recruiter.model';
 import { ToastService } from '../../../core/services/toast.service';
@@ -625,6 +626,7 @@ export class RecruiterProfilePageComponent implements OnInit, OnDestroy {
 
   // Translation state
   private bulkTranslation = inject(BulkTranslationService);
+  private master = inject(MasterDataService);
   private languageService = inject(LanguageService);
   private destroy$ = new Subject<void>();
   currentLanguage = signal<string>('en');
@@ -671,19 +673,34 @@ export class RecruiterProfilePageComponent implements OnInit, OnDestroy {
 
     this.isTranslatingShortlist.set(true);
     try {
+      const lang = this.currentLanguage();
+
+      // job_title/occupation/industry are master-data catalog values with
+      // pre-generated static translations — resolve all entries in one shot
+      // without an API call, falling back live only for genuinely missing
+      // catalog rows (and batched, not one request per shortlist entry).
+      await this.master.loadAll();
+      const catalogFields: Record<string, { category: MasterCatalogCategory; value: string }> = {};
+      this.shortlist.forEach((entry, i) => {
+        if (entry.job_title)  catalogFields[`${i}__job_title`] = { category: 'jobTitle', value: entry.job_title };
+        if (entry.occupation) catalogFields[`${i}__occupation`] = { category: 'occupation', value: entry.occupation };
+        if (entry.industry)   catalogFields[`${i}__industry`] = { category: 'industry', value: entry.industry };
+      });
+
+      const { resolved, missing } = await this.master.resolveCatalogValues(catalogFields, lang);
+      const combined: Record<string, string> = { ...resolved };
+      if (Object.keys(missing).length > 0) {
+        Object.assign(combined, await this.bulkTranslation.translateSection(missing, lang));
+      }
+
       const translated: Record<number, Record<string, string>> = {};
-
-      // Translate each candidate's fields
-      for (let i = 0; i < this.shortlist.length; i++) {
-        const entry = this.shortlist[i];
-        const fields: Record<string, string | null | undefined> = {
-          job_title: entry.job_title,
-          occupation: entry.occupation,
-          industry: entry.industry,
-        };
-
-        const result = await this.bulkTranslation.translateSection(fields, this.currentLanguage());
-        translated[i] = result;
+      for (const [key, value] of Object.entries(combined)) {
+        const idx = key.lastIndexOf('__');
+        if (idx === -1) continue;
+        const i = Number(key.slice(0, idx));
+        const field = key.slice(idx + 2);
+        if (!translated[i]) translated[i] = {};
+        translated[i][field] = value;
       }
 
       this.translatedShortlist.set(translated);

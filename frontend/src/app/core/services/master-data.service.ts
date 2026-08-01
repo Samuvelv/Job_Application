@@ -207,4 +207,59 @@ export class MasterDataService {
     const jt = this.jobTitles().find((j) => j.id === jobTitleId);
     return jt?.occupation_id ?? null;
   }
+
+  // ── Static-first resolution for candidate field values ──────────────────────
+  // A candidate's job_title/occupation/industry/current_country/nationality/
+  // hobbies/degree/field_of_study/languages are picked from these same fixed
+  // catalogs, so their translations already exist in the static
+  // master-data-i18n files. Consumers (candidate-profile, edit-request, etc.)
+  // should resolve these values here instead of sending them to the live
+  // /translate endpoint, which should only ever see genuine free text (bio,
+  // company names, descriptions, cities, ...).
+
+  private findCatalogId(category: MasterCatalogCategory, value: string): number | null {
+    switch (category) {
+      case 'country':      return this.countries().find(c => c.name === value)?.id ?? null;
+      case 'jobTitle':      return this.jobTitles().find(j => j.title === value)?.id ?? null;
+      case 'occupation':    return this.occupations().find(o => o.name === value)?.id ?? null;
+      case 'industry':      return this.industries().find(i => i.name === value)?.id ?? null;
+      case 'language':      return this.languages().find(l => l.name === value)?.id ?? null;
+      case 'degree':        return this.degrees().find(d => d.name === value)?.id ?? null;
+      case 'fieldOfStudy':  return this.fieldsOfStudy().find(f => f.name === value)?.id ?? null;
+      case 'noticePeriod':  return this.noticePeriods().find(n => n.label === value)?.id ?? null;
+      case 'hobby':         return this.hobbies().find(h => h.name === value)?.id ?? null;
+    }
+  }
+
+  /**
+   * Resolve a batch of candidate field values against the static
+   * master-data-i18n file for `lang` — no live API call. `fields` maps an
+   * arbitrary caller-defined key to the catalog category + English value.
+   * Returns `resolved` (found in the static file) and `missing` (value isn't
+   * a recognized catalog entry, or is a catalog row added after the static
+   * file was generated) so the caller can still fall back to
+   * BulkTranslationService.translateSection() for just the `missing` ones.
+   */
+  async resolveCatalogValues(
+    fields: Record<string, { category: MasterCatalogCategory; value: string }>,
+    lang: string,
+  ): Promise<{ resolved: Record<string, string>; missing: Record<string, string> }> {
+    const resolved: Record<string, string> = {};
+    const missing: Record<string, string> = {};
+    if (lang === 'en') return { resolved, missing };
+
+    const staticData = await this.loadStaticCatalogFile(lang);
+    for (const [key, { category, value }] of Object.entries(fields)) {
+      if (!value) continue;
+      const id = this.findCatalogId(category, value);
+      const translated = id != null ? staticData[`${category}_${id}`] : undefined;
+      if (translated) resolved[key] = translated;
+      else missing[key] = value;
+    }
+    return { resolved, missing };
+  }
 }
+
+export type MasterCatalogCategory =
+  | 'country' | 'jobTitle' | 'occupation' | 'industry' | 'language'
+  | 'degree' | 'fieldOfStudy' | 'noticePeriod' | 'hobby';

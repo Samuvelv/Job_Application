@@ -14,7 +14,7 @@ import { EditRequestService } from '../../../core/services/edit-request.service'
 import { Candidate } from '../../../core/models/candidate.model';
 import { EditRequest } from '../../../core/models/edit-request.model';
 import { ToastService } from '../../../core/services/toast.service';
-import { MasterDataService } from '../../../core/services/master-data.service';
+import { MasterDataService, MasterCatalogCategory } from '../../../core/services/master-data.service';
 import { SearchableSelectComponent, SelectOption } from '../../../shared/components/searchable-select/searchable-select.component';
 import { ChipMultiSelectComponent, ChipOption } from '../../../shared/components/chip-multi-select/chip-multi-select.component';
 import { EMPLOYMENT_STATUS_OPTIONS, VISA_STATUS_OPTIONS, REASON_FOR_LEAVING_OPTIONS } from '../../../core/constants/candidate-options';
@@ -1507,16 +1507,33 @@ export class EditRequestComponent implements OnInit, OnDestroy {
     const c = this.candidate;
     if (lang === 'en' || !c || !this.form) return;
 
-    const fields: Record<string, string> = {};
+    // job_title/occupation/industry/current_country/nationality/hobbies/
+    // degree/field_of_study are picked from the fixed master-data catalogs,
+    // so their translations already exist in the static master-data-i18n
+    // files — resolve those first and only send genuine free text (bio,
+    // current_city, company names, descriptions, ...) plus any catalog rows
+    // missing from the static file to the live /translate API.
+    await this.master.loadAll();
+
+    const catalogFields: Record<string, { category: MasterCatalogCategory; value: string }> = {};
+    if (c.job_title) catalogFields['job_title'] = { category: 'jobTitle', value: c.job_title };
+    if (c.occupation) catalogFields['occupation'] = { category: 'occupation', value: c.occupation };
+    if (c.industry) catalogFields['industry'] = { category: 'industry', value: c.industry };
+    if (c.current_country) catalogFields['current_country'] = { category: 'country', value: c.current_country };
+    if (c.nationality) catalogFields['nationality'] = { category: 'country', value: c.nationality };
+    c.hobbies?.forEach((h, i) => { if (h) catalogFields[`hobby_${i}`] = { category: 'hobby', value: h }; });
+    c.education?.forEach((edu, i) => {
+      if (edu.degree) catalogFields[`edu_${i}_degree`] = { category: 'degree', value: edu.degree };
+      if (edu.field_of_study) catalogFields[`edu_${i}_field`] = { category: 'fieldOfStudy', value: edu.field_of_study };
+    });
+
+    const { resolved, missing } = await this.master.resolveCatalogValues(catalogFields, lang);
+    if (myRequestId !== this.translateRequestId) return;
+
+    const fields: Record<string, string> = { ...missing };
     if (c.bio) fields['bio'] = c.bio;
-    if (c.job_title) fields['job_title'] = c.job_title;
-    if (c.occupation) fields['occupation'] = c.occupation;
-    if (c.industry) fields['industry'] = c.industry;
-    if (c.current_country) fields['current_country'] = c.current_country;
     if (c.current_city) fields['current_city'] = c.current_city;
-    if (c.nationality) fields['nationality'] = c.nationality;
     c.target_locations?.forEach((loc, i) => { if (loc) fields[`target_${i}`] = loc; });
-    c.hobbies?.forEach((h, i) => { if (h) fields[`hobby_${i}`] = h; });
     c.experience?.forEach((exp, i) => {
       if (exp.job_title) fields[`exp_${i}_job_title`] = exp.job_title;
       if (exp.company_name) fields[`exp_${i}_company_name`] = exp.company_name;
@@ -1524,16 +1541,17 @@ export class EditRequestComponent implements OnInit, OnDestroy {
     });
     c.education?.forEach((edu, i) => {
       if (edu.institution) fields[`edu_${i}_institution`] = edu.institution;
-      if (edu.degree) fields[`edu_${i}_degree`] = edu.degree;
-      if (edu.field_of_study) fields[`edu_${i}_field`] = edu.field_of_study;
       if (edu.location) fields[`edu_${i}_location`] = edu.location;
     });
 
-    if (Object.keys(fields).length === 0) return;
+    if (Object.keys(resolved).length === 0 && Object.keys(fields).length === 0) return;
 
     this.previewsTranslating = true;
     try {
-      const translated = await this.bulkTranslation.translateSection(fields, lang);
+      const translated: Record<string, string> = { ...resolved };
+      if (Object.keys(fields).length > 0) {
+        Object.assign(translated, await this.bulkTranslation.translateSection(fields, lang));
+      }
       if (myRequestId !== this.translateRequestId) return;
 
       const topPatch: Record<string, string> = {};

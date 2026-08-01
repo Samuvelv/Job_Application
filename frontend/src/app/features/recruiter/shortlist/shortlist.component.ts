@@ -12,6 +12,7 @@ import { ToastService } from '../../../core/services/toast.service';
 import { PageHeaderComponent } from '../../../shared/components/page-header/page-header.component';
 import { EmptyStateComponent } from '../../../shared/components/empty-state/empty-state.component';
 import { BulkTranslationService } from '../../../core/services/bulk-translation.service';
+import { MasterDataService, MasterCatalogCategory } from '../../../core/services/master-data.service';
 
 @Component({
   selector: 'app-shortlist',
@@ -273,6 +274,7 @@ export class ShortlistComponent implements OnInit, OnDestroy {
     private fb: FormBuilder,
     private translateService: TranslateService,
     private bulkTranslation: BulkTranslationService,
+    private master: MasterDataService,
   ) {
     this.filterForm = this.fb.group({
       search:          [''],
@@ -311,22 +313,36 @@ export class ShortlistComponent implements OnInit, OnDestroy {
     const lang = this.translateService.currentLang || 'en';
     if (lang === 'en' || this.allEntries.length === 0) return;
 
-    const allFields: Record<string, string> = {};
+    // job_title/occupation/industry/current_country are master-data catalog
+    // values with pre-generated static translations — resolve those without
+    // an API call, and only send genuine free text (city, target location)
+    // plus any catalog rows missing from the static file live.
+    await this.master.loadAll();
+    const catalogFields: Record<string, { category: MasterCatalogCategory; value: string }> = {};
     for (const e of this.allEntries) {
-      if (e.job_title)       allFields[`${e.candidate_id}__job_title`] = e.job_title;
-      if (e.occupation)      allFields[`${e.candidate_id}__occupation`] = e.occupation;
-      if (e.industry)        allFields[`${e.candidate_id}__industry`] = e.industry;
-      if (e.current_city)    allFields[`${e.candidate_id}__city`] = e.current_city;
-      if (e.current_country) allFields[`${e.candidate_id}__country`] = e.current_country;
+      if (e.job_title)       catalogFields[`${e.candidate_id}__job_title`] = { category: 'jobTitle', value: e.job_title };
+      if (e.occupation)      catalogFields[`${e.candidate_id}__occupation`] = { category: 'occupation', value: e.occupation };
+      if (e.industry)        catalogFields[`${e.candidate_id}__industry`] = { category: 'industry', value: e.industry };
+      if (e.current_country) catalogFields[`${e.candidate_id}__country`] = { category: 'country', value: e.current_country };
+    }
+    const { resolved, missing } = await this.master.resolveCatalogValues(catalogFields, lang);
+    if (myRequestId !== this.translateRequestId) return;
+
+    const allFields: Record<string, string> = { ...missing };
+    for (const e of this.allEntries) {
+      if (e.current_city) allFields[`${e.candidate_id}__city`] = e.current_city;
       const target = e.target_locations?.[0];
       if (target) allFields[`${e.candidate_id}__target`] = target;
     }
 
-    if (Object.keys(allFields).length === 0) return;
+    if (Object.keys(resolved).length === 0 && Object.keys(allFields).length === 0) return;
 
     this.cardsTranslating = true;
     try {
-      const translated = await this.bulkTranslation.translateSection(allFields, lang);
+      const translated: Record<string, string> = { ...resolved };
+      if (Object.keys(allFields).length > 0) {
+        Object.assign(translated, await this.bulkTranslation.translateSection(allFields, lang));
+      }
       if (myRequestId !== this.translateRequestId) return; // a newer request superseded this one
 
       const map = new Map<string, Record<string, string>>();

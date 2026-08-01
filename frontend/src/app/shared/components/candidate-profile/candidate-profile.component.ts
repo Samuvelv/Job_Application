@@ -6,6 +6,7 @@ import { LocaleDatePipe } from '../../../core/pipes/locale-date.pipe';
 import { Candidate } from '../../../core/models/candidate.model';
 import { CandidateService, CandidateActivity } from '../../../core/services/candidate.service';
 import { BulkTranslationService } from '../../../core/services/bulk-translation.service';
+import { MasterDataService, MasterCatalogCategory } from '../../../core/services/master-data.service';
 import { LanguageService } from '../../../core/services/language.service';
 import { Subject } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
@@ -419,10 +420,6 @@ type Tab = 'overview' | 'experience' | 'education' | 'documents' | 'activity';
                    } @else if (translatedBio() && currentLanguage() !== 'en') {
                      <p style="font-size:.875rem;line-height:1.75;color:var(--th-text-secondary);margin:0">
                        {{ translatedBio() }}
-                     </p>
-                     <p style="font-size:.8rem;color:var(--th-muted);margin:0.75rem 0 0 0;font-style:italic;padding:.5rem;
-                       background:var(--th-surface-raised);border-radius:var(--th-radius);border-left:2px solid var(--th-primary)">
-                       {{ 'CANDIDATE_PROFILE.original_prefix' | translate }} {{ candidate.bio }}
                      </p>
                    } @else {
                      <p style="font-size:.875rem;line-height:1.75;color:var(--th-text-secondary);margin:0">
@@ -1014,6 +1011,7 @@ export class CandidateProfileComponent implements OnInit, OnDestroy {
 
   private candidateSvc = inject(CandidateService);
   private bulkTranslation = inject(BulkTranslationService);
+  private master = inject(MasterDataService);
   private languageService = inject(LanguageService);
   private translate = inject(TranslateService);
   private destroy$ = new Subject<void>();
@@ -1159,23 +1157,41 @@ export class CandidateProfileComponent implements OnInit, OnDestroy {
     if (hasHobbies) this.isTranslatingHobbies.set(true);
 
     try {
-      const allFields: Record<string, string> = {};
+      // Fields drawn from a fixed master-data catalog (job title, occupation,
+      // industry, degree, field of study, hobbies, country/nationality,
+      // spoken languages) already have their translations pre-generated in
+      // the static master-data-i18n files — resolve those first so only
+      // genuine free text (bio, company names, descriptions, ...) and
+      // catalog rows added after the static file was generated reach the
+      // live /translate API.
+      await this.master.loadAll();
 
-      if (c.job_title) allFields['prof_job_title'] = c.job_title;
-      if (c.industry) allFields['prof_industry'] = c.industry;
-      if (c.occupation) allFields['prof_occupation'] = c.occupation;
+      const catalogFields: Record<string, { category: MasterCatalogCategory; value: string }> = {};
+      if (c.job_title) catalogFields['prof_job_title'] = { category: 'jobTitle', value: c.job_title };
+      if (c.industry) catalogFields['prof_industry'] = { category: 'industry', value: c.industry };
+      if (c.occupation) catalogFields['prof_occupation'] = { category: 'occupation', value: c.occupation };
+      if (c.current_country) catalogFields['pf_country'] = { category: 'country', value: c.current_country };
+      if (c.nationality) catalogFields['pf_nationality'] = { category: 'country', value: c.nationality };
+      c.hobbies?.forEach((hobby, i) => { if (hobby) catalogFields[`hobby_${i}`] = { category: 'hobby', value: hobby }; });
+      c.languages?.forEach((lang, i) => { if (lang.language) catalogFields[`lang_${i}`] = { category: 'language', value: lang.language }; });
+      c.education?.forEach((edu, i) => {
+        if (edu.degree) catalogFields[`edu_${i}_degree`] = { category: 'degree', value: edu.degree };
+        if (edu.field_of_study) catalogFields[`edu_${i}_field`] = { category: 'fieldOfStudy', value: edu.field_of_study };
+      });
+
+      const { resolved, missing } = await this.master.resolveCatalogValues(catalogFields, requestedLang);
+      if (this.currentLanguage() !== requestedLang) return;
+
+      const allFields: Record<string, string> = { ...missing };
+
       if (c.current_city) allFields['pf_city'] = c.current_city;
-      if (c.current_country) allFields['pf_country'] = c.current_country;
-      if (c.nationality) allFields['pf_nationality'] = c.nationality;
       if (c.gender) allFields['pf_gender'] = c.gender;
       if (c.marital_status) allFields['pf_marital_status'] = c.marital_status;
       if (c.employment_status) allFields['pf_employment_status'] = c.employment_status;
       if (c.visa_status) allFields['pf_visa_status'] = c.visa_status;
       if (c.bio) allFields['bio'] = c.bio;
 
-      c.hobbies?.forEach((hobby, i) => { if (hobby) allFields[`hobby_${i}`] = hobby; });
       c.target_locations?.forEach((loc, i) => { if (loc) allFields[`target_${i}`] = loc; });
-      c.languages?.forEach((lang, i) => { if (lang.language) allFields[`lang_${i}`] = lang.language; });
       c.skills?.forEach((skill, i) => { if (skill.skill_name) allFields[`skill_${i}`] = skill.skill_name; });
       c.experience?.forEach((exp, i) => {
         if (exp.job_title) allFields[`exp_${i}_job_title`] = exp.job_title;
@@ -1185,8 +1201,6 @@ export class CandidateProfileComponent implements OnInit, OnDestroy {
         if (exp.reason_for_leaving) allFields[`exp_${i}_reason`] = exp.reason_for_leaving;
       });
       c.education?.forEach((edu, i) => {
-        if (edu.degree) allFields[`edu_${i}_degree`] = edu.degree;
-        if (edu.field_of_study) allFields[`edu_${i}_field`] = edu.field_of_study;
         if (edu.institution) allFields[`edu_${i}_institution`] = edu.institution;
         if (edu.location) allFields[`edu_${i}_location`] = edu.location;
       });
@@ -1195,10 +1209,12 @@ export class CandidateProfileComponent implements OnInit, OnDestroy {
         if (cert.issuer) allFields[`cert_${i}_issuer`] = cert.issuer;
       });
 
-      if (Object.keys(allFields).length === 0) return;
-
-      const translated = await this.bulkTranslation.translateSection(allFields, requestedLang);
+      const translated: Record<string, string> = { ...resolved };
+      if (Object.keys(allFields).length > 0) {
+        Object.assign(translated, await this.bulkTranslation.translateSection(allFields, requestedLang));
+      }
       if (this.currentLanguage() !== requestedLang) return;
+      if (Object.keys(translated).length === 0) return;
 
       const professional: Record<string, string> = {};
       const profile: Record<string, string> = {};
