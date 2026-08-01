@@ -1273,7 +1273,8 @@
     "lang_level_c1": "C1 — Napredni",
     "lang_level_c2": "C2 — Usposobljen",
     "lang_level_native": "Materni jezik",
-    "any_location": "🌍 Katero koli lokacijo"
+    "any_location": "🌍 Katero koli lokacijo",
+    "translated_preview_prefix": "Prevedeno:"
   },
   "RECRUITER_DASHBOARD": {
     "portal_label": "Rekruterjev portal",

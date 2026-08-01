@@ -1273,7 +1273,8 @@
     "lang_level_c1": "C1 — 高级",
     "lang_level_c2": "C2 — 精通",
     "lang_level_native": "母语",
-    "any_location": "🌍 任何地点"
+    "any_location": "🌍 任何地点",
+    "translated_preview_prefix": "翻译："
   },
   "RECRUITER_DASHBOARD": {
     "portal_label": "招聘人员门户",

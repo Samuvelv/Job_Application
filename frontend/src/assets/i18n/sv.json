@@ -1273,7 +1273,8 @@
     "lang_level_c1": "C1 — Avancerad",
     "lang_level_c2": "C2 — Kunnig",
     "lang_level_native": "Modersmål",
-    "any_location": "🌍 Valfri plats"
+    "any_location": "🌍 Valfri plats",
+    "translated_preview_prefix": "Översatt:"
   },
   "RECRUITER_DASHBOARD": {
     "portal_label": "Rekryterarportal",

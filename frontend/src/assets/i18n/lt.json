@@ -1273,7 +1273,8 @@
     "lang_level_c1": "C1 — Pažengęs",
     "lang_level_c2": "C2 — Įgudęs",
     "lang_level_native": "Gimtoji",
-    "any_location": "🌍 Bet kur"
+    "any_location": "🌍 Bet kur",
+    "translated_preview_prefix": "Išversta:"
   },
   "RECRUITER_DASHBOARD": {
     "portal_label": "Personalinės paieškos portalas",

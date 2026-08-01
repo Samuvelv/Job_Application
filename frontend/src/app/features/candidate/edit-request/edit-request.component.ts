@@ -1,5 +1,5 @@
 // src/app/features/candidate/edit-request/edit-request.component.ts
-import { Component, OnInit, computed, inject } from '@angular/core';
+import { Component, OnInit, OnDestroy, computed, inject } from '@angular/core';
 import { CommonModule, formatDate } from '@angular/common';
 import {
   ReactiveFormsModule, FormBuilder, FormGroup,
@@ -7,6 +7,7 @@ import {
 } from '@angular/forms';
 import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
+import { Subject, takeUntil } from 'rxjs';
 import { LocaleDatePipe } from '../../../core/pipes/locale-date.pipe';
 import { CandidateService } from '../../../core/services/candidate.service';
 import { EditRequestService } from '../../../core/services/edit-request.service';
@@ -19,6 +20,7 @@ import { ChipMultiSelectComponent, ChipOption } from '../../../shared/components
 import { EMPLOYMENT_STATUS_OPTIONS, VISA_STATUS_OPTIONS, REASON_FOR_LEAVING_OPTIONS } from '../../../core/constants/candidate-options';
 import { PageHeaderComponent } from '../../../shared/components/page-header/page-header.component';
 import { LanguageService } from '../../../core/services/language.service';
+import { BulkTranslationService } from '../../../core/services/bulk-translation.service';
 
 // ── Validators ─────────────────────────────────────────────────────────────
 
@@ -433,6 +435,13 @@ function makePostalCodeGroupValidator(countryCtrl: string, postalCtrl: string): 
 
       <!-- ══ Profile fields form ════════════════════════════════════════════ -->
       <form [formGroup]="form" (ngSubmit)="submit()">
+
+        @if (previewsTranslating) {
+          <div class="d-flex align-items-center gap-2 mb-3" style="font-size:.8rem;color:var(--th-text-muted)">
+            <span class="spinner-border spinner-border-sm"></span>
+            {{ 'COMMON.translating' | translate }}…
+          </div>
+        }
 
         <!-- ── Personal ───────────────────────────────────────────────────── -->
         <div class="form-card mb-4">
@@ -1297,7 +1306,7 @@ function makePostalCodeGroupValidator(countryCtrl: string, postalCtrl: string): 
     }
   `,
 })
-export class EditRequestComponent implements OnInit {
+export class EditRequestComponent implements OnInit, OnDestroy {
   candidate:       Candidate | null = null;
   loadingProfile   = true;
   form:            FormGroup | null = null;
@@ -1308,6 +1317,15 @@ export class EditRequestComponent implements OnInit {
   staged:         Record<string, string | null> = {};
   stagedRelative: Record<string, string> = {};
   mediaLoading:   Record<string, boolean> = {};
+
+  // ── Field-value translation ──────────────────────────────────────────────
+  // Translates the candidate's loaded text directly into the form controls
+  // when the UI language isn't English, and restores the original values
+  // when switching back to English.
+  private bulkTranslation = inject(BulkTranslationService);
+  private destroy$ = new Subject<void>();
+  private translateRequestId = 0;
+  previewsTranslating = false;
 
   // Certificate direct-upload state (live API, mirrors admin candidate-edit pattern)
   certDeleting: number | null = null;
@@ -1326,43 +1344,50 @@ export class EditRequestComponent implements OnInit {
 
   // ── Computed options ───────────────────────────────────────────────────────
 
+  // Options keep `value` as the real catalog entry (name/id) so picking a new
+  // item from the list always submits a valid value — only `label` (what the
+  // user sees) is translated, via MasterDataService.translateLabel().
   readonly countryOptions = computed<SelectOption[]>(() =>
-    this.master.countries().map(c => ({ value: c.name, label: `${c.flag_emoji} ${c.name}` })));
+    this.master.countries().map(c => ({ value: c.name, label: `${c.flag_emoji} ${this.master.translateLabel('country', c.id, c.name)}` })));
 
   readonly dialCodeOptions = computed<SelectOption[]>(() =>
-    this.master.countries().map(c => ({ value: c.dial_code, label: `${c.flag_emoji} ${c.dial_code}`, sublabel: c.name })));
+    this.master.countries().map(c => ({ value: c.dial_code, label: `${c.flag_emoji} ${c.dial_code}`, sublabel: this.master.translateLabel('country', c.id, c.name) })));
 
   readonly cityOptions = computed<SelectOption[]>(() =>
     this.master.cities().map(c => ({ value: c.name, label: c.name })));
 
   readonly jobTitleOptions = computed<SelectOption[]>(() =>
-    this.master.jobTitles().map(j => ({ value: j.title, label: j.title, sublabel: j.occupation_name })));
+    this.master.jobTitles().map(j => ({
+      value: j.title,
+      label: this.master.translateLabel('jobTitle', j.id, j.title),
+      sublabel: this.master.translateLabel('occupation', j.occupation_id, j.occupation_name),
+    })));
 
   readonly occupationOptions = computed<SelectOption[]>(() =>
-    this.master.occupations().map(o => ({ value: o.name, label: o.name })));
+    this.master.occupations().map(o => ({ value: o.name, label: this.master.translateLabel('occupation', o.id, o.name) })));
 
   readonly industryOptions = computed<SelectOption[]>(() =>
-    this.master.industries().map(i => ({ value: i.name, label: i.name })));
+    this.master.industries().map(i => ({ value: i.name, label: this.master.translateLabel('industry', i.id, i.name) })));
 
   readonly languageOptions = computed<SelectOption[]>(() =>
-    this.master.languages().map(l => ({ value: l.name, label: l.name })));
+    this.master.languages().map(l => ({ value: l.name, label: this.master.translateLabel('language', l.id, l.name) })));
 
   readonly degreeOptions = computed<SelectOption[]>(() =>
-    this.master.degrees().map(d => ({ value: d.name, label: d.name })));
+    this.master.degrees().map(d => ({ value: d.name, label: this.master.translateLabel('degree', d.id, d.name) })));
 
   readonly fieldOfStudyOptions = computed<SelectOption[]>(() =>
-    this.master.fieldsOfStudy().map(f => ({ value: f.name, label: f.name })));
+    this.master.fieldsOfStudy().map(f => ({ value: f.name, label: this.master.translateLabel('fieldOfStudy', f.id, f.name) })));
 
   readonly noticePeriodOptions = computed<SelectOption[]>(() =>
-    this.master.noticePeriods().map(n => ({ value: n.id, label: n.label })));
+    this.master.noticePeriods().map(n => ({ value: n.id, label: this.master.translateLabel('noticePeriod', n.id, n.label) })));
 
   readonly targetLocationChipOptions = computed<ChipOption[]>(() => [
     { value: 'Any Location', label: 'CANDIDATE_EDIT_REQUEST.any_location' },
-    ...this.master.countries().map(c => ({ value: c.name, label: `${c.flag_emoji} ${c.name}` })),
+    ...this.master.countries().map(c => ({ value: c.name, label: `${c.flag_emoji} ${this.master.translateLabel('country', c.id, c.name)}` })),
   ]);
 
   readonly hobbyChipOptions = computed<ChipOption[]>(() =>
-    this.master.hobbies().map(h => ({ value: h.name, label: h.name })));
+    this.master.hobbies().map(h => ({ value: h.name, label: this.master.translateLabel('hobby', h.id, h.name) })));
 
   // ── Static option arrays ───────────────────────────────────────────────────
 
@@ -1443,8 +1468,152 @@ export class EditRequestComponent implements OnInit {
         this.loadingProfile = false;
         this.candidate = res.candidate;
         this.buildForm(res.candidate);
+        this.translateFieldValues();
       },
       error: () => (this.loadingProfile = false),
+    });
+
+    this.translate.onLangChange
+      .pipe(takeUntil(this.destroy$))
+      .subscribe((event) => {
+        this.bulkTranslation.clearCache();
+        if (event.lang === 'en') {
+          this.translateRequestId++; // invalidate any in-flight translation
+          this.restoreOriginalFieldValues();
+        } else {
+          this.translateFieldValues();
+        }
+      });
+  }
+
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
+  }
+
+  /**
+   * Translate the candidate's loaded (not live-edited) text fields — bio, job
+   * title, occupation, industry, location, nationality, target locations,
+   * hobbies, and each experience/education entry's fields — in one combined
+   * call, then write the results directly into the corresponding form
+   * controls so the fields display translated text. Values are patched with
+   * `emitEvent: false` so this never re-triggers cascades (e.g. country →
+   * city reload) or marks the form dirty on its own.
+   */
+  private async translateFieldValues(): Promise<void> {
+    const myRequestId = ++this.translateRequestId;
+
+    const lang = this.translate.currentLang || 'en';
+    const c = this.candidate;
+    if (lang === 'en' || !c || !this.form) return;
+
+    const fields: Record<string, string> = {};
+    if (c.bio) fields['bio'] = c.bio;
+    if (c.job_title) fields['job_title'] = c.job_title;
+    if (c.occupation) fields['occupation'] = c.occupation;
+    if (c.industry) fields['industry'] = c.industry;
+    if (c.current_country) fields['current_country'] = c.current_country;
+    if (c.current_city) fields['current_city'] = c.current_city;
+    if (c.nationality) fields['nationality'] = c.nationality;
+    c.target_locations?.forEach((loc, i) => { if (loc) fields[`target_${i}`] = loc; });
+    c.hobbies?.forEach((h, i) => { if (h) fields[`hobby_${i}`] = h; });
+    c.experience?.forEach((exp, i) => {
+      if (exp.job_title) fields[`exp_${i}_job_title`] = exp.job_title;
+      if (exp.company_name) fields[`exp_${i}_company_name`] = exp.company_name;
+      if (exp.description) fields[`exp_${i}_description`] = exp.description;
+    });
+    c.education?.forEach((edu, i) => {
+      if (edu.institution) fields[`edu_${i}_institution`] = edu.institution;
+      if (edu.degree) fields[`edu_${i}_degree`] = edu.degree;
+      if (edu.field_of_study) fields[`edu_${i}_field`] = edu.field_of_study;
+      if (edu.location) fields[`edu_${i}_location`] = edu.location;
+    });
+
+    if (Object.keys(fields).length === 0) return;
+
+    this.previewsTranslating = true;
+    try {
+      const translated = await this.bulkTranslation.translateSection(fields, lang);
+      if (myRequestId !== this.translateRequestId) return;
+
+      const topPatch: Record<string, string> = {};
+      (['bio', 'job_title', 'occupation', 'industry', 'current_country', 'current_city', 'nationality'] as const)
+        .forEach((key) => { if (translated[key]) topPatch[key] = translated[key]; });
+      if (Object.keys(topPatch).length) this.form!.patchValue(topPatch, { emitEvent: false });
+
+      if (c.target_locations?.length) {
+        const arr = c.target_locations.map((loc, i) => translated[`target_${i}`] || loc);
+        this.form!.get('target_locations')!.setValue(arr, { emitEvent: false });
+      }
+      if (c.hobbies?.length) {
+        const arr = c.hobbies.map((h, i) => translated[`hobby_${i}`] || h);
+        this.form!.get('hobbies')!.setValue(arr, { emitEvent: false });
+      }
+
+      c.experience?.forEach((exp, i) => {
+        const grp = this.experienceArray.at(i) as FormGroup | undefined;
+        if (!grp) return;
+        const patch: Record<string, string> = {};
+        if (translated[`exp_${i}_job_title`]) patch['job_title'] = translated[`exp_${i}_job_title`];
+        if (translated[`exp_${i}_company_name`]) patch['company_name'] = translated[`exp_${i}_company_name`];
+        if (translated[`exp_${i}_description`]) patch['description'] = translated[`exp_${i}_description`];
+        if (Object.keys(patch).length) grp.patchValue(patch, { emitEvent: false });
+      });
+
+      c.education?.forEach((edu, i) => {
+        const grp = this.educationArray.at(i) as FormGroup | undefined;
+        if (!grp) return;
+        const patch: Record<string, string> = {};
+        if (translated[`edu_${i}_institution`]) patch['institution'] = translated[`edu_${i}_institution`];
+        if (translated[`edu_${i}_degree`]) patch['degree'] = translated[`edu_${i}_degree`];
+        if (translated[`edu_${i}_field`]) patch['field_of_study'] = translated[`edu_${i}_field`];
+        if (translated[`edu_${i}_location`]) patch['location'] = translated[`edu_${i}_location`];
+        if (Object.keys(patch).length) grp.patchValue(patch, { emitEvent: false });
+      });
+    } catch (error) {
+      console.error('Error translating edit-request field values:', error);
+    } finally {
+      if (myRequestId === this.translateRequestId) this.previewsTranslating = false;
+    }
+  }
+
+  /** Restore every translatable field back to the candidate's original (English) values. */
+  private restoreOriginalFieldValues(): void {
+    const c = this.candidate;
+    if (!c || !this.form) return;
+
+    this.form.patchValue({
+      bio: c.bio ?? '',
+      job_title: c.job_title ?? '',
+      occupation: c.occupation ?? '',
+      industry: c.industry ?? '',
+      current_country: c.current_country ?? '',
+      current_city: c.current_city ?? '',
+      nationality: c.nationality ?? '',
+    }, { emitEvent: false });
+
+    this.form.get('target_locations')!.setValue(
+      Array.isArray(c.target_locations) ? [...c.target_locations] : [], { emitEvent: false });
+    this.form.get('hobbies')!.setValue(
+      Array.isArray(c.hobbies) ? [...c.hobbies] : [], { emitEvent: false });
+
+    c.experience?.forEach((exp, i) => {
+      const grp = this.experienceArray.at(i) as FormGroup | undefined;
+      grp?.patchValue({
+        job_title: exp.job_title ?? '',
+        company_name: exp.company_name ?? '',
+        description: exp.description ?? '',
+      }, { emitEvent: false });
+    });
+
+    c.education?.forEach((edu, i) => {
+      const grp = this.educationArray.at(i) as FormGroup | undefined;
+      grp?.patchValue({
+        institution: edu.institution ?? '',
+        degree: edu.degree ?? '',
+        field_of_study: edu.field_of_study ?? '',
+        location: edu.location ?? '',
+      }, { emitEvent: false });
     });
   }
 

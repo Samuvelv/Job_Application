@@ -1273,7 +1273,8 @@
     "lang_level_c1": "C1 — Avancéiert",
     "lang_level_c2": "C2 — Kompetent",
     "lang_level_native": "Nationalitéit",
-    "any_location": "🌍 All Plazen"
+    "any_location": "🌍 All Plazen",
+    "translated_preview_prefix": "Iwwersetzt:"
   },
   "RECRUITER_DASHBOARD": {
     "portal_label": "NTL Career Nexus — Admin Portal",

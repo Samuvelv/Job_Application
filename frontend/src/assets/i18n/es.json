@@ -1273,7 +1273,8 @@
     "lang_level_c1": "C1 — Avanzado",
     "lang_level_c2": "C2 — Experto",
     "lang_level_native": "Nativo/a",
-    "any_location": "🌍 Cualquier Ubicación"
+    "any_location": "🌍 Cualquier Ubicación",
+    "translated_preview_prefix": "Traducido:"
   },
   "RECRUITER_DASHBOARD": {
     "portal_label": "Portal de reclutador",

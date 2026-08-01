@@ -1273,7 +1273,8 @@
     "lang_level_c1": "C1 — Avanceret",
     "lang_level_c2": "C2 — Færdigheder",
     "lang_level_native": "Modersmål",
-    "any_location": "🌍 Enhver placering"
+    "any_location": "🌍 Enhver placering",
+    "translated_preview_prefix": "Oversat:"
   },
   "RECRUITER_DASHBOARD": {
     "portal_label": "Rekrutterportal",

@@ -1273,7 +1273,8 @@
     "lang_level_c1": "C1 — Avanzà",
     "lang_level_c2": "C2 — Competent",
     "lang_level_native": "Nativ",
-    "any_location": "🌍 Qualsiasi lieu"
+    "any_location": "🌍 Qualsiasi lieu",
+    "translated_preview_prefix": "Translatà:"
   },
   "RECRUITER_DASHBOARD": {
     "portal_label": "Portal dal Recrutur",

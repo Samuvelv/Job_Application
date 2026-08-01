@@ -1273,7 +1273,8 @@
     "lang_level_c1": "C1 — 고급",
     "lang_level_c2": "C2 — 유창",
     "lang_level_native": "모국어",
-    "any_location": "🌍 모든 위치"
+    "any_location": "🌍 모든 위치",
+    "translated_preview_prefix": "번역된:"
   },
   "RECRUITER_DASHBOARD": {
     "portal_label": "채용 담당자 포털",

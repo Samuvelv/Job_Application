@@ -1273,7 +1273,8 @@
     "lang_level_c1": "C1 — İleri",
     "lang_level_c2": "C2 — Profesyonel",
     "lang_level_native": "Ana Dil",
-    "any_location": "🌍 Herhangi Bir Konum"
+    "any_location": "🌍 Herhangi Bir Konum",
+    "translated_preview_prefix": "Çeviri:"
   },
   "RECRUITER_DASHBOARD": {
     "portal_label": "İşe Alan Portalı",

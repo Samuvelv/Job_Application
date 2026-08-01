@@ -62,7 +62,22 @@ export async function translateFields(
   const systemPrompt = buildSystemPrompt(targetLangName);
   const userContent  = JSON.stringify(fields, null, 0);
 
-  const rawReply = await chatComplete(systemPrompt, userContent);
+  // GPT occasionally returns malformed/truncated JSON — usually non-deterministic
+  // (a retry often succeeds) or caused by the output being cut off at the token
+  // cap. Try up to 3 times, splitting the batch in half on each retry so a chunk
+  // that's genuinely too large for the token budget converges instead of
+  // repeatedly failing the same way.
+  return attemptTranslate(fields, systemPrompt, targetLangName, 1);
+}
+
+async function attemptTranslate(
+  fields: Record<string, string>,
+  systemPrompt: string,
+  targetLangName: string,
+  attempt: number,
+): Promise<Record<string, string>> {
+  const userContent = JSON.stringify(fields, null, 0);
+  const { content: rawReply, finishReason } = await chatComplete(systemPrompt, userContent);
 
   // ── Parse and validate GPT response ─────────────────────────────────────
   let parsed: unknown;
@@ -74,8 +89,29 @@ export async function translateFields(
       .replace(/\s*```$/, '')
       .trim();
     parsed = JSON.parse(cleaned);
-  } catch {
-    console.warn('[translation.service] GPT response was not valid JSON — returning originals.');
+  } catch (err) {
+    console.warn(
+      `[translation.service] GPT response was not valid JSON (attempt ${attempt}, finish_reason=${finishReason}): ${(err as Error).message}`,
+    );
+
+    if (attempt < 3) {
+      const entries = Object.entries(fields);
+      if (finishReason === 'length' && entries.length > 1) {
+        // Truncated because the batch was too large for the token cap — split
+        // in half and retry each half independently so it can still converge.
+        const mid = Math.ceil(entries.length / 2);
+        const [left, right] = await Promise.all([
+          attemptTranslate(Object.fromEntries(entries.slice(0, mid)), systemPrompt, targetLangName, attempt + 1),
+          attemptTranslate(Object.fromEntries(entries.slice(mid)), systemPrompt, targetLangName, attempt + 1),
+        ]);
+        return { ...left, ...right };
+      }
+      // Otherwise just retry the same batch — malformed (non-truncated) JSON
+      // is usually a one-off sampling glitch.
+      return attemptTranslate(fields, systemPrompt, targetLangName, attempt + 1);
+    }
+
+    console.warn('[translation.service] Giving up after 3 attempts — returning originals.');
     return { ...fields };
   }
 

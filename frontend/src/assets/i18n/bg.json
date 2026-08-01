@@ -1273,7 +1273,8 @@
     "lang_level_c1": "C1 — Напреднал",
     "lang_level_c2": "C2 — Професионален",
     "lang_level_native": "Роден(а)",
-    "any_location": "🌍 Всяко място"
+    "any_location": "🌍 Всяко място",
+    "translated_preview_prefix": "Преведено:"
   },
   "RECRUITER_DASHBOARD": {
     "portal_label": "Портал на рекрутер",

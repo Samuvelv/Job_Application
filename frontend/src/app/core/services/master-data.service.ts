@@ -2,6 +2,8 @@
 import { Injectable, signal, computed } from '@angular/core';import { HttpClient } from '@angular/common/http';
 import { environment } from '../../../environments/environment';
 import { firstValueFrom } from 'rxjs';
+import { TranslateService } from '@ngx-translate/core';
+import { BulkTranslationService } from './bulk-translation.service';
 
 export interface MasterCountry {
   id: number;
@@ -43,7 +45,97 @@ export class MasterDataService {
 
   private loaded = false;
 
-  constructor(private http: HttpClient) {}
+  // ── Catalog-label translation ────────────────────────────────────────────
+  // Fixed catalogs (countries, job titles, occupations, industries, degrees,
+  // fields of study, notice periods, hobbies, languages — NOT cities, which
+  // are proper nouns) are translated whenever the UI language changes.
+  // Pre-generated static files (assets/master-data-i18n/{lang}.json) cover
+  // almost everything with zero API calls; the live /translate endpoint is
+  // only hit for catalog items that don't exist in that file yet (i.e. rows
+  // added to master data after the static file was last generated).
+  private translateRequestId = 0;
+  private staticCatalogCache = new Map<string, Record<string, string>>();
+  translatedLabels = signal<Record<string, string>>({});
+
+  constructor(
+    private http: HttpClient,
+    private translate: TranslateService,
+    private bulkTranslation: BulkTranslationService,
+  ) {
+    this.translate.onLangChange.subscribe((event) => {
+      if (event.lang === 'en') {
+        this.translateRequestId++;
+        this.translatedLabels.set({});
+      } else {
+        this.translateAllCatalogs(event.lang);
+      }
+    });
+  }
+
+  /** Translated label for a catalog entry, falling back to the original if not yet translated. */
+  translateLabel(prefix: string, id: number | string, fallback: string): string {
+    return this.translatedLabels()[`${prefix}_${id}`] ?? fallback;
+  }
+
+  /** Loads and caches the pre-generated static catalog-translation file for a language. */
+  private async loadStaticCatalogFile(lang: string): Promise<Record<string, string>> {
+    if (this.staticCatalogCache.has(lang)) return this.staticCatalogCache.get(lang)!;
+    try {
+      const data = await firstValueFrom(
+        this.http.get<Record<string, string>>(`assets/master-data-i18n/${lang}.json`),
+      );
+      this.staticCatalogCache.set(lang, data);
+      return data;
+    } catch {
+      // No static file generated yet for this language — everything falls
+      // through to the live API below.
+      this.staticCatalogCache.set(lang, {});
+      return {};
+    }
+  }
+
+  private async translateAllCatalogs(lang: string): Promise<void> {
+    const myRequestId = ++this.translateRequestId;
+    if (lang === 'en') return;
+
+    const fields: Record<string, string> = {};
+    this.countries().forEach(c => { if (c.name) fields[`country_${c.id}`] = c.name; });
+    this.jobTitles().forEach(j => { if (j.title) fields[`jobTitle_${j.id}`] = j.title; });
+    this.occupations().forEach(o => { if (o.name) fields[`occupation_${o.id}`] = o.name; });
+    this.industries().forEach(i => { if (i.name) fields[`industry_${i.id}`] = i.name; });
+    this.languages().forEach(l => { if (l.name) fields[`language_${l.id}`] = l.name; });
+    this.degrees().forEach(d => { if (d.name) fields[`degree_${d.id}`] = d.name; });
+    this.fieldsOfStudy().forEach(f => { if (f.name) fields[`fieldOfStudy_${f.id}`] = f.name; });
+    this.noticePeriods().forEach(n => { if (n.label) fields[`noticePeriod_${n.id}`] = n.label; });
+    this.hobbies().forEach(h => { if (h.name) fields[`hobby_${h.id}`] = h.name; });
+
+    if (Object.keys(fields).length === 0) return;
+
+    try {
+      const staticData = await this.loadStaticCatalogFile(lang);
+      if (myRequestId !== this.translateRequestId) return;
+
+      const result: Record<string, string> = {};
+      const missing: Record<string, string> = {};
+      for (const [key, englishVal] of Object.entries(fields)) {
+        if (staticData[key]) result[key] = staticData[key];
+        else missing[key] = englishVal;
+      }
+
+      // Only catalog rows added after the static file was generated (or,
+      // before one exists at all for this language) reach the live API.
+      if (Object.keys(missing).length > 0) {
+        console.log(`[MasterDataService] ${Object.keys(missing).length} catalog item(s) not in the static "${lang}" file — translating live.`);
+        const liveTranslated = await this.bulkTranslation.translateSection(missing, lang);
+        if (myRequestId !== this.translateRequestId) return;
+        Object.assign(result, liveTranslated);
+      }
+
+      this.translatedLabels.set(result);
+    } catch (error) {
+      console.error('Error translating master data catalogs:', error);
+    }
+  }
 
   /**
    * Invalidate the in-memory cache so the next loadAll() call re-fetches
@@ -82,6 +174,9 @@ export class MasterDataService {
     this.currencies.set(currencies);
     this.noticePeriods.set(noticePeriods);
     this.hobbies.set(hobbies);
+
+    const lang = this.translate.currentLang || 'en';
+    if (lang !== 'en') this.translateAllCatalogs(lang);
   }
 
   /** Load cities for a given country_id (cached) */

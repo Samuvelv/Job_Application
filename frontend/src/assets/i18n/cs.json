@@ -1273,7 +1273,8 @@
     "lang_level_c1": "C1 — Pokročilý",
     "lang_level_c2": "C2 — Odborný",
     "lang_level_native": "Rodilý mluvčí",
-    "any_location": "🌍 Libovolné místo"
+    "any_location": "🌍 Libovolné místo",
+    "translated_preview_prefix": "Přeloženo:"
   },
   "RECRUITER_DASHBOARD": {
     "portal_label": "Portál pro nábor",

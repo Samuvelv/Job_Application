@@ -1273,7 +1273,8 @@
     "lang_level_c1": "C1 — Napredni",
     "lang_level_c2": "C2 — Stručan",
     "lang_level_native": "Materinji",
-    "any_location": "🌍 Bilo koje mjesto"
+    "any_location": "🌍 Bilo koje mjesto",
+    "translated_preview_prefix": "Prevedeno:"
   },
   "RECRUITER_DASHBOARD": {
     "portal_label": "Portal regulatora",

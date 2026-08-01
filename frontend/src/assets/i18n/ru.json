@@ -1273,7 +1273,8 @@
     "lang_level_c1": "C1 — Продвинутый",
     "lang_level_c2": "C2 — В совершенстве",
     "lang_level_native": "Родной",
-    "any_location": "🌍 Любое местоположение"
+    "any_location": "🌍 Любое местоположение",
+    "translated_preview_prefix": "Переведено:"
   },
   "RECRUITER_DASHBOARD": {
     "portal_label": "Портал рекрутера",

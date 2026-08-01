@@ -99,11 +99,13 @@ export class SearchableSelectComponent implements OnChanges, OnInit, ControlValu
 
   /** Raw label (i18n key or literal) of the selected option — translated reactively
    *  in the template via the `translate` pipe, since `TranslateService.instant()` is
-   *  not itself a signal read and wouldn't re-trigger this computed on language change. */
+   *  not itself a signal read and wouldn't re-trigger this computed on language change.
+   *  Falls back to the raw value itself (e.g. a free-text or AI-translated value that
+   *  doesn't match any catalog option) rather than going blank. */
   displayLabel = computed(() => {
     const v = this.selectedValue();
     if (v === null || v === '') return '';
-    return this.options.find((o) => String(o.value) === String(v))?.label ?? '';
+    return this.options.find((o) => String(o.value) === String(v))?.label ?? String(v);
   });
 
   private onChange: (v: any) => void = () => {};
@@ -141,7 +143,12 @@ export class SearchableSelectComponent implements OnChanges, OnInit, ControlValu
     this.filteredOpts.set(
       this.options.filter(
         (o) => this.translate.instant(o.label).toLowerCase().includes(lower) ||
-               (o.sublabel ?? '').toLowerCase().includes(lower),
+               (o.sublabel ?? '').toLowerCase().includes(lower) ||
+               // Master-data options carry the original English catalog string in
+               // `value` (label/sublabel get translated for display) — matching
+               // against it too lets users search in English even when the UI
+               // language has translated every visible label into another script.
+               String(o.value).toLowerCase().includes(lower),
       ),
     );
   }

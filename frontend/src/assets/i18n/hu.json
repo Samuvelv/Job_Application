@@ -1273,7 +1273,8 @@
     "lang_level_c1": "C1 — Haladó",
     "lang_level_c2": "C2 — Szakértő",
     "lang_level_native": "Anyanyelvi",
-    "any_location": "🌍 Bármely Helyszín"
+    "any_location": "🌍 Bármely Helyszín",
+    "translated_preview_prefix": "Fordítva:"
   },
   "RECRUITER_DASHBOARD": {
     "portal_label": "Toborzó portál",

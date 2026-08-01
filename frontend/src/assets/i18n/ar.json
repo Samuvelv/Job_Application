@@ -1273,7 +1273,8 @@
     "lang_level_c1": "C1 — متقدم",
     "lang_level_c2": "C2 — محترف",
     "lang_level_native": "اللغة الأم",
-    "any_location": "🌍 أي مكان"
+    "any_location": "🌍 أي مكان",
+    "translated_preview_prefix": "ترجمة:"
   },
   "RECRUITER_DASHBOARD": {
     "portal_label": "بوابة المجند",

@@ -1186,7 +1186,8 @@
     "lang_level_c1": "C1 — Advanced",
     "lang_level_c2": "C2 — Proficient",
     "lang_level_native": "Native",
-    "any_location": "🌍 Any Location"
+    "any_location": "🌍 Any Location",
+    "translated_preview_prefix": "Translated:"
   },
   "RECRUITER_DASHBOARD": {
     "title": "Recruiter Dashboard",

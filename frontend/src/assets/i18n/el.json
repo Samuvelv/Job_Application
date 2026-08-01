@@ -1273,7 +1273,8 @@
     "lang_level_c1": "Γ1 — Προχωρημένος",
     "lang_level_c2": "Γ2 — Εξειδικευμένος",
     "lang_level_native": "Φυσική γλώσσα",
-    "any_location": "🌍 Οποιαδήποτε Τοποθεσία"
+    "any_location": "🌍 Οποιαδήποτε Τοποθεσία",
+    "translated_preview_prefix": "Μεταφρασμένο:"
   },
   "RECRUITER_DASHBOARD": {
     "portal_label": "Πύλη recruiter",

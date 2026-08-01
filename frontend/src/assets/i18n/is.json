@@ -1273,7 +1273,8 @@
     "lang_level_c1": "C1 — Áfram",
     "lang_level_c2": "C2 — Fagmannlegur",
     "lang_level_native": "Móðurmál",
-    "any_location": "🌍 Hvar sem er"
+    "any_location": "🌍 Hvar sem er",
+    "translated_preview_prefix": "Þýðing:"
   },
   "RECRUITER_DASHBOARD": {
     "portal_label": "Ráðningarmiðstöð",

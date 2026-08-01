@@ -1273,7 +1273,8 @@
     "lang_level_c1": "C1 — Avvanzat",
     "lang_level_c2": "C2 — Kapaċi",
     "lang_level_native": "Nattiva",
-    "any_location": "🌍 Kull Post"
+    "any_location": "🌍 Kull Post",
+    "translated_preview_prefix": "Tradott:"
   },
   "RECRUITER_DASHBOARD": {
     "portal_label": "Portal tal-Reklutaġġ",

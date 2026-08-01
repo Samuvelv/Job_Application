@@ -1273,7 +1273,8 @@
     "lang_level_c1": "C1 — Edasijõudnud",
     "lang_level_c2": "C2 — Vilunud",
     "lang_level_native": "Emakeel",
-    "any_location": "🌍 Mis tahes asukoht"
+    "any_location": "🌍 Mis tahes asukoht",
+    "translated_preview_prefix": "Tõlgitud:"
   },
   "RECRUITER_DASHBOARD": {
     "portal_label": "Värbaja portaal",

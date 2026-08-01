@@ -1273,7 +1273,8 @@
     "lang_level_c1": "C1 — Pokročilý",
     "lang_level_c2": "C2 — Odborný",
     "lang_level_native": "Rodilý hovorca/hovorkyňa",
-    "any_location": "🌍 Ľubovoľná lokalita"
+    "any_location": "🌍 Ľubovoľná lokalita",
+    "translated_preview_prefix": "Preložené:"
   },
   "RECRUITER_DASHBOARD": {
     "portal_label": "Portál Recruiterja",

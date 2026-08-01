@@ -1273,7 +1273,8 @@
     "lang_level_c1": "C1 — Ard",
     "lang_level_c2": "C2 — Sármhaithe",
     "lang_level_native": "Dúchais",
-    "any_location": "🌍 Aon Áit"
+    "any_location": "🌍 Aon Áit",
+    "translated_preview_prefix": "Aistríodh:"
   },
   "RECRUITER_DASHBOARD": {
     "portal_label": "Ardán Earcaitheora",

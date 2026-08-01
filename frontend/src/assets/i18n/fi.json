@@ -1273,7 +1273,8 @@
     "lang_level_c1": "C1 — Edistynyt",
     "lang_level_c2": "C2 — Taitava",
     "lang_level_native": "Äidinkieli",
-    "any_location": "🌍 Mikä tahansa sijainti"
+    "any_location": "🌍 Mikä tahansa sijainti",
+    "translated_preview_prefix": "Käännetty:"
   },
   "RECRUITER_DASHBOARD": {
     "portal_label": "Rekrytoijaportaali",

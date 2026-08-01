@@ -1273,7 +1273,8 @@
     "lang_level_c1": "C1 — 上級",
     "lang_level_c2": "C2 — 熟達",
     "lang_level_native": "ネイティブ",
-    "any_location": "🌍 どこでも"
+    "any_location": "🌍 どこでも",
+    "translated_preview_prefix": "翻訳済み:"
   },
   "RECRUITER_DASHBOARD": {
     "portal_label": "採用担当者ポータル",
