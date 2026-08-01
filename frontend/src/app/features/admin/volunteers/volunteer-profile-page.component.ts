@@ -99,7 +99,7 @@ type Tab = 'overview' | 'contact';
 
              @if (volunteer.role) {
                @if (isTranslatingRole()) {
-                 <div class="vp-hero__role" style="opacity:.6">Translating…</div>
+                 <div class="vp-hero__role" style="opacity:.6">{{ 'COMMON.translating' | translate }}…</div>
                } @else {
                  <div class="vp-hero__role">{{ translatedRole() || volunteer.role }}</div>
                }
@@ -189,7 +189,7 @@ type Tab = 'overview' | 'contact';
                    @if (isTranslatingStory()) {
                      <div style="display:flex;align-items:center;gap:.5rem;color:var(--th-muted);font-size:.875rem">
                        <span style="display:inline-block;width:14px;height:14px;border:2px solid var(--th-primary);border-right:2px solid transparent;border-radius:50%;animation:spin .6s linear infinite"></span>
-                       Translating story…
+                       {{ 'COMMON.translating' | translate }}…
                      </div>
                    } @else {
                      <p class="vp-story-text">{{ translatedStory() || volunteer.success_story }}</p>

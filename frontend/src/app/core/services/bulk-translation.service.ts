@@ -86,12 +86,22 @@ export class BulkTranslationService {
       // Chunk fields if necessary
       const chunks = this.chunkFieldsBySize(filledFields);
       const translatedChunks: Record<string, string> = {};
+      // A chunk that throws (e.g. exhausts its retries after a timeout) falls
+      // back to returning its own original, untranslated text below — so the
+      // merged result always "succeeds" even when nothing was translated.
+      // Track real failures separately so we don't cache that fallback as if
+      // it were a genuine translation: a failure surviving in the cache would
+      // make every future call for the same fields — including on the next
+      // page reload/re-navigation — return the stale English text forever
+      // instead of ever calling the API again.
+      let anyChunkFailed = false;
 
       // Translate each chunk in parallel (usually just 1 chunk)
       const chunkPromises = chunks.map(chunk =>
         this.userDataTranslation.translateUserFields(chunk, language)
           .catch(error => {
             console.error('Chunk translation failed:', error);
+            anyChunkFailed = true;
             return chunk; // Fallback to original on error
           })
       );
@@ -105,15 +115,18 @@ export class BulkTranslationService {
 
       // Verify completeness
       const verification = this.verifyTranslationCompleteness(filledFields, translatedChunks);
-      
-      // Cache result (complete or partial with fallback)
-      langCache.set(cacheKey, translatedChunks);
-      this.cache.set(language, langCache);
+
+      // Only cache a genuinely successful (or at least non-erroring) result —
+      // never cache a fallback born from a failed API call.
+      if (!anyChunkFailed) {
+        langCache.set(cacheKey, translatedChunks);
+        this.cache.set(language, langCache);
+      }
 
       return translatedChunks;
     } catch (error) {
       console.error('Bulk translation failed:', error);
-      return filledFields; // Fallback to original
+      return filledFields; // Fallback to original — not cached, so the next call retries.
     }
   }
 

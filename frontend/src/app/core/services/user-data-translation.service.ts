@@ -120,6 +120,13 @@ export class UserDataTranslationService {
    * }, 'es');
    * ```
    */
+  // Deliberately does NOT catch here — every caller (BulkTranslationService's
+  // chunk promises) has its own .catch() that both falls back to the original
+  // text AND records the failure so it isn't cached as a success. Swallowing
+  // the error at this layer used to make that outer .catch() dead code: the
+  // promise always resolved "successfully" with the untranslated fallback,
+  // so a failed translation looked identical to a real one and got cached
+  // forever — meaning a reload or re-navigation would never retry.
   async translateUserFields(fields: Record<string, string>, targetLang: string): Promise<Record<string, string>> {
     // Filter out empty fields
     const nonEmptyFields = Object.fromEntries(
@@ -130,12 +137,7 @@ export class UserDataTranslationService {
       return fields;
     }
 
-    try {
-      return await this.translateFields(nonEmptyFields, targetLang);
-    } catch (error) {
-      console.error('Failed to translate user fields:', error);
-      return fields; // Fallback to original fields
-    }
+    return this.translateFields(nonEmptyFields, targetLang);
   }
 
   /**

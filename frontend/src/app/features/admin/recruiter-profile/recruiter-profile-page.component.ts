@@ -558,6 +558,12 @@ import { ConfirmDialogService } from '../../../core/services/confirm-dialog.serv
                <div>{{ 'RECRUITER_PROFILE.no_candidates_shortlisted' | translate }}</div>
              </div>
           } @else {
+            @if (isTranslatingShortlist()) {
+              <div class="d-flex align-items-center gap-2 mb-3" style="font-size:.8rem;color:var(--th-text-muted)">
+                <span class="spinner-border spinner-border-sm"></span>
+                {{ 'COMMON.translating' | translate }}…
+              </div>
+            }
             <div class="sl-list">
               @for (entry of shortlist; track entry.shortlist_id) {
                 <div class="sl-row">
