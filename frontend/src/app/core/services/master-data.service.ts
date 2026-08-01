@@ -53,8 +53,16 @@ export class MasterDataService {
   // almost everything with zero API calls; the live /translate endpoint is
   // only hit for catalog items that don't exist in that file yet (i.e. rows
   // added to master data after the static file was last generated).
+  //
+  // The static files are keyed by category + the catalog's English text
+  // (e.g. country["Japan"]), NOT by database row id. Row ids are
+  // auto-increment values whose actual numbers depend on each database's own
+  // insert/delete history, so they're never portable between two separate
+  // database instances (a fresh seed, staging, another developer's machine).
+  // Keying by the stable English text instead makes the static file work
+  // identically no matter which database is running.
   private translateRequestId = 0;
-  private staticCatalogCache = new Map<string, Record<string, string>>();
+  private staticCatalogCache = new Map<string, Partial<Record<MasterCatalogCategory, Record<string, string>>>>();
   translatedLabels = signal<Record<string, string>>({});
 
   constructor(
@@ -78,11 +86,11 @@ export class MasterDataService {
   }
 
   /** Loads and caches the pre-generated static catalog-translation file for a language. */
-  private async loadStaticCatalogFile(lang: string): Promise<Record<string, string>> {
+  private async loadStaticCatalogFile(lang: string): Promise<Partial<Record<MasterCatalogCategory, Record<string, string>>>> {
     if (this.staticCatalogCache.has(lang)) return this.staticCatalogCache.get(lang)!;
     try {
       const data = await firstValueFrom(
-        this.http.get<Record<string, string>>(`assets/master-data-i18n/${lang}.json`),
+        this.http.get<Partial<Record<MasterCatalogCategory, Record<string, string>>>>(`assets/master-data-i18n/${lang}.json`),
       );
       this.staticCatalogCache.set(lang, data);
       return data;
@@ -98,18 +106,20 @@ export class MasterDataService {
     const myRequestId = ++this.translateRequestId;
     if (lang === 'en') return;
 
-    const fields: Record<string, string> = {};
-    this.countries().forEach(c => { if (c.name) fields[`country_${c.id}`] = c.name; });
-    this.jobTitles().forEach(j => { if (j.title) fields[`jobTitle_${j.id}`] = j.title; });
-    this.occupations().forEach(o => { if (o.name) fields[`occupation_${o.id}`] = o.name; });
-    this.industries().forEach(i => { if (i.name) fields[`industry_${i.id}`] = i.name; });
-    this.languages().forEach(l => { if (l.name) fields[`language_${l.id}`] = l.name; });
-    this.degrees().forEach(d => { if (d.name) fields[`degree_${d.id}`] = d.name; });
-    this.fieldsOfStudy().forEach(f => { if (f.name) fields[`fieldOfStudy_${f.id}`] = f.name; });
-    this.noticePeriods().forEach(n => { if (n.label) fields[`noticePeriod_${n.id}`] = n.label; });
-    this.hobbies().forEach(h => { if (h.name) fields[`hobby_${h.id}`] = h.name; });
+    // outKey (id-based, for translatedLabels()/translateLabel() consumers) ->
+    // catalog category + English value (for the static/live lookup itself).
+    const items: { outKey: string; category: MasterCatalogCategory; value: string }[] = [];
+    this.countries().forEach(c => { if (c.name) items.push({ outKey: `country_${c.id}`, category: 'country', value: c.name }); });
+    this.jobTitles().forEach(j => { if (j.title) items.push({ outKey: `jobTitle_${j.id}`, category: 'jobTitle', value: j.title }); });
+    this.occupations().forEach(o => { if (o.name) items.push({ outKey: `occupation_${o.id}`, category: 'occupation', value: o.name }); });
+    this.industries().forEach(i => { if (i.name) items.push({ outKey: `industry_${i.id}`, category: 'industry', value: i.name }); });
+    this.languages().forEach(l => { if (l.name) items.push({ outKey: `language_${l.id}`, category: 'language', value: l.name }); });
+    this.degrees().forEach(d => { if (d.name) items.push({ outKey: `degree_${d.id}`, category: 'degree', value: d.name }); });
+    this.fieldsOfStudy().forEach(f => { if (f.name) items.push({ outKey: `fieldOfStudy_${f.id}`, category: 'fieldOfStudy', value: f.name }); });
+    this.noticePeriods().forEach(n => { if (n.label) items.push({ outKey: `noticePeriod_${n.id}`, category: 'noticePeriod', value: n.label }); });
+    this.hobbies().forEach(h => { if (h.name) items.push({ outKey: `hobby_${h.id}`, category: 'hobby', value: h.name }); });
 
-    if (Object.keys(fields).length === 0) return;
+    if (items.length === 0) return;
 
     try {
       const staticData = await this.loadStaticCatalogFile(lang);
@@ -117,9 +127,10 @@ export class MasterDataService {
 
       const result: Record<string, string> = {};
       const missing: Record<string, string> = {};
-      for (const [key, englishVal] of Object.entries(fields)) {
-        if (staticData[key]) result[key] = staticData[key];
-        else missing[key] = englishVal;
+      for (const { outKey, category, value } of items) {
+        const translated = staticData[category]?.[value];
+        if (translated) result[outKey] = translated;
+        else missing[outKey] = value;
       }
 
       // Only catalog rows added after the static file was generated (or,
@@ -217,26 +228,14 @@ export class MasterDataService {
   // /translate endpoint, which should only ever see genuine free text (bio,
   // company names, descriptions, cities, ...).
 
-  private findCatalogId(category: MasterCatalogCategory, value: string): number | null {
-    switch (category) {
-      case 'country':      return this.countries().find(c => c.name === value)?.id ?? null;
-      case 'jobTitle':      return this.jobTitles().find(j => j.title === value)?.id ?? null;
-      case 'occupation':    return this.occupations().find(o => o.name === value)?.id ?? null;
-      case 'industry':      return this.industries().find(i => i.name === value)?.id ?? null;
-      case 'language':      return this.languages().find(l => l.name === value)?.id ?? null;
-      case 'degree':        return this.degrees().find(d => d.name === value)?.id ?? null;
-      case 'fieldOfStudy':  return this.fieldsOfStudy().find(f => f.name === value)?.id ?? null;
-      case 'noticePeriod':  return this.noticePeriods().find(n => n.label === value)?.id ?? null;
-      case 'hobby':         return this.hobbies().find(h => h.name === value)?.id ?? null;
-    }
-  }
-
   /**
    * Resolve a batch of candidate field values against the static
-   * master-data-i18n file for `lang` — no live API call. `fields` maps an
-   * arbitrary caller-defined key to the catalog category + English value.
-   * Returns `resolved` (found in the static file) and `missing` (value isn't
-   * a recognized catalog entry, or is a catalog row added after the static
+   * master-data-i18n file for `lang` — no live API call, no dependency on
+   * database row ids (matches purely on the English catalog text, which is
+   * stable across every database instance). `fields` maps an arbitrary
+   * caller-defined key to the catalog category + English value. Returns
+   * `resolved` (found in the static file) and `missing` (value isn't a
+   * recognized catalog entry, or is a catalog row added after the static
    * file was generated) so the caller can still fall back to
    * BulkTranslationService.translateSection() for just the `missing` ones.
    */
@@ -251,8 +250,7 @@ export class MasterDataService {
     const staticData = await this.loadStaticCatalogFile(lang);
     for (const [key, { category, value }] of Object.entries(fields)) {
       if (!value) continue;
-      const id = this.findCatalogId(category, value);
-      const translated = id != null ? staticData[`${category}_${id}`] : undefined;
+      const translated = staticData[category]?.[value];
       if (translated) resolved[key] = translated;
       else missing[key] = value;
     }
