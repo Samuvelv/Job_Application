@@ -1,5 +1,5 @@
 // src/app/core/services/auth.service.ts
-import { Injectable, signal, inject } from '@angular/core';
+import { Injectable, Injector, signal, inject } from '@angular/core';
 import { HttpClient, HttpBackend } from '@angular/common/http';
 import { Router } from '@angular/router';
 import { Observable, tap } from 'rxjs';
@@ -7,6 +7,7 @@ import { environment } from '../../../environments/environment';
 import { AuthResponse, LoginPayload, LoginResponse, OtpChallengeResponse, User, UserRole } from '../models/user.model';
 import { ToastService } from './toast.service';
 import { registerAuthForTabSync } from '../interceptors/jwt.interceptor';
+import { TranslateService } from '@ngx-translate/core';
 
 const TOKEN_KEY = 'th_access_token';
 const USER_KEY  = 'th_user';
@@ -29,8 +30,22 @@ export class AuthService {
   }
 
   private readonly httpBackend = inject(HttpBackend);
+  private readonly injector = inject(Injector);
 
-  constructor(private http: HttpClient, private router: Router, private toast: ToastService) {
+  // Resolved lazily (not via constructor injection) to avoid a circular DI
+  // chain: AuthService is injected eagerly by jwtInterceptor on every HTTP
+  // request, and TranslateService's HTTP loader depends on HttpClient, which
+  // depends on the interceptor chain — injecting TranslateService in the
+  // constructor here would deadlock DI (NG0200) on the very first request.
+  private get translate(): TranslateService {
+    return this.injector.get(TranslateService);
+  }
+
+  constructor(
+    private http: HttpClient,
+    private router: Router,
+    private toast: ToastService,
+  ) {
     // Give the BroadcastChannel listener in jwt.interceptor.ts a reference to
     // this service instance.  The listener runs outside Angular's DI context so
     // it cannot call inject() — this setter bridge is the cleanest alternative.
@@ -80,7 +95,7 @@ export class AuthService {
       this.expiryWarnTimer = setTimeout(() => {
         // Only show the warning if the user is still logged in
         if (this.isLoggedIn()) {
-          this.toast.warning('Your session will expire in 5 minutes. Any activity will extend it automatically.');
+          this.toast.warning(this.translate.instant('AUTH.session_expiring_soon'));
         }
       }, delay);
     } catch {
@@ -117,7 +132,7 @@ export class AuthService {
     this.candidateStatus.set(null);
 
     // Show toast first — delay redirect so the user can read it before leaving the page
-    this.toast.warning('Your session has expired. Please login again.');
+    this.toast.warning(this.translate.instant('MESSAGES.session_expired'));
 
     setTimeout(() => {
       this.sessionExpired = false; // reset so the guard works after fresh login

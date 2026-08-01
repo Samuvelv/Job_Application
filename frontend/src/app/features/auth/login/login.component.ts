@@ -9,6 +9,9 @@ import {
 } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { TranslateModule } from '@ngx-translate/core';
+import { interval, Subject } from 'rxjs';
+import { takeUntil } from 'rxjs/operators';
+import { environment } from '../../../../environments/environment';
 import { AuthService } from '../../../core/services/auth.service';
 import { LanguageSelectorComponent } from '../../../shared/components/language-selector/language-selector.component';
 
@@ -210,13 +213,13 @@ import { LanguageSelectorComponent } from '../../../shared/components/language-s
               </p>
               <div class="auth-register-note__btns">
                 <a
-                  class="auth-register-note__btn auth-register-note__btn--whatsapp"
-                  href="https://wa.me/919360454326?text=Hi%2C%20I%20would%20like%20to%20register%20on%20NTL%20Career%20Nexus.%20I%20am%20a%20%5BCandidate%2FRecruiter%5D%20from%20%5BCountry%5D%20looking%20for%20opportunities%20in%20%5BTarget%20Country%5D."
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
-                  <i class="bi bi-whatsapp"></i> {{ 'AUTH.whatsapp' | translate }}
-                </a>
+                   class="auth-register-note__btn auth-register-note__btn--whatsapp"
+                   [href]="'https://wa.me/' + whatsappPhone + '?text=Hi%2C%20I%20would%20like%20to%20register%20on%20NTL%20Career%20Nexus.%20I%20am%20a%20%5BCandidate%2FRecruiter%5D%20from%20%5BCountry%5D%20looking%20for%20opportunities%20in%20%5BTarget%20Country%5D.'"
+                   target="_blank"
+                   rel="noopener noreferrer"
+                 >
+                   <i class="bi bi-whatsapp"></i> {{ 'AUTH.whatsapp' | translate }}
+                 </a>
                 <a
                   class="auth-register-note__btn auth-register-note__btn--contact"
                   href="#contact"
@@ -396,8 +399,10 @@ export class LoginComponent implements OnInit, OnDestroy {
   otpSecondsLeft  = 0;
   resendCooldown  = 0;
 
-  private expiryInterval: ReturnType<typeof setInterval> | null = null;
-  private resendInterval: ReturnType<typeof setInterval> | null = null;
+  // ── Configuration ───────────────────────────────────────────────────────────
+  readonly whatsappPhone = environment.appConfig.whatsappPhone;
+
+  private destroy$ = new Subject<void>();
 
   onForgotOk(): void {
     this.showForgotPopup = false;
@@ -423,7 +428,8 @@ export class LoginComponent implements OnInit, OnDestroy {
   }
 
   ngOnDestroy(): void {
-    this.clearIntervals();
+    this.destroy$.next();
+    this.destroy$.complete();
   }
 
   get f() { return this.form.controls; }
@@ -468,14 +474,12 @@ export class LoginComponent implements OnInit, OnDestroy {
     this.auth.verifyOtp(this.otpToken, this.otpValue).subscribe({
       next: () => {
         this.otpLoading = false;
-        this.clearIntervals();
         this.router.navigate([this.auth.getDashboardRoute()]);
       },
       error: (err) => {
         this.otpLoading = false;
         if (err?.status === 429) {
           // Locked — force back to credentials
-          this.clearIntervals();
           this.view     = 'credentials';
           this.errorMsg = err?.error?.message ?? 'Too many incorrect attempts. Please log in again.';
         } else {
@@ -496,7 +500,6 @@ export class LoginComponent implements OnInit, OnDestroy {
         this.otpToken = res.otpToken;
         this.devOtp   = res.devOtp ?? '';
         this.otpValue = '';
-        this.clearExpiryInterval();
         this.startExpiryCountdown(res.expiresInSeconds);
         this.startResendCooldown(30);
       },
@@ -508,7 +511,6 @@ export class LoginComponent implements OnInit, OnDestroy {
 
   // ── Back to credentials ──────────────────────────────────────────────────────
   backToCredentials(): void {
-    this.clearIntervals();
     this.otpToken      = '';
     this.devOtp        = '';
     this.otpValue      = '';
@@ -525,34 +527,29 @@ export class LoginComponent implements OnInit, OnDestroy {
     return m > 0 ? `${m}m ${s}s` : `${s}s`;
   }
 
+  /**
+   * Start OTP expiry countdown using RxJS interval.
+   * Automatically cleaned up via takeUntil(destroy$).
+   */
   private startExpiryCountdown(seconds: number): void {
-    this.clearExpiryInterval();
     this.otpSecondsLeft = seconds;
-    this.expiryInterval = setInterval(() => {
-      this.otpSecondsLeft = Math.max(0, this.otpSecondsLeft - 1);
-      if (this.otpSecondsLeft === 0) this.clearExpiryInterval();
-    }, 1000);
+    interval(1000)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(() => {
+        this.otpSecondsLeft = Math.max(0, this.otpSecondsLeft - 1);
+      });
   }
 
+  /**
+   * Start resend cooldown using RxJS interval.
+   * Automatically cleaned up via takeUntil(destroy$).
+   */
   private startResendCooldown(seconds: number): void {
-    this.clearResendInterval();
     this.resendCooldown = seconds;
-    this.resendInterval = setInterval(() => {
-      this.resendCooldown = Math.max(0, this.resendCooldown - 1);
-      if (this.resendCooldown === 0) this.clearResendInterval();
-    }, 1000);
-  }
-
-  private clearExpiryInterval(): void {
-    if (this.expiryInterval) { clearInterval(this.expiryInterval); this.expiryInterval = null; }
-  }
-
-  private clearResendInterval(): void {
-    if (this.resendInterval) { clearInterval(this.resendInterval); this.resendInterval = null; }
-  }
-
-  private clearIntervals(): void {
-    this.clearExpiryInterval();
-    this.clearResendInterval();
+    interval(1000)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(() => {
+        this.resendCooldown = Math.max(0, this.resendCooldown - 1);
+      });
   }
 }

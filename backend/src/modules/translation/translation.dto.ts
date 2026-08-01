@@ -1,22 +1,25 @@
 // src/modules/translation/translation.dto.ts
 import { z } from 'zod';
 
-/** ISO codes that match the 15 languages supported by the platform. */
+/** ISO codes that match the 34 UI languages supported by the platform (frontend/src/app/core/services/language.service.ts). */
 const SUPPORTED_LANG_CODES = [
   'en', 'fr', 'de', 'es', 'pt', 'it',
   'nl', 'ru', 'zh', 'ja', 'ko', 'ar',
-  'hi', 'tr', 'pl',
+  'hi', 'tr', 'pl', 'bg', 'hr', 'el',
+  'cs', 'da', 'et', 'fi', 'sv', 'hu',
+  'ga', 'lv', 'lt', 'lb', 'mt', 'ro',
+  'sk', 'sl', 'no', 'rm', 'is',
 ] as const;
 
 export const TranslateSchema = z.object({
   /** Flat map of field-key → source text value.
    *  Keys are deterministic strings like "bio", "exp_0_description", "hobby_1".
-   *  Total characters across all values must not exceed 5 000 to cap token costs. */
+   *  Total characters across all values must not exceed 100 000 to cap token costs. */
   fields: z
     .record(z.string(), z.string())
     .refine(
-      (rec) => Object.values(rec).join('').length <= 5_000,
-      { message: 'Total content exceeds the 5 000 character limit per request.' },
+      (rec) => Object.values(rec).join('').length <= 100_000,
+      { message: 'Total content exceeds the 100 000 character limit per request.' },
     )
     .refine(
       (rec) => Object.keys(rec).length > 0,

@@ -1,5 +1,6 @@
 // src/app/shared/components/unauthorized/unauthorized.component.ts
 import { Component, OnInit } from '@angular/core';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
@@ -11,7 +12,7 @@ type PageState = 'denied' | 'form' | 'success' | 'already-sent';
 @Component({
   selector: 'app-unauthorized',
   standalone: true,
-  imports: [CommonModule, RouterLink, ReactiveFormsModule],
+  imports: [CommonModule, RouterLink, ReactiveFormsModule, TranslateModule],
   styles: [`
     .unauth-page { min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 32px 16px; background: var(--th-bg); }
     .unauth-card { background: var(--th-surface); border: 1px solid var(--th-border); border-radius: 16px; padding: 40px 36px; max-width: 480px; width: 100%; text-align: center; box-shadow: 0 4px 32px rgba(0,0,0,.06); }
@@ -33,26 +34,26 @@ type PageState = 'denied' | 'form' | 'success' | 'already-sent';
         <!-- ── Generic Access Denied ── -->
         @if (pageState === 'denied') {
           <div class="unauth-icon"><i class="bi bi-shield-x text-danger"></i></div>
-          <div class="unauth-title">Access Denied</div>
-          <p class="unauth-desc">You don't have permission to view this page.</p>
+          <div class="unauth-title">{{ 'UNAUTHORIZED.title' | translate }}</div>
+          <p class="unauth-desc">{{ 'UNAUTHORIZED.message' | translate }}</p>
           <a [routerLink]="dashRoute" class="btn btn-primary px-4">
-            <i class="bi bi-arrow-left me-1"></i>Back to Dashboard
+            <i class="bi bi-arrow-left me-1"></i>{{ 'UNAUTHORIZED.back_to_dashboard' | translate }}
           </a>
         }
 
         <!-- ── Extension Request Form ── -->
         @if (pageState === 'form') {
           <div class="unauth-icon"><i class="bi bi-clock-history" style="color:var(--th-primary,#6366f1)"></i></div>
-          <div class="unauth-title">Access Expired</div>
-          <p class="unauth-desc">Your recruiter access has expired. Submit a request below and our team will review it shortly.</p>
+          <div class="unauth-title">{{ 'UNAUTHORIZED.expired_title' | translate }}</div>
+          <p class="unauth-desc">{{ 'UNAUTHORIZED.expired_message' | translate }}</p>
 
           <form [formGroup]="reqForm" (ngSubmit)="onSubmit()" novalidate style="text-align:left">
-            <label class="form-label-sm">Email</label>
+            <label class="form-label-sm">{{ 'COMMON.email' | translate }}</label>
             <input class="unauth-input mb-3" formControlName="email" type="email" readonly />
 
-            <label class="form-label-sm mt-3">Message <span style="font-weight:400;text-transform:none;">(optional)</span></label>
+            <label class="form-label-sm mt-3">{{ 'UNAUTHORIZED.message' | translate }} <span style="font-weight:400;text-transform:none;">({{ 'FORMS.optional' | translate }})</span></label>
             <textarea class="unauth-textarea" formControlName="message" maxlength="1000"
-              placeholder="Add a brief note about why you need extended access…"></textarea>
+              [placeholder]="('PLACEHOLDERS.enter_message' | translate)"></textarea>
             <div class="char-counter">{{ msgLength }}/1000</div>
 
             @if (submitError) {
@@ -61,7 +62,7 @@ type PageState = 'denied' | 'form' | 'success' | 'already-sent';
 
             <button class="btn btn-primary w-100" type="submit" [disabled]="loading">
               @if (loading) { <span class="spinner-border spinner-border-sm me-2"></span> }
-              Send Request
+              {{ 'COMMON.submit' | translate }}
             </button>
           </form>
         }
@@ -69,17 +70,17 @@ type PageState = 'denied' | 'form' | 'success' | 'already-sent';
         <!-- ── Success ── -->
         @if (pageState === 'success') {
           <div class="unauth-icon"><i class="bi bi-check-circle-fill text-success"></i></div>
-          <div class="unauth-title">Request Sent</div>
-          <p class="unauth-desc">Your access extension request has been submitted. We'll email you once it's been reviewed.</p>
-          <a routerLink="/login" class="btn btn-outline-primary px-4">Back to Login</a>
+          <div class="unauth-title">{{ 'UNAUTHORIZED.request_sent' | translate }}</div>
+          <p class="unauth-desc">{{ 'UNAUTHORIZED.request_sent_message' | translate }}</p>
+          <a routerLink="/login" class="btn btn-outline-primary px-4">{{ 'UNAUTHORIZED.back_to_home' | translate }}</a>
         }
 
         <!-- ── Already Sent ── -->
         @if (pageState === 'already-sent') {
           <div class="unauth-icon"><i class="bi bi-info-circle-fill" style="color:var(--th-warning,#f59e0b)"></i></div>
-          <div class="unauth-title">Already Submitted</div>
-          <p class="unauth-desc">You already have a pending access extension request. We'll email you once it's been reviewed.</p>
-          <a routerLink="/login" class="btn btn-outline-primary px-4">Back to Login</a>
+          <div class="unauth-title">{{ 'UNAUTHORIZED.already_submitted' | translate }}</div>
+          <p class="unauth-desc">{{ 'UNAUTHORIZED.already_submitted_message' | translate }}</p>
+          <a routerLink="/login" class="btn btn-outline-primary px-4">{{ 'UNAUTHORIZED.back_to_home' | translate }}</a>
         }
 
       </div>
@@ -97,6 +98,7 @@ export class UnauthorizedComponent implements OnInit {
     private auth: AuthService,
     private fb: FormBuilder,
     private accessRequestSvc: RecruiterAccessRequestService,
+    private translate: TranslateService,
   ) {
     this.dashRoute = auth.getDashboardRoute();
     const nav = history.state as { reason?: string } | undefined;
@@ -133,9 +135,10 @@ export class UnauthorizedComponent implements OnInit {
         if (err?.status === 409) {
           this.pageState = 'already-sent';
         } else {
-          this.submitError = err?.error?.message ?? 'Failed to submit. Please try again.';
+          this.submitError = err?.error?.message ?? this.translate.instant('UNAUTHORIZED.submit_failed');
         }
       },
     });
   }
 }
+

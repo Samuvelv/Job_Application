@@ -1,14 +1,15 @@
 // src/app/features/recruiter/candidates/candidate-profile.component.ts
-import { Component, HostListener, OnInit, computed, inject, signal } from '@angular/core';
+import { Component, OnInit, OnDestroy, computed, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, RouterLink, Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
-import { catchError, forkJoin, of } from 'rxjs';
+import { catchError, forkJoin, of, Subject, takeUntil } from 'rxjs';
 import { CandidateService } from '../../../core/services/candidate.service';
 import { RecruiterService } from '../../../core/services/recruiter.service';
 import { ContactRequestService } from '../../../core/services/contact-request.service';
 import { InterestRequestService, InterestRequest } from '../../../core/services/interest-request.service';
 import { MasterDataService } from '../../../core/services/master-data.service';
+import { BulkTranslationService } from '../../../core/services/bulk-translation.service';
 import { Candidate } from '../../../core/models/candidate.model';
 import { ContactRequest } from '../../../core/models/contact-request.model';
 import { ToastService } from '../../../core/services/toast.service';
@@ -16,11 +17,6 @@ import { PageHeaderComponent } from '../../../shared/components/page-header/page
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { CandidateProfileComponent } from '../../../shared/components/candidate-profile/candidate-profile.component';
 import { SearchableSelectComponent, SelectOption } from '../../../shared/components/searchable-select/searchable-select.component';
-import {
-  CandidateTranslationService,
-  TRANSLATE_LANGUAGES,
-  TranslateLanguage,
-} from '../../../core/services/candidate-translation.service';
 
 @Component({
   selector: 'app-recruiter-candidate-profile',
@@ -85,150 +81,6 @@ import {
       box-shadow: 0 0 0 3px color-mix(in srgb, var(--th-primary) 15%, transparent);
     }
 
-    /* ── Translation bar ──────────────────────────────────────────────────── */
-    .translate-bar {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      flex-wrap: wrap;
-    }
-
-    /* Trigger button — mirrors .lang-btn */
-    .tr-btn {
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      height: 30px;
-      padding: 0 10px;
-      border: 1px solid var(--th-border);
-      border-radius: var(--th-radius);
-      background: var(--th-surface);
-      color: var(--th-text);
-      font-size: 13px;
-      font-weight: 500;
-      cursor: pointer;
-      transition: border-color .15s, background .15s;
-      white-space: nowrap;
-    }
-    .tr-btn:hover:not(:disabled) {
-      border-color: var(--th-border-strong);
-      background: var(--th-surface-2, var(--th-surface));
-    }
-    .tr-btn:disabled { opacity: .6; cursor: not-allowed; }
-    .tr-btn__flag  { font-size: 15px; line-height: 1; }
-    .tr-btn__label { font-size: 13px; }
-    .tr-btn__caret { font-size: 10px; opacity: .6; transition: transform .2s; }
-    .tr-btn--open .tr-btn__caret { transform: rotate(180deg); }
-
-    /* Dropdown panel — mirrors .lang-dropdown */
-    .tr-dropdown-wrap { position: relative; }
-    .tr-dropdown {
-      position: absolute;
-      top: calc(100% + 6px);
-      left: 0;
-      min-width: 200px;
-      max-height: 320px;
-      overflow-y: auto;
-      background: var(--th-surface);
-      border: 1px solid var(--th-border);
-      border-radius: var(--th-radius-xl);
-      box-shadow: 0 8px 24px rgba(0,0,0,.12);
-      z-index: 1100;
-      padding: 6px;
-      animation: trFadeIn .15s ease;
-    }
-    @keyframes trFadeIn {
-      from { opacity: 0; transform: translateY(-6px); }
-      to   { opacity: 1; transform: translateY(0); }
-    }
-    .tr-dropdown__label {
-      font-size: 10px;
-      font-weight: 700;
-      letter-spacing: .08em;
-      text-transform: uppercase;
-      color: var(--th-muted);
-      padding: 4px 8px 6px;
-    }
-    .tr-option {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      padding: 8px 10px;
-      border-radius: var(--th-radius);
-      cursor: pointer;
-      border: none;
-      background: transparent;
-      width: 100%;
-      text-align: start;
-      color: var(--th-text);
-      font-size: 13px;
-      transition: background .12s;
-    }
-    .tr-option:hover { background: var(--th-surface-2, rgba(0,0,0,.05)); }
-    .tr-option--active {
-      background: var(--th-primary-soft, rgba(99,102,241,.1));
-      font-weight: 600;
-    }
-    .tr-option__flag  { font-size: 17px; line-height: 1; flex-shrink: 0; }
-    .tr-option__name  { flex: 1; }
-    .tr-option__check { color: var(--th-primary); font-size: 12px; flex-shrink: 0; }
-    .translate-btn {
-      display: inline-flex;
-      align-items: center;
-      gap: 5px;
-      height: 30px;
-      padding: 0 12px;
-      border-radius: 6px;
-      border: 1px solid var(--th-primary);
-      background: transparent;
-      color: var(--th-primary);
-      font-size: 13px;
-      font-weight: 600;
-      cursor: pointer;
-      transition: background .15s, color .15s;
-      white-space: nowrap;
-    }
-    .translate-btn:hover:not(:disabled) {
-      background: var(--th-primary);
-      color: #fff;
-    }
-    .translate-btn:disabled {
-      opacity: .6;
-      cursor: not-allowed;
-    }
-    .translated-badge {
-      display: inline-flex;
-      align-items: center;
-      gap: 5px;
-      padding: 3px 10px;
-      border-radius: 999px;
-      font-size: 11px;
-      font-weight: 700;
-      letter-spacing: .04em;
-      text-transform: uppercase;
-      background: color-mix(in srgb, var(--th-primary) 12%, transparent);
-      color: var(--th-primary);
-      border: 1px solid color-mix(in srgb, var(--th-primary) 30%, transparent);
-    }
-    .show-original-btn {
-      display: inline-flex;
-      align-items: center;
-      gap: 5px;
-      height: 26px;
-      padding: 0 10px;
-      border-radius: 6px;
-      border: 1px solid var(--th-border-strong);
-      background: transparent;
-      color: var(--th-muted);
-      font-size: 12px;
-      font-weight: 500;
-      cursor: pointer;
-      transition: border-color .15s, color .15s;
-    }
-    .show-original-btn:hover {
-      border-color: var(--th-text);
-      color: var(--th-text);
-    }
   `],
   template: `
     <!-- Back button + action bar -->
@@ -239,68 +91,6 @@ import {
 
       @if (candidate) {
         <div class="ms-auto d-flex align-items-center gap-2 flex-wrap">
-
-          <!-- ── Translation bar ─────────────────────────────────────────── -->
-          @if (canTranslate) {
-          <div class="translate-bar">
-            @if (!translated()) {
-              <!-- Language selector dropdown + Translate button -->
-              <div class="tr-dropdown-wrap" (click)="$event.stopPropagation()">
-                <button
-                  class="tr-btn"
-                  [class.tr-btn--open]="translateDropdownOpen()"
-                  [disabled]="translating()"
-                  (click)="toggleTranslateDropdown()"
-                  type="button">
-                  <span class="tr-btn__flag">{{ activeLangFlag() }}</span>
-                  <span class="tr-btn__label">{{ activeLangLabel() }}</span>
-                  <i class="bi bi-chevron-down tr-btn__caret"></i>
-                </button>
-                @if (translateDropdownOpen()) {
-                  <div class="tr-dropdown" role="listbox">
-                    <div class="tr-dropdown__label">Translate to</div>
-                    @for (lang of translateLanguages; track lang.code) {
-                      <button
-                        class="tr-option"
-                        [class.tr-option--active]="lang.code === selectedLangCode"
-                        role="option"
-                        [attr.aria-selected]="lang.code === selectedLangCode"
-                        type="button"
-                        (click)="selectTranslateLang(lang.code)">
-                        <span class="tr-option__flag">{{ lang.flag }}</span>
-                        <span class="tr-option__name">{{ lang.label }}</span>
-                        @if (lang.code === selectedLangCode) {
-                          <i class="bi bi-check2 tr-option__check"></i>
-                        }
-                      </button>
-                    }
-                  </div>
-                }
-              </div>
-              <button
-                class="translate-btn"
-                (click)="translateProfile()"
-                [disabled]="translating()">
-                @if (translating()) {
-                  <span class="spinner-border spinner-border-sm" style="width:.75rem;height:.75rem;border-width:2px;"></span>
-                  Translating…
-                } @else {
-                  <i class="bi bi-translate"></i> Translate
-                }
-              </button>
-            } @else {
-              <!-- Translated state: badge + show original -->
-              <span class="translated-badge">
-                <i class="bi bi-translate"></i>
-                Translated · {{ activeLangLabel() }}
-              </span>
-              <button class="show-original-btn" (click)="showOriginal()">
-                <i class="bi bi-arrow-counterclockwise"></i> Show Original
-              </button>
-            }
-          </div>
-          }
-          <!-- ── End translation bar ─────────────────────────────────────── -->
 
           <!-- Direct employer: contact request button -->
           @if (!isAgency) {
@@ -332,7 +122,7 @@ import {
                     [(ngModel)]="requestReason"
                     [class.is-invalid]="reasonTouched && !requestReason.trim()"
                     (blur)="reasonTouched = true"
-                    placeholder="Briefly describe why you need this candidate's contact information…"></textarea>
+                    [placeholder]="'CONTACT_STATUS.reason_placeholder' | translate"></textarea>
                   @if (reasonTouched && !requestReason.trim()) {
                     <div style="font-size:.75rem;color:var(--th-danger,#f43f5e);margin-top:.25rem;">
                       <i class="bi bi-exclamation-circle me-1"></i>{{ 'CONTACT_STATUS.reason_required' | translate }}
@@ -372,7 +162,7 @@ import {
                     [(ngModel)]="requestReason"
                     [class.is-invalid]="reasonTouched && !requestReason.trim()"
                     (blur)="reasonTouched = true"
-                    placeholder="Briefly describe why you need this candidate's contact information…"></textarea>
+                    [placeholder]="'CONTACT_STATUS.reason_placeholder' | translate"></textarea>
                   @if (reasonTouched && !requestReason.trim()) {
                     <div style="font-size:.75rem;color:var(--th-danger,#f43f5e);margin-top:.25rem;">
                       <i class="bi bi-exclamation-circle me-1"></i>{{ 'CONTACT_STATUS.reason_required' | translate }}
@@ -402,7 +192,7 @@ import {
                     [(ngModel)]="requestReason"
                     [class.is-invalid]="reasonTouched && !requestReason.trim()"
                     (blur)="reasonTouched = true"
-                    placeholder="Briefly describe why you need this candidate's contact information…"></textarea>
+                    [placeholder]="'CONTACT_STATUS.reason_placeholder' | translate"></textarea>
                   @if (reasonTouched && !requestReason.trim()) {
                     <div style="font-size:.75rem;color:var(--th-danger,#f43f5e);margin-top:.25rem;">
                       <i class="bi bi-exclamation-circle me-1"></i>{{ 'CONTACT_STATUS.reason_required' | translate }}
@@ -452,7 +242,7 @@ import {
     @if (!isAgency && contactRequestStatus === 'rejected' && contactRequest?.admin_note) {
       <div class="alert alert-warning small py-2 mb-3">
         <i class="bi bi-chat-left-text me-1"></i>
-        <strong>{{ 'CONTACT_STATUS.admin_note' | translate }}</strong> {{ contactRequest!.admin_note }}
+        <strong>{{ 'CONTACT_STATUS.admin_note' | translate }}</strong> {{ translatedNotes()['contact_admin_note'] || contactRequest!.admin_note }}
       </div>
     }
 
@@ -462,14 +252,14 @@ import {
         <i class="bi bi-shield-x me-1"></i>
         <strong>{{ 'CONTACT_STATUS.access_revoked_note' | translate }}</strong>
         @if (contactRequest?.revocation_reason) {
-          {{ 'CONTACT_STATUS.reason_label' | translate }} {{ contactRequest!.revocation_reason }}
+          {{ 'CONTACT_STATUS.reason_label' | translate }} {{ translatedNotes()['revocation_reason'] || contactRequest!.revocation_reason }}
         }
         {{ 'CONTACT_STATUS.resubmit_note' | translate }}
       </div>
     }
 
-    <!-- Agency: interest request panel -->
-    @if (isAgency && candidate) {
+    <!-- Interest request panel (available to all recruiter types) -->
+    @if (candidate) {
       <div class="interest-panel">
         <div class="interest-panel__title"><i class="bi bi-briefcase-fill me-2" style="color:var(--th-primary)"></i>{{ 'INTEREST_REQUESTS.submit_interest_title' | translate }}</div>
         <div class="interest-panel__sub">
@@ -493,7 +283,7 @@ import {
           </div>
           @if (interestRequest.admin_note) {
             <div class="mt-2 small" style="color:var(--th-muted);">
-              <i class="bi bi-chat-left-text me-1"></i><strong>{{ 'INTEREST_REQUESTS.admin_note' | translate }}</strong> {{ interestRequest.admin_note }}
+              <i class="bi bi-chat-left-text me-1"></i><strong>{{ 'INTEREST_REQUESTS.admin_note' | translate }}</strong> {{ translatedNotes()['interest_admin_note'] || interestRequest.admin_note }}
             </div>
           }
           @if (interestRequest.status === 'rejected' || interestRequest.status === 'revoked') {
@@ -510,7 +300,7 @@ import {
                 [ngModel]="interestForm.sector"
                 (ngModelChange)="interestForm.sector = $event"
                 [options]="industryOptions()"
-                placeholder="Select sector…"
+                [placeholder]="'INTEREST_REQUESTS.sector_placeholder' | translate"
                 [allowClear]="true">
               </app-searchable-select>
             </div>
@@ -520,14 +310,14 @@ import {
                 [ngModel]="interestForm.country"
                 (ngModelChange)="interestForm.country = $event"
                 [options]="countryOptions()"
-                placeholder="Select country…"
+                [placeholder]="'INTEREST_REQUESTS.country_placeholder' | translate"
                 [allowClear]="true">
               </app-searchable-select>
             </div>
             <div class="col-12">
               <div class="interest-panel__label">{{ 'INTEREST_REQUESTS.message_to_admin_label' | translate }} *</div>
               <textarea class="interest-panel__textarea" rows="4" [(ngModel)]="interestForm.message"
-                placeholder="Describe the role, why this candidate is a good fit, and any relevant details…"
+                [placeholder]="'INTEREST_REQUESTS.message_placeholder' | translate"
                 maxlength="2000"></textarea>
               <div class="text-end small" style="color:var(--th-muted);">{{ interestForm.message.length }}/2000</div>
             </div>
@@ -555,13 +345,14 @@ import {
       <div class="alert alert-danger">{{ error }}</div>
     } @else if (candidate) {
       <app-candidate-profile
-        [candidate]="displayCandidate()"
+        [candidate]="candidate"
         [contactLocked]="contactLocked"
-        [showAdminInfo]="false" />
+        [showAdminInfo]="false"
+        [showActivityTab]="false" />
     }
   `,
 })
-export class RecruiterCandidateProfileComponent implements OnInit {
+export class RecruiterCandidateProfileComponent implements OnInit, OnDestroy {
   candidate: Candidate | null = null;
   loading = true;
   error = '';
@@ -583,47 +374,13 @@ export class RecruiterCandidateProfileComponent implements OnInit {
 
   private candidateId = '';
 
-  // ── Translation state ────────────────────────────────────────────────────────
-  /** Whether this recruiter has the translation permission enabled */
-  canTranslate = false;
-
-  /** All available translation languages (excludes English — no point translating to source) */
-  readonly translateLanguages: TranslateLanguage[] = TRANSLATE_LANGUAGES;
-
-  /** Currently selected language code in the dropdown */
-  selectedLangCode = 'fr';
-
-  /** Controls the custom language dropdown open/closed state */
-  translateDropdownOpen = signal(false);
-
-  /** Translated candidate object — null means show original */
-  private translatedCandidate = signal<Candidate | null>(null);
-
-  /** Whether a translation API call is in progress */
-  translating = signal(false);
-
-  /** Whether the profile is currently showing a translation */
-  translated = signal(false);
-
-  /** The candidate object shown in the profile — translated version if active, else original */
-  displayCandidate = computed<Candidate>(() =>
-    this.translatedCandidate() ?? this.candidate!
-  );
-
-  /** Flag emoji of the currently selected translation language */
-  activeLangFlag = computed<string>(() => {
-    const lang = this.translateLanguages.find(l => l.code === this.selectedLangCode);
-    return lang ? lang.flag : '🌐';
-  });
-
-  /** Label of the currently active translation language (shown in the badge and button) */
-  activeLangLabel = computed<string>(() => {
-    const lang = this.translateLanguages.find(l => l.code === this.selectedLangCode);
-    return lang ? lang.label : '';
-  });
-
   // ── Master data (inject before computed fields so this.master is available) ─
   private master = inject(MasterDataService);
+  private bulkTranslation = inject(BulkTranslationService);
+  private destroy$ = new Subject<void>();
+
+  /** Live-translated admin-authored free text: interest_admin_note, contact_admin_note, revocation_reason. */
+  translatedNotes = signal<Record<string, string>>({});
 
   industryOptions = computed<SelectOption[]>(() =>
     this.master.industries().map((i: { name: string }) => ({ value: i.name, label: i.name }))
@@ -644,7 +401,7 @@ export class RecruiterCandidateProfileComponent implements OnInit {
     private contactRequestService: ContactRequestService,
     private interestRequestService: InterestRequestService,
     private toast: ToastService,
-    private translationService: CandidateTranslationService,
+    private translate: TranslateService,
   ) {}
 
   backLink = '/recruiter/candidates';
@@ -682,7 +439,6 @@ export class RecruiterCandidateProfileComponent implements OnInit {
 
       if (myProfile) {
         this.isAgency    = (myProfile.recruiter as any).type === 'recruitment_agency';
-        this.canTranslate = myProfile.recruiter.enable_translation === true;
       }
 
       if (!this.isAgency && myRequests) {
@@ -693,7 +449,7 @@ export class RecruiterCandidateProfileComponent implements OnInit {
         }
       }
 
-      if (this.isAgency && myInterests) {
+      if (myInterests) {
         const forCandidate = myInterests.requests.filter(
           (r: InterestRequest) => r.candidate_id === this.candidateId
         );
@@ -705,51 +461,44 @@ export class RecruiterCandidateProfileComponent implements OnInit {
         })[0] ?? null;
         if (ir) this.interestRequest = ir;
       }
+
+      this.translateNotes();
     });
+
+    this.translate.onLangChange
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(() => {
+        this.bulkTranslation.clearCache();
+        this.translatedNotes.set({});
+        this.translateNotes();
+      });
   }
 
-  // ── Translation actions ──────────────────────────────────────────────────────
-
-  selectTranslateLang(code: string): void {
-    this.selectedLangCode = code;
-    this.translateDropdownOpen.set(false);
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
   }
 
-  toggleTranslateDropdown(): void {
-    this.translateDropdownOpen.update(v => !v);
-  }
+  /** Translate the genuinely free-text, admin-authored notes shown on this page
+   *  (interest-request admin note, contact-request admin note/revocation reason) —
+   *  these aren't master-data catalog values, so they always go live. */
+  private async translateNotes(): Promise<void> {
+    const lang = this.translate.currentLang || 'en';
+    if (lang === 'en') return;
 
-  @HostListener('document:click')
-  onDocumentClick(): void { this.translateDropdownOpen.set(false); }
+    const fields: Record<string, string> = {};
+    if (this.interestRequest?.admin_note) fields['interest_admin_note'] = this.interestRequest.admin_note;
+    if (this.contactRequest?.admin_note) fields['contact_admin_note'] = this.contactRequest.admin_note;
+    if (this.contactRequest?.revocation_reason) fields['revocation_reason'] = this.contactRequest.revocation_reason;
 
-  @HostListener('document:keydown.escape')
-  onEscape(): void { this.translateDropdownOpen.set(false); }
+    if (Object.keys(fields).length === 0) return;
 
-  translateProfile(): void {
-    if (!this.candidate || this.translating()) return;
-
-    const lang = this.translateLanguages.find(l => l.code === this.selectedLangCode);
-    if (!lang) return;
-
-    this.translating.set(true);
-
-    this.translationService.translate(this.candidate, lang).subscribe({
-      next: (translated) => {
-        this.translatedCandidate.set(translated);
-        this.translated.set(true);
-        this.translating.set(false);
-      },
-      error: (err) => {
-        this.translating.set(false);
-        const msg = err?.error?.message ?? 'Translation failed. Please try again.';
-        this.toast.error(msg);
-      },
-    });
-  }
-
-  showOriginal(): void {
-    this.translatedCandidate.set(null);
-    this.translated.set(false);
+    try {
+      const translated = await this.bulkTranslation.translateSection(fields, lang);
+      this.translatedNotes.set(translated);
+    } catch (error) {
+      console.error('Error translating admin notes:', error);
+    }
   }
 
   // ── Contact / shortlist actions ──────────────────────────────────────────────
@@ -766,11 +515,11 @@ export class RecruiterCandidateProfileComponent implements OnInit {
         this.reasonTouched        = false;
         this.contactRequest       = res.request;
         this.contactRequestStatus = 'pending';
-        this.toast.success('Contact info request submitted. Awaiting admin approval.');
+        this.toast.success(this.translate.instant('CONTACT_STATUS.request_submitted'));
       },
       error: (err) => {
         this.requesting = false;
-        this.toast.error(err?.error?.message ?? 'Failed to submit request');
+        this.toast.error(err?.error?.message ?? this.translate.instant('CONTACT_STATUS.request_submit_failed'));
       },
     });
   }
@@ -778,7 +527,7 @@ export class RecruiterCandidateProfileComponent implements OnInit {
   submitInterestRequest(): void {
     const { sector, country, message } = this.interestForm;
     if (!sector.trim() || !country.trim() || message.trim().length < 10) {
-      this.toast.error('Please fill in all fields (message must be at least 10 characters).');
+      this.toast.error(this.translate.instant('RECRUITER_CANDIDATES.fill_all_fields'));
       return;
     }
     this.submittingInterest = true;
@@ -786,11 +535,11 @@ export class RecruiterCandidateProfileComponent implements OnInit {
       next: (res) => {
         this.submittingInterest = false;
         this.interestRequest    = res.request;
-        this.toast.success('Interest request submitted. Awaiting admin review.');
+        this.toast.success(this.translate.instant('RECRUITER_CANDIDATES.interest_review_submitted'));
       },
       error: (err) => {
         this.submittingInterest = false;
-        this.toast.error(err?.error?.message ?? 'Failed to submit interest request');
+        this.toast.error(err?.error?.message ?? this.translate.instant('RECRUITER_CANDIDATES.interest_review_failed'));
       },
     });
   }
@@ -807,11 +556,11 @@ export class RecruiterCandidateProfileComponent implements OnInit {
       next: () => {
         this.shortlisting = false;
         this.shortlisted  = true;
-        this.toast.success(`${this.candidate!.first_name} ${this.candidate!.last_name} added to shortlist`);
+        this.toast.success(this.translate.instant('SHORTLIST.added_success', { name: `${this.candidate!.first_name} ${this.candidate!.last_name}` }));
       },
       error: (err) => {
         this.shortlisting = false;
-        this.toast.error(err?.error?.message ?? 'Failed to shortlist');
+        this.toast.error(err?.error?.message ?? this.translate.instant('SHORTLIST.add_failed'));
       },
     });
   }

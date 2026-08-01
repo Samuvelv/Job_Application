@@ -6,12 +6,6 @@ import * as ctrl        from './recruiters.controller';
 
 const router = Router();
 
-// ── Debug log — fires for EVERY request that reaches this router ──────────────
-router.use((req, _res, next) => {
-  console.log('[RECRUITER ROUTER]', req.method, req.originalUrl);
-  next();
-});
-
 // ── Recruiter self-service ────────────────────────────────────────────────────
 // Declared before /:id so Express never matches 'me' as an id param
 router.get(   '/me',                        authenticate, authorize('recruiter'), ctrl.getMyProfile);

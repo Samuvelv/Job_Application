@@ -10,140 +10,141 @@ import {
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { TranslateModule } from '@ngx-translate/core';
 import { ConfirmDialogService, ConfirmOptions, ConfirmResult } from '../../../core/services/confirm-dialog.service';
 
 @Component({
   selector: 'app-confirm-dialog',
   standalone: true,
-  imports: [CommonModule, FormsModule],
-  template: `
-    @if (visible()) {
-      <!-- Backdrop — click to dismiss (Stay / cancel) -->
-      <div
-        class="modal-backdrop-animated"
-        aria-hidden="true"
-        (click)="resolve(false)"
-      ></div>
+  imports: [CommonModule, FormsModule, TranslateModule],
+   template: `
+     @if (visible()) {
+       <!-- Backdrop — click to dismiss (Stay / cancel) -->
+       <div
+         class="modal-backdrop-animated"
+         aria-hidden="true"
+         (click)="resolve(false)"
+       ></div>
 
-      <!-- Dialog wrapper — keyboard trap root -->
-      <div
-        class="modal d-block confirm-dialog-modal"
-        tabindex="-1"
-        role="dialog"
-        aria-modal="true"
-        [attr.aria-labelledby]="dialogTitleId"
-        [attr.aria-describedby]="dialogBodyId"
-      >
-        <div class="modal-dialog modal-dialog-centered confirm-dialog-panel">
-          <div
-            class="modal-content confirm-dialog confirm-dialog--{{ variant() }}"
-            (click)="$event.stopPropagation()"
-          >
+       <!-- Dialog wrapper — keyboard trap root -->
+       <div
+         class="modal d-block confirm-dialog-modal"
+         tabindex="-1"
+         role="dialog"
+         aria-modal="true"
+         [attr.aria-labelledby]="dialogTitleId"
+         [attr.aria-describedby]="dialogBodyId"
+       >
+         <div class="modal-dialog modal-dialog-centered confirm-dialog-panel">
+           <div
+             class="modal-content confirm-dialog confirm-dialog--{{ variant() }}"
+             (click)="$event.stopPropagation()"
+           >
 
-            <!-- Header -->
-            <div class="modal-header border-0 pb-0">
-              <div class="d-flex align-items-center gap-3">
-                <!-- Variant icon circle -->
-                <div class="confirm-dialog__icon" aria-hidden="true">
-                  <i class="bi" [ngClass]="icon()"></i>
-                </div>
-                <h5
-                  class="modal-title fw-bold mb-0"
-                  [id]="dialogTitleId"
-                >{{ title() }}</h5>
-              </div>
-              <!-- Close × button — resolves as cancel (Stay) -->
-              <button
-                type="button"
-                class="btn-close"
-                aria-label="Close dialog"
-                (click)="resolve(false)"
-              ></button>
-            </div>
+             <!-- Header -->
+             <div class="modal-header border-0 pb-0">
+               <div class="d-flex align-items-center gap-3">
+                 <!-- Variant icon circle -->
+                 <div class="confirm-dialog__icon" aria-hidden="true">
+                   <i class="bi" [ngClass]="icon()"></i>
+                 </div>
+                 <h5
+                   class="modal-title fw-bold mb-0"
+                   [id]="dialogTitleId"
+                 >{{ title() }}</h5>
+               </div>
+               <!-- Close × button — resolves as cancel (Stay) -->
+               <button
+                 type="button"
+                 class="btn-close"
+                 [attr.aria-label]="('CONFIRM_DIALOG.close_dialog' | translate)"
+                 (click)="resolve(false)"
+               ></button>
+             </div>
 
-            <!-- Body -->
-            <div class="modal-body pt-2" [id]="dialogBodyId">
-              <p class="text-muted mb-3" style="line-height:1.65">{{ message() }}</p>
+             <!-- Body -->
+             <div class="modal-body pt-2" [id]="dialogBodyId">
+               <p class="text-muted mb-3" style="line-height:1.65">{{ message() }}</p>
 
-              @if (showDurationField()) {
-                <div class="mb-3">
-                  <label class="note-label">{{ durationLabel() }} <span class="text-danger">*</span></label>
-                  <div class="d-flex gap-2 align-items-center mb-1">
-                    <input
-                      type="number"
-                      class="form-control form-control-sm"
-                      [(ngModel)]="durationValue"
-                      placeholder="e.g. 6"
-                      min="1"
-                      style="width:100px;flex-shrink:0"
-                      (ngModelChange)="updateExpiryPreview()"
-                    >
-                    <select
-                      class="form-select form-select-sm"
-                      [(ngModel)]="durationUnit"
-                      style="max-width:140px"
-                      (ngModelChange)="updateExpiryPreview()"
-                    >
-                      <option value="" disabled selected>— Unit —</option>
-                      <option value="hours">Hours</option>
-                      <option value="days">Days</option>
-                      <option value="weeks">Weeks</option>
-                      <option value="months">Months</option>
-                      <option value="years">Years</option>
-                    </select>
-                  </div>
-                  @if (expiryPreview) {
-                    <div class="form-text text-info">
-                      <i class="bi bi-calendar-check me-1"></i>New expiry: <strong>{{ expiryPreview }}</strong>
-                    </div>
-                  }
-                  @if (durationError) {
-                    <div class="text-danger small mt-1">{{ durationError }}</div>
-                  }
-                </div>
-              }
+               @if (showDurationField()) {
+                 <div class="mb-3">
+                   <label class="note-label">{{ durationLabel() }} <span class="text-danger">*</span></label>
+                   <div class="d-flex gap-2 align-items-center mb-1">
+                     <input
+                       type="number"
+                       class="form-control form-control-sm"
+                       [(ngModel)]="durationValue"
+                       [placeholder]="('COMMON.example' | translate)"
+                       min="1"
+                       style="width:100px;flex-shrink:0"
+                       (ngModelChange)="updateExpiryPreview()"
+                     >
+                     <select
+                       class="form-select form-select-sm"
+                       [(ngModel)]="durationUnit"
+                       style="max-width:140px"
+                       (ngModelChange)="updateExpiryPreview()"
+                     >
+                       <option value="" disabled selected>{{ 'CONFIRM_DIALOG.select_unit' | translate }}</option>
+                       <option value="hours">{{ 'CONFIRM_DIALOG.hours' | translate }}</option>
+                       <option value="days">{{ 'CONFIRM_DIALOG.days' | translate }}</option>
+                       <option value="weeks">{{ 'CONFIRM_DIALOG.weeks' | translate }}</option>
+                       <option value="months">{{ 'CONFIRM_DIALOG.months' | translate }}</option>
+                       <option value="years">{{ 'CONFIRM_DIALOG.years' | translate }}</option>
+                     </select>
+                   </div>
+                   @if (expiryPreview) {
+                     <div class="form-text text-info">
+                       <i class="bi bi-calendar-check me-1"></i>{{ 'CONFIRM_DIALOG.new_expiry' | translate }} <strong>{{ expiryPreview }}</strong>
+                     </div>
+                   }
+                   @if (durationError) {
+                     <div class="text-danger small mt-1">{{ durationError }}</div>
+                   }
+                 </div>
+               }
 
-              @if (showNoteField()) {
-                <div class="note-field-container">
-                  <label class="note-label">{{ noteLabel() }}</label>
-                  <textarea
-                    class="form-control form-control-sm"
-                    [placeholder]="notePlaceholder()"
-                    [(ngModel)]="noteText"
-                    rows="3">
-                  </textarea>
-                </div>
-              }
-            </div>
+               @if (showNoteField()) {
+                 <div class="note-field-container">
+                   <label class="note-label">{{ noteLabel() }}</label>
+                   <textarea
+                     class="form-control form-control-sm"
+                     [placeholder]="notePlaceholder()"
+                     [(ngModel)]="noteText"
+                     rows="3">
+                   </textarea>
+                 </div>
+               }
+             </div>
 
-            <!-- Footer -->
-            <div class="modal-footer border-0 pt-0 gap-2">
-              <!-- Cancel — "Stay on Page" in the nav-guard context -->
-              <button
-                type="button"
-                class="btn btn-sm"
-                [ngClass]="cancelClass()"
-                (click)="resolve(false)"
-              >
-                {{ cancelLabel() }}
-              </button>
-              <!-- Confirm action button -->
-              <button
-                #confirmBtn
-                type="button"
-                class="btn btn-sm"
-                [ngClass]="confirmClass()"
-                (click)="resolve(true)"
-              >
-                {{ confirmLabel() }}
-              </button>
-            </div>
+             <!-- Footer -->
+             <div class="modal-footer border-0 pt-0 gap-2">
+               <!-- Cancel — "Stay on Page" in the nav-guard context -->
+               <button
+                 type="button"
+                 class="btn btn-sm"
+                 [ngClass]="cancelClass()"
+                 (click)="resolve(false)"
+               >
+                 {{ cancelLabel() }}
+               </button>
+               <!-- Confirm action button -->
+               <button
+                 #confirmBtn
+                 type="button"
+                 class="btn btn-sm"
+                 [ngClass]="confirmClass()"
+                 (click)="resolve(true)"
+               >
+                 {{ confirmLabel() }}
+               </button>
+             </div>
 
-          </div>
-        </div>
-      </div>
-    }
-  `,
+           </div>
+         </div>
+       </div>
+     }
+   `,
   styles: [`
     /* ── Animated backdrop ──────────────────────────────────────────────────── */
     .modal-backdrop-animated {

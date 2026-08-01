@@ -71,6 +71,7 @@ export interface Candidate {
   industry?: string;
   years_experience?: number;
   linkedin_url?: string;
+  notice_period_id?: number | null;
   visa_status?: string;
 
   // Location

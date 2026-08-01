@@ -1,5 +1,7 @@
 // src/app/shared/components/edit-request-card/edit-request-card.component.ts
 import { Component, Input, Output, EventEmitter, OnInit } from '@angular/core';
+import { TranslateModule } from '@ngx-translate/core';
+import { LocaleDatePipe } from '../../../core/pipes/locale-date.pipe';
 import { CommonModule } from '@angular/common';
 import { EditRequest } from '../../../core/models/edit-request.model';
 import { ConfirmDialogService } from '../../../core/services/confirm-dialog.service';
@@ -15,7 +17,7 @@ interface FieldChange {
 @Component({
   selector: 'app-edit-request-card',
   standalone: true,
-  imports: [CommonModule, EditChangesModalComponent],
+  imports: [LocaleDatePipe, CommonModule, EditChangesModalComponent, TranslateModule],
   template: `
     <div class="edit-request-card" [class.is-selected]="selected">
       <!-- Card Header -->
@@ -62,116 +64,116 @@ interface FieldChange {
       <!-- Card Body -->
       <div class="card-body">
         <!-- Reason Section -->
-        @if (request.reason) {
-          <div class="reason-section">
-            <p class="reason-label">Reason for Changes</p>
-            <p class="reason-text">{{ request.reason }}</p>
-          </div>
-        }
+         @if (request.reason) {
+           <div class="reason-section">
+             <p class="reason-label">{{ 'EDIT_REQUEST.reason_label' | translate }}</p>
+             <p class="reason-text">{{ request.reason }}</p>
+           </div>
+         }
 
-        <!-- Changes List Section -->
-        @if (getVisibleChanges().length > 0) {
-          <div class="changes-list-section">
-            <p class="changes-list-label">Changes</p>
-            <div class="changes-list">
-              @for (change of getVisibleChanges(); track change.key) {
-                <div class="change-item">
-                  <div class="change-label">{{ change.label }}</div>
-                  <div class="change-values">
-                    <span class="old-value">{{ change.oldValue || '—' }}</span>
-                    <span class="arrow">→</span>
-                    <span class="new-value">{{ change.newValue || '—' }}</span>
-                  </div>
-                </div>
-              }
-            </div>
+         <!-- Changes List Section -->
+         @if (getVisibleChanges().length > 0) {
+           <div class="changes-list-section">
+             <p class="changes-list-label">{{ 'COMMON.actions' | translate }}</p>
+             <div class="changes-list">
+               @for (change of getVisibleChanges(); track change.key) {
+                 <div class="change-item">
+                   <div class="change-label">{{ change.label }}</div>
+                   <div class="change-values">
+                     <span class="old-value">{{ change.oldValue || '—' }}</span>
+                     <span class="arrow">→</span>
+                     <span class="new-value">{{ change.newValue || '—' }}</span>
+                   </div>
+                 </div>
+               }
+             </div>
 
-            <!-- Show More Button -->
-            @if (getChangeCount() > 1) {
-              <button class="btn-show-more" (click)="onViewAllChanges()">
-                <i class="bi bi-plus-lg"></i>
-                Show {{ getChangeCount() - 1 }} more change{{ getChangeCount() - 1 !== 1 ? 's' : '' }}
-              </button>
-            }
-          </div>
-        }
+             <!-- Show More Button -->
+             @if (getChangeCount() > 1) {
+               <button class="btn-show-more" (click)="onViewAllChanges()">
+                 <i class="bi bi-plus-lg"></i>
+                 Show {{ getChangeCount() - 1 }} more change{{ getChangeCount() - 1 !== 1 ? 's' : '' }}
+               </button>
+             }
+           </div>
+         }
 
-        <!-- Admin Notes (if approved/rejected) -->
-        @if (request.status !== 'pending' && request.admin_note) {
-          <div class="admin-notes-section">
-            <p class="admin-note-label">Admin Note</p>
-            <p class="admin-note-text">{{ request.admin_note }}</p>
-            @if (isNoteTruncated()) {
-              <button class="btn-read-more" (click)="showNoteModal = true">
-                Read more <i class="bi bi-chevron-right"></i>
-              </button>
-            }
-          </div>
-        }
+         <!-- Admin Notes (if approved/rejected) -->
+         @if (request.status !== 'pending' && request.admin_note) {
+           <div class="admin-notes-section">
+             <p class="admin-note-label">{{ 'EDIT_REQUEST.admin_note' | translate }}</p>
+             <p class="admin-note-text">{{ request.admin_note }}</p>
+             @if (isNoteTruncated()) {
+               <button class="btn-read-more" (click)="showNoteModal = true">
+                 {{ 'COMMON.view' | translate }} <i class="bi bi-chevron-right"></i>
+               </button>
+             }
+           </div>
+         }
       </div>
 
-      <!-- Audit Trail -->
-      <div class="audit-trail">
-        <div class="audit-trail__title">
-          <i class="bi bi-journal-text"></i>
-          Audit Trail
-        </div>
-        <div class="audit-trail__rows">
-          <div class="audit-trail__row">
-            <span class="audit-trail__label">Submitted</span>
-            <span class="audit-trail__value">{{ request.created_at | date:'dd MMM yyyy, HH:mm' }}</span>
-          </div>
-          @if (request.status !== 'pending') {
-            <div class="audit-trail__row">
-              <span class="audit-trail__label">Reviewed by</span>
-              <span class="audit-trail__value">
-                @if (request.reviewed_by_name) {
-                  <i class="bi bi-person-check"></i>
-                  {{ request.reviewed_by_name }}
-                } @else {
-                  <span class="audit-trail__unknown">—</span>
-                }
-              </span>
-            </div>
-            <div class="audit-trail__row">
-              <span class="audit-trail__label">Decision made</span>
-              <span class="audit-trail__value">{{ request.reviewed_at | date:'dd MMM yyyy, HH:mm' }}</span>
-            </div>
-          }
-        </div>
-      </div>
+       <!-- Audit Trail -->
+       <div class="audit-trail">
+         <div class="audit-trail__title">
+           <i class="bi bi-journal-text"></i>
+           {{ 'AUDIT_LOGS.title' | translate }}
+         </div>
+         <div class="audit-trail__rows">
+           <div class="audit-trail__row">
+             <span class="audit-trail__label">{{ 'EDIT_REQUEST.submitted' | translate }}</span>
+             <span class="audit-trail__value">{{ request.created_at | localeDate:'dd MMM yyyy, HH:mm' }}</span>
+           </div>
+           @if (request.status !== 'pending') {
+             <div class="audit-trail__row">
+               <span class="audit-trail__label">{{ 'COMMON.actions' | translate }}</span>
+               <span class="audit-trail__value">
+                 @if (request.reviewed_by_name) {
+                   <i class="bi bi-person-check"></i>
+                   {{ request.reviewed_by_name }}
+                 } @else {
+                   <span class="audit-trail__unknown">—</span>
+                 }
+               </span>
+             </div>
+             <div class="audit-trail__row">
+               <span class="audit-trail__label">{{ 'EDIT_REQUEST.reviewed' | translate }}</span>
+               <span class="audit-trail__value">{{ request.reviewed_at | localeDate:'dd MMM yyyy, HH:mm' }}</span>
+             </div>
+           }
+         </div>
+       </div>
 
-      <!-- Card Footer (Action Buttons) -->
-      @if ((isAdmin || isRecruiter) && !isSubmitting) {
-        <div class="card-footer">
-          <button class="btn btn-action btn-action--view" (click)="onViewAllChanges()">
-            <i class="bi bi-eye"></i>
-            View
-          </button>
-          @if (request.status === 'pending') {
-            <div class="btn-action-group">
-              <button class="btn btn-success btn-action" (click)="onApproveClick()">
-                <i class="bi bi-check-circle"></i>
-                Approve
-              </button>
-              <button class="btn btn-danger btn-action" (click)="onRejectClick()">
-                <i class="bi bi-x-circle"></i>
-                Reject
-              </button>
-            </div>
-          }
-        </div>
-      }
+       <!-- Card Footer (Action Buttons) -->
+       @if ((isAdmin || isRecruiter) && !isSubmitting) {
+         <div class="card-footer">
+           <button class="btn btn-action btn-action--view" (click)="onViewAllChanges()">
+             <i class="bi bi-eye"></i>
+             {{ 'COMMON.view' | translate }}
+           </button>
+           @if (request.status === 'pending') {
+             <div class="btn-action-group">
+               <button class="btn btn-success btn-action" (click)="onApproveClick()">
+                 <i class="bi bi-check-circle"></i>
+                 {{ 'EDIT_REQUEST.approved' | translate }}
+               </button>
+               <button class="btn btn-danger btn-action" (click)="onRejectClick()">
+                 <i class="bi bi-x-circle"></i>
+                 {{ 'EDIT_REQUEST.rejected' | translate }}
+               </button>
+             </div>
+           }
+         </div>
+       }
 
-      <!-- Loading State -->
-      @if (isSubmitting) {
-        <div class="card-footer">
-          <button class="btn btn-secondary btn-action" disabled>
-            <span class="spinner-border spinner-border-sm me-2"></span>
-            Processing...
-          </button>
-        </div>
-      }
+       <!-- Loading State -->
+       @if (isSubmitting) {
+         <div class="card-footer">
+           <button class="btn btn-secondary btn-action" disabled>
+             <span class="spinner-border spinner-border-sm me-2"></span>
+             {{ 'COMMON.loading' | translate }}
+           </button>
+         </div>
+       }
     </div>
 
     <!-- Changes Modal (Outside card due to fixed positioning) -->
@@ -181,22 +183,22 @@ interface FieldChange {
       (closed)="showChangesModal = false">
     </app-edit-changes-modal>
 
-    <!-- Admin Note Full Modal -->
-    @if (showNoteModal) {
-      <div class="note-modal-backdrop" (click)="showNoteModal = false">
-        <div class="note-modal-panel" (click)="$event.stopPropagation()">
-          <div class="note-modal-header">
-            <span class="note-modal-title">Admin Note</span>
-            <button class="note-modal-close" (click)="showNoteModal = false">
-              <i class="bi bi-x-lg"></i>
-            </button>
-          </div>
-          <div class="note-modal-body">
-            <p>{{ request.admin_note }}</p>
-          </div>
-        </div>
-      </div>
-    }
+     <!-- Admin Note Full Modal -->
+     @if (showNoteModal) {
+       <div class="note-modal-backdrop" (click)="showNoteModal = false">
+         <div class="note-modal-panel" (click)="$event.stopPropagation()">
+           <div class="note-modal-header">
+             <span class="note-modal-title">{{ 'EDIT_REQUEST.admin_note' | translate }}</span>
+             <button class="note-modal-close" (click)="showNoteModal = false">
+               <i class="bi bi-x-lg"></i>
+             </button>
+           </div>
+           <div class="note-modal-body">
+             <p>{{ request.admin_note }}</p>
+           </div>
+         </div>
+       </div>
+     }
   `,
   styles: [`
     .edit-request-card {
@@ -1014,3 +1016,4 @@ export class EditRequestCardComponent implements OnInit {
     });
   }
 }
+

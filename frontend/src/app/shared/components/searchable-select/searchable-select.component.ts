@@ -28,7 +28,7 @@ export interface SelectOption {
       <!-- Trigger -->
       <div class="ss-trigger" (click)="toggle()" [class.ss-invalid]="invalid">
         <span class="ss-value" [class.ss-placeholder]="!displayLabel()">
-          {{ displayLabel() || placeholder }}
+          {{ (displayLabel() | translate) || placeholder }}
         </span>
         <i class="bi" [class.bi-chevron-down]="!open()" [class.bi-chevron-up]="open()"></i>
       </div>
@@ -43,7 +43,7 @@ export interface SelectOption {
               #searchInput
               class="ss-search"
               type="text"
-              [placeholder]="'Search ' + (placeholder || 'options') + '...'"
+              [placeholder]="(('COMMON.search' | translate) + ' ' + (placeholder || ('COMMON.options' | translate)) + '...')"
               [(ngModel)]="query"
               (ngModelChange)="onQuery($event)"
               (click)="$event.stopPropagation()"
@@ -60,7 +60,7 @@ export interface SelectOption {
           <ul class="ss-list">
             @if (allowClear && selectedValue() !== null && selectedValue() !== '') {
               <li class="ss-option ss-clear-option" (click)="select(null)">
-                <i class="bi bi-x-circle me-1"></i>Clear selection
+                <i class="bi bi-x-circle me-1"></i>{{ 'TOOLTIPS.clear_selection' | translate }}
               </li>
             }
             @for (opt of filteredOptions(); track opt.value) {
@@ -75,7 +75,7 @@ export interface SelectOption {
                 }
               </li>
             } @empty {
-              <li class="ss-empty">No results found</li>
+              <li class="ss-empty">{{ 'MESSAGES.no_results' | translate }}</li>
             }
           </ul>
         </div>
@@ -97,11 +97,15 @@ export class SearchableSelectComponent implements OnChanges, OnInit, ControlValu
 
   filteredOptions = computed(() => this.filteredOpts());
 
+  /** Raw label (i18n key or literal) of the selected option — translated reactively
+   *  in the template via the `translate` pipe, since `TranslateService.instant()` is
+   *  not itself a signal read and wouldn't re-trigger this computed on language change.
+   *  Falls back to the raw value itself (e.g. a free-text or AI-translated value that
+   *  doesn't match any catalog option) rather than going blank. */
   displayLabel = computed(() => {
     const v = this.selectedValue();
     if (v === null || v === '') return '';
-    const raw = this.options.find((o) => String(o.value) === String(v))?.label ?? '';
-    return raw ? this.translate.instant(raw) : '';
+    return this.options.find((o) => String(o.value) === String(v))?.label ?? String(v);
   });
 
   private onChange: (v: any) => void = () => {};
@@ -139,7 +143,12 @@ export class SearchableSelectComponent implements OnChanges, OnInit, ControlValu
     this.filteredOpts.set(
       this.options.filter(
         (o) => this.translate.instant(o.label).toLowerCase().includes(lower) ||
-               (o.sublabel ?? '').toLowerCase().includes(lower),
+               (o.sublabel ?? '').toLowerCase().includes(lower) ||
+               // Master-data options carry the original English catalog string in
+               // `value` (label/sublabel get translated for display) — matching
+               // against it too lets users search in English even when the UI
+               // language has translated every visible label into another script.
+               String(o.value).toLowerCase().includes(lower),
       ),
     );
   }

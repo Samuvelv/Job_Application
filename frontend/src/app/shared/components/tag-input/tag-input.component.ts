@@ -3,12 +3,13 @@ import {
   Component, forwardRef, signal, Input, HostListener,
 } from '@angular/core';
 import { ControlValueAccessor, NG_VALUE_ACCESSOR, FormsModule } from '@angular/forms';
+import { TranslateModule } from '@ngx-translate/core';
 import { CommonModule } from '@angular/common';
 
 @Component({
   selector: 'app-tag-input',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, TranslateModule],
   providers: [
     {
       provide: NG_VALUE_ACCESSOR,
@@ -23,7 +24,7 @@ import { CommonModule } from '@angular/common';
         <span class="tag-chip">
           {{ tag }}
           @if (!isDisabled) {
-            <button type="button" class="tag-chip-remove" (click)="remove(tag)" [attr.aria-label]="'Remove ' + tag">
+            <button type="button" class="tag-chip-remove" (click)="remove(tag)" [attr.aria-label]="(('COMMON.remove' | translate) + ' ' + tag)">
               <i class="bi bi-x"></i>
             </button>
           }
@@ -95,3 +96,4 @@ export class TagInputComponent implements ControlValueAccessor {
     this.onChange(this.tags());
   }
 }
+

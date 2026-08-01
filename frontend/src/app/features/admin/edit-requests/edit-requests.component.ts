@@ -1,6 +1,8 @@
 // src/app/features/admin/edit-requests/edit-requests.component.ts
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
+import { LocaleDatePipe } from '../../../core/pipes/locale-date.pipe';
 import { ReactiveFormsModule, FormBuilder, FormGroup, FormsModule } from '@angular/forms';
 import { Subject, debounceTime, distinctUntilChanged, takeUntil } from 'rxjs';
 import { EditRequestService } from '../../../core/services/edit-request.service';
@@ -26,7 +28,7 @@ import { EditChangesModalComponent } from '../../../shared/components/edit-reque
 @Component({
   selector: 'app-edit-requests',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, FormsModule, PageHeaderComponent, EmptyStateComponent, EditRequestCardComponent, ContactRequestCardComponent, SearchableSelectComponent, EditChangesModalComponent],
+  imports: [LocaleDatePipe, CommonModule, TranslateModule, ReactiveFormsModule, FormsModule, PageHeaderComponent, EmptyStateComponent, EditRequestCardComponent, ContactRequestCardComponent, SearchableSelectComponent, EditChangesModalComponent],
   styles: [`
     .filter-bar {
       background: var(--th-surface);
@@ -238,52 +240,52 @@ import { EditChangesModalComponent } from '../../../shared/components/edit-reque
     .cl-view-toggle button:not(.active):hover { background: var(--th-surface, #fff); color: var(--th-text, #111); }
     .btn-xs { padding: .2rem .45rem; font-size: .75rem; }
   `],
-  template: `
-    <app-page-header
-      title="Requests"
-      [subtitle]="activeSection === 'edit' ? (editPagination.total + ' edit requests') : activeSection === 'contact' ? (contactPagination.total + ' contact requests') : activeSection === 'support' ? (supportPagination.total + ' volunteer support requests') : (accessPagination.total + ' recruiter access requests')"
-      icon="bi-inbox-fill"
-    />
+   template: `
+     <app-page-header
+       [title]="'EDIT_REQUESTS.title' | translate"
+       [subtitle]="activeSection === 'edit' ? (editPagination.total + ' ' + ('EDIT_REQUESTS.edit_requests' | translate)) : activeSection === 'contact' ? (contactPagination.total + ' ' + ('EDIT_REQUESTS.contact_requests' | translate)) : activeSection === 'support' ? (supportPagination.total + ' ' + ('EDIT_REQUESTS.support_requests' | translate)) : (accessPagination.total + ' ' + ('EDIT_REQUESTS.recruiter_access_requests' | translate))"
+       icon="bi-inbox-fill"
+     />
 
-    <!-- Section toggle -->
-    <div class="req-section-toggle mb-4">
-      <button class="req-section-btn"
-        [class.active]="activeSection === 'edit'"
-        (click)="setSection('edit')">
-        <i class="bi bi-pencil-square"></i>
-        Candidate Edit Requests
-        @if (editPendingCount > 0) {
-          <span class="req-section-badge">{{ editPendingCount }}</span>
-        }
-      </button>
-      <button class="req-section-btn"
-        [class.active]="activeSection === 'contact'"
-        (click)="setSection('contact')">
-        <i class="bi bi-person-lines-fill"></i>
-        Contact Info Requests
-        @if (contactPendingCount > 0) {
-          <span class="req-section-badge">{{ contactPendingCount }}</span>
-        }
-      </button>
-      <button class="req-section-btn"
-        [class.active]="activeSection === 'support'"
-        (click)="setSection('support')">
-        <i class="bi bi-hand-thumbs-up-fill"></i>
-        Volunteer Support
-        @if (supportPendingCount > 0) {
-          <span class="req-section-badge">{{ supportPendingCount }}</span>
-        }
-      </button>
-      <button class="req-section-btn"
-        [class.active]="activeSection === 'recruiter-access'"
-        (click)="setSection('recruiter-access')">
-        <i class="bi bi-key-fill"></i>
-        Recruiter Access Requests
-        @if (accessPendingCount > 0) {
-          <span class="req-section-badge">{{ accessPendingCount }}</span>
-        }
-      </button>
-    </div>
+     <!-- Section toggle -->
+     <div class="req-section-toggle mb-4">
+       <button class="req-section-btn"
+         [class.active]="activeSection === 'edit'"
+         (click)="setSection('edit')">
+         <i class="bi bi-pencil-square"></i>
+         {{ 'EDIT_REQUESTS.edit_requests' | translate }}
+         @if (editPendingCount > 0) {
+           <span class="req-section-badge">{{ editPendingCount }}</span>
+         }
+       </button>
+       <button class="req-section-btn"
+         [class.active]="activeSection === 'contact'"
+         (click)="setSection('contact')">
+         <i class="bi bi-person-lines-fill"></i>
+         {{ 'EDIT_REQUESTS.contact_info_requests' | translate }}
+         @if (contactPendingCount > 0) {
+           <span class="req-section-badge">{{ contactPendingCount }}</span>
+         }
+       </button>
+       <button class="req-section-btn"
+         [class.active]="activeSection === 'support'"
+         (click)="setSection('support')">
+         <i class="bi bi-hand-thumbs-up-fill"></i>
+         {{ 'EDIT_REQUESTS.volunteer_support' | translate }}
+         @if (supportPendingCount > 0) {
+           <span class="req-section-badge">{{ supportPendingCount }}</span>
+         }
+       </button>
+       <button class="req-section-btn"
+         [class.active]="activeSection === 'recruiter-access'"
+         (click)="setSection('recruiter-access')">
+         <i class="bi bi-key-fill"></i>
+         {{ 'EDIT_REQUESTS.recruiter_access_requests' | translate }}
+         @if (accessPendingCount > 0) {
+           <span class="req-section-badge">{{ accessPendingCount }}</span>
+         }
+       </button>
+     </div>
 
     <!-- ── EDIT REQUESTS SECTION ── -->
     @if (activeSection === 'edit') {
@@ -294,11 +296,11 @@ import { EditChangesModalComponent } from '../../../shared/components/edit-reque
 
           <!-- Search -->
           <div class="filter-bar__group filter-bar__group--wide">
-            <span class="filter-bar__label"><i class="bi bi-search me-1"></i>Search candidate</span>
+            <span class="filter-bar__label"><i class="bi bi-search me-1"></i>{{ 'EDIT_REQUESTS_ADMIN.search_candidate' | translate }}</span>
             <input
               class="filter-bar__input"
               type="text"
-              placeholder="Search by candidate name…"
+              [placeholder]="'EDIT_REQUESTS_ADMIN.search_by_candidate_name' | translate"
               [(ngModel)]="editSearch"
               (ngModelChange)="onEditSearchChange($event)"
             />
@@ -306,19 +308,19 @@ import { EditChangesModalComponent } from '../../../shared/components/edit-reque
 
           <!-- Request Type -->
           <div class="filter-bar__group">
-            <span class="filter-bar__label"><i class="bi bi-tag me-1"></i>Request type</span>
+            <span class="filter-bar__label"><i class="bi bi-tag me-1"></i>{{ 'EDIT_REQUESTS_ADMIN.request_type' | translate }}</span>
             <app-searchable-select
               [ngModel]="editRequestType"
               (ngModelChange)="editRequestType = $event; onEditFilterChange()"
               [options]="editRequestTypeOptions"
-              placeholder="All types"
+              [placeholder]="'EDIT_REQUESTS_ADMIN.all_types' | translate"
               [allowClear]="false">
             </app-searchable-select>
           </div>
 
           <!-- Date From -->
           <div class="filter-bar__group">
-            <span class="filter-bar__label"><i class="bi bi-calendar me-1"></i>Date from</span>
+            <span class="filter-bar__label"><i class="bi bi-calendar me-1"></i>{{ 'AUDIT_LOGS.from' | translate }}</span>
             <input
               class="filter-bar__input"
               type="date"
@@ -329,7 +331,7 @@ import { EditChangesModalComponent } from '../../../shared/components/edit-reque
 
           <!-- Date To -->
           <div class="filter-bar__group">
-            <span class="filter-bar__label"><i class="bi bi-calendar-check me-1"></i>Date to</span>
+            <span class="filter-bar__label"><i class="bi bi-calendar-check me-1"></i>{{ 'AUDIT_LOGS.to' | translate }}</span>
             <input
               class="filter-bar__input"
               type="date"
@@ -340,12 +342,12 @@ import { EditChangesModalComponent } from '../../../shared/components/edit-reque
 
           <!-- Sort -->
           <div class="filter-bar__group er-sort-group">
-            <span class="filter-bar__label"><i class="bi bi-sort-down me-1"></i>Sort</span>
+            <span class="filter-bar__label"><i class="bi bi-sort-down me-1"></i>{{ 'CANDIDATE_LIST.sort_by' | translate }}</span>
             <app-searchable-select
               [ngModel]="editSort"
               (ngModelChange)="editSort = $event; onEditFilterChange()"
               [options]="sortOptions"
-              placeholder="Sort"
+              [placeholder]="'CANDIDATE_LIST.sort_by' | translate"
               [allowClear]="false">
             </app-searchable-select>
           </div>
@@ -353,8 +355,8 @@ import { EditChangesModalComponent } from '../../../shared/components/edit-reque
           <!-- View toggle + Export -->
           <div style="display:flex;align-items:flex-end;gap:6px;margin-left:auto">
             <div class="cl-view-toggle" style="align-self:flex-end">
-              <button [class.active]="editViewMode === 'card'" (click)="editViewMode = 'card'" title="Card view"><i class="bi bi-grid-3x3-gap-fill"></i></button>
-              <button [class.active]="editViewMode === 'list'" (click)="editViewMode = 'list'" title="List view"><i class="bi bi-list-ul"></i></button>
+              <button [class.active]="editViewMode === 'card'" (click)="editViewMode = 'card'" [title]="'VOLUNTEERS.grid_view' | translate"><i class="bi bi-grid-3x3-gap-fill"></i></button>
+              <button [class.active]="editViewMode === 'list'" (click)="editViewMode = 'list'" [title]="'VOLUNTEERS.list_view' | translate"><i class="bi bi-list-ul"></i></button>
             </div>
             <button class="filter-bar__clear" style="border-color:var(--th-success);color:var(--th-success)"
               [disabled]="editExporting" (click)="exportEditCsv()">
@@ -493,11 +495,11 @@ import { EditChangesModalComponent } from '../../../shared/components/edit-reque
                         <span class="badge bg-danger-subtle text-danger border border-danger-subtle" style="font-size:.7rem">Rejected</span>
                       }
                     </td>
-                    <td class="small text-muted">{{ req.created_at | date:'dd MMM yyyy' }}</td>
+                    <td class="small text-muted">{{ req.created_at | localeDate:'dd MMM yyyy' }}</td>
                     <td class="small text-muted">{{ req.reviewed_by_name || '—' }}</td>
                     <td class="text-end">
                       <div class="d-flex justify-content-end gap-1">
-                        <button class="btn btn-xs btn-outline-secondary" title="View changes" (click)="openEditChangesModal(req)">
+                        <button class="btn btn-xs btn-outline-secondary" [title]="'EDIT_REQUESTS_ADMIN.view_changes' | translate" (click)="openEditChangesModal(req)">
                           <i class="bi bi-eye"></i>
                         </button>
                         @if (req.status === 'pending') {
@@ -557,7 +559,7 @@ import { EditChangesModalComponent } from '../../../shared/components/edit-reque
             <input
               class="filter-bar__input"
               type="text"
-              placeholder="Search by recruiter or candidate name…"
+              [placeholder]="'EDIT_REQUESTS_ADMIN.search_recruiter_or_candidate' | translate"
               [(ngModel)]="contactSearch"
               (ngModelChange)="onContactSearchChange($event)"
             />
@@ -565,7 +567,7 @@ import { EditChangesModalComponent } from '../../../shared/components/edit-reque
 
           <!-- Date From -->
           <div class="filter-bar__group">
-            <span class="filter-bar__label"><i class="bi bi-calendar me-1"></i>Date from</span>
+            <span class="filter-bar__label"><i class="bi bi-calendar me-1"></i>{{ 'AUDIT_LOGS.from' | translate }}</span>
             <input
               class="filter-bar__input"
               type="date"
@@ -576,7 +578,7 @@ import { EditChangesModalComponent } from '../../../shared/components/edit-reque
 
           <!-- Date To -->
           <div class="filter-bar__group">
-            <span class="filter-bar__label"><i class="bi bi-calendar-check me-1"></i>Date to</span>
+            <span class="filter-bar__label"><i class="bi bi-calendar-check me-1"></i>{{ 'AUDIT_LOGS.to' | translate }}</span>
             <input
               class="filter-bar__input"
               type="date"
@@ -587,12 +589,12 @@ import { EditChangesModalComponent } from '../../../shared/components/edit-reque
 
           <!-- Sort -->
           <div class="filter-bar__group er-sort-group">
-            <span class="filter-bar__label"><i class="bi bi-sort-down me-1"></i>Sort</span>
+            <span class="filter-bar__label"><i class="bi bi-sort-down me-1"></i>{{ 'CANDIDATE_LIST.sort_by' | translate }}</span>
             <app-searchable-select
               [ngModel]="contactSort"
               (ngModelChange)="contactSort = $event; onContactFilterChange()"
               [options]="sortOptions"
-              placeholder="Sort"
+              [placeholder]="'CANDIDATE_LIST.sort_by' | translate"
               [allowClear]="false">
             </app-searchable-select>
           </div>
@@ -600,8 +602,8 @@ import { EditChangesModalComponent } from '../../../shared/components/edit-reque
           <!-- View toggle + Export -->
           <div style="display:flex;align-items:flex-end;gap:6px;margin-left:auto">
             <div class="cl-view-toggle" style="align-self:flex-end">
-              <button [class.active]="contactViewMode === 'card'" (click)="contactViewMode = 'card'" title="Card view"><i class="bi bi-grid-3x3-gap-fill"></i></button>
-              <button [class.active]="contactViewMode === 'list'" (click)="contactViewMode = 'list'" title="List view"><i class="bi bi-list-ul"></i></button>
+              <button [class.active]="contactViewMode === 'card'" (click)="contactViewMode = 'card'" [title]="'VOLUNTEERS.grid_view' | translate"><i class="bi bi-grid-3x3-gap-fill"></i></button>
+              <button [class.active]="contactViewMode === 'list'" (click)="contactViewMode = 'list'" [title]="'VOLUNTEERS.list_view' | translate"><i class="bi bi-list-ul"></i></button>
             </div>
             <button class="filter-bar__clear" style="border-color:var(--th-success);color:var(--th-success)"
               [disabled]="contactExporting" (click)="exportContactCsv()">
@@ -737,22 +739,22 @@ import { EditChangesModalComponent } from '../../../shared/components/edit-reque
                          <span class="badge bg-danger-subtle text-danger border border-danger-subtle" style="font-size:.7rem">Rejected</span>
                        }
                      </td>
-                     <td class="small text-muted">{{ req.created_at | date:'dd MMM yyyy' }}</td>
+                     <td class="small text-muted">{{ req.created_at | localeDate:'dd MMM yyyy' }}</td>
                      <td class="small text-muted">{{ req.revoked_by_name || req.reviewed_by_name || '—' }}</td>
                      <td class="text-end">
                        @if (req.status === 'pending') {
                          <div class="d-flex justify-content-end gap-1">
-                           <button class="btn btn-xs btn-success" title="Approve"
+                           <button class="btn btn-xs btn-success" [title]="'INTEREST_REQUESTS.approve' | translate"
                              (click)="onContactApproveFromList(req.id)">
                              <i class="bi bi-check"></i>
                            </button>
-                           <button class="btn btn-xs btn-danger" title="Reject"
+                           <button class="btn btn-xs btn-danger" [title]="'INTEREST_REQUESTS.reject' | translate"
                              (click)="onContactRejectFromList(req.id)">
                              <i class="bi bi-x"></i>
                            </button>
                          </div>
                        } @else if (req.status === 'approved') {
-                         <button class="btn btn-xs btn-warning" title="Revoke access"
+                         <button class="btn btn-xs btn-warning" [title]="'EDIT_REQUESTS_ADMIN.revoke_access_label' | translate"
                            (click)="onContactRevoked({ id: req.id })">
                            <i class="bi bi-shield-x me-1"></i>Revoke
                          </button>
@@ -798,7 +800,7 @@ import { EditChangesModalComponent } from '../../../shared/components/edit-reque
             <input
               class="filter-bar__input"
               type="text"
-              placeholder="Search by candidate or volunteer name…"
+              [placeholder]="'EDIT_REQUESTS_ADMIN.search_candidate_or_volunteer' | translate"
               [(ngModel)]="supportSearch"
               (ngModelChange)="onSupportSearchChange($event)"
             />
@@ -806,19 +808,19 @@ import { EditChangesModalComponent } from '../../../shared/components/edit-reque
 
           <!-- Sort -->
           <div class="filter-bar__group er-sort-group">
-            <span class="filter-bar__label"><i class="bi bi-sort-down me-1"></i>Sort</span>
+            <span class="filter-bar__label"><i class="bi bi-sort-down me-1"></i>{{ 'CANDIDATE_LIST.sort_by' | translate }}</span>
             <app-searchable-select
               [ngModel]="supportSort"
               (ngModelChange)="supportSort = $event; onSupportFilterChange()"
               [options]="sortOptions"
-              placeholder="Sort"
+              [placeholder]="'CANDIDATE_LIST.sort_by' | translate"
               [allowClear]="false">
             </app-searchable-select>
           </div>
 
           <!-- Date From -->
           <div class="filter-bar__group">
-            <span class="filter-bar__label"><i class="bi bi-calendar me-1"></i>Date from</span>
+            <span class="filter-bar__label"><i class="bi bi-calendar me-1"></i>{{ 'AUDIT_LOGS.from' | translate }}</span>
             <input
               class="filter-bar__input"
               type="date"
@@ -829,7 +831,7 @@ import { EditChangesModalComponent } from '../../../shared/components/edit-reque
 
           <!-- Date To -->
           <div class="filter-bar__group">
-            <span class="filter-bar__label"><i class="bi bi-calendar-check me-1"></i>Date to</span>
+            <span class="filter-bar__label"><i class="bi bi-calendar-check me-1"></i>{{ 'AUDIT_LOGS.to' | translate }}</span>
             <input
               class="filter-bar__input"
               type="date"
@@ -927,7 +929,7 @@ import { EditChangesModalComponent } from '../../../shared/components/edit-reque
                       <span class="badge bg-secondary-subtle text-secondary border border-secondary-subtle" style="font-size:.7rem">Closed</span>
                     }
                   </td>
-                  <td class="small text-muted">{{ req.created_at | date:'dd MMM yyyy' }}</td>
+                  <td class="small text-muted">{{ req.created_at | localeDate:'dd MMM yyyy' }}</td>
                   <td class="text-end">
                     <div class="d-flex justify-content-end gap-1">
                       @if (req.status === 'pending') {
@@ -989,7 +991,7 @@ import { EditChangesModalComponent } from '../../../shared/components/edit-reque
             <input
               class="filter-bar__input"
               type="text"
-              placeholder="Search by recruiter email…"
+              [placeholder]="'EDIT_REQUESTS_ADMIN.search_recruiter_email' | translate"
               [(ngModel)]="accessSearch"
               (ngModelChange)="accessSearch$.next($event)"
             />
@@ -997,7 +999,7 @@ import { EditChangesModalComponent } from '../../../shared/components/edit-reque
 
           <!-- Date From -->
           <div class="filter-bar__group">
-            <span class="filter-bar__label"><i class="bi bi-calendar me-1"></i>Date from</span>
+            <span class="filter-bar__label"><i class="bi bi-calendar me-1"></i>{{ 'AUDIT_LOGS.from' | translate }}</span>
             <input
               class="filter-bar__input"
               type="date"
@@ -1008,7 +1010,7 @@ import { EditChangesModalComponent } from '../../../shared/components/edit-reque
 
           <!-- Date To -->
           <div class="filter-bar__group">
-            <span class="filter-bar__label"><i class="bi bi-calendar-check me-1"></i>Date to</span>
+            <span class="filter-bar__label"><i class="bi bi-calendar-check me-1"></i>{{ 'AUDIT_LOGS.to' | translate }}</span>
             <input
               class="filter-bar__input"
               type="date"
@@ -1019,12 +1021,12 @@ import { EditChangesModalComponent } from '../../../shared/components/edit-reque
 
           <!-- Sort -->
           <div class="filter-bar__group er-sort-group">
-            <span class="filter-bar__label"><i class="bi bi-sort-down me-1"></i>Sort</span>
+            <span class="filter-bar__label"><i class="bi bi-sort-down me-1"></i>{{ 'CANDIDATE_LIST.sort_by' | translate }}</span>
             <app-searchable-select
               [ngModel]="accessSort"
               (ngModelChange)="accessSort = $event; onAccessFilterChange()"
               [options]="sortOptions"
-              placeholder="Sort"
+              [placeholder]="'CANDIDATE_LIST.sort_by' | translate"
               [allowClear]="false">
             </app-searchable-select>
           </div>
@@ -1032,8 +1034,8 @@ import { EditChangesModalComponent } from '../../../shared/components/edit-reque
           <!-- View toggle -->
           <div style="display:flex;align-items:flex-end;gap:6px;margin-left:auto">
             <div class="cl-view-toggle" style="align-self:flex-end">
-              <button [class.active]="accessViewMode === 'card'" (click)="accessViewMode = 'card'" title="Card view"><i class="bi bi-grid-3x3-gap-fill"></i></button>
-              <button [class.active]="accessViewMode === 'list'" (click)="accessViewMode = 'list'" title="List view"><i class="bi bi-list-ul"></i></button>
+              <button [class.active]="accessViewMode === 'card'" (click)="accessViewMode = 'card'" [title]="'VOLUNTEERS.grid_view' | translate"><i class="bi bi-grid-3x3-gap-fill"></i></button>
+              <button [class.active]="accessViewMode === 'list'" (click)="accessViewMode = 'list'" [title]="'VOLUNTEERS.list_view' | translate"><i class="bi bi-list-ul"></i></button>
             </div>
           </div>
 
@@ -1101,7 +1103,7 @@ import { EditChangesModalComponent } from '../../../shared/components/edit-reque
                       </div>
                       <div class="flex-grow-1 min-w-0">
                         <div class="fw-semibold small text-truncate" style="color:var(--th-text);max-width:160px" [title]="req.email">{{ req.email }}</div>
-                        <div class="text-muted" style="font-size:.7rem"><i class="bi bi-calendar3 me-1"></i>{{ req.created_at | date:'dd MMM yyyy' }}</div>
+                        <div class="text-muted" style="font-size:.7rem"><i class="bi bi-calendar3 me-1"></i>{{ req.created_at | localeDate:'dd MMM yyyy' }}</div>
                       </div>
                       @if (req.status === 'pending') {
                         <span class="badge bg-warning-subtle text-warning border border-warning-subtle flex-shrink-0" style="font-size:.68rem">Pending</span>
@@ -1173,7 +1175,7 @@ import { EditChangesModalComponent } from '../../../shared/components/edit-reque
                   <tr>
                     <td class="fw-semibold small">{{ req.email }}</td>
                     <td class="small text-muted" style="max-width:220px;white-space:pre-wrap;overflow:hidden">{{ req.message || '—' }}</td>
-                    <td class="small text-muted">{{ req.created_at | date:'dd MMM yyyy' }}</td>
+                    <td class="small text-muted">{{ req.created_at | localeDate:'dd MMM yyyy' }}</td>
                     <td class="small text-muted">{{ req.reviewed_by_name || '—' }}</td>
                     <td>
                       @if (req.status === 'pending') {
@@ -1187,10 +1189,10 @@ import { EditChangesModalComponent } from '../../../shared/components/edit-reque
                     <td class="text-end">
                       @if (req.status === 'pending') {
                         <div class="d-flex justify-content-end gap-1">
-                          <button class="btn btn-xs btn-success" title="Approve" (click)="openAccessReview(req, 'approved')">
+                          <button class="btn btn-xs btn-success" [title]="'INTEREST_REQUESTS.approve' | translate" (click)="openAccessReview(req, 'approved')">
                             <i class="bi bi-check"></i>
                           </button>
-                          <button class="btn btn-xs btn-danger" title="Reject" (click)="openAccessReview(req, 'rejected')">
+                          <button class="btn btn-xs btn-danger" [title]="'INTEREST_REQUESTS.reject' | translate" (click)="openAccessReview(req, 'rejected')">
                             <i class="bi bi-x"></i>
                           </button>
                         </div>
@@ -1398,6 +1400,7 @@ export class EditRequestsComponent implements OnInit, OnDestroy {
     private confirmDialog: ConfirmDialogService,
     private accessRequestSvc: RecruiterAccessRequestService,
     private notifications: NotificationService,
+    private translate: TranslateService,
   ) {
     this.reviewForm = this.fb.group({ admin_note: [''] });
   }
@@ -1604,14 +1607,14 @@ export class EditRequestsComponent implements OnInit, OnDestroy {
     const ids = Array.from(this.editSelectedIds);
     const verb = status === 'approved' ? 'approve' : 'reject';
     this.confirmDialog.confirm({
-      title:        `Bulk ${status === 'approved' ? 'Approve' : 'Reject'} Requests?`,
-      message:      `Are you sure you want to ${verb} ${ids.length} edit request${ids.length !== 1 ? 's' : ''}? This action cannot be undone.`,
-      confirmLabel: status === 'approved' ? 'Approve All' : 'Reject All',
-      cancelLabel:  'Cancel',
+      title:        status === 'approved' ? this.translate.instant('EDIT_REQUESTS_ADMIN.bulk_approve_title') : this.translate.instant('EDIT_REQUESTS_ADMIN.bulk_reject_title'),
+      message:      this.translate.instant('EDIT_REQUESTS_ADMIN.bulk_confirm_msg', { verb: this.translate.instant(`EDIT_REQUESTS_ADMIN.${verb}_verb`), count: ids.length, plural: ids.length !== 1 ? 's' : '' }),
+      confirmLabel: status === 'approved' ? this.translate.instant('EDIT_REQUESTS_ADMIN.approve_all') : this.translate.instant('EDIT_REQUESTS_ADMIN.reject_all'),
+      cancelLabel:  this.translate.instant('COMMON.cancel'),
       confirmClass: status === 'approved' ? 'btn-success' : 'btn-danger',
       showNoteField: true,
-      noteLabel:    'Admin Note (Optional — applied to all)',
-      notePlaceholder: status === 'approved' ? 'Add notes about this approval…' : 'Explain why these requests are being rejected…',
+      noteLabel:    this.translate.instant('EDIT_REQUESTS_ADMIN.admin_note_optional'),
+      notePlaceholder: status === 'approved' ? this.translate.instant('EDIT_REQUESTS_ADMIN.approval_notes_placeholder') : this.translate.instant('EDIT_REQUESTS_ADMIN.rejection_notes_placeholder'),
     }).then(result => {
       if (!result.confirmed) return;
       this.bulkSubmitting = true;
@@ -1620,9 +1623,9 @@ export class EditRequestsComponent implements OnInit, OnDestroy {
           this.bulkSubmitting  = false;
           this.editSelectedIds = new Set();
           if (res.failed.length === 0) {
-            this.toast.success(`${res.succeeded.length} request${res.succeeded.length !== 1 ? 's' : ''} ${status}`);
+            this.toast.success(this.translate.instant('EDIT_REQUESTS_ADMIN.bulk_result_success', { count: res.succeeded.length, plural: res.succeeded.length !== 1 ? 's' : '', status }));
           } else {
-            this.toast.error(`${res.succeeded.length} succeeded, ${res.failed.length} failed`);
+            this.toast.error(this.translate.instant('EDIT_REQUESTS_ADMIN.bulk_result_partial', { succeeded: res.succeeded.length, failed: res.failed.length }));
           }
           this.loadEditRequests();
           this.refreshEditCounts();
@@ -1630,7 +1633,7 @@ export class EditRequestsComponent implements OnInit, OnDestroy {
         },
         error: (err) => {
           this.bulkSubmitting = false;
-          this.toast.error(err?.error?.message ?? 'Bulk action failed');
+          this.toast.error(err?.error?.message ?? this.translate.instant('EDIT_REQUESTS_ADMIN.bulk_action_failed'));
         },
       });
     });
@@ -1669,14 +1672,14 @@ export class EditRequestsComponent implements OnInit, OnDestroy {
     const ids = Array.from(this.contactSelectedIds);
     const verb = status === 'approved' ? 'approve' : 'reject';
     this.confirmDialog.confirm({
-      title:        `Bulk ${status === 'approved' ? 'Approve' : 'Reject'} Requests?`,
-      message:      `Are you sure you want to ${verb} ${ids.length} contact request${ids.length !== 1 ? 's' : ''}? This action cannot be undone.`,
-      confirmLabel: status === 'approved' ? 'Approve All' : 'Reject All',
-      cancelLabel:  'Cancel',
+      title:        status === 'approved' ? this.translate.instant('EDIT_REQUESTS_ADMIN.bulk_approve_title') : this.translate.instant('EDIT_REQUESTS_ADMIN.bulk_reject_title'),
+      message:      this.translate.instant('EDIT_REQUESTS_ADMIN.bulk_confirm_msg', { verb: this.translate.instant(`EDIT_REQUESTS_ADMIN.${verb}_verb`), count: ids.length, plural: ids.length !== 1 ? 's' : '' }),
+      confirmLabel: status === 'approved' ? this.translate.instant('EDIT_REQUESTS_ADMIN.approve_all') : this.translate.instant('EDIT_REQUESTS_ADMIN.reject_all'),
+      cancelLabel:  this.translate.instant('COMMON.cancel'),
       confirmClass: status === 'approved' ? 'btn-success' : 'btn-danger',
       showNoteField: true,
-      noteLabel:    'Admin Note (Optional — applied to all)',
-      notePlaceholder: status === 'approved' ? 'Add notes about this approval…' : 'Explain why these requests are being rejected…',
+      noteLabel:    this.translate.instant('EDIT_REQUESTS_ADMIN.admin_note_optional'),
+      notePlaceholder: status === 'approved' ? this.translate.instant('EDIT_REQUESTS_ADMIN.approval_notes_placeholder') : this.translate.instant('EDIT_REQUESTS_ADMIN.rejection_notes_placeholder'),
     }).then(result => {
       if (!result.confirmed) return;
       this.bulkSubmitting = true;
@@ -1685,9 +1688,9 @@ export class EditRequestsComponent implements OnInit, OnDestroy {
           this.bulkSubmitting     = false;
           this.contactSelectedIds = new Set();
           if (res.failed.length === 0) {
-            this.toast.success(`${res.succeeded.length} request${res.succeeded.length !== 1 ? 's' : ''} ${status}`);
+            this.toast.success(this.translate.instant('EDIT_REQUESTS_ADMIN.bulk_result_success', { count: res.succeeded.length, plural: res.succeeded.length !== 1 ? 's' : '', status }));
           } else {
-            this.toast.error(`${res.succeeded.length} succeeded, ${res.failed.length} failed`);
+            this.toast.error(this.translate.instant('EDIT_REQUESTS_ADMIN.bulk_result_partial', { succeeded: res.succeeded.length, failed: res.failed.length }));
           }
           this.loadContactRequests();
           this.refreshContactCounts();
@@ -1695,7 +1698,7 @@ export class EditRequestsComponent implements OnInit, OnDestroy {
         },
         error: (err) => {
           this.bulkSubmitting = false;
-          this.toast.error(err?.error?.message ?? 'Bulk action failed');
+          this.toast.error(err?.error?.message ?? this.translate.instant('EDIT_REQUESTS_ADMIN.bulk_action_failed'));
         },
       });
     });
@@ -1820,14 +1823,14 @@ export class EditRequestsComponent implements OnInit, OnDestroy {
       next: () => {
         this.reviewSubmitting = false;
         this.editReviewingId  = null;
-        this.toast.success(`Request ${status}`);
+        this.toast.success(status === 'approved' ? this.translate.instant('EDIT_REQUESTS_ADMIN.request_approved') : this.translate.instant('EDIT_REQUESTS_ADMIN.request_rejected'));
         this.loadEditRequests();
         this.refreshEditCounts();
         this.notifications.refreshCounts();
       },
       error: (err) => {
         this.reviewSubmitting = false;
-        this.toast.error(err?.error?.message ?? 'Failed to review');
+        this.toast.error(err?.error?.message ?? this.translate.instant('EDIT_REQUESTS_ADMIN.review_failed'));
       },
     });
   }
@@ -1886,14 +1889,14 @@ export class EditRequestsComponent implements OnInit, OnDestroy {
       next: () => {
         this.reviewSubmitting    = false;
         this.contactReviewingId  = null;
-        this.toast.success(`Request ${status}`);
+        this.toast.success(status === 'approved' ? this.translate.instant('EDIT_REQUESTS_ADMIN.request_approved') : this.translate.instant('EDIT_REQUESTS_ADMIN.request_rejected'));
         this.loadContactRequests();
         this.refreshContactCounts();
         this.notifications.refreshCounts();
       },
       error: (err) => {
         this.reviewSubmitting = false;
-        this.toast.error(err?.error?.message ?? 'Failed to review');
+        this.toast.error(err?.error?.message ?? this.translate.instant('EDIT_REQUESTS_ADMIN.review_failed'));
       },
     });
   }
@@ -1903,14 +1906,14 @@ export class EditRequestsComponent implements OnInit, OnDestroy {
     this.editRequestService.review(event.id, { status: 'approved', admin_note: event.adminNote }).subscribe({
       next: () => {
         this.reviewSubmitting = false;
-        this.toast.success('Request approved');
+        this.toast.success(this.translate.instant('EDIT_REQUESTS_ADMIN.request_approved'));
         this.loadEditRequests();
         this.refreshEditCounts();
         this.notifications.refreshCounts();
       },
       error: (err) => {
         this.reviewSubmitting = false;
-        this.toast.error(err?.error?.message ?? 'Failed to review');
+        this.toast.error(err?.error?.message ?? this.translate.instant('EDIT_REQUESTS_ADMIN.review_failed'));
       },
     });
   }
@@ -1920,14 +1923,14 @@ export class EditRequestsComponent implements OnInit, OnDestroy {
     this.editRequestService.review(event.id, { status: 'rejected', admin_note: event.adminNote }).subscribe({
       next: () => {
         this.reviewSubmitting = false;
-        this.toast.success('Request rejected');
+        this.toast.success(this.translate.instant('EDIT_REQUESTS_ADMIN.request_rejected'));
         this.loadEditRequests();
         this.refreshEditCounts();
         this.notifications.refreshCounts();
       },
       error: (err) => {
         this.reviewSubmitting = false;
-        this.toast.error(err?.error?.message ?? 'Failed to review');
+        this.toast.error(err?.error?.message ?? this.translate.instant('EDIT_REQUESTS_ADMIN.review_failed'));
       },
     });
   }
@@ -1941,14 +1944,14 @@ export class EditRequestsComponent implements OnInit, OnDestroy {
     this.contactRequestService.review(event.id, { status: 'approved', admin_note: event.adminNote }).subscribe({
       next: () => {
         this.reviewSubmitting = false;
-        this.toast.success('Request approved');
+        this.toast.success(this.translate.instant('EDIT_REQUESTS_ADMIN.request_approved'));
         this.loadContactRequests();
         this.refreshContactCounts();
         this.notifications.refreshCounts();
       },
       error: (err) => {
         this.reviewSubmitting = false;
-        this.toast.error(err?.error?.message ?? 'Failed to review');
+        this.toast.error(err?.error?.message ?? this.translate.instant('EDIT_REQUESTS_ADMIN.review_failed'));
       },
     });
   }
@@ -1958,14 +1961,14 @@ export class EditRequestsComponent implements OnInit, OnDestroy {
     this.contactRequestService.review(event.id, { status: 'rejected', admin_note: event.adminNote }).subscribe({
       next: () => {
         this.reviewSubmitting = false;
-        this.toast.success('Request rejected');
+        this.toast.success(this.translate.instant('EDIT_REQUESTS_ADMIN.request_rejected'));
         this.loadContactRequests();
         this.refreshContactCounts();
         this.notifications.refreshCounts();
       },
       error: (err) => {
         this.reviewSubmitting = false;
-        this.toast.error(err?.error?.message ?? 'Failed to review');
+        this.toast.error(err?.error?.message ?? this.translate.instant('EDIT_REQUESTS_ADMIN.review_failed'));
       },
     });
   }
@@ -1976,14 +1979,14 @@ export class EditRequestsComponent implements OnInit, OnDestroy {
 
   onContactApproveFromList(id: string): void {
     this.confirmDialog.confirm({
-      title: 'Approve Contact Request?',
-      message: 'Recruiter will be able to see the candidate\'s contact details. This action cannot be undone.',
-      confirmLabel: 'Approve',
-      cancelLabel: 'Cancel',
+      title: this.translate.instant('EDIT_REQUESTS_ADMIN.approve_contact_title'),
+      message: this.translate.instant('EDIT_REQUESTS_ADMIN.approve_contact_msg'),
+      confirmLabel: this.translate.instant('INTEREST_REQUESTS.approve'),
+      cancelLabel: this.translate.instant('COMMON.cancel'),
       confirmClass: 'btn-success',
       showNoteField: true,
-      noteLabel: 'Admin Notes (Optional)',
-      notePlaceholder: 'Add any comments about this approval...',
+      noteLabel: this.translate.instant('EDIT_REQUESTS_ADMIN.admin_notes_optional'),
+      notePlaceholder: this.translate.instant('EDIT_REQUESTS_ADMIN.approval_comments_placeholder'),
     }).then(result => {
       if (result.confirmed) {
         this.onContactApproved({ id, adminNote: result.notes });
@@ -1993,14 +1996,14 @@ export class EditRequestsComponent implements OnInit, OnDestroy {
 
   onContactRejectFromList(id: string): void {
     this.confirmDialog.confirm({
-      title: 'Reject Contact Request?',
-      message: 'Recruiter will be notified that the request was not approved. This action cannot be undone.',
-      confirmLabel: 'Reject',
-      cancelLabel: 'Cancel',
+      title: this.translate.instant('EDIT_REQUESTS_ADMIN.reject_contact_title'),
+      message: this.translate.instant('EDIT_REQUESTS_ADMIN.reject_contact_msg'),
+      confirmLabel: this.translate.instant('INTEREST_REQUESTS.reject'),
+      cancelLabel: this.translate.instant('COMMON.cancel'),
       confirmClass: 'btn-danger',
       showNoteField: true,
-      noteLabel: 'Reason for Rejection (Optional)',
-      notePlaceholder: 'Explain why you are rejecting this request...',
+      noteLabel: this.translate.instant('EDIT_REQUESTS_ADMIN.rejection_reason_optional'),
+      notePlaceholder: this.translate.instant('EDIT_REQUESTS_ADMIN.rejection_explain_placeholder'),
     }).then(result => {
       if (result.confirmed) {
         this.onContactRejected({ id, adminNote: result.notes });
@@ -2010,28 +2013,28 @@ export class EditRequestsComponent implements OnInit, OnDestroy {
 
   onContactRevoked(event: { id: string; reason?: string }): void {
     this.confirmDialog.confirm({
-      title:        'Revoke Contact Access?',
-      message:      'This will immediately remove the recruiter\'s access to this candidate\'s contact details. They will be notified by email.',
-      confirmLabel: 'Revoke Access',
-      cancelLabel:  'Cancel',
+      title:        this.translate.instant('EDIT_REQUESTS_ADMIN.revoke_contact_title'),
+      message:      this.translate.instant('EDIT_REQUESTS_ADMIN.revoke_contact_msg'),
+      confirmLabel: this.translate.instant('EDIT_REQUESTS_ADMIN.revoke_access_label'),
+      cancelLabel:  this.translate.instant('COMMON.cancel'),
       confirmClass: 'btn-danger',
       showNoteField: true,
-      noteLabel:    'Reason for Revocation (Optional)',
-      notePlaceholder: 'Explain why access is being revoked…',
+      noteLabel:    this.translate.instant('EDIT_REQUESTS_ADMIN.revocation_reason_optional'),
+      notePlaceholder: this.translate.instant('EDIT_REQUESTS_ADMIN.revocation_explain_placeholder'),
     }).then(result => {
       if (!result.confirmed) return;
       this.reviewSubmitting = true;
       this.contactRequestService.revoke(event.id, result.notes || undefined).subscribe({
         next: () => {
           this.reviewSubmitting = false;
-          this.toast.success('Contact access revoked');
+          this.toast.success(this.translate.instant('EDIT_REQUESTS_ADMIN.contact_access_revoked'));
           this.loadContactRequests();
           this.refreshContactCounts();
           this.notifications.refreshCounts();
         },
         error: (err) => {
           this.reviewSubmitting = false;
-          this.toast.error(err?.error?.message ?? 'Failed to revoke access');
+          this.toast.error(err?.error?.message ?? this.translate.instant('EDIT_REQUESTS_ADMIN.revoke_access_failed'));
         },
       });
     });
@@ -2119,19 +2122,19 @@ export class EditRequestsComponent implements OnInit, OnDestroy {
   openAccessReview(req: RecruiterAccessRequest, status: 'approved' | 'rejected'): void {
     const isApproval = status === 'approved';
     this.confirmDialog.confirm({
-      title:        isApproval ? 'Approve Access Request?' : 'Reject Access Request?',
+      title:        isApproval ? this.translate.instant('EDIT_REQUESTS_ADMIN.approve_access_title') : this.translate.instant('EDIT_REQUESTS_ADMIN.reject_access_title'),
       message:      isApproval
-        ? `Grant extended portal access to ${req.email}. Set the new duration below.`
-        : `Deny the access extension request from ${req.email}. The recruiter will be notified.`,
-      confirmLabel: isApproval ? 'Approve' : 'Reject',
-      cancelLabel:  'Cancel',
+        ? this.translate.instant('EDIT_REQUESTS_ADMIN.approve_access_msg', { email: req.email })
+        : this.translate.instant('EDIT_REQUESTS_ADMIN.reject_access_msg', { email: req.email }),
+      confirmLabel: isApproval ? this.translate.instant('INTEREST_REQUESTS.approve') : this.translate.instant('INTEREST_REQUESTS.reject'),
+      cancelLabel:  this.translate.instant('COMMON.cancel'),
       confirmClass: isApproval ? 'btn-success' : 'btn-danger',
       icon: isApproval ? 'bi-check-circle-fill' : 'bi-exclamation-triangle-fill',
       showDurationField: isApproval,
-      durationLabel: 'Extend Access Duration',
+      durationLabel: this.translate.instant('EDIT_REQUESTS_ADMIN.extend_access_duration'),
       showNoteField: true,
-      noteLabel:        isApproval ? 'Admin Note (Optional)' : 'Reason for Rejection (Optional)',
-      notePlaceholder:  isApproval ? 'Optional note sent to the recruiter…' : 'Explain why this request is being rejected…',
+      noteLabel:        isApproval ? this.translate.instant('EDIT_REQUESTS_ADMIN.admin_notes_optional') : this.translate.instant('EDIT_REQUESTS_ADMIN.rejection_reason_optional'),
+      notePlaceholder:  isApproval ? this.translate.instant('EDIT_REQUESTS_ADMIN.optional_note_to_recruiter') : this.translate.instant('EDIT_REQUESTS_ADMIN.reject_request_explain_placeholder'),
     }).then(result => {
       if (!result.confirmed) return;
       const newExpiresAt = (isApproval && result.durationValue && result.durationUnit)
@@ -2146,10 +2149,10 @@ export class EditRequestsComponent implements OnInit, OnDestroy {
           this.loadAccessRequests();
           this.refreshAccessCounts();
           this.notifications.refreshCounts();
-          this.toast.success(isApproval ? 'Access request approved.' : 'Access request rejected.');
+          this.toast.success(isApproval ? this.translate.instant('EDIT_REQUESTS_ADMIN.access_request_approved') : this.translate.instant('EDIT_REQUESTS_ADMIN.access_request_rejected'));
         },
         error: (err) => {
-          this.toast.error(err?.error?.message ?? 'Failed to submit review.');
+          this.toast.error(err?.error?.message ?? this.translate.instant('EDIT_REQUESTS_ADMIN.review_submit_failed'));
         },
       });
     });
@@ -2163,10 +2166,10 @@ export class EditRequestsComponent implements OnInit, OnDestroy {
   }
 
   get supportEmptyTitle(): string {
-    if (this.supportStatus === 'pending')   return 'No pending support requests';
-    if (this.supportStatus === 'connected') return 'No connected requests yet';
-    if (this.supportStatus === 'closed')    return 'No closed requests yet';
-    return 'No volunteer support requests found';
+    if (this.supportStatus === 'pending')   return this.translate.instant('EDIT_REQUESTS_ADMIN.no_pending_support');
+    if (this.supportStatus === 'connected') return this.translate.instant('EDIT_REQUESTS_ADMIN.no_connected_support');
+    if (this.supportStatus === 'closed')    return this.translate.instant('EDIT_REQUESTS_ADMIN.no_closed_support');
+    return this.translate.instant('EDIT_REQUESTS_ADMIN.no_support_requests');
   }
 
   get supportActiveFilterCount(): number {
@@ -2229,7 +2232,7 @@ export class EditRequestsComponent implements OnInit, OnDestroy {
       next: (blob) => {
         this.supportExporting = false;
         if (blob.size < 10) {
-          this.toast.error('No volunteer support requests available to export.');
+          this.toast.error(this.translate.instant('EDIT_REQUESTS_ADMIN.no_support_to_export'));
           return;
         }
         const url = URL.createObjectURL(blob);
@@ -2238,9 +2241,9 @@ export class EditRequestsComponent implements OnInit, OnDestroy {
         a.download = `volunteer-support-requests-${new Date().toISOString().slice(0, 10)}.csv`;
         a.click();
         URL.revokeObjectURL(url);
-        this.toast.success('CSV exported successfully.');
+        this.toast.success(this.translate.instant('EDIT_REQUESTS_ADMIN.csv_exported'));
       },
-      error: () => { this.supportExporting = false; this.toast.error('Export failed. Please try again.'); },
+      error: () => { this.supportExporting = false; this.toast.error(this.translate.instant('MESSAGES.operation_failed')); },
     });
   }
 
@@ -2249,7 +2252,7 @@ export class EditRequestsComponent implements OnInit, OnDestroy {
     this.supportRequestService.review(id, status).subscribe({
       next: () => {
         this.supportReviewingId = null;
-        this.toast.success(status === 'connected' ? 'Marked as Connected' : 'Request Closed');
+        this.toast.success(status === 'connected' ? this.translate.instant('EDIT_REQUESTS_ADMIN.marked_connected') : this.translate.instant('EDIT_REQUESTS_ADMIN.request_closed'));
         this.loadSupportRequests();
         this.refreshSupportCounts();
         this.notifications.refreshCounts();
@@ -2260,7 +2263,7 @@ export class EditRequestsComponent implements OnInit, OnDestroy {
         const detail = fieldErrors
           ? Object.values(fieldErrors).flat().join('; ')
           : null;
-        this.toast.error(detail ?? err?.error?.message ?? 'Action failed');
+        this.toast.error(detail ?? err?.error?.message ?? this.translate.instant('EDIT_REQUESTS_ADMIN.action_failed'));
       },
     });
   }
@@ -2292,7 +2295,7 @@ export class EditRequestsComponent implements OnInit, OnDestroy {
         this.editExporting = false;
         // Guard: if blob is effectively empty (only headers ~1 line), warn and abort
         if (blob.size < 10) {
-          this.toast.error('No edit requests available to export.');
+          this.toast.error(this.translate.instant('EDIT_REQUESTS_ADMIN.no_edit_requests_to_export'));
           return;
         }
         const url = URL.createObjectURL(blob);
@@ -2301,9 +2304,9 @@ export class EditRequestsComponent implements OnInit, OnDestroy {
         a.download = `candidate-edit-requests-${new Date().toISOString().slice(0,10)}.csv`;
         a.click();
         URL.revokeObjectURL(url);
-        this.toast.success('CSV exported successfully.');
+        this.toast.success(this.translate.instant('EDIT_REQUESTS_ADMIN.csv_exported'));
       },
-      error: () => { this.editExporting = false; this.toast.error('Export failed'); },
+      error: () => { this.editExporting = false; this.toast.error(this.translate.instant('MESSAGES.operation_failed')); },
     });
   }
 
@@ -2319,7 +2322,7 @@ export class EditRequestsComponent implements OnInit, OnDestroy {
       next: (blob) => {
         this.contactExporting = false;
         if (blob.size < 10) {
-          this.toast.error('No contact info requests available to export.');
+          this.toast.error(this.translate.instant('EDIT_REQUESTS_ADMIN.no_contact_requests_to_export'));
           return;
         }
         const url = URL.createObjectURL(blob);
@@ -2328,9 +2331,9 @@ export class EditRequestsComponent implements OnInit, OnDestroy {
         a.download = `contact-info-requests-${new Date().toISOString().slice(0, 10)}.csv`;
         a.click();
         URL.revokeObjectURL(url);
-        this.toast.success('CSV exported successfully.');
+        this.toast.success(this.translate.instant('EDIT_REQUESTS_ADMIN.csv_exported'));
       },
-      error: () => { this.contactExporting = false; this.toast.error('Export failed. Please try again.'); },
+      error: () => { this.contactExporting = false; this.toast.error(this.translate.instant('MESSAGES.operation_failed')); },
     });
   }
 
@@ -2348,3 +2351,4 @@ export class EditRequestsComponent implements OnInit, OnDestroy {
     return Array.from({ length: end - start + 1 }, (_, i) => start + i);
   }
 }
+

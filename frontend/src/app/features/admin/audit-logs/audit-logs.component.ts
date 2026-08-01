@@ -2,6 +2,8 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule, DatePipe } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, FormGroup } from '@angular/forms';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
+import { LocaleDatePipe } from '../../../core/pipes/locale-date.pipe';
 import { debounceTime, distinctUntilChanged } from 'rxjs';
 import { AuditLogService } from '../../../core/services/audit-log.service';
 import { AuditLog } from '../../../core/models/audit-log.model';
@@ -11,55 +13,55 @@ import { ToastService } from '../../../core/services/toast.service';
 @Component({
   selector: 'app-audit-logs',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, PageHeaderComponent],
+  imports: [LocaleDatePipe, CommonModule, ReactiveFormsModule, TranslateModule, PageHeaderComponent],
   providers: [DatePipe],
   template: `
     <!-- Header -->
     <app-page-header
-      title="Audit Logs"
-      [subtitle]="pagination.total + ' total entries'"
+      [title]="'AUDIT_LOGS.title' | translate"
+      [subtitle]="pagination.total + ' ' + ('AUDIT_LOGS.total_entries' | translate)"
       icon="bi-shield-check"
     >
       <button class="btn btn-sm btn-outline-success"
         [disabled]="exporting || logs.length === 0"
         (click)="exportCsv()">
         <i class="bi bi-download me-1"></i>
-        {{ exporting ? 'Exporting…' : 'Export CSV' }}
+        {{ exporting ? ('AUDIT_LOGS.exporting' | translate) : ('AUDIT_LOGS.export_csv' | translate) }}
       </button>
       <button class="btn btn-sm btn-outline-secondary" (click)="clearFilters()">
-        <i class="bi bi-x-circle me-1"></i>Clear Filters
+        <i class="bi bi-x-circle me-1"></i>{{ 'AUDIT_LOGS.clear_filters' | translate }}
       </button>
     </app-page-header>
 
     <!-- Filters -->
     <div class="filter-card">
-      <div class="filter-card__title"><i class="bi bi-funnel"></i> Filters</div>
+      <div class="filter-card__title"><i class="bi bi-funnel"></i> {{ 'AUDIT_LOGS.filters' | translate }}</div>
       <form [formGroup]="filterForm" class="row g-2 align-items-end">
         <div class="col-md-3">
-          <label class="form-label small mb-1">Action</label>
+          <label class="form-label small mb-1">{{ 'AUDIT_LOGS.action' | translate }}</label>
           <select class="form-select form-select-sm" formControlName="action">
-            <option value="">All actions</option>
+            <option value="">{{ 'AUDIT_LOGS.all_actions' | translate }}</option>
             @for (a of knownActions; track a) {
               <option [value]="a">{{ a }}</option>
             }
           </select>
         </div>
         <div class="col-md-2">
-          <label class="form-label small mb-1">Resource</label>
+          <label class="form-label small mb-1">{{ 'AUDIT_LOGS.resource' | translate }}</label>
           <input type="text" class="form-control form-control-sm"
-            formControlName="resource" placeholder="e.g. candidate">
+            formControlName="resource" [placeholder]="'AUDIT_LOGS.eg_candidate' | translate">
         </div>
         <div class="col-md-3">
-          <label class="form-label small mb-1">User</label>
+          <label class="form-label small mb-1">{{ 'AUDIT_LOGS.user' | translate }}</label>
           <input type="text" class="form-control form-control-sm"
-            formControlName="userSearch" placeholder="Search by user ID…">
+            formControlName="userSearch" [placeholder]="'AUDIT_LOGS.search_by_user_id' | translate">
         </div>
         <div class="col-md-2">
-          <label class="form-label small mb-1">From</label>
+          <label class="form-label small mb-1">{{ 'AUDIT_LOGS.from' | translate }}</label>
           <input type="date" class="form-control form-control-sm" formControlName="from">
         </div>
         <div class="col-md-2">
-          <label class="form-label small mb-1">To</label>
+          <label class="form-label small mb-1">{{ 'AUDIT_LOGS.to' | translate }}</label>
           <input type="date" class="form-control form-control-sm" formControlName="to">
         </div>
       </form>
@@ -69,7 +71,7 @@ import { ToastService } from '../../../core/services/toast.service';
     @if (loading) {
       <div class="loading-state">
         <div class="spinner-border"></div>
-        <div class="loading-state__text">Loading logs…</div>
+        <div class="loading-state__text">{{ 'COMMON.loading_logs' | translate }}</div>
       </div>
     }
 
@@ -77,8 +79,8 @@ import { ToastService } from '../../../core/services/toast.service';
     @if (!loading && logs.length === 0) {
       <div class="empty-state">
         <div class="empty-state__icon"><i class="bi bi-clipboard-x"></i></div>
-        <h5 class="empty-state-title">No audit log entries found</h5>
-        <p class="empty-state-message">Try adjusting your filters.</p>
+        <h5 class="empty-state-title">{{ 'AUDIT_LOGS.no_entries_found' | translate }}</h5>
+        <p class="empty-state-message">{{ 'AUDIT_LOGS.try_adjusting_filters' | translate }}</p>
       </div>
     }
 
@@ -90,13 +92,13 @@ import { ToastService } from '../../../core/services/toast.service';
             <thead class="table-light">
               <tr>
                 <th style="width:36px"></th>
-                <th>Timestamp</th>
-                <th>User</th>
-                <th>Action</th>
-                <th>Resource</th>
-                <th>Entity</th>
-                <th>IP Address</th>
-                <th>Summary</th>
+                <th>{{ 'AUDIT_LOGS.timestamp' | translate }}</th>
+                <th>{{ 'AUDIT_LOGS.user' | translate }}</th>
+                <th>{{ 'AUDIT_LOGS.action' | translate }}</th>
+                <th>{{ 'AUDIT_LOGS.resource' | translate }}</th>
+                <th>{{ 'AUDIT_LOGS.entity' | translate }}</th>
+                <th>{{ 'AUDIT_LOGS.ip_address' | translate }}</th>
+                <th>{{ 'AUDIT_LOGS.summary' | translate }}</th>
               </tr>
             </thead>
             <tbody>
@@ -111,11 +113,11 @@ import { ToastService } from '../../../core/services/toast.service';
                       style="font-size:.7rem"></i>
                   </td>
                   <td class="text-nowrap text-muted" style="font-size:.75rem">
-                    {{ log.created_at | date:'dd MMM yyyy, HH:mm:ss' }}
+                    {{ log.created_at | localeDate:'dd MMM yyyy, HH:mm:ss' }}
                   </td>
-                  <td class="fw-semibold">
-                    {{ log.user_name || 'System' }}
-                  </td>
+                   <td class="fw-semibold">
+                     {{ log.user_name || ('AUDIT_LOGS.system' | translate) }}
+                   </td>
                   <td>
                     <span class="badge rounded-pill" [class]="actionBadgeClass(log.action)">
                       {{ log.action }}
@@ -149,110 +151,110 @@ import { ToastService } from '../../../core/services/toast.service';
                     <td colspan="8">
                       <div class="audit-detail">
 
-                        <!-- Column 1: Event Details -->
-                        <div class="audit-detail__col">
-                          <div class="audit-detail__section-title">
-                            <i class="bi bi-clock me-1"></i>Event Details
-                          </div>
-                          <div class="audit-detail__field">
-                            <div class="audit-detail__label">Timestamp</div>
-                            <div class="audit-detail__value">
-                              {{ log.created_at | date:'dd MMM yyyy' }}<br>
-                              <span class="text-muted" style="font-size:.75rem">
-                                {{ log.created_at | date:'HH:mm:ss' }} UTC
-                              </span>
-                            </div>
-                          </div>
-                          <div class="audit-detail__field mt-2">
-                            <div class="audit-detail__label">Action</div>
-                            <div class="audit-detail__value">
-                              <span class="badge rounded-pill mb-1" [class]="actionBadgeClass(log.action)">
-                                {{ log.action }}
-                              </span><br>
-                              <span class="audit-detail__action-desc">
-                                {{ describeAction(log.action) }}
-                              </span>
-                            </div>
-                          </div>
-                          @if (log.resource) {
-                            <div class="audit-detail__field mt-2">
-                              <div class="audit-detail__label">Resource Type</div>
-                              <div class="audit-detail__value text-capitalize">
-                                {{ log.resource.replace('_', ' ') }}
-                              </div>
-                            </div>
-                          }
-                          <div class="audit-detail__field mt-2">
-                            <div class="audit-detail__label">Entity</div>
-                            <div class="audit-detail__value">{{ resolveResourceLabel(log) }}</div>
-                          </div>
-                          @if (log.resource_id) {
-                            <div class="audit-detail__field mt-2">
-                              <div class="audit-detail__label">Resource ID</div>
-                              <div class="audit-detail__value audit-detail__uuid">{{ log.resource_id }}</div>
-                            </div>
-                          }
-                        </div>
+                         <!-- Column 1: Event Details -->
+                         <div class="audit-detail__col">
+                           <div class="audit-detail__section-title">
+                             <i class="bi bi-clock me-1"></i>{{ 'AUDIT_LOGS.event_details' | translate }}
+                           </div>
+                           <div class="audit-detail__field">
+                             <div class="audit-detail__label">{{ 'AUDIT_LOGS.timestamp' | translate }}</div>
+                             <div class="audit-detail__value">
+                               {{ log.created_at | localeDate:'dd MMM yyyy' }}<br>
+                               <span class="text-muted" style="font-size:.75rem">
+                                 {{ log.created_at | localeDate:'HH:mm:ss' }} UTC
+                               </span>
+                             </div>
+                           </div>
+                           <div class="audit-detail__field mt-2">
+                             <div class="audit-detail__label">{{ 'AUDIT_LOGS.action' | translate }}</div>
+                             <div class="audit-detail__value">
+                               <span class="badge rounded-pill mb-1" [class]="actionBadgeClass(log.action)">
+                                 {{ log.action }}
+                               </span><br>
+                               <span class="audit-detail__action-desc">
+                                 {{ describeAction(log.action) }}
+                               </span>
+                             </div>
+                           </div>
+                           @if (log.resource) {
+                             <div class="audit-detail__field mt-2">
+                               <div class="audit-detail__label">{{ 'AUDIT_LOGS.resource_type' | translate }}</div>
+                               <div class="audit-detail__value text-capitalize">
+                                 {{ log.resource.replace('_', ' ') }}
+                               </div>
+                             </div>
+                           }
+                           <div class="audit-detail__field mt-2">
+                             <div class="audit-detail__label">{{ 'AUDIT_LOGS.entity' | translate }}</div>
+                             <div class="audit-detail__value">{{ resolveResourceLabel(log) }}</div>
+                           </div>
+                           @if (log.resource_id) {
+                             <div class="audit-detail__field mt-2">
+                               <div class="audit-detail__label">{{ 'AUDIT_LOGS.resource_id' | translate }}</div>
+                               <div class="audit-detail__value audit-detail__uuid">{{ log.resource_id }}</div>
+                             </div>
+                           }
+                         </div>
 
-                        <!-- Column 2: Actor Details -->
-                        <div class="audit-detail__col">
-                          <div class="audit-detail__section-title">
-                            <i class="bi bi-person me-1"></i>Actor Details
-                          </div>
-                          <div class="audit-detail__field">
-                            <div class="audit-detail__label">Name</div>
-                            <div class="audit-detail__value fw-semibold">
-                              {{ log.user_name || 'System / Automated' }}
-                            </div>
-                          </div>
-                          @if (log.user_email) {
-                            <div class="audit-detail__field mt-2">
-                              <div class="audit-detail__label">Email</div>
-                              <div class="audit-detail__value">{{ log.user_email }}</div>
-                            </div>
-                          }
-                          <div class="audit-detail__field mt-2">
-                            <div class="audit-detail__label">Role</div>
-                            <div class="audit-detail__value">
-                              <span class="badge rounded-pill audit-detail__role-badge">
-                                {{ log.user_role || 'System' }}
-                              </span>
-                            </div>
-                          </div>
-                          @if (log.user_id) {
-                            <div class="audit-detail__field mt-2">
-                              <div class="audit-detail__label">User ID</div>
-                              <div class="audit-detail__value audit-detail__uuid">{{ log.user_id }}</div>
-                            </div>
-                          }
-                          <div class="audit-detail__field mt-2">
-                            <div class="audit-detail__label">IP Address</div>
-                            <div class="audit-detail__value">
-                              {{ log.ip_address || '—' }}
-                            </div>
-                          </div>
-                        </div>
+                         <!-- Column 2: Actor Details -->
+                         <div class="audit-detail__col">
+                           <div class="audit-detail__section-title">
+                             <i class="bi bi-person me-1"></i>{{ 'AUDIT_LOGS.actor_details' | translate }}
+                           </div>
+                           <div class="audit-detail__field">
+                             <div class="audit-detail__label">{{ 'FORMS.name' | translate }}</div>
+                             <div class="audit-detail__value fw-semibold">
+                               {{ log.user_name || ('AUDIT_LOGS.system_or_automated' | translate) }}
+                             </div>
+                           </div>
+                           @if (log.user_email) {
+                             <div class="audit-detail__field mt-2">
+                               <div class="audit-detail__label">{{ 'FORMS.email' | translate }}</div>
+                               <div class="audit-detail__value">{{ log.user_email }}</div>
+                             </div>
+                           }
+                           <div class="audit-detail__field mt-2">
+                             <div class="audit-detail__label">{{ 'AUDIT_LOGS.role' | translate }}</div>
+                             <div class="audit-detail__value">
+                               <span class="badge rounded-pill audit-detail__role-badge">
+                                 {{ log.user_role || ('AUDIT_LOGS.system' | translate) }}
+                               </span>
+                             </div>
+                           </div>
+                           @if (log.user_id) {
+                             <div class="audit-detail__field mt-2">
+                               <div class="audit-detail__label">{{ 'AUDIT_LOGS.user_id' | translate }}</div>
+                               <div class="audit-detail__value audit-detail__uuid">{{ log.user_id }}</div>
+                             </div>
+                           }
+                           <div class="audit-detail__field mt-2">
+                             <div class="audit-detail__label">{{ 'AUDIT_LOGS.ip_address' | translate }}</div>
+                             <div class="audit-detail__value">
+                               {{ log.ip_address || '—' }}
+                             </div>
+                           </div>
+                         </div>
 
-                        <!-- Column 3: Full Metadata -->
-                        <div class="audit-detail__col">
-                          <div class="audit-detail__section-title">
-                            <i class="bi bi-card-list me-1"></i>Metadata
-                          </div>
-                          @if (metadataEntries(log.metadata).length > 0) {
-                            <table class="audit-detail__meta-table">
-                              <tbody>
-                                @for (entry of metadataEntries(log.metadata); track entry.key) {
-                                  <tr>
-                                    <td>{{ entry.label }}</td>
-                                    <td>{{ entry.value }}</td>
-                                  </tr>
-                                }
-                              </tbody>
-                            </table>
-                          } @else {
-                            <span class="text-muted" style="font-size:.75rem">No metadata recorded</span>
-                          }
-                        </div>
+                         <!-- Column 3: Full Metadata -->
+                         <div class="audit-detail__col">
+                           <div class="audit-detail__section-title">
+                             <i class="bi bi-card-list me-1"></i>{{ 'AUDIT_LOGS.metadata' | translate }}
+                           </div>
+                           @if (metadataEntries(log.metadata).length > 0) {
+                             <table class="audit-detail__meta-table">
+                               <tbody>
+                                 @for (entry of metadataEntries(log.metadata); track entry.key) {
+                                   <tr>
+                                     <td>{{ entry.label }}</td>
+                                     <td>{{ entry.value }}</td>
+                                   </tr>
+                                 }
+                               </tbody>
+                             </table>
+                           } @else {
+                             <span class="text-muted" style="font-size:.75rem">{{ 'AUDIT_LOGS.no_metadata_recorded' | translate }}</span>
+                           }
+                         </div>
 
                       </div>
                     </td>
@@ -268,8 +270,8 @@ import { ToastService } from '../../../core/services/toast.service';
         @if (pagination.pages > 1) {
           <div class="d-flex justify-content-between align-items-center px-3 py-2 border-top">
             <small class="text-muted">
-              Page {{ pagination.page }} of {{ pagination.pages }}
-              ({{ pagination.total }} entries)
+              {{ 'AUDIT_LOGS.page' | translate }} {{ pagination.page }} {{ 'AUDIT_LOGS.of' | translate }} {{ pagination.pages }}
+              ({{ pagination.total }} {{ 'AUDIT_LOGS.entries' | translate }})
             </small>
             <div class="d-flex gap-1">
               <button class="btn btn-sm btn-outline-secondary"
@@ -306,6 +308,7 @@ export class AuditLogsComponent implements OnInit {
     private fb: FormBuilder,
     private datePipe: DatePipe,
     private toast: ToastService,
+    private translate: TranslateService,
   ) {}
 
   ngOnInit(): void {
@@ -380,7 +383,7 @@ export class AuditLogsComponent implements OnInit {
 
   exportCsv(): void {
     if (this.logs.length === 0) {
-      this.toast.show('No audit logs available to export.', 'warning');
+      this.toast.show(this.translate.instant('AUDIT_LOGS.no_logs_to_export'), 'warning');
       return;
     }
     this.exporting = true;
@@ -399,7 +402,7 @@ export class AuditLogsComponent implements OnInit {
         this.exporting = false;
       },
       error: () => {
-        this.toast.show('Export failed. Please try again.', 'error');
+        this.toast.show(this.translate.instant('MESSAGES.operation_failed'), 'error');
         this.exporting = false;
       },
     });

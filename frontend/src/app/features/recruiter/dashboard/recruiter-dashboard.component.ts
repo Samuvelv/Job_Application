@@ -3,6 +3,7 @@ import { Component, signal, OnInit, computed, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
+import { LocaleDatePipe } from '../../../core/pipes/locale-date.pipe';
 import { forkJoin, of } from 'rxjs';
 import { catchError } from 'rxjs/operators';
 import { AuthService } from '../../../core/services/auth.service';
@@ -13,7 +14,7 @@ import { Recruiter } from '../../../core/models/recruiter.model';
 @Component({
   selector: 'app-recruiter-dashboard',
   standalone: true,
-  imports: [CommonModule, RouterLink, TranslateModule],
+  imports: [LocaleDatePipe, CommonModule, RouterLink, TranslateModule],
   styles: [`
     /* ── Hero ─────────────────────────────────────────────────────────── */
     .rd-hero {
@@ -275,7 +276,7 @@ import { Recruiter } from '../../../core/models/recruiter.model';
 
       <div class="rd-hero__chips">
         <span class="rd-hero__chip">
-          <i class="bi bi-calendar3"></i>{{ today() }}
+          <i class="bi bi-calendar3"></i>{{ todayDate | localeDate:'EEEE, d MMMM' }}
         </span>
         @if (profile()?.access_expires_at) {
           <span class="rd-hero__chip" [class.rd-hero__chip--warn]="isExpired()">
@@ -283,7 +284,7 @@ import { Recruiter } from '../../../core/models/recruiter.model';
             @if (isExpired()) {
               {{ 'RECRUITER_DASHBOARD.access_expired_chip' | translate }}
             } @else {
-              {{ 'RECRUITER_DASHBOARD.access_expires' | translate }} {{ profile()!.access_expires_at | date:'d MMM yyyy' }}
+              {{ 'RECRUITER_DASHBOARD.access_expires' | translate }} {{ profile()!.access_expires_at | localeDate:'d MMMM yyyy' }}
             }
           </span>
         }
@@ -440,7 +441,9 @@ export class RecruiterDashboardComponent implements OnInit {
     return this.translate.instant('COMMON.evening');
   }
 
-  today(): string {
-    return new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' });
-  }
+  // A plain Date value, formatted reactively via the `localeDate` pipe in the
+  // template (pure: false, so it re-renders on language change) — a raw
+  // toLocaleDateString('en-US', ...) call here would always render in
+  // English regardless of the active UI language.
+  readonly todayDate = new Date();
 }

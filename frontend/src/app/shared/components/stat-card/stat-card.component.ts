@@ -1,11 +1,12 @@
 // src/app/shared/components/stat-card/stat-card.component.ts
 import { Component, Input } from '@angular/core';
+import { TranslateModule } from '@ngx-translate/core';
 import { CommonModule } from '@angular/common';
 
 @Component({
   selector: 'app-stat-card',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, TranslateModule],
   template: `
     <div class="stat-card" [ngClass]="'stat-card--' + color">
       <div class="stat-icon">
@@ -31,3 +32,4 @@ export class StatCardComponent {
   @Input() loading = false;
   @Input() color: 'primary' | 'success' | 'warning' | 'info' | 'purple' | 'pink' | 'danger' | 'teal' | 'orange' = 'primary';
 }
+

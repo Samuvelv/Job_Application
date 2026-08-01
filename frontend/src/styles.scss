@@ -6257,34 +6257,8 @@ body {
   margin-bottom: 1.5rem;
   box-shadow: var(--th-shadow-card);
 
-  &__cover {
-    height: 170px;
-    background: linear-gradient(135deg, #3730a3 0%, #4f46e5 40%, #6d28d9 100%);
-    position: relative;
-
-    // Mesh pattern overlay
-    &::before {
-      content: '';
-      position: absolute; inset: 0;
-      background-image:
-        radial-gradient(circle at 15% 50%, rgba(255,255,255,.06) 0%, transparent 50%),
-        radial-gradient(circle at 85% 20%, rgba(255,255,255,.04) 0%, transparent 40%),
-        radial-gradient(circle at 60% 80%, rgba(124,58,237,.18) 0%, transparent 38%);
-    }
-
-    // Decorative circle
-    &::after {
-      content: '';
-      position: absolute;
-      width: 320px; height: 320px;
-      border-radius: 50%;
-      border: 1px solid rgba(255,255,255,.07);
-      top: -130px; right: -90px;
-    }
-  }
-
   &__body {
-    padding: 0 2rem 1.75rem;
+    padding: 1.75rem 2rem;
     display: flex;
     align-items: flex-end;
     gap: 1.5rem;
@@ -6292,7 +6266,6 @@ body {
   }
 
   &__avatar-wrap {
-    margin-top: -50px;
     flex-shrink: 0;
     position: relative;
   }
@@ -6419,7 +6392,7 @@ body {
     &--video {
       background: var(--th-success-soft);
       color: var(--th-success);
-      border-color: rgba(25,135,84,.18);
+      border-color: rgba(52,211,153,.18);
       &:hover { background: var(--th-gradient-success); color: #fff; border-color: transparent; box-shadow: var(--th-shadow-success); transform: translateY(-1px); }
     }
     &--linkedin {

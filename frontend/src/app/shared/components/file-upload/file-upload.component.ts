@@ -3,12 +3,13 @@ import {
   Component, forwardRef, signal, Input, HostListener, ElementRef, ViewChild,
 } from '@angular/core';
 import { ControlValueAccessor, NG_VALUE_ACCESSOR } from '@angular/forms';
+import { TranslateModule } from '@ngx-translate/core';
 import { CommonModule } from '@angular/common';
 
 @Component({
   selector: 'app-file-upload',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, TranslateModule],
   providers: [
     {
       provide: NG_VALUE_ACCESSOR,
@@ -97,3 +98,4 @@ export class FileUploadComponent implements ControlValueAccessor {
     this.onTouched();
   }
 }
+

@@ -3,6 +3,7 @@
 // Driven entirely by MasterTableConfig — no per-table code needed.
 import { Component, Input, Output, EventEmitter, OnInit, OnChanges, SimpleChanges } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { ReactiveFormsModule, FormBuilder, FormGroup, Validators, AbstractControl } from '@angular/forms';
 import { MasterTableConfig, MasterFieldDef } from './master-table.config';
 import { AdminMasterService, MasterRecord } from '../../../core/services/admin-master.service';
@@ -16,7 +17,7 @@ export type { MasterRecord } from '../../../core/services/admin-master.service';
 @Component({
   selector: 'app-master-form-modal',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, SearchableSelectComponent],
+  imports: [CommonModule, TranslateModule, ReactiveFormsModule, SearchableSelectComponent],
   template: `
     @if (visible) {
       <!-- Backdrop -->
@@ -174,6 +175,7 @@ export class MasterFormModalComponent implements OnInit, OnChanges {
     private adminSvc:   AdminMasterService,
     private masterData: MasterDataService,
     private toast:      ToastService,
+    private translate:  TranslateService,
   ) {}
 
   ngOnInit(): void { this.buildForm(); }
@@ -263,14 +265,14 @@ export class MasterFormModalComponent implements OnInit, OnChanges {
       next: (res) => {
         this.saving = false;
         this.toast.show(
-          this.isEdit ? 'Record updated successfully.' : 'Record created successfully.',
+          this.isEdit ? this.translate.instant('MASTER.record_updated') : this.translate.instant('MASTER.record_created'),
           'success',
         );
         this.saved.emit(res.data);
       },
       error: (err) => {
         this.saving      = false;
-        this.serverError = err?.error?.message ?? 'Save failed. Please try again.';
+        this.serverError = err?.error?.message ?? this.translate.instant('MASTER.save_failed_retry');
       },
     });
   }
@@ -280,3 +282,4 @@ export class MasterFormModalComponent implements OnInit, OnChanges {
     this.closed.emit();
   }
 }
+

@@ -3,6 +3,9 @@
 // Route: /admin/master?table=<key>
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
+import { LocaleDatePipe } from '../../../core/pipes/locale-date.pipe';
+import { LocaleNumberPipe } from '../../../core/pipes/locale-number.pipe';
 import { ReactiveFormsModule, FormControl } from '@angular/forms';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { Subject } from 'rxjs';
@@ -19,8 +22,8 @@ import { ConfirmDialogService } from '../../../core/services/confirm-dialog.serv
 @Component({
   selector: 'app-master-management',
   standalone: true,
-  imports: [
-    CommonModule,
+  imports: [LocaleDatePipe, LocaleNumberPipe,
+    CommonModule, TranslateModule,
     ReactiveFormsModule,
     RouterModule,
     PageHeaderComponent,
@@ -29,8 +32,8 @@ import { ConfirmDialogService } from '../../../core/services/confirm-dialog.serv
   template: `
     <!-- Page Header -->
     <app-page-header
-      title="Master Data"
-      subtitle="{{ tableConfigs.length }} modules"
+      [title]="'MASTER.title' | translate"
+      [subtitle]="tableConfigs.length + ' ' + ('MASTER.modules' | translate)"
       icon="bi-database"
     ></app-page-header>
 
@@ -51,7 +54,7 @@ import { ConfirmDialogService } from '../../../core/services/confirm-dialog.serv
               @if (countsLoading) {
                 <span class="md-card__count--loading"></span>
               } @else {
-                {{ counts[cfg.table] | number }}
+                {{ counts[cfg.table] | localeNumber }}
               }
             </div>
           </div>
@@ -74,19 +77,19 @@ import { ConfirmDialogService } from '../../../core/services/confirm-dialog.serv
             <i class="bi {{ selectedConfig.icon }}" style="color:var(--th-primary);font-size:1.1rem"></i>
             <h6 class="mb-0 fw-semibold">{{ selectedConfig.label }}</h6>
             <span class="badge rounded-pill" style="background:var(--th-primary-soft);color:var(--th-primary);font-size:.72rem">
-              {{ pagination.total | number }} records
+              {{ pagination.total | localeNumber }} records
             </span>
           </div>
-          <div class="d-flex gap-2">
-            <button class="btn btn-sm btn-outline-secondary"
-              (click)="toggleDeleted()">
-              <i class="bi me-1" [class]="showDeleted ? 'bi-eye-slash' : 'bi-eye'"></i>
-              {{ showDeleted ? 'Hide Deleted' : 'Show Deleted' }}
-            </button>
-            <button class="btn btn-sm btn-primary" (click)="openCreate()">
-              <i class="bi bi-plus-lg me-1"></i>Add New
-            </button>
-          </div>
+           <div class="d-flex gap-2">
+             <button class="btn btn-sm btn-outline-secondary"
+               (click)="toggleDeleted()">
+               <i class="bi me-1" [class]="showDeleted ? 'bi-eye-slash' : 'bi-eye'"></i>
+               {{ showDeleted ? ('MASTER.hide_deleted' | translate) : ('MASTER.show_deleted' | translate) }}
+             </button>
+             <button class="btn btn-sm btn-primary" (click)="openCreate()">
+               <i class="bi bi-plus-lg me-1"></i>{{ 'MASTER.add_new' | translate }}
+             </button>
+           </div>
         </div>
 
         <!-- Search bar -->
@@ -96,43 +99,43 @@ import { ConfirmDialogService } from '../../../core/services/confirm-dialog.serv
               <div class="position-relative">
                 <i class="bi bi-search position-absolute"
                    style="left:.75rem;top:50%;transform:translateY(-50%);color:var(--th-muted);font-size:.85rem"></i>
-                <input type="text" class="form-control form-control-sm"
-                  style="padding-left:2.2rem"
-                  placeholder="Search {{ selectedConfig.labelPlural | lowercase }}…"
-                  [formControl]="searchCtrl">
+               <input type="text" class="form-control form-control-sm"
+                 style="padding-left:2.2rem"
+                 [placeholder]="('MASTER.search' | translate) + ' ' + (selectedConfig.labelPlural | lowercase) + '…'"
+                 [formControl]="searchCtrl">
               </div>
             </div>
-            <div class="col-auto ms-auto">
-              <span class="text-muted small">
-                {{ pagination.total }} record{{ pagination.total !== 1 ? 's' : '' }}
-                @if (showDeleted) {
-                  <span class="badge bg-warning text-dark ms-1">incl. deleted</span>
-                }
-              </span>
-            </div>
+             <div class="col-auto ms-auto">
+               <span class="text-muted small">
+                 {{ pagination.total }} {{ 'MASTER.record' | translate }}{{ pagination.total !== 1 ? 's' : '' }}
+                 @if (showDeleted) {
+                   <span class="badge bg-warning text-dark ms-1">{{ 'MASTER.incl_deleted' | translate }}</span>
+                 }
+               </span>
+             </div>
           </div>
         </div>
 
-        <!-- Loading -->
-        @if (loading) {
-          <div class="loading-state">
-            <div class="spinner-border text-primary"></div>
-            <div class="loading-state__text">Loading {{ selectedConfig.labelPlural | lowercase }}…</div>
-          </div>
-        }
+         <!-- Loading -->
+         @if (loading) {
+           <div class="loading-state">
+             <div class="spinner-border text-primary"></div>
+             <div class="loading-state__text">{{ 'COMMON.loading' | translate }} {{ selectedConfig.labelPlural | lowercase }}…</div>
+           </div>
+         }
 
-        <!-- Empty -->
-        @if (!loading && records.length === 0) {
-          <div class="empty-state">
-            <div class="empty-state__icon"><i class="bi" [class]="selectedConfig.icon"></i></div>
-            <h5 class="empty-state-title">No {{ selectedConfig.labelPlural | lowercase }} found</h5>
-            @if (searchCtrl.value) {
-              <p class="empty-state-message">Try clearing the search term.</p>
-            } @else {
-              <p class="empty-state-message">Click <strong>Add New</strong> to create the first record.</p>
-            }
-          </div>
-        }
+         <!-- Empty -->
+         @if (!loading && records.length === 0) {
+           <div class="empty-state">
+             <div class="empty-state__icon"><i class="bi" [class]="selectedConfig.icon"></i></div>
+             <h5 class="empty-state-title">{{ 'MASTER.no_records_found' | translate: { records: selectedConfig.labelPlural | lowercase } }}</h5>
+             @if (searchCtrl.value) {
+               <p class="empty-state-message">{{ 'MASTER.try_clearing_search' | translate }}</p>
+             } @else {
+               <p class="empty-state-message">{{ 'MASTER.click_add_new' | translate }}</p>
+             }
+           </div>
+         }
 
         <!-- Table -->
         @if (!loading && records.length > 0) {
@@ -151,15 +154,15 @@ import { ConfirmDialogService } from '../../../core/services/confirm-dialog.serv
                         }
                       </th>
                     }
-                    @if (selectedConfig.table === 'master_job_titles') {
-                      <th>Occupation</th>
-                    }
-                    @if (selectedConfig.table === 'master_cities') {
-                      <th>Country</th>
-                    }
-                    <th>Status</th>
-                    <th>Created</th>
-                    <th style="width:110px" class="text-end">Actions</th>
+                     @if (selectedConfig.table === 'master_job_titles') {
+                       <th>{{ 'MASTER.occupation' | translate }}</th>
+                     }
+                     @if (selectedConfig.table === 'master_cities') {
+                       <th>{{ 'MASTER.country' | translate }}</th>
+                     }
+                     <th>{{ 'STATUS.status' | translate }}</th>
+                     <th>{{ 'COMMON.created' | translate }}</th>
+                     <th style="width:110px" class="text-end">{{ 'COMMON.actions' | translate }}</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -189,39 +192,39 @@ import { ConfirmDialogService } from '../../../core/services/confirm-dialog.serv
                       @if (selectedConfig.table === 'master_cities') {
                         <td class="text-muted">{{ rec['country_name'] || '—' }}</td>
                       }
-                      <td>
-                        @if (rec.deleted_at) {
-                          <span class="badge mm-badge--deleted">
-                            <i class="bi bi-trash me-1"></i>Deleted
-                          </span>
-                        } @else {
-                          <span class="badge mm-badge--active">
-                            <i class="bi bi-check-circle me-1"></i>Active
-                          </span>
-                        }
-                      </td>
+                       <td>
+                         @if (rec.deleted_at) {
+                           <span class="badge mm-badge--deleted">
+                             <i class="bi bi-trash me-1"></i>{{ 'STATUS.deleted' | translate }}
+                           </span>
+                         } @else {
+                           <span class="badge mm-badge--active">
+                             <i class="bi bi-check-circle me-1"></i>{{ 'STATUS.active' | translate }}
+                           </span>
+                         }
+                       </td>
                       <td class="text-muted text-nowrap" style="font-size:.75rem">
-                        {{ rec.created_at ? (rec.created_at | date:'dd MMM yyyy') : '—' }}
+                        {{ rec.created_at ? (rec.created_at | localeDate:'dd MMM yyyy') : '—' }}
                       </td>
-                      <td class="text-end">
-                        <div class="d-flex gap-1 justify-content-end">
-                          @if (!rec.deleted_at) {
-                            <button class="btn btn-xs btn-outline-primary"
-                              title="Edit" (click)="openEdit(rec)">
-                              <i class="bi bi-pencil"></i>
-                            </button>
-                            <button class="btn btn-xs btn-outline-danger"
-                              title="Delete" (click)="onDelete(rec)">
-                              <i class="bi bi-trash"></i>
-                            </button>
-                          } @else {
-                            <button class="btn btn-xs btn-outline-success"
-                              title="Restore" (click)="onRestore(rec)">
-                              <i class="bi bi-arrow-counterclockwise"></i>
-                            </button>
-                          }
-                        </div>
-                      </td>
+                       <td class="text-end">
+                         <div class="d-flex gap-1 justify-content-end">
+                           @if (!rec.deleted_at) {
+                             <button class="btn btn-xs btn-outline-primary"
+                               [title]="'COMMON.edit' | translate" (click)="openEdit(rec)">
+                               <i class="bi bi-pencil"></i>
+                             </button>
+                             <button class="btn btn-xs btn-outline-danger"
+                               [title]="'COMMON.delete' | translate" (click)="onDelete(rec)">
+                               <i class="bi bi-trash"></i>
+                             </button>
+                           } @else {
+                             <button class="btn btn-xs btn-outline-success"
+                               [title]="'COMMON.restore' | translate" (click)="onRestore(rec)">
+                               <i class="bi bi-arrow-counterclockwise"></i>
+                             </button>
+                           }
+                         </div>
+                       </td>
                     </tr>
                   }
                 </tbody>
@@ -232,8 +235,8 @@ import { ConfirmDialogService } from '../../../core/services/confirm-dialog.serv
             @if (pagination.pages > 1) {
               <div class="d-flex justify-content-between align-items-center px-3 py-2 border-top">
                 <small class="text-muted">
-                  Page {{ pagination.page }} of {{ pagination.pages }}
-                  ({{ pagination.total }} records)
+                  {{ 'COMMON.page' | translate }} {{ pagination.page }} {{ 'COMMON.of' | translate }} {{ pagination.pages }}
+                  ({{ pagination.total }} {{ 'MASTER.records' | translate }})
                 </small>
                 <div class="d-flex gap-1">
                   <button class="btn btn-sm btn-outline-secondary"
@@ -313,6 +316,7 @@ export class MasterManagementComponent implements OnInit, OnDestroy {
     private masterData: MasterDataService,
     private toast:      ToastService,
     private confirm:    ConfirmDialogService,
+    private translate:  TranslateService,
   ) {}
 
   ngOnInit(): void {
@@ -383,7 +387,7 @@ export class MasterManagementComponent implements OnInit, OnDestroy {
         this.loading    = false;
       },
       error: () => {
-        this.toast.show('Failed to load records.', 'error');
+        this.toast.show(this.translate.instant('MASTER.load_failed'), 'error');
         this.loading = false;
       },
     });
@@ -449,9 +453,9 @@ export class MasterManagementComponent implements OnInit, OnDestroy {
     if (!this.selectedConfig) return;
     const label = rec[this.selectedConfig.displayField] ?? `#${rec.id}`;
     const result = await this.confirm.confirm({
-      title:        'Delete Record',
-      message:      `Are you sure you want to delete "${label}"? It will be soft-deleted and can be restored later.`,
-      confirmLabel: 'Delete',
+      title:        this.translate.instant('MASTER.delete_record_title'),
+      message:      this.translate.instant('MASTER.delete_record_msg', { label }),
+      confirmLabel: this.translate.instant('COMMON.delete'),
       confirmClass: 'btn-danger',
       icon:         'bi-trash-fill',
     });
@@ -459,11 +463,11 @@ export class MasterManagementComponent implements OnInit, OnDestroy {
 
     this.adminSvc.delete(this.selectedConfig.table, rec.id).subscribe({
       next: () => {
-        this.toast.show(`"${label}" deleted.`, 'success');
+        this.toast.show(this.translate.instant('MASTER.record_deleted', { label }), 'success');
         this.load();
         this.adminSvc.getCounts().subscribe((c) => { this.counts = c; });
       },
-      error: (err) => this.toast.show(err?.error?.message ?? 'Delete failed.', 'error'),
+      error: (err) => this.toast.show(err?.error?.message ?? this.translate.instant('MASTER.delete_record_failed'), 'error'),
     });
   }
 
@@ -473,9 +477,9 @@ export class MasterManagementComponent implements OnInit, OnDestroy {
     if (!this.selectedConfig) return;
     const label = rec[this.selectedConfig.displayField] ?? `#${rec.id}`;
     const result = await this.confirm.confirm({
-      title:        'Restore Record',
-      message:      `Restore "${label}" and make it active again?`,
-      confirmLabel: 'Restore',
+      title:        this.translate.instant('MASTER.restore_record_title'),
+      message:      this.translate.instant('MASTER.restore_record_msg', { label }),
+      confirmLabel: this.translate.instant('COMMON.restore'),
       confirmClass: 'btn-success',
       icon:         'bi-arrow-counterclockwise',
     });
@@ -483,11 +487,12 @@ export class MasterManagementComponent implements OnInit, OnDestroy {
 
     this.adminSvc.restore(this.selectedConfig.table, rec.id).subscribe({
       next: () => {
-        this.toast.show(`"${label}" restored.`, 'success');
+        this.toast.show(this.translate.instant('MASTER.record_restored', { label }), 'success');
         this.load();
         this.adminSvc.getCounts().subscribe((c) => { this.counts = c; });
       },
-      error: (err) => this.toast.show(err?.error?.message ?? 'Restore failed.', 'error'),
+      error: (err) => this.toast.show(err?.error?.message ?? this.translate.instant('MASTER.restore_record_failed'), 'error'),
     });
   }
 }
+

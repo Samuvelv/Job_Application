@@ -2,13 +2,15 @@
 import { Component, Input, Output, EventEmitter, computed } from '@angular/core';
 import { CommonModule, DatePipe } from '@angular/common';
 import { RouterLink } from '@angular/router';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
+import { LocaleDatePipe } from '../../../core/pipes/locale-date.pipe';
 import { Recruiter } from '../../../core/models/recruiter.model';
 import { MasterDataService } from '../../../core/services/master-data.service';
 
 @Component({
   selector: 'app-recruiter-card',
   standalone: true,
-  imports: [CommonModule, RouterLink, DatePipe],
+  imports: [LocaleDatePipe, CommonModule, RouterLink, DatePipe, TranslateModule],
   template: `
     <div class="rc-card" [class.rc-card--inactive]="!recruiter.is_active || isExpired">
 
@@ -59,72 +61,72 @@ import { MasterDataService } from '../../../core/services/master-data.service';
         }
       </div>
 
-      <!-- ── Activity metrics ── -->
-      <div class="rc-card__metrics">
-        <div class="rc-card__metric">
-          <span class="rc-card__metric-val">{{ recruiter.shortlists_count ?? 0 }}</span>
-          <span class="rc-card__metric-lbl"><i class="bi bi-people-fill"></i> Shortlisted</span>
-        </div>
-        <div class="rc-card__metric-sep"></div>
-        <div class="rc-card__metric">
-          <span class="rc-card__metric-val">{{ recruiter.profiles_viewed_count ?? 0 }}</span>
-          <span class="rc-card__metric-lbl"><i class="bi bi-eye-fill"></i> Profiles Viewed</span>
-        </div>
-        <div class="rc-card__metric-sep"></div>
-        <div class="rc-card__metric">
-          <span class="rc-card__metric-val">{{ recruiter.contact_requests_count ?? 0 }}</span>
-          <span class="rc-card__metric-lbl"><i class="bi bi-chat-dots-fill"></i> Requests Made</span>
-        </div>
-      </div>
+       <!-- ── Activity metrics ── -->
+       <div class="rc-card__metrics">
+         <div class="rc-card__metric">
+           <span class="rc-card__metric-val">{{ recruiter.shortlists_count ?? 0 }}</span>
+           <span class="rc-card__metric-lbl"><i class="bi bi-people-fill"></i> {{ 'COMMON.search' | translate }}</span>
+         </div>
+         <div class="rc-card__metric-sep"></div>
+         <div class="rc-card__metric">
+           <span class="rc-card__metric-val">{{ recruiter.profiles_viewed_count ?? 0 }}</span>
+           <span class="rc-card__metric-lbl"><i class="bi bi-eye-fill"></i> {{ 'COMMON.view' | translate }}</span>
+         </div>
+         <div class="rc-card__metric-sep"></div>
+         <div class="rc-card__metric">
+           <span class="rc-card__metric-val">{{ recruiter.contact_requests_count ?? 0 }}</span>
+           <span class="rc-card__metric-lbl"><i class="bi bi-chat-dots-fill"></i> {{ 'COMMON.message' | translate }}</span>
+         </div>
+       </div>
 
-      <!-- ── Dates ── -->
-      <div class="rc-card__dates">
-        @if (recruiter.created_at) {
-          <span>
-            <i class="bi bi-calendar3"></i>
-            Joined {{ recruiter.created_at | date:'MMM yyyy' }}
-          </span>
-        }
-        <span class="rc-card__dot">·</span>
-        <span>
-          <i class="bi bi-clock"></i>
-          Last Login:
-          @if (recruiter.last_login_at) {
-            {{ recruiter.last_login_at | date:'dd MMM yyyy' }}
-          } @else {
-            Never
+       <!-- ── Dates ── -->
+        <div class="rc-card__dates">
+          @if (recruiter.created_at) {
+            <span>
+              <i class="bi bi-calendar3"></i>
+              {{ 'COMMON.joined' | translate }} {{ recruiter.created_at | localeDate:'MMM yyyy' }}
+            </span>
           }
-        </span>
-      </div>
+          <span class="rc-card__dot">·</span>
+          <span>
+            <i class="bi bi-clock"></i>
+            {{ 'RECRUITER.last_login' | translate }}:
+            @if (recruiter.last_login_at) {
+              {{ recruiter.last_login_at | localeDate:'dd MMM yyyy' }}
+            } @else {
+              {{ 'COMMON.never' | translate }}
+            }
+          </span>
+        </div>
 
-      <!-- ── Actions ── -->
-      <div class="cl-card__actions">
-        <a [routerLink]="['/admin/recruiters', recruiter.id]"
-          class="cl-card__action cl-card__action--view" title="View profile">
-          <i class="bi bi-eye"></i><span>View</span>
-        </a>
-        <button class="cl-card__action cl-card__action--edit"
-          (click)="edit.emit()" title="Edit">
-          <i class="bi bi-pencil"></i><span>Edit</span>
-        </button>
-        <button class="cl-card__action cl-card__action--mail"
-          (click)="resendCreds.emit()" title="Resend credentials">
-          <i class="bi bi-envelope"></i>
-        </button>
-        <button class="cl-card__action"
-          [class.cl-card__action--activate]="!recruiter.is_active"
-          [class.cl-card__action--deactivate]="recruiter.is_active"
-          (click)="toggleActive.emit()"
-          [title]="recruiter.is_active ? 'Deactivate' : 'Activate'">
-          <i class="bi"
-            [class.bi-person-check-fill]="!recruiter.is_active"
-            [class.bi-person-x-fill]="recruiter.is_active"></i>
-        </button>
-        <button class="cl-card__action cl-card__action--danger"
-          (click)="delete.emit()" title="Delete">
-          <i class="bi bi-trash"></i>
-        </button>
-      </div>
+        <!-- ── Actions ── -->
+        <div class="cl-card__actions">
+          <a [routerLink]="['/admin/recruiters', recruiter.id]"
+            class="cl-card__action cl-card__action--view" [title]="('COMMON.view' | translate)">
+            <i class="bi bi-eye"></i><span>{{ 'COMMON.view' | translate }}</span>
+          </a>
+          <button class="cl-card__action cl-card__action--edit"
+            (click)="edit.emit()" [title]="('COMMON.edit' | translate)">
+            <i class="bi bi-pencil"></i><span>{{ 'COMMON.edit' | translate }}</span>
+          </button>
+          <button class="cl-card__action cl-card__action--mail"
+            (click)="resendCreds.emit()" [title]="'COMMON.resend_credentials' | translate">
+            <i class="bi bi-envelope"></i>
+          </button>
+          <button class="cl-card__action"
+            [class.cl-card__action--activate]="!recruiter.is_active"
+            [class.cl-card__action--deactivate]="recruiter.is_active"
+            (click)="toggleActive.emit()"
+            [title]="recruiter.is_active ? ('COMMON.active' | translate) : ('COMMON.inactive' | translate)">
+            <i class="bi"
+              [class.bi-person-check-fill]="!recruiter.is_active"
+              [class.bi-person-x-fill]="recruiter.is_active"></i>
+          </button>
+          <button class="cl-card__action cl-card__action--danger"
+            (click)="delete.emit()" [title]="('COMMON.delete' | translate)">
+            <i class="bi bi-trash"></i>
+          </button>
+        </div>
 
     </div>
   `,
@@ -136,7 +138,11 @@ export class RecruiterCardComponent {
   @Output() resendCreds   = new EventEmitter<void>();
   @Output() toggleActive  = new EventEmitter<void>();
 
-  constructor(private master: MasterDataService) {}
+  constructor(private master: MasterDataService, private translate: TranslateService) {}
+
+  private translateKey(key: string): string {
+    return this.translate.instant(key);
+  }
 
   private readonly flagMap = computed<Map<string, string>>(() => {
     const map = new Map<string, string>();
@@ -159,25 +165,26 @@ export class RecruiterCardComponent {
   }
 
   get statusInfo(): { label: string; cls: string } {
-    if (!this.recruiter.is_active) return { label: 'Inactive',      cls: 'rc-badge--inactive' };
-    if (this.isExpired)            return { label: 'Expired',       cls: 'rc-badge--expired'  };
-    return                                { label: 'Active',        cls: 'rc-badge--active'   };
+    if (!this.recruiter.is_active) return { label: this.translateKey('COMMON.inactive'), cls: 'rc-badge--inactive' };
+    if (this.isExpired)            return { label: this.translateKey('COMMON.expired'),  cls: 'rc-badge--expired'  };
+    return                                { label: this.translateKey('COMMON.active'),   cls: 'rc-badge--active'   };
   }
 
   get typeInfo(): { label: string; cls: string } {
     if (this.recruiter.type === 'recruitment_agency') {
-      return { label: 'Recruitment Agency', cls: 'rc-badge--type-agency' };
+      return { label: this.translateKey('RECRUITER.recruitment_agency'), cls: 'rc-badge--type-agency' };
     }
-    return { label: 'Direct Employer', cls: 'rc-badge--type-employer' };
+    return { label: this.translateKey('RECRUITER.direct_employer'), cls: 'rc-badge--type-employer' };
   }
 
   get sponsorInfo(): { label: string; cls: string } | null {
     switch (this.recruiter.has_sponsor_licence) {
-      case 'yes':     return { label: '✓ Verified',     cls: 'rc-badge--sponsor-yes'     };
-      case 'no':      return { label: '✕ Not Verified', cls: 'rc-badge--sponsor-no'      };
-      case 'unknown': return { label: '⏳ Pending',      cls: 'rc-badge--sponsor-pending' };
+      case 'yes':     return { label: `✓ ${this.translateKey('COMMON.verified')}`, cls: 'rc-badge--sponsor-yes'     };
+      case 'no':      return { label: `✕ ${this.translateKey('RECRUITER.not_verified')}`, cls: 'rc-badge--sponsor-no'      };
+      case 'unknown': return { label: `⏳ ${this.translateKey('COMMON.pending')}`, cls: 'rc-badge--sponsor-pending' };
       default:        return null;
     }
   }
 
 }
+

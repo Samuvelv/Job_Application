@@ -1,5 +1,7 @@
 // src/app/shared/components/contact-request-card/contact-request-card.component.ts
 import { Component, Input, Output, EventEmitter, OnInit } from '@angular/core';
+import { TranslateModule } from '@ngx-translate/core';
+import { LocaleDatePipe } from '../../../core/pipes/locale-date.pipe';
 import { CommonModule } from '@angular/common';
 import { ContactRequest } from '../../../core/models/contact-request.model';
 import { ConfirmDialogService } from '../../../core/services/confirm-dialog.service';
@@ -7,7 +9,7 @@ import { ConfirmDialogService } from '../../../core/services/confirm-dialog.serv
 @Component({
   selector: 'app-contact-request-card',
   standalone: true,
-  imports: [CommonModule],
+  imports: [LocaleDatePipe, CommonModule, TranslateModule],
   template: `
     <div class="contact-request-card" [class.is-selected]="selected">
       <!-- Card Header -->
@@ -25,163 +27,163 @@ import { ConfirmDialogService } from '../../../core/services/confirm-dialog.serv
             </div>
           }
           <!-- Status badge inline in header -->
-          <span class="status-badge ms-auto" [class]="'status-' + request.status">
-            @if (request.status === 'pending') { <i class="bi bi-hourglass-split me-1"></i> }
-            @else if (request.status === 'approved') { <i class="bi bi-check-circle-fill me-1"></i> }
-            @else if (request.status === 'rejected') { <i class="bi bi-x-circle-fill me-1"></i> }
-            @else if (request.status === 'revoked') { <i class="bi bi-shield-x-fill me-1"></i> }
-            {{ request.status | uppercase }}
-          </span>
+           <span class="status-badge ms-auto" [class]="'status-' + request.status">
+             @if (request.status === 'pending') { <i class="bi bi-hourglass-split me-1"></i> }
+             @else if (request.status === 'approved') { <i class="bi bi-check-circle-fill me-1"></i> }
+             @else if (request.status === 'rejected') { <i class="bi bi-x-circle-fill me-1"></i> }
+             @else if (request.status === 'revoked') { <i class="bi bi-shield-x-fill me-1"></i> }
+             {{ ('OPTIONS.contact_request_status_' + request.status) | translate }}
+           </span>
         </div>
 
         <div class="header-content">
           <!-- Recruiter Info -->
-          <div class="party-block recruiter-block">
-            <div class="party-label"><i class="bi bi-briefcase-fill me-1"></i>Recruiter</div>
-            <div class="party-name">{{ request.recruiter_name ?? '—' }}</div>
-            @if (request.recruiter_company) {
-              <div class="party-company">{{ request.recruiter_company }}</div>
-            }
-            @if (request.recruiter_email) {
-              <div class="party-email">
-                <i class="bi bi-envelope-fill"></i>
-                {{ request.recruiter_email }}
-              </div>
-            }
-          </div>
+        <div class="party-block recruiter-block">
+             <div class="party-label"><i class="bi bi-briefcase-fill me-1"></i>{{ 'CONTACT_REQUESTS.recruiter' | translate }}</div>
+             <div class="party-name">{{ request.recruiter_name ?? '—' }}</div>
+             @if (request.recruiter_company) {
+               <div class="party-company">{{ request.recruiter_company }}</div>
+             }
+             @if (request.recruiter_email) {
+               <div class="party-email">
+                 <i class="bi bi-envelope-fill"></i>
+                 {{ request.recruiter_email }}
+               </div>
+             }
+           </div>
 
-          <!-- Arrow Separator -->
-          <div class="party-separator" aria-hidden="true">
-            <i class="bi bi-arrow-right-circle-fill"></i>
-          </div>
+           <!-- Arrow Separator -->
+           <div class="party-separator" aria-hidden="true">
+             <i class="bi bi-arrow-right-circle-fill"></i>
+           </div>
 
-          <!-- Candidate Info -->
-          <div class="party-block candidate-block">
-            <div class="party-label"><i class="bi bi-person-fill me-1"></i>Candidate</div>
-            <div class="party-name">{{ request.candidate_first_name }} {{ request.candidate_last_name }}</div>
-            @if (request.candidate_number) {
-              <div class="candidate-number">
-                <span class="badge">#{{ request.candidate_number }}</span>
-              </div>
-            }
-            @if (request.candidate_job_title) {
-              <div class="party-title">{{ request.candidate_job_title }}</div>
-            }
-            @if (request.candidate_email) {
-              <div class="party-email">
-                <i class="bi bi-envelope-fill"></i>
-                {{ request.candidate_email }}
-              </div>
-            }
-          </div>
+           <!-- Candidate Info -->
+           <div class="party-block candidate-block">
+             <div class="party-label"><i class="bi bi-person-fill me-1"></i>{{ 'CONTACT_REQUESTS.candidate' | translate }}</div>
+             <div class="party-name">{{ request.candidate_first_name }} {{ request.candidate_last_name }}</div>
+             @if (request.candidate_number) {
+               <div class="candidate-number">
+                 <span class="badge">#{{ request.candidate_number }}</span>
+               </div>
+             }
+             @if (request.candidate_job_title) {
+               <div class="party-title">{{ request.candidate_job_title }}</div>
+             }
+             @if (request.candidate_email) {
+               <div class="party-email">
+                 <i class="bi bi-envelope-fill"></i>
+                 {{ request.candidate_email }}
+               </div>
+             }
+           </div>
         </div>
       </div>
 
-      <!-- Audit Trail -->
-      <div class="audit-trail">
-        <div class="audit-trail__title">
-          <i class="bi bi-journal-text"></i>
-          Audit Trail
-        </div>
-        <div class="audit-trail__rows">
-          <div class="audit-trail__row">
-            <span class="audit-trail__label">Submitted</span>
-            <span class="audit-trail__value">{{ request.created_at | date:'dd MMM yyyy, HH:mm' }}</span>
-          </div>
-          @if (request.status !== 'pending' && request.status !== 'revoked') {
-            <div class="audit-trail__row">
-              <span class="audit-trail__label">Reviewed by</span>
-              <span class="audit-trail__value">
-                @if (request.reviewed_by_name) {
-                  <i class="bi bi-person-check"></i>
-                  {{ request.reviewed_by_name }}
-                } @else {
-                  <span class="audit-trail__unknown">—</span>
-                }
-              </span>
-            </div>
-            <div class="audit-trail__row">
-              <span class="audit-trail__label">Decision made</span>
-              <span class="audit-trail__value">{{ request.reviewed_at | date:'dd MMM yyyy, HH:mm' }}</span>
-            </div>
-          }
-          @if (request.status === 'revoked') {
-            <div class="audit-trail__row">
-              <span class="audit-trail__label">Revoked by</span>
-              <span class="audit-trail__value">
-                @if (request.revoked_by_name) {
-                  <i class="bi bi-person-x" style="color:var(--th-danger)"></i>
-                  {{ request.revoked_by_name }}
-                } @else {
-                  <span class="audit-trail__unknown">—</span>
-                }
-              </span>
-            </div>
-            <div class="audit-trail__row">
-              <span class="audit-trail__label">Revoked at</span>
-              <span class="audit-trail__value">{{ request.revoked_at | date:'dd MMM yyyy, HH:mm' }}</span>
-            </div>
-          }
-        </div>
-      </div>
+       <!-- Audit Trail -->
+       <div class="audit-trail">
+         <div class="audit-trail__title">
+           <i class="bi bi-journal-text"></i>
+           {{ 'AUDIT_LOGS.title' | translate }}
+         </div>
+         <div class="audit-trail__rows">
+           <div class="audit-trail__row">
+             <span class="audit-trail__label">{{ 'COMMON.date' | translate }}</span>
+             <span class="audit-trail__value">{{ request.created_at | localeDate:'dd MMM yyyy, HH:mm' }}</span>
+           </div>
+           @if (request.status !== 'pending' && request.status !== 'revoked') {
+             <div class="audit-trail__row">
+               <span class="audit-trail__label">{{ 'COMMON.actions' | translate }}</span>
+               <span class="audit-trail__value">
+                 @if (request.reviewed_by_name) {
+                   <i class="bi bi-person-check"></i>
+                   {{ request.reviewed_by_name }}
+                 } @else {
+                   <span class="audit-trail__unknown">—</span>
+                 }
+               </span>
+             </div>
+             <div class="audit-trail__row">
+               <span class="audit-trail__label">{{ 'COMMON.date' | translate }}</span>
+               <span class="audit-trail__value">{{ request.reviewed_at | localeDate:'dd MMM yyyy, HH:mm' }}</span>
+             </div>
+           }
+           @if (request.status === 'revoked') {
+             <div class="audit-trail__row">
+               <span class="audit-trail__label">{{ 'COMMON.remove' | translate }}</span>
+               <span class="audit-trail__value">
+                 @if (request.revoked_by_name) {
+                   <i class="bi bi-person-x" style="color:var(--th-danger)"></i>
+                   {{ request.revoked_by_name }}
+                 } @else {
+                   <span class="audit-trail__unknown">—</span>
+                 }
+               </span>
+             </div>
+             <div class="audit-trail__row">
+               <span class="audit-trail__label">{{ 'COMMON.date' | translate }}</span>
+               <span class="audit-trail__value">{{ request.revoked_at | localeDate:'dd MMM yyyy, HH:mm' }}</span>
+             </div>
+           }
+         </div>
+       </div>
 
-      <!-- Request Reason (if provided) -->
-      @if (request.request_reason) {
-        <div class="request-reason-section">
-          <p class="request-reason-label"><i class="bi bi-chat-left-text-fill me-1"></i>Reason for Request</p>
-          <p class="request-reason-text">{{ request.request_reason }}</p>
-        </div>
-      }
+       <!-- Request Reason (if provided) -->
+       @if (request.request_reason) {
+         <div class="request-reason-section">
+           <p class="request-reason-label"><i class="bi bi-chat-left-text-fill me-1"></i>{{ 'CONTACT_SUBMISSIONS.subject' | translate }}</p>
+           <p class="request-reason-text">{{ request.request_reason }}</p>
+         </div>
+       }
 
-      <!-- Admin Notes (if exists) -->
-      @if (request.status !== 'pending' && request.admin_note) {
-        <div class="admin-notes-section">
-          <p class="admin-note-label"><i class="bi bi-sticky-fill me-1"></i>Admin Note</p>
-          <p class="admin-note-text">{{ request.admin_note }}</p>
-        </div>
-      }
+       <!-- Admin Notes (if exists) -->
+       @if (request.status !== 'pending' && request.admin_note) {
+         <div class="admin-notes-section">
+           <p class="admin-note-label"><i class="bi bi-sticky-fill me-1"></i>{{ 'EDIT_REQUEST.admin_note' | translate }}</p>
+           <p class="admin-note-text">{{ request.admin_note }}</p>
+         </div>
+       }
 
-      <!-- Action Buttons (for pending requests) -->
-      @if (request.status === 'pending' && (isAdmin || isRecruiter) && !isSubmitting) {
-        <div class="card-actions">
-          <button class="btn btn-success btn-action" (click)="onApproveClick()">
-            <i class="bi bi-check-circle"></i>
-            Approve
-          </button>
-          <button class="btn btn-danger btn-action" (click)="onRejectClick()">
-            <i class="bi bi-x-circle"></i>
-            Reject
-          </button>
-        </div>
-      }
+       <!-- Action Buttons (for pending requests) -->
+       @if (request.status === 'pending' && (isAdmin || isRecruiter) && !isSubmitting) {
+         <div class="card-actions">
+           <button class="btn btn-success btn-action" (click)="onApproveClick()">
+             <i class="bi bi-check-circle"></i>
+             {{ 'INTEREST_REQUESTS.accepted' | translate }}
+           </button>
+           <button class="btn btn-danger btn-action" (click)="onRejectClick()">
+             <i class="bi bi-x-circle"></i>
+             {{ 'INTEREST_REQUESTS.rejected' | translate }}
+           </button>
+         </div>
+       }
 
-      <!-- Revoke Button (for approved requests, admin only) -->
-      @if (request.status === 'approved' && isAdmin && !isSubmitting) {
-        <div class="card-actions">
-          <button class="btn btn-warning btn-action" (click)="onRevokeClick()">
-            <i class="bi bi-shield-x"></i>
-            Revoke Access
-          </button>
-        </div>
-      }
+       <!-- Revoke Button (for approved requests, admin only) -->
+       @if (request.status === 'approved' && isAdmin && !isSubmitting) {
+         <div class="card-actions">
+           <button class="btn btn-warning btn-action" (click)="onRevokeClick()">
+             <i class="bi bi-shield-x"></i>
+             {{ 'COMMON.remove' | translate }}
+           </button>
+         </div>
+       }
 
-      <!-- Revocation info (revoked rows) -->
-      @if (request.status === 'revoked' && request.revocation_reason) {
-        <div class="admin-notes-section admin-notes-section--revoked">
-          <p class="admin-note-label"><i class="bi bi-shield-exclamation me-1"></i>Revocation Reason</p>
-          <p class="admin-note-text">{{ request.revocation_reason }}</p>
-        </div>
-      }
+       <!-- Revocation info (revoked rows) -->
+       @if (request.status === 'revoked' && request.revocation_reason) {
+         <div class="admin-notes-section admin-notes-section--revoked">
+           <p class="admin-note-label"><i class="bi bi-shield-exclamation me-1"></i>{{ 'COMMON.warning' | translate }}</p>
+           <p class="admin-note-text">{{ request.revocation_reason }}</p>
+         </div>
+       }
 
-      <!-- Loading State -->
-      @if (isSubmitting) {
-        <div class="card-actions">
-          <button class="btn btn-secondary btn-action" disabled>
-            <span class="spinner-border spinner-border-sm me-2"></span>
-            Processing...
-          </button>
-        </div>
-      }
+       <!-- Loading State -->
+       @if (isSubmitting) {
+         <div class="card-actions">
+           <button class="btn btn-secondary btn-action" disabled>
+             <span class="spinner-border spinner-border-sm me-2"></span>
+             {{ 'COMMON.loading' | translate }}
+           </button>
+         </div>
+       }
     </div>
   `,
   styles: [`
@@ -596,3 +598,4 @@ export class ContactRequestCardComponent implements OnInit {
     });
   }
 }
+

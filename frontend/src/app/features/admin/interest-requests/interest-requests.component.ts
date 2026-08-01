@@ -1,6 +1,8 @@
 // src/app/features/admin/interest-requests/interest-requests.component.ts
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
+import { LocaleDatePipe } from '../../../core/pipes/locale-date.pipe';
 import { ReactiveFormsModule, FormBuilder, FormGroup, FormsModule } from '@angular/forms';
 import { Subject, debounceTime, distinctUntilChanged, takeUntil } from 'rxjs';
 import { InterestRequestService, InterestRequest, InterestRequestCounts, PaginatedInterestRequests } from '../../../core/services/interest-request.service';
@@ -13,7 +15,7 @@ import { NotificationService } from '../../../core/services/notification.service
 @Component({
   selector: 'app-interest-requests',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, FormsModule, PageHeaderComponent, EmptyStateComponent],
+  imports: [LocaleDatePipe, CommonModule, TranslateModule, ReactiveFormsModule, FormsModule, PageHeaderComponent, EmptyStateComponent],
   styles: [`
     /* ── Filter bar ───────────────────────────────────────────── */
     .filter-bar {
@@ -246,28 +248,28 @@ import { NotificationService } from '../../../core/services/notification.service
     }
   `],
   template: `
-    <app-page-header title="Agency Interest Requests" subtitle="Review interest requests submitted by recruitment agencies." />
+    <app-page-header [title]="'INTEREST_REQUESTS.admin_title' | translate" [subtitle]="'INTEREST_REQUESTS.admin_subtitle_full' | translate" />
 
     <!-- Status tabs -->
     <div class="tabs-row">
       <button class="tab-btn" [class.tab-btn--active]="activeTab === ''"         (click)="setTab('')">
-        <i class="bi bi-grid"></i>All
+        <i class="bi bi-grid"></i>{{ 'INTEREST_REQUESTS.all' | translate }}
         <span class="tab-count">{{ counts.total }}</span>
       </button>
       <button class="tab-btn" [class.tab-btn--active]="activeTab === 'pending'"  (click)="setTab('pending')">
-        <i class="bi bi-hourglass-split"></i>Pending
+        <i class="bi bi-hourglass-split"></i>{{ 'INTEREST_REQUESTS.pending' | translate }}
         <span class="tab-count">{{ counts.pending }}</span>
       </button>
       <button class="tab-btn" [class.tab-btn--active]="activeTab === 'approved'" (click)="setTab('approved')">
-        <i class="bi bi-check-circle"></i>Approved
+        <i class="bi bi-check-circle"></i>{{ 'INTEREST_REQUESTS.approved' | translate }}
         <span class="tab-count">{{ counts.approved }}</span>
       </button>
       <button class="tab-btn" [class.tab-btn--active]="activeTab === 'rejected'" (click)="setTab('rejected')">
-        <i class="bi bi-x-circle"></i>Rejected
+        <i class="bi bi-x-circle"></i>{{ 'INTEREST_REQUESTS.rejected' | translate }}
         <span class="tab-count">{{ counts.rejected }}</span>
       </button>
       <button class="tab-btn" [class.tab-btn--active]="activeTab === 'revoked'"  (click)="setTab('revoked')">
-        <i class="bi bi-slash-circle"></i>Revoked
+        <i class="bi bi-slash-circle"></i>{{ 'INTEREST_REQUESTS.revoked' | translate }}
         <span class="tab-count">{{ counts.revoked }}</span>
       </button>
     </div>
@@ -276,31 +278,31 @@ import { NotificationService } from '../../../core/services/notification.service
     <div class="filter-bar">
       <div class="filter-bar__row">
         <div class="filter-bar__group filter-bar__group--wide">
-          <label class="filter-bar__label">Search</label>
-          <input class="filter-bar__input" type="text" placeholder="Agency name, candidate…"
+          <label class="filter-bar__label">{{ 'COMMON.search' | translate }}</label>
+          <input class="filter-bar__input" type="text" [placeholder]="'INTEREST_REQUESTS.search_placeholder' | translate"
             [(ngModel)]="searchTerm" (ngModelChange)="onSearchChange($event)" />
         </div>
         <div class="filter-bar__group">
-          <label class="filter-bar__label">Status</label>
+          <label class="filter-bar__label">{{ 'INTEREST_REQUESTS.status' | translate }}</label>
           <select class="filter-bar__select" [(ngModel)]="statusFilter" (ngModelChange)="onStatusFilterChange()">
-            <option value="">All</option>
-            <option value="pending">Pending</option>
-            <option value="approved">Approved</option>
-            <option value="rejected">Rejected</option>
-            <option value="revoked">Revoked</option>
+            <option value="">{{ 'INTEREST_REQUESTS.all' | translate }}</option>
+            <option value="pending">{{ 'INTEREST_REQUESTS.pending' | translate }}</option>
+            <option value="approved">{{ 'INTEREST_REQUESTS.approved' | translate }}</option>
+            <option value="rejected">{{ 'INTEREST_REQUESTS.rejected' | translate }}</option>
+            <option value="revoked">{{ 'INTEREST_REQUESTS.revoked' | translate }}</option>
           </select>
         </div>
 
         <!-- Date From -->
         <div class="filter-bar__group">
-          <label class="filter-bar__label"><i class="bi bi-calendar me-1"></i>Date from</label>
+          <label class="filter-bar__label"><i class="bi bi-calendar me-1"></i>{{ 'INTEREST_REQUESTS.date_from' | translate }}</label>
           <input class="filter-bar__input" type="date"
             [(ngModel)]="dateFrom" (ngModelChange)="onFilterChange()" />
         </div>
 
         <!-- Date To -->
         <div class="filter-bar__group">
-          <label class="filter-bar__label"><i class="bi bi-calendar-check me-1"></i>Date to</label>
+          <label class="filter-bar__label"><i class="bi bi-calendar-check me-1"></i>{{ 'INTEREST_REQUESTS.date_to' | translate }}</label>
           <input class="filter-bar__input" type="date"
             [(ngModel)]="dateTo" (ngModelChange)="onFilterChange()" />
         </div>
@@ -311,7 +313,7 @@ import { NotificationService } from '../../../core/services/notification.service
             [disabled]="exporting" (click)="exportCsv()">
             @if (exporting) { <span class="spinner-border spinner-border-sm"></span> }
             @else { <i class="bi bi-download"></i> }
-            Export CSV
+            {{ 'INTEREST_REQUESTS.export_csv' | translate }}
           </button>
         </div>
 
@@ -319,7 +321,7 @@ import { NotificationService } from '../../../core/services/notification.service
         @if (activeFilterCount > 0) {
           <button class="filter-bar__clear" (click)="clearFilters()">
             <i class="bi bi-x-lg"></i>
-            Clear
+            {{ 'INTEREST_REQUESTS.clear' | translate }}
             <span class="filter-bar__active-badge">{{ activeFilterCount }}</span>
           </button>
         }
@@ -341,7 +343,7 @@ import { NotificationService } from '../../../core/services/notification.service
           <div class="request-card__header">
             <div class="request-card__info">
               <div class="request-card__agency">{{ r.recruiter_company }} <span style="font-weight:400;color:var(--th-muted);">({{ r.recruiter_name }})</span></div>
-              <div class="request-card__meta">{{ r.recruiter_email }} · Submitted {{ r.created_at | date:'dd MMM yyyy, HH:mm' }}</div>
+              <div class="request-card__meta">{{ r.recruiter_email }} · Submitted {{ r.created_at | localeDate:'dd MMM yyyy, HH:mm' }}</div>
             </div>
             <span class="status-badge status-badge--{{ r.status }}">
               <i class="bi"
@@ -353,29 +355,29 @@ import { NotificationService } from '../../../core/services/notification.service
             </span>
           </div>
 
-          <div class="request-card__fields">
-            <div class="request-card__field">
-              <strong>Candidate:</strong> {{ r.candidate_first_name }} {{ r.candidate_last_name }}
-              @if (r.candidate_number) { <span style="color:var(--th-muted);">#{{ r.candidate_number }}</span> }
-            </div>
-            <div class="request-card__field"><strong>Sector:</strong> {{ r.sector }}</div>
-            <div class="request-card__field"><strong>Country:</strong> {{ r.country }}</div>
-          </div>
+           <div class="request-card__fields">
+             <div class="request-card__field">
+               <strong>{{ 'INTEREST_REQUESTS.candidate_label' | translate }}:</strong> {{ r.candidate_first_name }} {{ r.candidate_last_name }}
+               @if (r.candidate_number) { <span style="color:var(--th-muted);">#{{ r.candidate_number }}</span> }
+             </div>
+             <div class="request-card__field"><strong>{{ 'INTEREST_REQUESTS.sector' | translate }}:</strong> {{ r.sector }}</div>
+             <div class="request-card__field"><strong>{{ 'INTEREST_REQUESTS.country' | translate }}:</strong> {{ r.country }}</div>
+           </div>
 
           <div class="request-card__message">{{ r.message }}</div>
 
-          @if (r.admin_note) {
-            <div class="mt-2 small" style="color:var(--th-muted);">
-              <i class="bi bi-chat-left-text me-1"></i><strong>Admin note:</strong> {{ r.admin_note }}
-            </div>
-          }
+           @if (r.admin_note) {
+             <div class="mt-2 small" style="color:var(--th-muted);">
+               <i class="bi bi-chat-left-text me-1"></i><strong>{{ 'COMMON.admin_note' | translate }}:</strong> {{ r.admin_note }}
+             </div>
+           }
 
           <!-- Revocation details -->
           @if (r.status === 'revoked' && r.revoked_at) {
             <div class="revocation-info">
               <i class="bi bi-slash-circle-fill"></i>
               <span>
-                <strong>Revoked</strong> {{ r.revoked_at | date:'dd MMM yyyy, HH:mm' }}
+                <strong>{{ 'INTEREST_REQUESTS.revoked' | translate }}</strong> {{ r.revoked_at | localeDate:'dd MMM yyyy, HH:mm' }}
                 @if (r.revocation_reason) { · {{ r.revocation_reason }} }
               </span>
             </div>
@@ -385,17 +387,17 @@ import { NotificationService } from '../../../core/services/notification.service
           @if (r.status === 'pending') {
             <div class="request-card__actions">
               <button class="btn btn-sm btn-success" (click)="openReview(r, 'approved')">
-                <i class="bi bi-check-lg me-1"></i>Approve
+                <i class="bi bi-check-lg me-1"></i>{{ 'INTEREST_REQUESTS.approve' | translate }}
               </button>
               <button class="btn btn-sm btn-danger" (click)="openReview(r, 'rejected')">
-                <i class="bi bi-x-lg me-1"></i>Reject
+                <i class="bi bi-x-lg me-1"></i>{{ 'INTEREST_REQUESTS.reject' | translate }}
               </button>
             </div>
           }
           @if (r.status === 'approved') {
             <div class="request-card__actions">
               <button class="btn btn-sm btn-outline-warning" (click)="onRevokeClick(r)">
-                <i class="bi bi-slash-circle me-1"></i>Revoke
+                <i class="bi bi-slash-circle me-1"></i>{{ 'INTEREST_REQUESTS.revoke' | translate }}
               </button>
             </div>
           }
@@ -405,9 +407,9 @@ import { NotificationService } from '../../../core/services/notification.service
       <!-- Pagination -->
       @if (pagination && pagination.pages > 1) {
         <div class="d-flex justify-content-center gap-2 mt-4">
-          <button class="btn btn-sm btn-outline-secondary" [disabled]="page <= 1" (click)="goToPage(page - 1)">Previous</button>
+          <button class="btn btn-sm btn-outline-secondary" [disabled]="page <= 1" (click)="goToPage(page - 1)">{{ 'COMMON.previous' | translate }}</button>
           <span class="btn btn-sm disabled">{{ page }} / {{ pagination.pages }}</span>
-          <button class="btn btn-sm btn-outline-secondary" [disabled]="page >= pagination.pages" (click)="goToPage(page + 1)">Next</button>
+          <button class="btn btn-sm btn-outline-secondary" [disabled]="page >= pagination.pages" (click)="goToPage(page + 1)">{{ 'COMMON.next' | translate }}</button>
         </div>
       }
     }
@@ -416,24 +418,24 @@ import { NotificationService } from '../../../core/services/notification.service
     @if (reviewTarget) {
       <div class="modal-backdrop" (click)="closeModal()">
         <div class="modal-box" (click)="$event.stopPropagation()">
-          <h5>{{ reviewAction === 'approved' ? 'Approve' : 'Reject' }} Interest Request</h5>
+          <h5>{{ reviewAction === 'approved' ? ('INTEREST_REQUESTS.approve' | translate) : ('INTEREST_REQUESTS.reject' | translate) }} {{ 'INTEREST_REQUESTS.interest_request' | translate }}</h5>
           <p class="small text-muted">
-            Agency: <strong>{{ reviewTarget.recruiter_company }}</strong><br>
-            Candidate: <strong>{{ reviewTarget.candidate_first_name }} {{ reviewTarget.candidate_last_name }}</strong>
+            {{ 'INTEREST_REQUESTS.agency' | translate }}: <strong>{{ reviewTarget.recruiter_company }}</strong><br>
+            {{ 'COMMON.candidate' | translate }}: <strong>{{ reviewTarget.candidate_first_name }} {{ reviewTarget.candidate_last_name }}</strong>
           </p>
           <div class="mb-3">
-            <div class="modal-label">Admin Note <span style="font-weight:400;text-transform:none;">(optional)</span></div>
+            <div class="modal-label">{{ 'INTEREST_REQUESTS.admin_note' | translate }} <span style="font-weight:400;text-transform:none;">({{ 'COMMON.optional' | translate }})</span></div>
             <textarea class="modal-textarea" rows="3" [(ngModel)]="adminNote"
-              placeholder="Optional note to the agency…"></textarea>
+              [placeholder]="'INTEREST_REQUESTS.optional_note_to_agency' | translate"></textarea>
           </div>
           <div class="d-flex gap-2 justify-content-end">
-            <button class="btn btn-sm btn-outline-secondary" (click)="closeModal()">Cancel</button>
+            <button class="btn btn-sm btn-outline-secondary" (click)="closeModal()">{{ 'COMMON.cancel' | translate }}</button>
             <button class="btn btn-sm"
               [class.btn-success]="reviewAction === 'approved'"
               [class.btn-danger]="reviewAction === 'rejected'"
               [disabled]="submitting" (click)="submitReview()">
               @if (submitting) { <span class="spinner-border spinner-border-sm me-1"></span> }
-              {{ reviewAction === 'approved' ? 'Approve' : 'Reject' }}
+              {{ reviewAction === 'approved' ? ('INTEREST_REQUESTS.approve' | translate) : ('INTEREST_REQUESTS.reject' | translate) }}
             </button>
           </div>
         </div>
@@ -488,6 +490,7 @@ export class InterestRequestsComponent implements OnInit, OnDestroy {
     private toast:         ToastService,
     private confirmDialog: ConfirmDialogService,
     private notifications: NotificationService,
+    private translate: TranslateService,
   ) {}
 
   ngOnInit(): void {
@@ -556,7 +559,7 @@ export class InterestRequestsComponent implements OnInit, OnDestroy {
         this.loading    = false;
       },
       error: () => {
-        this.toast.error('Failed to load interest requests');
+        this.toast.error(this.translate.instant('INTEREST_REQUESTS_ADMIN.load_failed'));
         this.loading = false;
       },
     });
@@ -595,7 +598,7 @@ export class InterestRequestsComponent implements OnInit, OnDestroy {
       .subscribe({
         next: () => {
           this.submitting = false;
-          this.toast.success(`Request ${this.reviewAction}`);
+          this.toast.success(this.reviewAction === 'approved' ? this.translate.instant('EDIT_REQUESTS_ADMIN.request_approved') : this.translate.instant('EDIT_REQUESTS_ADMIN.request_rejected'));
           this.closeModal();
           this.load();
           this.loadCounts();
@@ -603,7 +606,7 @@ export class InterestRequestsComponent implements OnInit, OnDestroy {
         },
         error: (err) => {
           this.submitting = false;
-          this.toast.error(err?.error?.message ?? 'Failed to review request');
+          this.toast.error(err?.error?.message ?? this.translate.instant('INTEREST_REQUESTS_ADMIN.review_failed'));
         },
       });
   }
@@ -611,28 +614,28 @@ export class InterestRequestsComponent implements OnInit, OnDestroy {
   // ── Revoke (confirm dialog) ───────────────────────────────────────────────
 
   onRevokeClick(r: InterestRequest): void {
-    const agencyLabel = r.recruiter_company ?? r.recruiter_name ?? 'this agency';
-    const candidateLabel = `${r.candidate_first_name ?? ''} ${r.candidate_last_name ?? ''}`.trim() || 'this candidate';
+    const agencyLabel = r.recruiter_company ?? r.recruiter_name ?? this.translate.instant('INTEREST_REQUESTS_ADMIN.this_agency');
+    const candidateLabel = `${r.candidate_first_name ?? ''} ${r.candidate_last_name ?? ''}`.trim() || this.translate.instant('INTEREST_REQUESTS_ADMIN.this_candidate');
 
     this.confirmDialog.confirm({
-      title:           'Revoke Agency Interest Request?',
-      message:         `Are you sure you want to revoke the approved interest request from ${agencyLabel} for ${candidateLabel}? The agency will be notified by email.`,
-      confirmLabel:    'Revoke',
-      cancelLabel:     'Cancel',
+      title:           this.translate.instant('INTEREST_REQUESTS_ADMIN.revoke_title'),
+      message:         this.translate.instant('INTEREST_REQUESTS_ADMIN.revoke_msg', { agency: agencyLabel, candidate: candidateLabel }),
+      confirmLabel:    this.translate.instant('INTEREST_REQUESTS.revoke'),
+      cancelLabel:     this.translate.instant('COMMON.cancel'),
       confirmClass:    'btn-danger',
       showNoteField:   true,
-      noteLabel:       'Reason for Revocation (Optional)',
-      notePlaceholder: 'Explain why this interest request is being revoked…',
+      noteLabel:       this.translate.instant('EDIT_REQUESTS_ADMIN.revocation_reason_optional'),
+      notePlaceholder: this.translate.instant('INTEREST_REQUESTS_ADMIN.revoke_explain_placeholder'),
     }).then(result => {
       if (!result.confirmed) return;
       this.svc.revoke(r.id, result.notes || undefined).subscribe({
         next: () => {
-          this.toast.success('Interest request revoked');
+          this.toast.success(this.translate.instant('INTEREST_REQUESTS_ADMIN.request_revoked'));
           this.load();
           this.loadCounts();
           this.notifications.refreshCounts();
         },
-        error: (err) => this.toast.error(err?.error?.message ?? 'Failed to revoke request'),
+        error: (err) => this.toast.error(err?.error?.message ?? this.translate.instant('INTEREST_REQUESTS_ADMIN.revoke_failed')),
       });
     });
   }
@@ -651,7 +654,7 @@ export class InterestRequestsComponent implements OnInit, OnDestroy {
       next: (blob) => {
         this.exporting = false;
         if (blob.size < 10) {
-          this.toast.error('No agency interest requests available to export.');
+          this.toast.error(this.translate.instant('INTEREST_REQUESTS_ADMIN.no_requests_to_export'));
           return;
         }
         const url = URL.createObjectURL(blob);
@@ -660,12 +663,13 @@ export class InterestRequestsComponent implements OnInit, OnDestroy {
         a.download = `agency-interest-requests-${new Date().toISOString().slice(0, 10)}.csv`;
         a.click();
         URL.revokeObjectURL(url);
-        this.toast.success('CSV exported successfully.');
+        this.toast.success(this.translate.instant('EDIT_REQUESTS_ADMIN.csv_exported'));
       },
       error: () => {
         this.exporting = false;
-        this.toast.error('Export failed. Please try again.');
+        this.toast.error(this.translate.instant('MESSAGES.operation_failed'));
       },
     });
   }
 }
+

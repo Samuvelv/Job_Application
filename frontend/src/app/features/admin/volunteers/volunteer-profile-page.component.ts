@@ -1,11 +1,17 @@
 // src/app/features/admin/volunteers/volunteer-profile-page.component.ts
-import { Component, OnInit, computed, signal } from '@angular/core';
+import { Component, OnInit, computed, signal, inject, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
+import { LocaleDatePipe } from '../../../core/pipes/locale-date.pipe';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
+import { Subject } from 'rxjs';
+import { takeUntil } from 'rxjs/operators';
 import { VolunteerService } from '../../../core/services/volunteer.service';
 import { MasterDataService } from '../../../core/services/master-data.service';
 import { ToastService } from '../../../core/services/toast.service';
 import { ConfirmDialogService } from '../../../core/services/confirm-dialog.service';
+import { BulkTranslationService } from '../../../core/services/bulk-translation.service';
+import { LanguageService } from '../../../core/services/language.service';
 import { Volunteer } from '../../../core/models/volunteer.model';
 
 type Tab = 'overview' | 'contact';
@@ -13,19 +19,19 @@ type Tab = 'overview' | 'contact';
 @Component({
   selector: 'app-volunteer-profile-page',
   standalone: true,
-  imports: [CommonModule, RouterLink],
+  imports: [LocaleDatePipe, CommonModule, TranslateModule, RouterLink],
   template: `
     <!-- Back + actions -->
     <div class="d-flex align-items-center justify-content-between mb-4 gap-2 flex-wrap">
-      <a routerLink="/admin/volunteers" class="back-btn">
-        <i class="bi bi-arrow-left"></i> Back to Volunteers
-      </a>
+       <a routerLink="/admin/volunteers" class="back-btn">
+         <i class="bi bi-arrow-left"></i> {{ 'VOLUNTEER_PROFILE.back_to_volunteers' | translate }}
+       </a>
       @if (volunteer) {
         <div class="tbl-actions">
           <a class="tbl-actions__btn tbl-actions__btn--edit"
             [routerLink]="['/admin/volunteers/create']"
             [queryParams]="{edit: volunteer.id}">
-            <i class="bi bi-pencil me-1"></i> Edit
+             <i class="bi bi-pencil me-1"></i> {{ 'COMMON.edit' | translate }}
           </a>
           <div class="tbl-actions__sep"></div>
           <button class="tbl-actions__btn"
@@ -35,15 +41,15 @@ type Tab = 'overview' | 'contact';
             [disabled]="toggling">
             @if (toggling) {
               <span class="spinner-border spinner-border-sm"></span>
-            } @else if (volunteer.availability === 'Active') {
-              <i class="bi bi-pause-circle me-1"></i> Deactivate
-            } @else {
-              <i class="bi bi-play-circle me-1"></i> Activate
-            }
+             } @else if (volunteer.availability === 'Active') {
+               <i class="bi bi-pause-circle me-1"></i> {{ 'VOLUNTEER_PROFILE.deactivate' | translate }}
+             } @else {
+               <i class="bi bi-play-circle me-1"></i> {{ 'VOLUNTEER_PROFILE.activate' | translate }}
+             }
           </button>
           <div class="tbl-actions__sep"></div>
           <button class="tbl-actions__btn tbl-actions__btn--danger tbl-actions__btn--icon"
-            (click)="deleteVolunteer()" title="Delete volunteer">
+            (click)="deleteVolunteer()" [title]="'VOLUNTEER_PROFILE.delete_volunteer' | translate">
             <i class="bi bi-trash"></i>
           </button>
         </div>
@@ -54,10 +60,10 @@ type Tab = 'overview' | 'contact';
       <div class="alert alert-danger">{{ loadError }}</div>
 
     } @else if (!volunteer) {
-      <div class="loading-state">
-        <div class="spinner-border"></div>
-        <div class="loading-state__text">Loading volunteer profile…</div>
-      </div>
+       <div class="loading-state">
+         <div class="spinner-border"></div>
+         <div class="loading-state__text">{{ 'VOLUNTEER_PROFILE.loading_profile' | translate }}</div>
+       </div>
 
     } @else {
 
@@ -87,13 +93,17 @@ type Tab = 'overview' | 'contact';
                 [class.vp-avail-badge--active]="volunteer.availability === 'Active'"
                 [class.vp-avail-badge--inactive]="volunteer.availability !== 'Active'">
                 <i class="bi bi-circle-fill" style="font-size:.4rem"></i>
-                {{ volunteer.availability === 'Active' ? 'Active' : 'Unavailable' }}
+                {{ volunteer.availability === 'Active' ? ('COMMON.active' | translate) : ('VOLUNTEER_PROFILE.unavailable' | translate) }}
               </span>
             </div>
 
-            @if (volunteer.role) {
-              <div class="vp-hero__role">{{ volunteer.role }}</div>
-            }
+             @if (volunteer.role) {
+               @if (isTranslatingRole()) {
+                 <div class="vp-hero__role" style="opacity:.6">{{ 'COMMON.translating' | translate }}…</div>
+               } @else {
+                 <div class="vp-hero__role">{{ translatedRole() || volunteer.role }}</div>
+               }
+             }
 
             <!-- Meta chips -->
             <div class="vp-hero__chips mt-2">
@@ -109,11 +119,11 @@ type Tab = 'overview' | 'contact';
                   {{ flagOf(volunteer.country_placed) }} {{ volunteer.country_placed }}
                 </span>
               }
-              @if (volunteer.year_placed) {
-                <span class="vp-chip">
-                  <i class="bi bi-calendar3"></i> Placed {{ volunteer.year_placed }}
-                </span>
-              }
+               @if (volunteer.year_placed) {
+                 <span class="vp-chip">
+                   <i class="bi bi-calendar3"></i> {{ 'VOLUNTEER_PROFILE.placed' | translate }} {{ volunteer.year_placed }}
+                 </span>
+               }
               @if (volunteer.company_joined) {
                 <span class="vp-chip vp-chip--company">
                   <i class="bi bi-building"></i> {{ volunteer.company_joined }}
@@ -134,18 +144,18 @@ type Tab = 'overview' | 'contact';
 
           <!-- Stats -->
           <div class="vp-hero__stats">
-            <div class="vp-stat">
-              <div class="vp-stat__val">{{ volunteer.candidates_helped ?? 0 }}</div>
-              <div class="vp-stat__label">Helped</div>
-            </div>
-            <div class="vp-stat">
-              <div class="vp-stat__val">{{ volunteer.languages?.length ?? 0 }}</div>
-              <div class="vp-stat__label">Languages</div>
-            </div>
-            <div class="vp-stat">
-              <div class="vp-stat__val">{{ volunteer.created_at | date:'yyyy' }}</div>
-              <div class="vp-stat__label">Since</div>
-            </div>
+             <div class="vp-stat">
+               <div class="vp-stat__val">{{ volunteer.candidates_helped ?? 0 }}</div>
+               <div class="vp-stat__label">{{ 'VOLUNTEER_PROFILE.helped' | translate }}</div>
+             </div>
+             <div class="vp-stat">
+               <div class="vp-stat__val">{{ volunteer.languages?.length ?? 0 }}</div>
+               <div class="vp-stat__label">{{ 'VOLUNTEER_PROFILE.languages' | translate }}</div>
+             </div>
+             <div class="vp-stat">
+               <div class="vp-stat__val">{{ volunteer.created_at | localeDate:'yyyy' }}</div>
+               <div class="vp-stat__label">{{ 'VOLUNTEER_PROFILE.since' | translate }}</div>
+             </div>
           </div>
 
         </div>
@@ -153,14 +163,14 @@ type Tab = 'overview' | 'contact';
 
       <!-- ── Tabs ──────────────────────────────────────────────── -->
       <div class="vp-tabs mb-4">
-        <button class="vp-tab" [class.vp-tab--active]="activeTab() === 'overview'"
-          (click)="activeTab.set('overview')">
-          <i class="bi bi-person-lines-fill"></i> Overview
-        </button>
-        <button class="vp-tab" [class.vp-tab--active]="activeTab() === 'contact'"
-          (click)="activeTab.set('contact')">
-          <i class="bi bi-headset"></i> Contact &amp; Record
-        </button>
+         <button class="vp-tab" [class.vp-tab--active]="activeTab() === 'overview'"
+           (click)="activeTab.set('overview')">
+           <i class="bi bi-person-lines-fill"></i> {{ 'VOLUNTEER_PROFILE.overview' | translate }}
+         </button>
+         <button class="vp-tab" [class.vp-tab--active]="activeTab() === 'contact'"
+           (click)="activeTab.set('contact')">
+           <i class="bi bi-headset"></i> {{ 'VOLUNTEER_PROFILE.contact_record' | translate }}
+         </button>
       </div>
 
       <!-- ── Tab: Overview ──────────────────────────────────────── -->
@@ -170,22 +180,29 @@ type Tab = 'overview' | 'contact';
           <!-- Left col -->
           <div class="vp-col">
 
-            @if (volunteer.success_story) {
-              <div class="section-card mb-3">
-                <div class="section-card__header">
-                  <span class="section-card__title"><i class="bi bi-chat-quote-fill"></i> Success Story</span>
-                </div>
-                <div class="section-card__body">
-                  <p class="vp-story-text">{{ volunteer.success_story }}</p>
-                </div>
-              </div>
-            }
+             @if (volunteer.success_story) {
+               <div class="section-card mb-3">
+                  <div class="section-card__header">
+                    <span class="section-card__title"><i class="bi bi-chat-quote-fill"></i> {{ 'VOLUNTEER_PROFILE.success_story' | translate }}</span>
+                  </div>
+                 <div class="section-card__body">
+                   @if (isTranslatingStory()) {
+                     <div style="display:flex;align-items:center;gap:.5rem;color:var(--th-muted);font-size:.875rem">
+                       <span style="display:inline-block;width:14px;height:14px;border:2px solid var(--th-primary);border-right:2px solid transparent;border-radius:50%;animation:spin .6s linear infinite"></span>
+                       {{ 'COMMON.translating' | translate }}…
+                     </div>
+                   } @else {
+                     <p class="vp-story-text">{{ translatedStory() || volunteer.success_story }}</p>
+                   }
+                 </div>
+               </div>
+             }
 
             @if (volunteer.languages?.length) {
               <div class="section-card mb-3">
-                <div class="section-card__header">
-                  <span class="section-card__title"><i class="bi bi-translate"></i> Languages Spoken</span>
-                </div>
+                 <div class="section-card__header">
+                   <span class="section-card__title"><i class="bi bi-translate"></i> {{ 'VOLUNTEER_PROFILE.languages_spoken' | translate }}</span>
+                 </div>
                 <div class="section-card__body">
                   <div class="vp-lang-list">
                     @for (lang of volunteer.languages ?? []; track lang) {
@@ -198,21 +215,21 @@ type Tab = 'overview' | 'contact';
 
             @if (volunteer.notes) {
               <div class="section-card mb-3">
-                <div class="section-card__header">
-                  <span class="section-card__title"><i class="bi bi-sticky-fill"></i> Admin Notes</span>
-                </div>
+                 <div class="section-card__header">
+                   <span class="section-card__title"><i class="bi bi-sticky-fill"></i> {{ 'VOLUNTEER_PROFILE.admin_notes' | translate }}</span>
+                 </div>
                 <div class="section-card__body">
                   <p class="small text-muted mb-0">{{ volunteer.notes }}</p>
                 </div>
               </div>
             }
 
-            @if (!volunteer.success_story && !volunteer.languages?.length && !volunteer.notes) {
-              <div class="vp-empty-state">
-                <i class="bi bi-journal-text vp-empty-state__icon"></i>
-                <div>No overview information recorded yet.</div>
-              </div>
-            }
+             @if (!volunteer.success_story && !volunteer.languages?.length && !volunteer.notes) {
+               <div class="vp-empty-state">
+                 <i class="bi bi-journal-text vp-empty-state__icon"></i>
+                 <div>{{ 'VOLUNTEER_PROFILE.no_overview' | translate }}</div>
+               </div>
+             }
 
           </div>
 
@@ -221,72 +238,72 @@ type Tab = 'overview' | 'contact';
 
             <!-- Support info card -->
             <div class="section-card mb-3">
-              <div class="section-card__header">
-                <span class="section-card__title"><i class="bi bi-tools"></i> Support Details</span>
-              </div>
+               <div class="section-card__header">
+                 <span class="section-card__title"><i class="bi bi-tools"></i> {{ 'VOLUNTEER_PROFILE.support_details' | translate }}</span>
+               </div>
               <div class="section-card__body">
                 <div class="vp-info-list">
-                  <div class="vp-info-row">
-                    <span class="vp-info-label">Support method</span>
-                    <span class="vp-info-val">
-                      @if (volunteer.support_method) {
-                        <span class="badge bg-info-subtle text-info-emphasis">
-                          {{ volunteer.support_method }}
-                        </span>
-                      } @else { <span class="text-muted">—</span> }
-                    </span>
-                  </div>
-                  <div class="vp-info-row">
-                    <span class="vp-info-label">Contact preference</span>
-                    <span class="vp-info-val">
-                      @if (volunteer.contact_preference) {
-                        <span class="badge bg-secondary-subtle text-secondary-emphasis">
-                          {{ volunteer.contact_preference }}
-                        </span>
-                      } @else { <span class="text-muted">—</span> }
-                    </span>
-                  </div>
-                  <div class="vp-info-row">
-                    <span class="vp-info-label">Country placed</span>
-                    <span class="vp-info-val">
-                      {{ volunteer.country_placed ? (flagOf(volunteer.country_placed) + ' ' + volunteer.country_placed) : '—' }}
-                    </span>
-                  </div>
-                  <div class="vp-info-row">
-                    <span class="vp-info-label">Company joined</span>
-                    <span class="vp-info-val">{{ volunteer.company_joined || '—' }}</span>
-                  </div>
-                  <div class="vp-info-row">
-                    <span class="vp-info-label">Year placed</span>
-                    <span class="vp-info-val">{{ volunteer.year_placed || '—' }}</span>
-                  </div>
+                   <div class="vp-info-row">
+                     <span class="vp-info-label">{{ 'VOLUNTEER_PROFILE.support_method' | translate }}</span>
+                     <span class="vp-info-val">
+                       @if (volunteer.support_method) {
+                         <span class="badge bg-info-subtle text-info-emphasis">
+                           {{ volunteer.support_method }}
+                         </span>
+                       } @else { <span class="text-muted">—</span> }
+                     </span>
+                   </div>
+                   <div class="vp-info-row">
+                     <span class="vp-info-label">{{ 'VOLUNTEER_PROFILE.contact_preference' | translate }}</span>
+                     <span class="vp-info-val">
+                       @if (volunteer.contact_preference) {
+                         <span class="badge bg-secondary-subtle text-secondary-emphasis">
+                           {{ volunteer.contact_preference }}
+                         </span>
+                       } @else { <span class="text-muted">—</span> }
+                     </span>
+                   </div>
+                   <div class="vp-info-row">
+                     <span class="vp-info-label">{{ 'VOLUNTEER_PROFILE.country_placed' | translate }}</span>
+                     <span class="vp-info-val">
+                       {{ volunteer.country_placed ? (flagOf(volunteer.country_placed) + ' ' + volunteer.country_placed) : '—' }}
+                     </span>
+                   </div>
+                   <div class="vp-info-row">
+                     <span class="vp-info-label">{{ 'VOLUNTEER_PROFILE.company_joined' | translate }}</span>
+                     <span class="vp-info-val">{{ volunteer.company_joined || '—' }}</span>
+                   </div>
+                   <div class="vp-info-row">
+                     <span class="vp-info-label">{{ 'VOLUNTEER_PROFILE.year_placed' | translate }}</span>
+                     <span class="vp-info-val">{{ volunteer.year_placed || '—' }}</span>
+                   </div>
                 </div>
               </div>
             </div>
 
             <!-- Consent card -->
             <div class="section-card mb-3">
-              <div class="section-card__header">
-                <span class="section-card__title"><i class="bi bi-shield-check-fill"></i> Consent</span>
-              </div>
+               <div class="section-card__header">
+                 <span class="section-card__title"><i class="bi bi-shield-check-fill"></i> {{ 'COMMON.consent' | translate }}</span>
+               </div>
               <div class="section-card__body">
                 <div class="vp-consent-block">
                   @if (volunteer.consent) {
                     <div class="vp-consent-block__icon vp-consent-block__icon--yes">
                       <i class="bi bi-check-circle-fill"></i>
                     </div>
-                    <div>
-                      <div class="vp-consent-block__label">Consent confirmed</div>
-                      <div class="vp-consent-block__sub">Volunteer has agreed to be listed on the platform</div>
-                    </div>
+                     <div>
+                       <div class="vp-consent-block__label">{{ 'VOLUNTEER_PROFILE.consent_confirmed' | translate }}</div>
+                       <div class="vp-consent-block__sub">{{ 'VOLUNTEER_PROFILE.consent_agreed' | translate }}</div>
+                     </div>
                   } @else {
                     <div class="vp-consent-block__icon vp-consent-block__icon--no">
                       <i class="bi bi-x-circle-fill"></i>
                     </div>
-                    <div>
-                      <div class="vp-consent-block__label">Consent not confirmed</div>
-                      <div class="vp-consent-block__sub">Volunteer has not confirmed consent</div>
-                    </div>
+                     <div>
+                       <div class="vp-consent-block__label">{{ 'VOLUNTEER_PROFILE.consent_not_confirmed' | translate }}</div>
+                       <div class="vp-consent-block__sub">{{ 'VOLUNTEER_PROFILE.consent_not_agreed' | translate }}</div>
+                     </div>
                   }
                 </div>
               </div>
@@ -301,10 +318,10 @@ type Tab = 'overview' | 'contact';
         <div class="vp-grid">
 
           <div class="vp-col">
-            <div class="section-card mb-3">
-              <div class="section-card__header">
-                <span class="section-card__title"><i class="bi bi-person-badge-fill"></i> Contact Information</span>
-              </div>
+             <div class="section-card mb-3">
+               <div class="section-card__header">
+                 <span class="section-card__title"><i class="bi bi-person-badge-fill"></i> {{ 'VOLUNTEER_PROFILE.contact_information' | translate }}</span>
+               </div>
               <div class="section-card__body">
                 <div class="vp-info-list">
                   <div class="vp-info-row">
@@ -349,12 +366,12 @@ type Tab = 'overview' | 'contact';
                 <div class="vp-info-list">
                   <div class="vp-info-row">
                     <span class="vp-info-label">Added on</span>
-                    <span class="vp-info-val">{{ volunteer.created_at | date:'dd MMM yyyy' }}</span>
+                    <span class="vp-info-val">{{ volunteer.created_at | localeDate:'dd MMM yyyy' }}</span>
                   </div>
                   <div class="vp-info-row">
                     <span class="vp-info-label">Last updated</span>
                     <span class="vp-info-val">
-                      {{ volunteer.updated_at ? (volunteer.updated_at | date:'dd MMM yyyy') : '—' }}
+                      {{ volunteer.updated_at ? (volunteer.updated_at | localeDate:'dd MMM yyyy') : '—' }}
                     </span>
                   </div>
                   <div class="vp-info-row">
@@ -364,7 +381,7 @@ type Tab = 'overview' | 'contact';
                         [class.vp-avail-badge--active]="volunteer.availability === 'Active'"
                         [class.vp-avail-badge--inactive]="volunteer.availability !== 'Active'">
                         <i class="bi bi-circle-fill" style="font-size:.4rem"></i>
-                        {{ volunteer.availability === 'Active' ? 'Active' : 'Unavailable' }}
+                        {{ volunteer.availability === 'Active' ? ('COMMON.active' | translate) : ('VOLUNTEER_PROFILE.unavailable' | translate) }}
                       </span>
                     </span>
                   </div>
@@ -385,6 +402,9 @@ type Tab = 'overview' | 'contact';
     }
 
     <style>
+      @keyframes spin {
+        to { transform: rotate(360deg); }
+      }
       /* ── Hero ─────────────────────────── */
       .vp-hero {
         background: var(--th-surface, #fff);
@@ -560,11 +580,21 @@ type Tab = 'overview' | 'contact';
     </style>
   `,
 })
-export class VolunteerProfilePageComponent implements OnInit {
+export class VolunteerProfilePageComponent implements OnInit, OnDestroy {
   volunteer: Volunteer | null = null;
   loadError = '';
   toggling  = false;
   activeTab = signal<Tab>('overview');
+
+  // Translation state
+  private bulkTranslation = inject(BulkTranslationService);
+  private languageService = inject(LanguageService);
+  private destroy$ = new Subject<void>();
+  currentLanguage = signal<string>('en');
+  translatedRole = signal<string>('');
+  translatedStory = signal<string>('');
+  isTranslatingRole = signal(false);
+  isTranslatingStory = signal(false);
 
   private readonly flagMap = computed<Map<string, string>>(() => {
     const map = new Map<string, string>();
@@ -579,15 +609,88 @@ export class VolunteerProfilePageComponent implements OnInit {
     private master: MasterDataService,
     private toast: ToastService,
     private confirm: ConfirmDialogService,
+    private translate: TranslateService,
   ) {}
 
   ngOnInit(): void {
+    // Listen to language changes
+    this.translate.onLangChange
+      .pipe(takeUntil(this.destroy$))
+      .subscribe((event) => {
+        this.currentLanguage.set(event.lang);
+        this.bulkTranslation.clearCache();
+        this.resetAllTranslations();
+        if (event.lang !== 'en' && this.volunteer) {
+          this.translateAllSections();
+        }
+      });
+
+    // Set initial language
+    this.currentLanguage.set(this.translate.currentLang || 'en');
+
     this.master.loadAll();
     const id = this.route.snapshot.paramMap.get('id')!;
     this.volunteerSvc.getById(id).subscribe({
-      next: (res) => (this.volunteer = res.volunteer),
+      next: (res) => {
+        this.volunteer = res.volunteer;
+        if (this.currentLanguage() !== 'en') {
+          this.translateAllSections();
+        }
+      },
       error: () => (this.loadError = 'Volunteer not found or failed to load.'),
     });
+  }
+
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
+  }
+
+  private resetAllTranslations(): void {
+    this.translatedRole.set('');
+    this.translatedStory.set('');
+  }
+
+  private async translateAllSections(): Promise<void> {
+    if (this.currentLanguage() === 'en' || !this.volunteer) return;
+    await Promise.all([
+      this.translateRoleSection(),
+      this.translateStorySection(),
+    ]);
+  }
+
+  private async translateRoleSection(): Promise<void> {
+    if (!this.volunteer?.role || this.currentLanguage() === 'en') return;
+    
+    this.isTranslatingRole.set(true);
+    try {
+      const translated = await this.bulkTranslation.translateSection(
+        { role: this.volunteer.role },
+        this.currentLanguage()
+      );
+      this.translatedRole.set(translated['role'] || '');
+    } catch (error) {
+      console.error('Error translating role section:', error);
+    } finally {
+      this.isTranslatingRole.set(false);
+    }
+  }
+
+  private async translateStorySection(): Promise<void> {
+    if (!this.volunteer?.success_story || this.currentLanguage() === 'en') return;
+    
+    this.isTranslatingStory.set(true);
+    try {
+      const translated = await this.bulkTranslation.translateSection(
+        { story: this.volunteer.success_story },
+        this.currentLanguage()
+      );
+      this.translatedStory.set(translated['story'] || '');
+    } catch (error) {
+      console.error('Error translating success story:', error);
+    } finally {
+      this.isTranslatingStory.set(false);
+    }
   }
 
   initials(name: string): string {
@@ -604,33 +707,34 @@ export class VolunteerProfilePageComponent implements OnInit {
     const next = this.volunteer.availability === 'Active' ? 'Temporarily Unavailable' : 'Active';
     this.toggling = true;
     this.volunteerSvc.update(this.volunteer.id, { availability: next as any }).subscribe({
-      next: (res) => {
-        this.toggling  = false;
-        this.volunteer = res.volunteer;
-        this.toast.success(next === 'Active' ? 'Volunteer activated' : 'Volunteer deactivated');
-      },
-      error: (err) => {
-        this.toggling = false;
-        this.toast.error(err?.error?.message ?? 'Failed to update availability');
-      },
-    });
-  }
+       next: (res) => {
+         this.toggling  = false;
+         this.volunteer = res.volunteer;
+         this.toast.success(next === 'Active' ? this.translate.instant('VOLUNTEER_PROFILE.activated') : this.translate.instant('VOLUNTEER_PROFILE.deactivated'));
+       },
+       error: (err) => {
+         this.toggling = false;
+         this.toast.error(err?.error?.message ?? this.translate.instant('VOLUNTEER_PROFILE.availability_update_failed'));
+       },
+     });
+   }
 
-  async deleteVolunteer(): Promise<void> {
-    if (!this.volunteer) return;
-    const ok = await this.confirm.confirm({
-      title: 'Delete Volunteer',
-      message: `Permanently remove ${this.volunteer.name} from the volunteer list?`,
-      confirmLabel: 'Delete',
-      confirmClass: 'btn-danger',
-    });
-    if (!ok.confirmed) return;
-    this.volunteerSvc.delete(this.volunteer.id).subscribe({
-      next: () => {
-        this.toast.success('Volunteer removed');
-        this.router.navigate(['/admin/volunteers']);
-      },
-      error: (err) => this.toast.error(err?.error?.message ?? 'Failed to delete'),
-    });
-  }
+   async deleteVolunteer(): Promise<void> {
+     if (!this.volunteer) return;
+     const ok = await this.confirm.confirm({
+       title: this.translate.instant('VOLUNTEER_PROFILE.delete_volunteer'),
+       message: this.translate.instant('VOLUNTEER_PROFILE.delete_volunteer_msg', { name: this.volunteer.name }),
+       confirmLabel: this.translate.instant('COMMON.delete'),
+       confirmClass: 'btn-danger',
+     });
+     if (!ok.confirmed) return;
+     this.volunteerSvc.delete(this.volunteer.id).subscribe({
+       next: () => {
+         this.toast.success(this.translate.instant('VOLUNTEER_PROFILE.volunteer_deleted'));
+         this.router.navigate(['/admin/volunteers']);
+       },
+       error: (err) => this.toast.error(err?.error?.message ?? this.translate.instant('VOLUNTEER_PROFILE.delete_failed')),
+     });
+   }
 }
+

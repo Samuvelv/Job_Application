@@ -1,19 +1,23 @@
 // src/app/features/recruiter/shortlist/shortlist.component.ts
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { ReactiveFormsModule, FormBuilder, FormGroup } from '@angular/forms';
-import { TranslateModule } from '@ngx-translate/core';
+import { Subject, takeUntil } from 'rxjs';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
+import { LocaleDatePipe } from '../../../core/pipes/locale-date.pipe';
 import { RecruiterService } from '../../../core/services/recruiter.service';
 import { ShortlistEntry } from '../../../core/models/recruiter.model';
 import { ToastService } from '../../../core/services/toast.service';
 import { PageHeaderComponent } from '../../../shared/components/page-header/page-header.component';
 import { EmptyStateComponent } from '../../../shared/components/empty-state/empty-state.component';
+import { BulkTranslationService } from '../../../core/services/bulk-translation.service';
+import { MasterDataService, MasterCatalogCategory } from '../../../core/services/master-data.service';
 
 @Component({
   selector: 'app-shortlist',
   standalone: true,
-  imports: [CommonModule, RouterLink, ReactiveFormsModule, TranslateModule, PageHeaderComponent, EmptyStateComponent],
+  imports: [LocaleDatePipe, CommonModule, RouterLink, ReactiveFormsModule, TranslateModule, PageHeaderComponent, EmptyStateComponent],
   template: `
     <app-page-header
       [title]="'SHORTLIST.title' | translate"
@@ -64,17 +68,17 @@ import { EmptyStateComponent } from '../../../shared/components/empty-state/empt
                 <div class="col-sm-6 col-md-4 col-lg-3">
                   <label class="filter-card__section-label">{{ 'SHORTLIST.industry_label' | translate }}</label>
                   <input type="text" class="form-control form-control-sm"
-                    formControlName="industry" placeholder="e.g. Technology">
+                    formControlName="industry" [placeholder]="'CANDIDATE_EDIT_REQUEST.eg_technology' | translate">
                 </div>
                 <div class="col-sm-6 col-md-4 col-lg-3">
                   <label class="filter-card__section-label">{{ 'SHORTLIST.country_label' | translate }}</label>
                   <input type="text" class="form-control form-control-sm"
-                    formControlName="currentCountry" placeholder="e.g. Australia">
+                    formControlName="currentCountry" [placeholder]="'SHORTLIST.country_example' | translate">
                 </div>
                 <div class="col-sm-6 col-md-4 col-lg-3">
                   <label class="filter-card__section-label">{{ 'SHORTLIST.min_experience' | translate }}</label>
                   <input type="number" class="form-control form-control-sm"
-                    formControlName="yearsExperience" placeholder="e.g. 3" min="0">
+                    formControlName="yearsExperience" [placeholder]="'SHORTLIST.min_experience_placeholder' | translate" min="0">
                 </div>
               </div>
               <div class="mt-3 d-flex gap-2">
@@ -113,6 +117,12 @@ import { EmptyStateComponent } from '../../../shared/components/empty-state/empt
         [subtitle]="'SHORTLIST.no_results_sub' | translate"
       />
     } @else {
+      @if (cardsTranslating) {
+        <div class="d-flex align-items-center gap-2 mb-3" style="font-size:.8rem;color:var(--th-text-muted)">
+          <span class="spinner-border spinner-border-sm"></span>
+          {{ 'COMMON.translating' | translate }}…
+        </div>
+      }
       <div class="cl-grid">
         @for (entry of entries; track entry.shortlist_id) {
 
@@ -127,7 +137,7 @@ import { EmptyStateComponent } from '../../../shared/components/empty-state/empt
               background:var(--th-surface-alt);color:var(--th-text-muted);
               border:1px solid var(--th-border);
               pointer-events:none;z-index:1;">
-              <i class="bi bi-calendar3"></i> {{ entry.shortlisted_at | date:'dd MMM yyyy' }}
+              <i class="bi bi-calendar3"></i> {{ entry.shortlisted_at | localeDate:'dd MMM yyyy' }}
             </span>
 
             <!-- Shortlisted badge (top-right) -->
@@ -156,7 +166,7 @@ import { EmptyStateComponent } from '../../../shared/components/empty-state/empt
                 }
               </div>
               <div class="cl-card__name">{{ entry.first_name }} {{ entry.last_name }}</div>
-              <div class="cl-card__job">{{ entry.job_title || entry.occupation || '—' }}</div>
+              <div class="cl-card__job">{{ translatedMap.get(entry.candidate_id)?.['job_title'] || translatedMap.get(entry.candidate_id)?.['occupation'] || entry.job_title || entry.occupation || '—' }}</div>
             </div>
 
             <!-- Info rows -->
@@ -168,7 +178,7 @@ import { EmptyStateComponent } from '../../../shared/components/empty-state/empt
                     <i class="bi bi-building" style="font-size:.72rem;color:var(--th-primary);opacity:.8;"></i>{{ 'SHORTLIST.industry_label' | translate }}
                     <span style="margin-left:auto;">:</span>
                   </span>
-                  <span style="font-size:.8rem;font-weight:500;color:var(--th-text);padding-left:.5rem;">{{ entry.industry }}</span>
+                  <span style="font-size:.8rem;font-weight:500;color:var(--th-text);padding-left:.5rem;">{{ translatedMap.get(entry.candidate_id)?.['industry'] || entry.industry }}</span>
                 </div>
               }
 
@@ -188,7 +198,7 @@ import { EmptyStateComponent } from '../../../shared/components/empty-state/empt
                     <i class="bi bi-geo-alt-fill" style="font-size:.72rem;color:var(--th-primary);opacity:.8;"></i>{{ 'COMMON.location' | translate }}
                     <span style="margin-left:auto;">:</span>
                   </span>
-                  <span style="font-size:.8rem;font-weight:500;color:var(--th-text);padding-left:.5rem;">{{ entry.current_city ? entry.current_city + ', ' : '' }}{{ entry.current_country }}</span>
+                  <span style="font-size:.8rem;font-weight:500;color:var(--th-text);padding-left:.5rem;">{{ (translatedMap.get(entry.candidate_id)?.['city'] || entry.current_city) ? (translatedMap.get(entry.candidate_id)?.['city'] || entry.current_city) + ', ' : '' }}{{ translatedMap.get(entry.candidate_id)?.['country'] || entry.current_country }}</span>
                 </div>
               }
 
@@ -198,7 +208,7 @@ import { EmptyStateComponent } from '../../../shared/components/empty-state/empt
                     <i class="bi bi-send-fill" style="font-size:.72rem;color:var(--th-primary);opacity:.8;"></i>{{ 'CANDIDATE_CARD.target' | translate }}
                     <span style="margin-left:auto;">:</span>
                   </span>
-                  <span style="font-size:.8rem;font-weight:500;color:var(--th-text);padding-left:.5rem;">{{ entry.target_locations![0] }}</span>
+                  <span style="font-size:.8rem;font-weight:500;color:var(--th-text);padding-left:.5rem;">{{ translatedMap.get(entry.candidate_id)?.['target'] || entry.target_locations![0] }}</span>
                 </div>
               }
 
@@ -241,7 +251,7 @@ import { EmptyStateComponent } from '../../../shared/components/empty-state/empt
     }
   `,
 })
-export class ShortlistComponent implements OnInit {
+export class ShortlistComponent implements OnInit, OnDestroy {
   allEntries: ShortlistEntry[] = [];
   entries: ShortlistEntry[] = [];
   loading = false;
@@ -250,10 +260,21 @@ export class ShortlistComponent implements OnInit {
 
   filterForm: FormGroup;
 
+  /** AI-translated preview fields per candidate ID, for the current UI language. */
+  translatedMap = new Map<string, Record<string, string>>();
+  /** True while translateEntries() has an in-flight /translate call. */
+  cardsTranslating = false;
+  private destroy$ = new Subject<void>();
+  /** Monotonic token so a stale in-flight translation can never overwrite a newer one. */
+  private translateRequestId = 0;
+
   constructor(
     private recruiterService: RecruiterService,
     private toast: ToastService,
     private fb: FormBuilder,
+    private translateService: TranslateService,
+    private bulkTranslation: BulkTranslationService,
+    private master: MasterDataService,
   ) {
     this.filterForm = this.fb.group({
       search:          [''],
@@ -263,7 +284,83 @@ export class ShortlistComponent implements OnInit {
     });
   }
 
-  ngOnInit(): void { this.load(); }
+  ngOnInit(): void {
+    this.load();
+
+    this.translateService.onLangChange
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(() => {
+        this.bulkTranslation.clearCache();
+        this.translatedMap = new Map();
+        this.translateEntries();
+      });
+  }
+
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
+  }
+
+  /**
+   * Translate the preview fields (job title, occupation, industry, city,
+   * country, top target location) shown on every shortlist card, in one
+   * combined /translate call covering all entries (so client-side filtering
+   * afterwards never needs a re-fetch or re-translate).
+   */
+  private async translateEntries(): Promise<void> {
+    const myRequestId = ++this.translateRequestId;
+
+    const lang = this.translateService.currentLang || 'en';
+    if (lang === 'en' || this.allEntries.length === 0) return;
+
+    // job_title/occupation/industry/current_country are master-data catalog
+    // values with pre-generated static translations — resolve those without
+    // an API call, and only send genuine free text (city, target location)
+    // plus any catalog rows missing from the static file live.
+    await this.master.loadAll();
+    const catalogFields: Record<string, { category: MasterCatalogCategory; value: string }> = {};
+    for (const e of this.allEntries) {
+      if (e.job_title)       catalogFields[`${e.candidate_id}__job_title`] = { category: 'jobTitle', value: e.job_title };
+      if (e.occupation)      catalogFields[`${e.candidate_id}__occupation`] = { category: 'occupation', value: e.occupation };
+      if (e.industry)        catalogFields[`${e.candidate_id}__industry`] = { category: 'industry', value: e.industry };
+      if (e.current_country) catalogFields[`${e.candidate_id}__country`] = { category: 'country', value: e.current_country };
+    }
+    const { resolved, missing } = await this.master.resolveCatalogValues(catalogFields, lang);
+    if (myRequestId !== this.translateRequestId) return;
+
+    const allFields: Record<string, string> = { ...missing };
+    for (const e of this.allEntries) {
+      if (e.current_city) allFields[`${e.candidate_id}__city`] = e.current_city;
+      const target = e.target_locations?.[0];
+      if (target) allFields[`${e.candidate_id}__target`] = target;
+    }
+
+    if (Object.keys(resolved).length === 0 && Object.keys(allFields).length === 0) return;
+
+    this.cardsTranslating = true;
+    try {
+      const translated: Record<string, string> = { ...resolved };
+      if (Object.keys(allFields).length > 0) {
+        Object.assign(translated, await this.bulkTranslation.translateSection(allFields, lang));
+      }
+      if (myRequestId !== this.translateRequestId) return; // a newer request superseded this one
+
+      const map = new Map<string, Record<string, string>>();
+      for (const [key, value] of Object.entries(translated)) {
+        const idx = key.lastIndexOf('__');
+        if (idx === -1) continue;
+        const candidateId = key.slice(0, idx);
+        const field = key.slice(idx + 2);
+        if (!map.has(candidateId)) map.set(candidateId, {});
+        map.get(candidateId)![field] = value;
+      }
+      this.translatedMap = map;
+    } catch (error) {
+      console.error('Error translating shortlist card previews:', error);
+    } finally {
+      if (myRequestId === this.translateRequestId) this.cardsTranslating = false;
+    }
+  }
 
   get activeAdvCount(): number {
     const v = this.filterForm.value;
@@ -303,6 +400,8 @@ export class ShortlistComponent implements OnInit {
         this.loading    = false;
         this.allEntries = res.shortlist;
         this.entries    = [...this.allEntries];
+        this.translatedMap = new Map();
+        this.translateEntries();
       },
       error: () => (this.loading = false),
     });
@@ -315,11 +414,11 @@ export class ShortlistComponent implements OnInit {
         this.removing   = null;
         this.allEntries = this.allEntries.filter(e => e.candidate_id !== entry.candidate_id);
         this.entries    = this.entries.filter(e => e.candidate_id !== entry.candidate_id);
-        this.toast.success(`${entry.first_name} ${entry.last_name} removed from shortlist`);
+        this.toast.success(this.translateService.instant('SHORTLIST.removed_success', { name: `${entry.first_name} ${entry.last_name}` }));
       },
       error: (err) => {
         this.removing = null;
-        this.toast.error(err?.error?.message ?? 'Failed to remove');
+        this.toast.error(err?.error?.message ?? this.translateService.instant('SHORTLIST.remove_failed'));
       },
     });
   }

@@ -1,10 +1,10 @@
 // src/app/features/recruiter/candidates/candidates.component.ts
-import { Component, OnInit, ViewChild } from '@angular/core';
+import { Component, OnInit, OnDestroy, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, FormControl, FormGroup, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
-import { catchError, forkJoin, of } from 'rxjs';
-import { TranslateModule } from '@ngx-translate/core';
+import { catchError, forkJoin, of, Subject, takeUntil } from 'rxjs';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { CandidateService, PaginatedCandidates } from '../../../core/services/candidate.service';
 import { RecruiterService } from '../../../core/services/recruiter.service';
 import { InterestRequestService, InterestRequest } from '../../../core/services/interest-request.service';
@@ -14,6 +14,8 @@ import { PageHeaderComponent } from '../../../shared/components/page-header/page
 import { EmptyStateComponent } from '../../../shared/components/empty-state/empty-state.component';
 import { CandidateFilterSidebarComponent } from '../../../shared/components/candidate-filter-sidebar/candidate-filter-sidebar.component';
 import { RecruiterCandidateCardComponent } from '../../../shared/components/recruiter-candidate-card/recruiter-candidate-card.component';
+import { BulkTranslationService } from '../../../core/services/bulk-translation.service';
+import { MasterDataService, MasterCatalogCategory } from '../../../core/services/master-data.service';
 
 @Component({
   selector: 'app-candidates',
@@ -85,12 +87,19 @@ import { RecruiterCandidateCardComponent } from '../../../shared/components/recr
           [subtitle]="'RECRUITER_CANDIDATES.no_candidates_sub' | translate"
         />
       } @else {
+        @if (cardsTranslating) {
+          <div class="d-flex align-items-center gap-2 mb-3" style="font-size:.8rem;color:var(--th-text-muted)">
+            <span class="spinner-border spinner-border-sm"></span>
+            {{ 'COMMON.translating' | translate }}…
+          </div>
+        }
         <div class="cl-grid">
           @for (emp of candidates; track emp.id) {
             <app-recruiter-candidate-card
               [candidate]="emp"
               [interestRequest]="interestMap.get(emp.id) ?? null"
               [isShortlisted]="shortlistedIds.has(emp.id)"
+              [translated]="translatedCardsMap.get(emp.id) ?? null"
               (shortlist)="toggleShortlist(emp)"
               (requestInterest)="openRequestModal(emp)"
             />
@@ -177,7 +186,7 @@ import { RecruiterCandidateCardComponent } from '../../../shared/components/recr
     }
   `,
 })
-export class CandidatesComponent implements OnInit {
+export class CandidatesComponent implements OnInit, OnDestroy {
   @ViewChild('filterSidebar') filterSidebar!: CandidateFilterSidebarComponent;
 
   candidates: Candidate[] = [];
@@ -188,6 +197,15 @@ export class CandidatesComponent implements OnInit {
   sidebarVisible = true;
   sidebarActiveCount = 0;
   hasActiveFilters = false;
+
+  /** AI-translated preview fields per candidate ID, for the current UI language. */
+  translatedCardsMap = new Map<string, Record<string, string>>();
+  /** True while translateCandidateCards() has an in-flight /translate call. */
+  cardsTranslating = false;
+  private destroy$ = new Subject<void>();
+  /** Monotonic token so a stale in-flight translation (from a prior page/filter/
+   *  language state) can never overwrite the result of a newer one that resolved first. */
+  private translateRequestId = 0;
 
   /** Map of candidateId → most-recent InterestRequest for this recruiter */
   interestMap = new Map<string, InterestRequest>();
@@ -207,6 +225,9 @@ export class CandidatesComponent implements OnInit {
     private recruiterService: RecruiterService,
     private interestRequestService: InterestRequestService,
     private toast: ToastService,
+    private translate: TranslateService,
+    private bulkTranslation: BulkTranslationService,
+    private master: MasterDataService,
   ) {
     this.requestForm = this.fb.group({
       sector:  ['', Validators.required],
@@ -218,6 +239,85 @@ export class CandidatesComponent implements OnInit {
   ngOnInit(): void {
     this.loadShortlist();
     this.load();
+
+    this.translate.onLangChange
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(() => {
+        this.bulkTranslation.clearCache();
+        this.translatedCardsMap = new Map();
+        this.translateCandidateCards();
+      });
+  }
+
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
+  }
+
+  /**
+   * Translate the preview fields (job title, occupation, industry, city,
+   * country, top target location, first 4 skill names) shown on each
+   * candidate card in the current results page, in a single combined
+   * /translate call rather than one call per card.
+   */
+  private async translateCandidateCards(): Promise<void> {
+    const myRequestId = ++this.translateRequestId;
+
+    const lang = this.translate.currentLang || 'en';
+    if (lang === 'en' || this.candidates.length === 0) return;
+
+    const requestedLang = lang;
+
+    // job_title/occupation/industry/current_country are master-data catalog
+    // values with pre-generated static translations — resolve those without
+    // an API call, and only send genuine free text (city, target location,
+    // skill names) plus any catalog rows missing from the static file live.
+    await this.master.loadAll();
+    const catalogFields: Record<string, { category: MasterCatalogCategory; value: string }> = {};
+    for (const c of this.candidates) {
+      if (c.job_title)       catalogFields[`${c.id}__job_title`] = { category: 'jobTitle', value: c.job_title };
+      if (c.occupation)      catalogFields[`${c.id}__occupation`] = { category: 'occupation', value: c.occupation };
+      if (c.industry)        catalogFields[`${c.id}__industry`] = { category: 'industry', value: c.industry };
+      if (c.current_country) catalogFields[`${c.id}__country`] = { category: 'country', value: c.current_country };
+    }
+    const { resolved, missing } = await this.master.resolveCatalogValues(catalogFields, requestedLang);
+    if (myRequestId !== this.translateRequestId) return;
+
+    const allFields: Record<string, string> = { ...missing };
+    for (const c of this.candidates) {
+      if (c.current_city)   allFields[`${c.id}__city`] = c.current_city;
+      const target = c.target_locations?.[0];
+      if (target) allFields[`${c.id}__target`] = target;
+      c.skills?.slice(0, 4).forEach((s, i) => {
+        if (s.skill_name) allFields[`${c.id}__skill_${i}`] = s.skill_name;
+      });
+    }
+
+    if (Object.keys(resolved).length === 0 && Object.keys(allFields).length === 0) return;
+
+    this.cardsTranslating = true;
+    try {
+      const translated: Record<string, string> = { ...resolved };
+      if (Object.keys(allFields).length > 0) {
+        Object.assign(translated, await this.bulkTranslation.translateSection(allFields, requestedLang));
+      }
+      if (myRequestId !== this.translateRequestId) return; // a newer request superseded this one
+
+      const map = new Map<string, Record<string, string>>();
+      for (const [key, value] of Object.entries(translated)) {
+        const idx = key.lastIndexOf('__');
+        if (idx === -1) continue;
+        const candidateId = key.slice(0, idx);
+        const field = key.slice(idx + 2);
+        if (!map.has(candidateId)) map.set(candidateId, {});
+        map.get(candidateId)![field] = value;
+      }
+      this.translatedCardsMap = map;
+    } catch (error) {
+      console.error('Error translating candidate card previews:', error);
+    } finally {
+      if (myRequestId === this.translateRequestId) this.cardsTranslating = false;
+    }
   }
 
   toggleSidebar(): void {
@@ -281,6 +381,8 @@ export class CandidatesComponent implements OnInit {
       if (candidates) {
         this.candidates   = candidates.data;
         this.pagination   = candidates.pagination;
+        this.translatedCardsMap = new Map();
+        this.translateCandidateCards();
       }
       // Build map: candidateId → most-recent request (sorted by created_at desc)
       const sorted = [...(requests?.requests ?? [])].sort(
@@ -312,20 +414,20 @@ export class CandidatesComponent implements OnInit {
           const updated = new Set(this.shortlistedIds);
           updated.delete(emp.id);
           this.shortlistedIds = updated;
-          this.toast.success(`${emp.first_name} ${emp.last_name} removed from shortlist`);
+          this.toast.success(this.translate.instant('SHORTLIST.removed_success', { name: `${emp.first_name} ${emp.last_name}` }));
         },
         error: (err) => {
-          this.toast.error(err?.error?.message ?? 'Failed to remove from shortlist');
+          this.toast.error(err?.error?.message ?? this.translate.instant('SHORTLIST.remove_failed'));
         },
       });
     } else {
       this.recruiterService.addToShortlist(emp.id).subscribe({
         next: () => {
           this.shortlistedIds = new Set([...this.shortlistedIds, emp.id]);
-          this.toast.success(`${emp.first_name} ${emp.last_name} added to shortlist`);
+          this.toast.success(this.translate.instant('SHORTLIST.added_success', { name: `${emp.first_name} ${emp.last_name}` }));
         },
         error: (err) => {
-          this.toast.error(err?.error?.message ?? 'Failed to shortlist');
+          this.toast.error(err?.error?.message ?? this.translate.instant('SHORTLIST.add_failed'));
         },
       });
     }
@@ -356,12 +458,12 @@ export class CandidatesComponent implements OnInit {
         this.submitting = false;
         // Add the new request to the map so the card immediately shows "Pending"
         this.interestMap.set(res.request.candidate_id, res.request);
-        this.toast.success('Interest request submitted. Awaiting admin approval.');
+        this.toast.success(this.translate.instant('RECRUITER_CANDIDATES.interest_submitted'));
         this.closeModal();
       },
       error: (err) => {
         this.submitting = false;
-        this.toast.error(err?.error?.message ?? 'Failed to submit request');
+        this.toast.error(err?.error?.message ?? this.translate.instant('RECRUITER_CANDIDATES.interest_submit_failed'));
       },
     });
   }

@@ -1,20 +1,22 @@
 // src/app/features/recruiter/interest-requests/recruiter-interest-requests.component.ts
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
-import { TranslateModule } from '@ngx-translate/core';
-import { forkJoin, of } from 'rxjs';
-import { catchError } from 'rxjs/operators';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
+import { LocaleDatePipe } from '../../../core/pipes/locale-date.pipe';
+import { Subject, of } from 'rxjs';
+import { catchError, takeUntil } from 'rxjs/operators';
 import { InterestRequestService, InterestRequest } from '../../../core/services/interest-request.service';
-import { RecruiterService } from '../../../core/services/recruiter.service';
 import { ToastService } from '../../../core/services/toast.service';
 import { EmptyStateComponent } from '../../../shared/components/empty-state/empty-state.component';
 import { PageHeaderComponent } from '../../../shared/components/page-header/page-header.component';
+import { MasterDataService, MasterCatalogCategory } from '../../../core/services/master-data.service';
+import { BulkTranslationService } from '../../../core/services/bulk-translation.service';
 
 @Component({
   selector: 'app-recruiter-interest-requests',
   standalone: true,
-  imports: [CommonModule, RouterLink, TranslateModule, EmptyStateComponent, PageHeaderComponent],
+  imports: [LocaleDatePipe, CommonModule, RouterLink, TranslateModule, EmptyStateComponent, PageHeaderComponent],
   styles: [`
     .ir-card {
       background: var(--th-surface);
@@ -112,17 +114,6 @@ import { PageHeaderComponent } from '../../../shared/components/page-header/page
     .status-badge--approved { background: var(--th-emerald-soft, #d1fae5); color: var(--th-emerald,#059669); }
     .status-badge--rejected { background: var(--th-red-soft,    #fee2e2); color: var(--th-red,    #dc2626); }
 
-    .agency-only-notice {
-      background: var(--th-surface);
-      border: 1px solid var(--th-border);
-      border-radius: 12px;
-      padding: 40px 24px;
-      text-align: center;
-      color: var(--th-muted);
-    }
-    .agency-only-notice i { font-size: 2.5rem; display: block; margin-bottom: 12px; }
-    .agency-only-notice h5 { color: var(--th-text); font-size: 16px; margin-bottom: 8px; }
-
     .summary-bar {
       display: flex;
       flex-wrap: wrap;
@@ -155,16 +146,6 @@ import { PageHeaderComponent } from '../../../shared/components/page-header/page
       <div class="text-center py-5">
         <div class="spinner-border" style="color:var(--th-primary)"></div>
         <div class="mt-2 text-muted small">{{ 'INTEREST_REQUESTS.loading' | translate }}</div>
-      </div>
-
-    <!-- Non-agency notice -->
-    } @else if (!isAgency) {
-      <div class="agency-only-notice">
-        <i class="bi bi-briefcase text-muted"></i>
-        <h5>{{ 'INTEREST_REQUESTS.agency_only_title' | translate }}</h5>
-        <p class="mb-0 small">
-          {{ 'INTEREST_REQUESTS.agency_only_desc' | translate }}
-        </p>
       </div>
 
     <!-- Main content -->
@@ -203,6 +184,12 @@ import { PageHeaderComponent } from '../../../shared/components/page-header/page
 
       <!-- Request cards -->
       } @else {
+        @if (isTranslating()) {
+          <div class="d-flex align-items-center gap-2 mb-3" style="font-size:.8rem;color:var(--th-text-muted)">
+            <span class="spinner-border spinner-border-sm"></span>
+            {{ 'COMMON.translating' | translate }}…
+          </div>
+        }
         @for (r of requests; track r.id) {
           <div class="ir-card">
 
@@ -217,33 +204,33 @@ import { PageHeaderComponent } from '../../../shared/components/page-header/page
                 }
               </div>
               <span class="ir-card__date">
-                <i class="bi bi-clock me-1"></i>{{ r.created_at | date:'dd MMM yyyy, HH:mm' }}
+                <i class="bi bi-clock me-1"></i>{{ r.created_at | localeDate:'dd MMM yyyy, HH:mm' }}
               </span>
             </div>
 
             <!-- Fields row -->
             <div class="ir-card__fields">
               <div class="ir-card__field">
-                <strong>{{ 'INTEREST_REQUESTS.sector_field_label' | translate }}:</strong> {{ r.sector }}
+                <strong>{{ 'INTEREST_REQUESTS.sector_field_label' | translate }}:</strong> {{ translatedMap.get(r.id)?.['sector'] || r.sector }}
               </div>
               <div class="ir-card__field">
-                <strong>{{ 'INTEREST_REQUESTS.country_field_label' | translate }}:</strong> {{ r.country }}
+                <strong>{{ 'INTEREST_REQUESTS.country_field_label' | translate }}:</strong> {{ translatedMap.get(r.id)?.['country'] || r.country }}
               </div>
               @if (r.reviewed_at) {
                 <div class="ir-card__field">
-                  <strong>{{ 'INTEREST_REQUESTS.reviewed_label' | translate }}:</strong> {{ r.reviewed_at | date:'dd MMM yyyy' }}
+                  <strong>{{ 'INTEREST_REQUESTS.reviewed_label' | translate }}:</strong> {{ r.reviewed_at | localeDate:'dd MMM yyyy' }}
                 </div>
               }
             </div>
 
             <!-- Message -->
-            <div class="ir-card__message">{{ r.message }}</div>
+            <div class="ir-card__message">{{ translatedMap.get(r.id)?.['message'] || r.message }}</div>
 
             <!-- Admin note -->
             @if (r.admin_note) {
               <div class="ir-card__admin-note">
                 <i class="bi bi-chat-left-text me-1"></i>
-                <strong>{{ 'INTEREST_REQUESTS.admin_note' | translate }}</strong> {{ r.admin_note }}
+                <strong>{{ 'INTEREST_REQUESTS.admin_note' | translate }}</strong> {{ translatedMap.get(r.id)?.['admin_note'] || r.admin_note }}
               </div>
             }
 
@@ -281,27 +268,26 @@ import { PageHeaderComponent } from '../../../shared/components/page-header/page
     }
   `,
 })
-export class RecruiterInterestRequestsComponent implements OnInit {
+export class RecruiterInterestRequestsComponent implements OnInit, OnDestroy {
   loading = true;
-  isAgency = false;
   requests: InterestRequest[] = [];
+  isTranslating = signal(false);
+  translatedMap = new Map<string, Record<string, string>>();
+
+  private destroy$ = new Subject<void>();
+  private translateRequestId = 0;
 
   constructor(
     private interestSvc: InterestRequestService,
-    private recruiterSvc: RecruiterService,
     private toast: ToastService,
+    private translateService: TranslateService,
+    private master: MasterDataService,
+    private bulkTranslation: BulkTranslationService,
   ) {}
 
   ngOnInit(): void {
-    forkJoin({
-      profile:  this.recruiterSvc.getMyProfile().pipe(catchError(() => of(null))),
-      requests: this.interestSvc.getMyRequests().pipe(catchError(() => of(null))),
-    }).subscribe(({ profile, requests }) => {
+    this.interestSvc.getMyRequests().pipe(catchError(() => of(null))).subscribe((requests) => {
       this.loading = false;
-
-      if (profile) {
-        this.isAgency = (profile.recruiter as any).type === 'recruitment_agency';
-      }
 
       if (requests) {
         // Sort: pending first, then approved, then rejected; within each group newest first
@@ -311,17 +297,81 @@ export class RecruiterInterestRequestsComponent implements OnInit {
           if (statusDiff !== 0) return statusDiff;
           return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
         });
+        this.translateRequests();
       } else {
-        this.toast.error('Failed to load interest requests.');
-      }
+         this.toast.error(this.translateService.instant('INTEREST_REQUESTS.load_error'));
+       }
     });
+
+    this.translateService.onLangChange
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(() => {
+        this.bulkTranslation.clearCache();
+        this.translatedMap = new Map();
+        this.translateRequests();
+      });
+  }
+
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
+  }
+
+  /**
+   * Translate each card's sector/country (master-data catalog values — resolved
+   * statically, no API call) plus message/admin_note (genuine free text — sent
+   * live, batched into one combined /translate call across every card).
+   */
+  private async translateRequests(): Promise<void> {
+    const myRequestId = ++this.translateRequestId;
+    const lang = this.translateService.currentLang || 'en';
+    if (lang === 'en' || this.requests.length === 0) return;
+
+    await this.master.loadAll();
+    const catalogFields: Record<string, { category: MasterCatalogCategory; value: string }> = {};
+    this.requests.forEach((r) => {
+      if (r.sector)  catalogFields[`${r.id}__sector`] = { category: 'industry', value: r.sector };
+      if (r.country) catalogFields[`${r.id}__country`] = { category: 'country', value: r.country };
+    });
+    const { resolved, missing } = await this.master.resolveCatalogValues(catalogFields, lang);
+    if (myRequestId !== this.translateRequestId) return;
+
+    const freeTextFields: Record<string, string> = { ...missing };
+    this.requests.forEach((r) => {
+      if (r.message)    freeTextFields[`${r.id}__message`] = r.message;
+      if (r.admin_note) freeTextFields[`${r.id}__admin_note`] = r.admin_note;
+    });
+
+    this.isTranslating.set(true);
+    try {
+      const combined: Record<string, string> = { ...resolved };
+      if (Object.keys(freeTextFields).length > 0) {
+        Object.assign(combined, await this.bulkTranslation.translateSection(freeTextFields, lang));
+      }
+      if (myRequestId !== this.translateRequestId) return;
+
+      const map = new Map<string, Record<string, string>>();
+      for (const [key, value] of Object.entries(combined)) {
+        const idx = key.lastIndexOf('__');
+        if (idx === -1) continue;
+        const requestId = key.slice(0, idx);
+        const field = key.slice(idx + 2);
+        if (!map.has(requestId)) map.set(requestId, {});
+        map.get(requestId)![field] = value;
+      }
+      this.translatedMap = map;
+    } catch (error) {
+      console.error('Error translating interest requests:', error);
+    } finally {
+      if (myRequestId === this.translateRequestId) this.isTranslating.set(false);
+    }
   }
 
   candidateName(r: InterestRequest): string {
     const first = r.candidate_first_name ?? '';
     const last  = r.candidate_last_name  ?? '';
     const name  = `${first} ${last}`.trim();
-    return name || 'Unknown Candidate';
+    return name || this.translateService.instant('INTEREST_REQUESTS.unknown_candidate');
   }
 
   countByStatus(status: 'pending' | 'approved' | 'rejected'): number {

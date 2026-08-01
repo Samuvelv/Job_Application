@@ -1,14 +1,14 @@
 <!-- volunteer-create.component.html -->
 <div class="mb-3">
   <a [routerLink]="cancelRoute" class="back-btn">
-    <i class="bi bi-arrow-left"></i>Back to Volunteers
+    <i class="bi bi-arrow-left"></i>{{ 'VOLUNTEERS.back_to_volunteers' | translate }}
   </a>
 </div>
 
 <app-page-header
-  [title]="editId ? 'Edit Volunteer' : 'Add Volunteer'"
+  [title]="editId ? ('VOLUNTEERS.edit_volunteer_title' | translate) : ('VOLUNTEERS.add_volunteer_title' | translate)"
   icon="bi-person-heart"
-  [subtitle]="editId ? 'Update volunteer profile' : 'Create a detailed volunteer profile'" />
+  [subtitle]="editId ? ('VOLUNTEERS.update_volunteer_profile' | translate) : ('VOLUNTEERS.create_volunteer_profile' | translate)" />
 
 @if (error) {
   <div class="alert alert-danger d-flex align-items-center gap-2 mb-4">
@@ -24,19 +24,19 @@
   ═══════════════════════════════════════════════════════════════════════ -->
   <div class="form-card mb-4">
     <h5 class="card-section-header">
-      <i class="bi bi-person-circle"></i> Profile
+      <i class="bi bi-person-circle"></i> {{ 'VOLUNTEERS.profile' | translate }}
     </h5>
     <div class="row g-3">
 
       <!-- Profile Photo -->
       <div class="col-md-6">
-        <label class="form-label">Profile Photo</label>
+        <label class="form-label">{{ 'VOLUNTEERS.profile_photo' | translate }}</label>
         @if (!photoPreview()) {
           <label class="file-drop-zone d-block" style="cursor:pointer">
             <input type="file" class="d-none" accept="image/jpeg,image/png,image/webp"
               (change)="onPhotoSelected($event)">
             <div class="drop-icon mb-2"><i class="bi bi-person-bounding-box"></i></div>
-            <div class="fw-semibold small">Click to upload photo</div>
+            <div class="fw-semibold small">{{ 'VOLUNTEERS.click_to_upload' | translate }}</div>
             <div class="text-muted" style="font-size:.75rem">JPG, PNG, WEBP — max 5 MB</div>
           </label>
         } @else {
@@ -44,7 +44,7 @@
             <img [src]="photoPreview()!" alt="Preview"
               style="width:56px;height:56px;object-fit:cover;border-radius:50%;border:2px solid var(--th-success);flex-shrink:0">
             <div class="file-info flex-grow-1">
-              <span class="file-info__name">Photo selected</span>
+              <span class="file-info__name">{{ 'VOLUNTEERS.photo_selected' | translate }}</span>
             </div>
             <div class="file-actions">
               <button type="button" class="btn btn-sm btn-outline-danger" (click)="clearPhoto()">
@@ -65,29 +65,29 @@
 
       <!-- Full Name -->
       <div class="col-md-6">
-        <label class="form-label">Full Name <span class="text-danger">*</span></label>
+        <label class="form-label">{{ 'VOLUNTEERS.full_name' | translate }} <span class="text-danger">*</span></label>
         <input formControlName="name" class="form-control"
           [class.is-invalid]="invalid('name')"
           placeholder="e.g. Arun Kumar">
         @if (invalid('name')) {
-          <div class="invalid-feedback">Name is required.</div>
+          <div class="invalid-feedback">{{ 'VOLUNTEERS.name_required' | translate }}</div>
         }
       </div>
 
       <!-- Email -->
       <div class="col-md-6">
-        <label class="form-label">Email <span class="rep-optional">optional</span></label>
+        <label class="form-label">{{ 'COMMON.email' | translate }} <span class="rep-optional">{{ 'VOLUNTEERS.optional_label' | translate }}</span></label>
         <input formControlName="email" type="email" class="form-control"
           [class.is-invalid]="invalid('email')"
           placeholder="volunteer@example.com">
         @if (invalid('email')) {
-          <div class="invalid-feedback">Enter a valid email address.</div>
+          <div class="invalid-feedback">{{ 'VOLUNTEERS.email_invalid' | translate }}</div>
         }
       </div>
 
       <!-- Phone -->
       <div class="col-md-6">
-        <label class="form-label">Phone <span class="rep-optional">optional</span></label>
+        <label class="form-label">{{ 'COMMON.phone' | translate }} <span class="rep-optional">{{ 'VOLUNTEERS.optional_label' | translate }}</span></label>
         <div class="phone-input-group">
           <app-searchable-select
             formControlName="dial_code"
@@ -109,7 +109,7 @@
 
       <!-- WhatsApp -->
       <div class="col-md-6">
-        <label class="form-label">WhatsApp <span class="rep-optional">optional</span></label>
+        <label class="form-label">{{ 'COMMON.whatsapp' | translate }} <span class="rep-optional">{{ 'VOLUNTEERS.optional_label' | translate }}</span></label>
         <div class="phone-input-group">
           <app-searchable-select
             formControlName="whatsapp_dial_code"
@@ -130,7 +130,7 @@
           <input class="form-check-input" type="checkbox"
             formControlName="whatsapp_same_as_phone" id="wa_same_vol">
           <label class="form-check-label small text-muted" for="wa_same_vol">
-            Same as phone number
+            {{ 'COMMON.same_as_phone' | translate }}
           </label>
         </div>
         @if (invalid('whatsapp_number') && form.get('whatsapp_number')?.errors?.['phoneInvalid']) {
@@ -142,44 +142,44 @@
 
       <!-- Nationality -->
       <div class="col-md-6">
-        <label class="form-label">Nationality <span class="text-danger">*</span></label>
+        <label class="form-label">{{ 'VOLUNTEERS.nationality' | translate }} <span class="text-danger">*</span></label>
         <app-searchable-select
           formControlName="nationality"
           [options]="countryOpts()"
           [invalid]="invalid('nationality')"
           placeholder="Select nationality" />
         @if (invalid('nationality')) {
-          <div class="text-danger small mt-1">Nationality is required.</div>
+          <div class="text-danger small mt-1">{{ 'VOLUNTEERS.nationality_required' | translate }}</div>
         }
       </div>
 
       <!-- Country Placed -->
       <div class="col-md-6">
-        <label class="form-label">Country Placed In <span class="text-danger">*</span></label>
+        <label class="form-label">{{ 'VOLUNTEERS.country_placed_in_label' | translate }} <span class="text-danger">*</span></label>
         <app-searchable-select
           formControlName="country_placed"
           [options]="countryOpts()"
           [invalid]="invalid('country_placed')"
           placeholder="Select country" />
         @if (invalid('country_placed')) {
-          <div class="text-danger small mt-1">Country placed is required.</div>
+          <div class="text-danger small mt-1">{{ 'VOLUNTEERS.country_placed_required' | translate }}</div>
         }
       </div>
 
       <!-- Job Role -->
       <div class="col-md-6">
-        <label class="form-label">Job Role / Title <span class="text-danger">*</span></label>
+        <label class="form-label">{{ 'VOLUNTEERS.role' | translate }} <span class="text-danger">*</span></label>
         <input formControlName="role" class="form-control"
           [class.is-invalid]="invalid('role')"
           placeholder="e.g. Registered Nurse, IT Support">
         @if (invalid('role')) {
-          <div class="invalid-feedback">Job role is required.</div>
+          <div class="invalid-feedback">{{ 'VOLUNTEERS.role_required' | translate }}</div>
         }
       </div>
 
       <!-- Industry / Sector -->
       <div class="col-md-6">
-        <label class="form-label">Industry / Sector <span class="rep-optional">optional</span></label>
+        <label class="form-label">{{ 'VOLUNTEERS.industry' | translate }} <span class="rep-optional">{{ 'VOLUNTEERS.optional_label' | translate }}</span></label>
         <app-searchable-select
           formControlName="sector"
           [options]="industryOpts()"
@@ -189,21 +189,21 @@
 
       <!-- Company Joined -->
       <div class="col-md-6">
-        <label class="form-label">Company Joined <span class="rep-optional">optional</span></label>
+        <label class="form-label">{{ 'VOLUNTEERS.company_joined' | translate }} <span class="rep-optional">{{ 'VOLUNTEERS.optional_label' | translate }}</span></label>
         <input formControlName="company_joined" class="form-control"
           placeholder="e.g. NHS Trust, Tesco">
       </div>
 
       <!-- Year Placed -->
       <div class="col-md-6">
-        <label class="form-label">Year Placed <span class="text-danger">*</span></label>
+        <label class="form-label">{{ 'VOLUNTEERS.year_placed' | translate }} <span class="text-danger">*</span></label>
         <app-searchable-select
           formControlName="year_placed"
           [options]="yearOpts"
           [invalid]="invalid('year_placed')"
           placeholder="Select year" />
         @if (invalid('year_placed')) {
-          <div class="text-danger small mt-1">Year placed is required.</div>
+          <div class="text-danger small mt-1">{{ 'VOLUNTEERS.year_placed_required' | translate }}</div>
         }
       </div>
 
@@ -212,10 +212,10 @@
 
   <!-- ══════════════════════════════════════════════════════════════════════
        SECTION 2 — Languages Spoken
-  ═══════════════════════════════════════════════════════════════════════ -->
+   ═══════════════════════════════════════════════════════════════════════ -->
   <div class="form-card mb-4">
     <h5 class="card-section-header">
-      <i class="bi bi-translate"></i> Languages Spoken
+      <i class="bi bi-translate"></i> {{ 'VOLUNTEERS.languages_spoken' | translate }}
     </h5>
     <app-chip-multi-select
       formControlName="languages"
@@ -225,16 +225,16 @@
 
   <!-- ══════════════════════════════════════════════════════════════════════
        SECTION 3 — Story & Support
-  ═══════════════════════════════════════════════════════════════════════ -->
+   ═══════════════════════════════════════════════════════════════════════ -->
   <div class="form-card mb-4">
     <h5 class="card-section-header">
-      <i class="bi bi-chat-heart"></i> Story &amp; Support
+      <i class="bi bi-chat-heart"></i> {{ 'VOLUNTEERS.story_support' | translate }}
     </h5>
     <div class="row g-3">
 
       <!-- Success Story -->
       <div class="col-12">
-        <label class="form-label">Short Success Story <span class="rep-optional">optional</span></label>
+        <label class="form-label">{{ 'VOLUNTEERS.success_story' | translate }} <span class="rep-optional">{{ 'VOLUNTEERS.optional_label' | translate }}</span></label>
         <textarea formControlName="success_story" class="form-control" rows="3"
           placeholder="2–3 sentences about their journey — how they secured a job abroad through NTL Career Nexus…"
           maxlength="1000"></textarea>
@@ -245,46 +245,46 @@
 
       <!-- How They Want to Help -->
       <div class="col-md-6">
-        <label class="form-label">How They Want to Help <span class="text-danger">*</span></label>
+        <label class="form-label">{{ 'VOLUNTEERS.support_method' | translate }} <span class="text-danger">*</span></label>
         <app-searchable-select
           formControlName="support_method"
           [options]="supportMethodOpts"
           [invalid]="invalid('support_method')"
           placeholder="Select support method" />
         @if (invalid('support_method')) {
-          <div class="text-danger small mt-1">Please select a support method.</div>
+          <div class="text-danger small mt-1">{{ 'VOLUNTEERS.support_method_required' | translate }}</div>
         }
       </div>
 
       <!-- Contact Preference -->
       <div class="col-md-6">
-        <label class="form-label">Contact Preference <span class="text-danger">*</span></label>
+        <label class="form-label">{{ 'VOLUNTEERS.contact_preference' | translate }} <span class="text-danger">*</span></label>
         <app-searchable-select
           formControlName="contact_preference"
           [options]="contactPrefOpts"
           [invalid]="invalid('contact_preference')"
           placeholder="Select preference" />
         @if (invalid('contact_preference')) {
-          <div class="text-danger small mt-1">Please select a contact preference.</div>
+          <div class="text-danger small mt-1">{{ 'VOLUNTEERS.contact_preference_required' | translate }}</div>
         }
       </div>
 
       <!-- Availability -->
       <div class="col-md-6">
-        <label class="form-label">Availability <span class="text-danger">*</span></label>
+        <label class="form-label">{{ 'VOLUNTEERS.availability' | translate }} <span class="text-danger">*</span></label>
         <app-searchable-select
           formControlName="availability"
           [options]="availabilityOpts"
           [invalid]="invalid('availability')"
           placeholder="Select availability" />
         @if (invalid('availability')) {
-          <div class="text-danger small mt-1">Please select availability.</div>
+          <div class="text-danger small mt-1">{{ 'VOLUNTEERS.availability_required' | translate }}</div>
         }
       </div>
 
       <!-- Admin Notes -->
       <div class="col-md-6">
-        <label class="form-label">Admin Notes <span class="rep-optional">optional</span></label>
+        <label class="form-label">{{ 'VOLUNTEERS.admin_notes' | translate }} <span class="rep-optional">{{ 'VOLUNTEERS.optional_label' | translate }}</span></label>
         <input formControlName="notes" class="form-control"
           placeholder="Internal notes — not visible to candidates">
       </div>
@@ -294,20 +294,20 @@
 
   <!-- ══════════════════════════════════════════════════════════════════════
        SECTION 4 — Consent
-  ═══════════════════════════════════════════════════════════════════════ -->
+   ═══════════════════════════════════════════════════════════════════════ -->
   <div class="form-card mb-4">
     <h5 class="card-section-header">
-      <i class="bi bi-shield-check"></i> Consent
+      <i class="bi bi-shield-check"></i> {{ 'VOLUNTEERS.consent' | translate }}
     </h5>
     <div class="form-check">
       <input class="form-check-input" type="checkbox" formControlName="consent"
         id="consentCheck" [class.is-invalid]="invalid('consent')">
       <label class="form-check-label fw-semibold" for="consentCheck">
-        This volunteer has agreed to appear on the platform
+        {{ 'VOLUNTEERS.consent_agreed' | translate }}
         <span class="text-danger">*</span>
       </label>
       @if (invalid('consent')) {
-        <div class="invalid-feedback d-block">Consent is required before saving.</div>
+        <div class="invalid-feedback d-block">{{ 'VOLUNTEERS.consent_required' | translate }}</div>
       }
     </div>
   </div>
@@ -315,15 +315,15 @@
   <!-- ── Action bar ──────────────────────────────────────────────────────── -->
   <div class="d-flex justify-content-end gap-3 mt-2 mb-5">
     <a [routerLink]="cancelRoute" class="btn btn-outline-secondary">
-      <i class="bi bi-x-lg me-1"></i>Cancel
+      <i class="bi bi-x-lg me-1"></i>{{ 'COMMON.cancel' | translate }}
     </a>
     <button type="submit" class="btn btn-primary" [disabled]="submitting">
       @if (submitting) {
-        <span class="spinner-border spinner-border-sm me-2"></span>Saving…
+        <span class="spinner-border spinner-border-sm me-2"></span>{{ 'COMMON.saving' | translate }}
       } @else if (editId) {
-        <i class="bi bi-floppy me-1"></i>Update Volunteer
+        <i class="bi bi-floppy me-1"></i>{{ 'VOLUNTEERS.update_volunteer' | translate }}
       } @else {
-        <i class="bi bi-person-heart me-1"></i>Save Volunteer
+        <i class="bi bi-person-heart me-1"></i>{{ 'VOLUNTEERS.save_volunteer' | translate }}
       }
     </button>
   </div>

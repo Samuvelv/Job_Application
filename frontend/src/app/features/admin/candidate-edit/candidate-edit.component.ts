@@ -9,6 +9,7 @@ import {
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 import { CdkDragDrop, DragDropModule } from '@angular/cdk/drag-drop';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { CandidateService } from '../../../core/services/candidate.service';
 import { ToastService } from '../../../core/services/toast.service';
 import { MasterDataService } from '../../../core/services/master-data.service';
@@ -16,6 +17,7 @@ import { VolunteerService } from '../../../core/services/volunteer.service';
 import { SearchableSelectComponent, SelectOption } from '../../../shared/components/searchable-select/searchable-select.component';
 import { ChipMultiSelectComponent, ChipOption } from '../../../shared/components/chip-multi-select/chip-multi-select.component';
 import { Candidate, Certificate } from '../../../core/models/candidate.model';
+import { Volunteer } from '../../../core/models/volunteer.model';
 import { REGISTRATION_FEE_STATUS_OPTIONS, CV_FORMAT_OPTIONS, SOURCE_OPTIONS, EMPLOYMENT_STATUS_OPTIONS, VISA_STATUS_OPTIONS, REASON_FOR_LEAVING_OPTIONS, PROFILE_STATUS_OPTIONS } from '../../../core/constants/candidate-options';
 
 // ── Email validator ────────────────────────────────────────────────────────
@@ -267,7 +269,7 @@ function makePostalCodeGroupValidator(countryCtrl: string, postalCtrl: string): 
 @Component({
   selector: 'app-candidate-edit',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, RouterLink, SearchableSelectComponent, ChipMultiSelectComponent, DragDropModule],
+  imports: [CommonModule, ReactiveFormsModule, RouterLink, DragDropModule, TranslateModule, SearchableSelectComponent, ChipMultiSelectComponent],
   templateUrl: './candidate-edit.component.html',
 })
 export class CandidateEditComponent implements OnInit, OnDestroy {
@@ -421,6 +423,7 @@ export class CandidateEditComponent implements OnInit, OnDestroy {
     public master: MasterDataService,
     private sanitizer: DomSanitizer,
     private volunteerSvc: VolunteerService,
+    private translate: TranslateService,
   ) {}
 
   ngOnInit(): void {
@@ -652,12 +655,17 @@ export class CandidateEditComponent implements OnInit, OnDestroy {
       this.empSvc.uploadFile(this.candidateId, type, file, file.name.replace(/\.[^.]+$/, '')).subscribe({
         next: () => {
           this.mediaLoading[type] = false;
-          this.toast.success('Certificate uploaded');
-          this.empSvc.getById(this.candidateId).subscribe(r => { this.candidate = r.candidate; });
+          this.toast.success(this.translate.instant('CANDIDATE_EDIT_REQUEST.cert_uploaded'));
+          this.empSvc.getById(this.candidateId).subscribe({
+            next: (r) => { this.candidate = r.candidate; },
+            error: (err) => {
+              this.toast.error(err?.error?.message ?? this.translate.instant('CANDIDATE_EDIT.load_failed'));
+            },
+          });
         },
         error: (err) => {
           this.mediaLoading[type] = false;
-          this.toast.error(err?.error?.message ?? 'Upload failed');
+          this.toast.error(err?.error?.message ?? this.translate.instant('CANDIDATE_EDIT_REQUEST.upload_failed'));
         },
       });
       return;
@@ -665,7 +673,7 @@ export class CandidateEditComponent implements OnInit, OnDestroy {
 
     // Profile photo / resume / video — stage locally, upload on Save
     if (type === 'videos' && file.size > 200 * 1024 * 1024) {
-      this.toast.error(`Video exceeds the 200 MB limit (selected: ${(file.size / (1024 * 1024)).toFixed(1)} MB). Please choose a smaller file.`);
+      this.toast.error(this.translate.instant('CANDIDATE_EDIT_REQUEST.video_size_exceeded', { size: (file.size / (1024 * 1024)).toFixed(1) }));
       return;
     }
 
@@ -675,7 +683,7 @@ export class CandidateEditComponent implements OnInit, OnDestroy {
 
     this.stagedFiles[type]    = file;
     this.stagedPreviews[type] = URL.createObjectURL(file);
-    this.toast.success(`${file.name} staged — click Save to apply`);
+    this.toast.success(this.translate.instant('CANDIDATE_EDIT.file_staged', { name: file.name }));
   }
 
   /** Discard a staged (not-yet-saved) media file */
@@ -692,12 +700,17 @@ export class CandidateEditComponent implements OnInit, OnDestroy {
     this.empSvc.deleteFile(this.candidateId, type).subscribe({
       next: () => {
         this.mediaLoading[type] = false;
-        this.toast.success('File removed');
-        this.empSvc.getById(this.candidateId).subscribe(r => { this.candidate = r.candidate; });
+        this.toast.success(this.translate.instant('CANDIDATE_EDIT.file_removed'));
+        this.empSvc.getById(this.candidateId).subscribe({
+          next: (r) => { this.candidate = r.candidate; },
+          error: (err) => {
+            this.toast.error(err?.error?.message ?? this.translate.instant('CANDIDATE_EDIT.load_failed'));
+          },
+        });
       },
       error: (err) => {
         this.mediaLoading[type] = false;
-        this.toast.error(err?.error?.message ?? 'Failed to remove file');
+        this.toast.error(err?.error?.message ?? this.translate.instant('CANDIDATE_EDIT.file_remove_failed'));
       },
     });
   }
@@ -708,12 +721,17 @@ export class CandidateEditComponent implements OnInit, OnDestroy {
     this.empSvc.deleteCertificate(this.candidateId, cert.id).subscribe({
       next: () => {
         this.certDeleting = null;
-        this.toast.success('Certificate removed');
-        this.empSvc.getById(this.candidateId).subscribe(r => { this.candidate = r.candidate; });
+        this.toast.success(this.translate.instant('CANDIDATE_EDIT_REQUEST.cert_removed'));
+        this.empSvc.getById(this.candidateId).subscribe({
+          next: (r) => { this.candidate = r.candidate; },
+          error: (err) => {
+            this.toast.error(err?.error?.message ?? this.translate.instant('CANDIDATE_EDIT.load_failed'));
+          },
+        });
       },
       error: (err) => {
         this.certDeleting = null;
-        this.toast.error(err?.error?.message ?? 'Failed to remove certificate');
+        this.toast.error(err?.error?.message ?? this.translate.instant('CANDIDATE_EDIT_REQUEST.cert_remove_failed'));
       },
     });
   }
@@ -745,11 +763,11 @@ export class CandidateEditComponent implements OnInit, OnDestroy {
       no_expiry:   v.no_expiry,
     }).subscribe({
       next: () => {
-        this.toast.success('Certificate updated');
+        this.toast.success(this.translate.instant('CANDIDATE_EDIT.cert_updated'));
         this.cancelEditCert();
         this.empSvc.getById(this.candidateId).subscribe(r => { this.candidate = r.candidate; });
       },
-      error: (err) => this.toast.error(err?.error?.message ?? 'Failed to update certificate'),
+      error: (err) => this.toast.error(err?.error?.message ?? this.translate.instant('CANDIDATE_EDIT.cert_update_failed')),
     });
   }
 
@@ -775,7 +793,7 @@ export class CandidateEditComponent implements OnInit, OnDestroy {
 
   submitNewCert(): void {
     const c = this.pendingNewCert;
-    if (!c || !c.file) { this.toast.error('Please attach a file'); return; }
+    if (!c || !c.file) { this.toast.error(this.translate.instant('CANDIDATE_EDIT.attach_file_required')); return; }
     this.mediaLoading['certificates'] = true;
     this.empSvc.uploadCertificate(this.candidateId, c.file, {
       name:        c.name || c.file.name,
@@ -787,12 +805,17 @@ export class CandidateEditComponent implements OnInit, OnDestroy {
       next: () => {
         this.mediaLoading['certificates'] = false;
         this.pendingNewCert = null;
-        this.toast.success('Certificate uploaded');
-        this.empSvc.getById(this.candidateId).subscribe(r => { this.candidate = r.candidate; });
+        this.toast.success(this.translate.instant('CANDIDATE_EDIT_REQUEST.cert_uploaded'));
+        this.empSvc.getById(this.candidateId).subscribe({
+          next: (r) => { this.candidate = r.candidate; },
+          error: (err) => {
+            this.toast.error(err?.error?.message ?? this.translate.instant('CANDIDATE_EDIT.load_failed'));
+          },
+        });
       },
       error: (err) => {
         this.mediaLoading['certificates'] = false;
-        this.toast.error(err?.error?.message ?? 'Upload failed');
+        this.toast.error(err?.error?.message ?? this.translate.instant('CANDIDATE_EDIT_REQUEST.upload_failed'));
       },
     });
   }
@@ -846,7 +869,7 @@ export class CandidateEditComponent implements OnInit, OnDestroy {
       industry:         [emp.industry ?? '',         Validators.required],
       years_experience: [emp.years_experience ?? 0],
       linkedin_url:     [emp.linkedin_url ?? '', linkedInValidator()],
-      notice_period_id: [(emp as any).notice_period_id ?? null],
+      notice_period_id: [emp.notice_period_id ?? null],
 
       current_country:  [emp.current_country ?? '', Validators.required],
       current_city:     [emp.current_city ?? '',    Validators.required],
@@ -1037,12 +1060,12 @@ export class CandidateEditComponent implements OnInit, OnDestroy {
           delete this.stagedFiles[t];
           delete this.stagedPreviews[t];
         });
-        this.empSvc.update(this.candidateId, payload as any).subscribe({
+        this.empSvc.update(this.candidateId, payload).subscribe({
           next: (res) => {
             this.saving     = false;
             this.candidate   = res.candidate;
-            this.successMsg = 'Candidate updated successfully!';
-            this.toast.success('Candidate updated');
+            this.successMsg = this.translate.instant('CANDIDATE_EDIT.update_success_msg');
+            this.toast.success(this.translate.instant('CANDIDATE_EDIT.candidate_updated'));
             window.scrollTo({ top: 0, behavior: 'smooth' });
 
             if (raw.profile_status === 'placed'
@@ -1059,13 +1082,13 @@ export class CandidateEditComponent implements OnInit, OnDestroy {
           },
           error: (err) => {
             this.saving   = false;
-            this.errorMsg = err?.error?.message ?? 'Update failed. Please try again.';
+            this.errorMsg = err?.error?.message ?? this.translate.instant('CANDIDATE_EDIT.update_failed_retry');
           },
         });
       },
       error: (err) => {
         this.saving   = false;
-        this.errorMsg = err?.error?.message ?? 'Media upload failed. Please try again.';
+        this.errorMsg = err?.error?.message ?? this.translate.instant('CANDIDATE_EDIT.media_upload_failed');
       },
     });
   }
@@ -1082,7 +1105,7 @@ export class CandidateEditComponent implements OnInit, OnDestroy {
         const placedReferral = (c.referrals ?? []).find((r: any) => r.status === 'placed');
         const countryPlaced  = placedReferral?.country ?? c.current_country ?? null;
 
-        const payload = {
+    const payload: Partial<Volunteer> = {
           name:             `${c.first_name} ${c.last_name}`.trim(),
           email:            c.email            ?? undefined,
           phone:            c.phone            ?? undefined,
@@ -1101,18 +1124,18 @@ export class CandidateEditComponent implements OnInit, OnDestroy {
           next: (res) => {
             this.inviteSending    = false;
             this.showPlacedPrompt = false;
-            this.toast.success('Volunteer created! Please complete their profile.');
+            this.toast.success(this.translate.instant('CANDIDATE_EDIT.volunteer_created'));
             this.router.navigate(['/admin/volunteers', res.volunteer.id]);
           },
           error: (err) => {
             this.inviteSending = false;
-            this.inviteError   = err?.error?.message ?? 'Failed to create volunteer.';
+            this.inviteError   = err?.error?.message ?? this.translate.instant('CANDIDATE_EDIT.volunteer_create_failed');
           },
         });
       },
       error: (err) => {
         this.inviteSending = false;
-        this.inviteError   = err?.error?.message ?? 'Failed to send invitation.';
+        this.inviteError   = err?.error?.message ?? this.translate.instant('CANDIDATE_PROFILE_ADMIN.invitation_send_failed');
       },
     });
   }
@@ -1129,7 +1152,7 @@ export class CandidateEditComponent implements OnInit, OnDestroy {
       next: () => {
         this.reactivating = false;
         this.showVolunteerReactivatePrompt = false;
-        this.toast.success('Volunteer profile reactivated.');
+        this.toast.success(this.translate.instant('CANDIDATE_EDIT.volunteer_reactivated'));
         this.router.navigate(['/admin/candidates', this.candidateId]);
       },
       error: (err) => {
@@ -1153,3 +1176,4 @@ export class CandidateEditComponent implements OnInit, OnDestroy {
     });
   }
 }
+

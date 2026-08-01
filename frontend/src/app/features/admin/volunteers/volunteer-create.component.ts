@@ -1,6 +1,7 @@
 // src/app/features/admin/volunteers/volunteer-create.component.ts
 import { Component, OnInit, OnDestroy, computed, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import {
   ReactiveFormsModule, FormBuilder, FormGroup,
   Validators, AbstractControl, ValidationErrors, ValidatorFn,
@@ -78,7 +79,7 @@ function makePhoneGroupValidator(dialCtrl: string, numCtrl: string): ValidatorFn
   templateUrl: './volunteer-create.component.html',
   styleUrl: './volunteer-create.component.scss',
   imports: [
-    CommonModule,
+    CommonModule, TranslateModule,
     ReactiveFormsModule,
     RouterLink,
     PageHeaderComponent,
@@ -154,6 +155,7 @@ export class VolunteerCreateComponent implements OnInit, OnDestroy {
     private route: ActivatedRoute,
     private toast: ToastService,
     private candidateSvc: CandidateService,
+    private translate: TranslateService,
   ) {}
 
   async ngOnInit(): Promise<void> {
@@ -203,7 +205,7 @@ export class VolunteerCreateComponent implements OnInit, OnDestroy {
             this.form.get('whatsapp_same_as_phone')!.setValue(true);
           }
         },
-        error: () => this.toast.error('Could not pre-fill candidate details'),
+        error: () => this.toast.error(this.translate.instant('ADMIN_VOLUNTEERS.prefill_failed')),
       });
     }
 
@@ -237,7 +239,7 @@ export class VolunteerCreateComponent implements OnInit, OnDestroy {
 
           if (v.photo_url) this.photoPreview.set(v.photo_url);
         },
-        error: () => this.toast.error('Failed to load volunteer for editing'),
+        error: () => this.toast.error(this.translate.instant('ADMIN_VOLUNTEERS.load_for_edit_failed')),
       });
     }
   }
@@ -415,7 +417,7 @@ export class VolunteerCreateComponent implements OnInit, OnDestroy {
       afterSave$.subscribe({
         next: () => {
           this.submitting = false;
-          this.toast.success('Volunteer updated successfully');
+          this.toast.success(this.translate.instant('ADMIN_VOLUNTEERS.volunteer_updated'));
           this.router.navigate(['/admin/volunteers', id]);
         },
         error: (err) => {
@@ -435,7 +437,7 @@ export class VolunteerCreateComponent implements OnInit, OnDestroy {
       ).subscribe({
         next: () => {
           this.submitting = false;
-          this.toast.success('Volunteer added successfully');
+          this.toast.success(this.translate.instant('ADMIN_VOLUNTEERS.volunteer_added'));
           this.router.navigate(['/admin/volunteers']);
         },
         error: (err) => {
@@ -450,3 +452,4 @@ export class VolunteerCreateComponent implements OnInit, OnDestroy {
     return this.editId ? `/admin/volunteers/${this.editId}` : '/admin/volunteers';
   }
 }
+

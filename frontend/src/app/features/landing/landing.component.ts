@@ -534,10 +534,10 @@ function makeOptionalPhoneValidator(dialCtrl: string, numCtrl: string): Validato
           <p class="lp-contact__tagline">{{ 'LANDING.contact_tagline' | translate }}</p>
 
           <div class="lp-contact__social">
-            <a class="lp-contact__social-btn" href="https://wa.me/919360454326" target="_blank" title="WhatsApp">
+            <a class="lp-contact__social-btn" href="https://wa.me/919360454326" target="_blank" [title]="'LANDING.contact_channel_whatsapp' | translate">
               <i class="bi bi-whatsapp"></i>
             </a>
-            <a class="lp-contact__social-btn" href="mailto:hello@ntlcareernexus.com" title="Email">
+            <a class="lp-contact__social-btn" href="mailto:hello@ntlcareernexus.com" [title]="'LANDING.contact_channel_email' | translate">
               <i class="bi bi-envelope-fill"></i>
             </a>
           </div>
@@ -695,6 +695,7 @@ function makeOptionalPhoneValidator(dialCtrl: string, numCtrl: string): Validato
 export class LandingComponent implements OnInit, OnDestroy {
   theme  = inject(ThemeService);
   private toast = inject(ToastService);
+  private translate = inject(TranslateService);
   private fb    = inject(FormBuilder);
   private statsService = inject(StatsService);
   private contactSvc   = inject(ContactSubmissionService);
@@ -771,8 +772,8 @@ export class LandingComponent implements OnInit, OnDestroy {
 
   readonly statsLoading = signal(true);
   readonly statsError   = signal(false);
-  readonly stats        = signal<{ icon: string; value: string; label: string }[]>([]);
-  readonly miniStats    = signal<{ num: string; label: string }[]>([]);
+  readonly stats        = signal<{ icon: string; value: string; labelKey: string }[]>([]);
+  readonly miniStats    = signal<{ num: string; labelKey: string }[]>([]);
 
   contactForm!: FormGroup;
 
@@ -908,14 +909,14 @@ export class LandingComponent implements OnInit, OnDestroy {
     this.statsService.getPublicStats().subscribe({
       next: (s) => {
         this.stats.set([
-          { icon: 'bi-people-fill',           value: this.formatCount(s.totalCandidates), label: 'Active Candidates' },
-          { icon: 'bi-building',              value: this.formatCount(s.totalCompanies),  label: 'Partner Companies' },
-          { icon: 'bi-lightning-charge-fill', value: this.formatCount(s.totalMatches),    label: 'Matches Made'      },
+          { icon: 'bi-people-fill',           value: this.formatCount(s.totalCandidates), labelKey: 'LANDING.stats_active_candidates' },
+          { icon: 'bi-building',              value: this.formatCount(s.totalCompanies),  labelKey: 'LANDING.stats_partner_companies' },
+          { icon: 'bi-lightning-charge-fill', value: this.formatCount(s.totalMatches),    labelKey: 'LANDING.stats_matches_made'      },
         ]);
         this.miniStats.set([
-          { num: this.formatCount(s.totalCandidates), label: 'Candidates' },
-          { num: this.formatCount(s.totalCompanies),  label: 'Companies'  },
-          { num: this.formatCount(s.totalMatches),    label: 'Matches'    },
+          { num: this.formatCount(s.totalCandidates), labelKey: 'LANDING.stats_candidates' },
+          { num: this.formatCount(s.totalCompanies),  labelKey: 'LANDING.stats_companies'  },
+          { num: this.formatCount(s.totalMatches),    labelKey: 'LANDING.stats_matches'    },
         ]);
         this.statsLoading.set(false);
       },
@@ -953,11 +954,11 @@ export class LandingComponent implements OnInit, OnDestroy {
       next: () => {
         this.contactSending = false;
         this.contactForm.reset();
-        this.toast.success('Message received! We\'ll be in touch soon.');
+        this.toast.success(this.translate.instant('LANDING.contact_success'));
       },
       error: () => {
         this.contactSending = false;
-        this.toast.success('Message received! We\'ll be in touch soon.');
+        this.toast.success(this.translate.instant('LANDING.contact_success'));
       },
     });
   }
