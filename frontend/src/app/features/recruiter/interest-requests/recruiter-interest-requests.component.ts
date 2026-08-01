@@ -4,10 +4,9 @@ import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { LocaleDatePipe } from '../../../core/pipes/locale-date.pipe';
-import { forkJoin, of } from 'rxjs';
+import { of } from 'rxjs';
 import { catchError } from 'rxjs/operators';
 import { InterestRequestService, InterestRequest } from '../../../core/services/interest-request.service';
-import { RecruiterService } from '../../../core/services/recruiter.service';
 import { ToastService } from '../../../core/services/toast.service';
 import { EmptyStateComponent } from '../../../shared/components/empty-state/empty-state.component';
 import { PageHeaderComponent } from '../../../shared/components/page-header/page-header.component';
@@ -113,17 +112,6 @@ import { PageHeaderComponent } from '../../../shared/components/page-header/page
     .status-badge--approved { background: var(--th-emerald-soft, #d1fae5); color: var(--th-emerald,#059669); }
     .status-badge--rejected { background: var(--th-red-soft,    #fee2e2); color: var(--th-red,    #dc2626); }
 
-    .agency-only-notice {
-      background: var(--th-surface);
-      border: 1px solid var(--th-border);
-      border-radius: 12px;
-      padding: 40px 24px;
-      text-align: center;
-      color: var(--th-muted);
-    }
-    .agency-only-notice i { font-size: 2.5rem; display: block; margin-bottom: 12px; }
-    .agency-only-notice h5 { color: var(--th-text); font-size: 16px; margin-bottom: 8px; }
-
     .summary-bar {
       display: flex;
       flex-wrap: wrap;
@@ -156,16 +144,6 @@ import { PageHeaderComponent } from '../../../shared/components/page-header/page
       <div class="text-center py-5">
         <div class="spinner-border" style="color:var(--th-primary)"></div>
         <div class="mt-2 text-muted small">{{ 'INTEREST_REQUESTS.loading' | translate }}</div>
-      </div>
-
-    <!-- Non-agency notice -->
-    } @else if (!isAgency) {
-      <div class="agency-only-notice">
-        <i class="bi bi-briefcase text-muted"></i>
-        <h5>{{ 'INTEREST_REQUESTS.agency_only_title' | translate }}</h5>
-        <p class="mb-0 small">
-          {{ 'INTEREST_REQUESTS.agency_only_desc' | translate }}
-        </p>
       </div>
 
     <!-- Main content -->
@@ -284,26 +262,17 @@ import { PageHeaderComponent } from '../../../shared/components/page-header/page
 })
 export class RecruiterInterestRequestsComponent implements OnInit {
   loading = true;
-  isAgency = false;
   requests: InterestRequest[] = [];
 
   constructor(
     private interestSvc: InterestRequestService,
-    private recruiterSvc: RecruiterService,
     private toast: ToastService,
     private translateService: TranslateService,
   ) {}
 
   ngOnInit(): void {
-    forkJoin({
-      profile:  this.recruiterSvc.getMyProfile().pipe(catchError(() => of(null))),
-      requests: this.interestSvc.getMyRequests().pipe(catchError(() => of(null))),
-    }).subscribe(({ profile, requests }) => {
+    this.interestSvc.getMyRequests().pipe(catchError(() => of(null))).subscribe((requests) => {
       this.loading = false;
-
-      if (profile) {
-        this.isAgency = (profile.recruiter as any).type === 'recruitment_agency';
-      }
 
       if (requests) {
         // Sort: pending first, then approved, then rejected; within each group newest first

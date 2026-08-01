@@ -257,8 +257,8 @@ import { SearchableSelectComponent, SelectOption } from '../../../shared/compone
       </div>
     }
 
-    <!-- Agency: interest request panel -->
-    @if (isAgency && candidate) {
+    <!-- Interest request panel (available to all recruiter types) -->
+    @if (candidate) {
       <div class="interest-panel">
         <div class="interest-panel__title"><i class="bi bi-briefcase-fill me-2" style="color:var(--th-primary)"></i>{{ 'INTEREST_REQUESTS.submit_interest_title' | translate }}</div>
         <div class="interest-panel__sub">
@@ -443,7 +443,7 @@ export class RecruiterCandidateProfileComponent implements OnInit {
         }
       }
 
-      if (this.isAgency && myInterests) {
+      if (myInterests) {
         const forCandidate = myInterests.requests.filter(
           (r: InterestRequest) => r.candidate_id === this.candidateId
         );

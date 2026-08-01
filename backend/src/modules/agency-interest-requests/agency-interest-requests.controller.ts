@@ -8,7 +8,6 @@ import {
   InterestRequestFilterSchema,
 } from './agency-interest-requests.dto';
 import { getRecruiterByUserId } from '../recruiters/recruiters.service';
-import { AppError } from '../../middleware/errorHandler';
 import { logAudit } from '../../services/audit.service';
 
 // ── Recruiter: submit interest request ──────────────────────────────────────
@@ -16,9 +15,6 @@ import { logAudit } from '../../services/audit.service';
 export async function create(req: Request, res: Response, next: NextFunction): Promise<void> {
   try {
     const recruiter = await getRecruiterByUserId(req.user!.sub);
-    if ((recruiter as any).type !== 'recruitment_agency') {
-      throw new AppError(403, 'Only recruitment agencies can submit interest requests.');
-    }
     const dto = CreateInterestRequestSchema.parse(req.body);
     const row = await svc.createInterestRequest(recruiter.id, dto);
     res.status(201).json({ request: row });
