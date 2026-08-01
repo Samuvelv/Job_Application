@@ -1,15 +1,17 @@
 // src/app/features/recruiter/interest-requests/recruiter-interest-requests.component.ts
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { LocaleDatePipe } from '../../../core/pipes/locale-date.pipe';
-import { of } from 'rxjs';
-import { catchError } from 'rxjs/operators';
+import { Subject, of } from 'rxjs';
+import { catchError, takeUntil } from 'rxjs/operators';
 import { InterestRequestService, InterestRequest } from '../../../core/services/interest-request.service';
 import { ToastService } from '../../../core/services/toast.service';
 import { EmptyStateComponent } from '../../../shared/components/empty-state/empty-state.component';
 import { PageHeaderComponent } from '../../../shared/components/page-header/page-header.component';
+import { MasterDataService, MasterCatalogCategory } from '../../../core/services/master-data.service';
+import { BulkTranslationService } from '../../../core/services/bulk-translation.service';
 
 @Component({
   selector: 'app-recruiter-interest-requests',
@@ -182,6 +184,12 @@ import { PageHeaderComponent } from '../../../shared/components/page-header/page
 
       <!-- Request cards -->
       } @else {
+        @if (isTranslating()) {
+          <div class="d-flex align-items-center gap-2 mb-3" style="font-size:.8rem;color:var(--th-text-muted)">
+            <span class="spinner-border spinner-border-sm"></span>
+            {{ 'COMMON.translating' | translate }}…
+          </div>
+        }
         @for (r of requests; track r.id) {
           <div class="ir-card">
 
@@ -203,10 +211,10 @@ import { PageHeaderComponent } from '../../../shared/components/page-header/page
             <!-- Fields row -->
             <div class="ir-card__fields">
               <div class="ir-card__field">
-                <strong>{{ 'INTEREST_REQUESTS.sector_field_label' | translate }}:</strong> {{ r.sector }}
+                <strong>{{ 'INTEREST_REQUESTS.sector_field_label' | translate }}:</strong> {{ translatedMap.get(r.id)?.['sector'] || r.sector }}
               </div>
               <div class="ir-card__field">
-                <strong>{{ 'INTEREST_REQUESTS.country_field_label' | translate }}:</strong> {{ r.country }}
+                <strong>{{ 'INTEREST_REQUESTS.country_field_label' | translate }}:</strong> {{ translatedMap.get(r.id)?.['country'] || r.country }}
               </div>
               @if (r.reviewed_at) {
                 <div class="ir-card__field">
@@ -216,13 +224,13 @@ import { PageHeaderComponent } from '../../../shared/components/page-header/page
             </div>
 
             <!-- Message -->
-            <div class="ir-card__message">{{ r.message }}</div>
+            <div class="ir-card__message">{{ translatedMap.get(r.id)?.['message'] || r.message }}</div>
 
             <!-- Admin note -->
             @if (r.admin_note) {
               <div class="ir-card__admin-note">
                 <i class="bi bi-chat-left-text me-1"></i>
-                <strong>{{ 'INTEREST_REQUESTS.admin_note' | translate }}</strong> {{ r.admin_note }}
+                <strong>{{ 'INTEREST_REQUESTS.admin_note' | translate }}</strong> {{ translatedMap.get(r.id)?.['admin_note'] || r.admin_note }}
               </div>
             }
 
@@ -260,14 +268,21 @@ import { PageHeaderComponent } from '../../../shared/components/page-header/page
     }
   `,
 })
-export class RecruiterInterestRequestsComponent implements OnInit {
+export class RecruiterInterestRequestsComponent implements OnInit, OnDestroy {
   loading = true;
   requests: InterestRequest[] = [];
+  isTranslating = signal(false);
+  translatedMap = new Map<string, Record<string, string>>();
+
+  private destroy$ = new Subject<void>();
+  private translateRequestId = 0;
 
   constructor(
     private interestSvc: InterestRequestService,
     private toast: ToastService,
     private translateService: TranslateService,
+    private master: MasterDataService,
+    private bulkTranslation: BulkTranslationService,
   ) {}
 
   ngOnInit(): void {
@@ -282,10 +297,74 @@ export class RecruiterInterestRequestsComponent implements OnInit {
           if (statusDiff !== 0) return statusDiff;
           return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
         });
+        this.translateRequests();
       } else {
          this.toast.error(this.translateService.instant('INTEREST_REQUESTS.load_error'));
        }
     });
+
+    this.translateService.onLangChange
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(() => {
+        this.bulkTranslation.clearCache();
+        this.translatedMap = new Map();
+        this.translateRequests();
+      });
+  }
+
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
+  }
+
+  /**
+   * Translate each card's sector/country (master-data catalog values — resolved
+   * statically, no API call) plus message/admin_note (genuine free text — sent
+   * live, batched into one combined /translate call across every card).
+   */
+  private async translateRequests(): Promise<void> {
+    const myRequestId = ++this.translateRequestId;
+    const lang = this.translateService.currentLang || 'en';
+    if (lang === 'en' || this.requests.length === 0) return;
+
+    await this.master.loadAll();
+    const catalogFields: Record<string, { category: MasterCatalogCategory; value: string }> = {};
+    this.requests.forEach((r) => {
+      if (r.sector)  catalogFields[`${r.id}__sector`] = { category: 'industry', value: r.sector };
+      if (r.country) catalogFields[`${r.id}__country`] = { category: 'country', value: r.country };
+    });
+    const { resolved, missing } = await this.master.resolveCatalogValues(catalogFields, lang);
+    if (myRequestId !== this.translateRequestId) return;
+
+    const freeTextFields: Record<string, string> = { ...missing };
+    this.requests.forEach((r) => {
+      if (r.message)    freeTextFields[`${r.id}__message`] = r.message;
+      if (r.admin_note) freeTextFields[`${r.id}__admin_note`] = r.admin_note;
+    });
+
+    this.isTranslating.set(true);
+    try {
+      const combined: Record<string, string> = { ...resolved };
+      if (Object.keys(freeTextFields).length > 0) {
+        Object.assign(combined, await this.bulkTranslation.translateSection(freeTextFields, lang));
+      }
+      if (myRequestId !== this.translateRequestId) return;
+
+      const map = new Map<string, Record<string, string>>();
+      for (const [key, value] of Object.entries(combined)) {
+        const idx = key.lastIndexOf('__');
+        if (idx === -1) continue;
+        const requestId = key.slice(0, idx);
+        const field = key.slice(idx + 2);
+        if (!map.has(requestId)) map.set(requestId, {});
+        map.get(requestId)![field] = value;
+      }
+      this.translatedMap = map;
+    } catch (error) {
+      console.error('Error translating interest requests:', error);
+    } finally {
+      if (myRequestId === this.translateRequestId) this.isTranslating.set(false);
+    }
   }
 
   candidateName(r: InterestRequest): string {

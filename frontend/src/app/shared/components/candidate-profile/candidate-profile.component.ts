@@ -404,11 +404,6 @@ type Tab = 'overview' | 'experience' | 'education' | 'documents' | 'activity';
                     <i class="bi bi-chat-quote-fill"></i>
                   </div>
                   <h6>{{ 'CANDIDATE_PROFILE.about' | translate }}</h6>
-                  @if (translatedBio() && currentLanguage() !== 'en') {
-                    <span style="margin-left:auto;font-size:.65rem;color:var(--th-muted);font-style:italic">
-                      {{ 'CANDIDATE_PROFILE.translated_by_ai' | translate }}
-                    </span>
-                  }
                 </div>
                 <div class="profile-section-card__body">
                   @if (isTranslatingBio()) {

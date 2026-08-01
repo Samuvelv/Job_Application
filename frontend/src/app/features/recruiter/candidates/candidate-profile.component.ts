@@ -1,14 +1,15 @@
 // src/app/features/recruiter/candidates/candidate-profile.component.ts
-import { Component, OnInit, computed, inject } from '@angular/core';
+import { Component, OnInit, OnDestroy, computed, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, RouterLink, Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
-import { catchError, forkJoin, of } from 'rxjs';
+import { catchError, forkJoin, of, Subject, takeUntil } from 'rxjs';
 import { CandidateService } from '../../../core/services/candidate.service';
 import { RecruiterService } from '../../../core/services/recruiter.service';
 import { ContactRequestService } from '../../../core/services/contact-request.service';
 import { InterestRequestService, InterestRequest } from '../../../core/services/interest-request.service';
 import { MasterDataService } from '../../../core/services/master-data.service';
+import { BulkTranslationService } from '../../../core/services/bulk-translation.service';
 import { Candidate } from '../../../core/models/candidate.model';
 import { ContactRequest } from '../../../core/models/contact-request.model';
 import { ToastService } from '../../../core/services/toast.service';
@@ -241,7 +242,7 @@ import { SearchableSelectComponent, SelectOption } from '../../../shared/compone
     @if (!isAgency && contactRequestStatus === 'rejected' && contactRequest?.admin_note) {
       <div class="alert alert-warning small py-2 mb-3">
         <i class="bi bi-chat-left-text me-1"></i>
-        <strong>{{ 'CONTACT_STATUS.admin_note' | translate }}</strong> {{ contactRequest!.admin_note }}
+        <strong>{{ 'CONTACT_STATUS.admin_note' | translate }}</strong> {{ translatedNotes()['contact_admin_note'] || contactRequest!.admin_note }}
       </div>
     }
 
@@ -251,7 +252,7 @@ import { SearchableSelectComponent, SelectOption } from '../../../shared/compone
         <i class="bi bi-shield-x me-1"></i>
         <strong>{{ 'CONTACT_STATUS.access_revoked_note' | translate }}</strong>
         @if (contactRequest?.revocation_reason) {
-          {{ 'CONTACT_STATUS.reason_label' | translate }} {{ contactRequest!.revocation_reason }}
+          {{ 'CONTACT_STATUS.reason_label' | translate }} {{ translatedNotes()['revocation_reason'] || contactRequest!.revocation_reason }}
         }
         {{ 'CONTACT_STATUS.resubmit_note' | translate }}
       </div>
@@ -282,7 +283,7 @@ import { SearchableSelectComponent, SelectOption } from '../../../shared/compone
           </div>
           @if (interestRequest.admin_note) {
             <div class="mt-2 small" style="color:var(--th-muted);">
-              <i class="bi bi-chat-left-text me-1"></i><strong>{{ 'INTEREST_REQUESTS.admin_note' | translate }}</strong> {{ interestRequest.admin_note }}
+              <i class="bi bi-chat-left-text me-1"></i><strong>{{ 'INTEREST_REQUESTS.admin_note' | translate }}</strong> {{ translatedNotes()['interest_admin_note'] || interestRequest.admin_note }}
             </div>
           }
           @if (interestRequest.status === 'rejected' || interestRequest.status === 'revoked') {
@@ -351,7 +352,7 @@ import { SearchableSelectComponent, SelectOption } from '../../../shared/compone
     }
   `,
 })
-export class RecruiterCandidateProfileComponent implements OnInit {
+export class RecruiterCandidateProfileComponent implements OnInit, OnDestroy {
   candidate: Candidate | null = null;
   loading = true;
   error = '';
@@ -375,6 +376,11 @@ export class RecruiterCandidateProfileComponent implements OnInit {
 
   // ── Master data (inject before computed fields so this.master is available) ─
   private master = inject(MasterDataService);
+  private bulkTranslation = inject(BulkTranslationService);
+  private destroy$ = new Subject<void>();
+
+  /** Live-translated admin-authored free text: interest_admin_note, contact_admin_note, revocation_reason. */
+  translatedNotes = signal<Record<string, string>>({});
 
   industryOptions = computed<SelectOption[]>(() =>
     this.master.industries().map((i: { name: string }) => ({ value: i.name, label: i.name }))
@@ -455,7 +461,44 @@ export class RecruiterCandidateProfileComponent implements OnInit {
         })[0] ?? null;
         if (ir) this.interestRequest = ir;
       }
+
+      this.translateNotes();
     });
+
+    this.translate.onLangChange
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(() => {
+        this.bulkTranslation.clearCache();
+        this.translatedNotes.set({});
+        this.translateNotes();
+      });
+  }
+
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
+  }
+
+  /** Translate the genuinely free-text, admin-authored notes shown on this page
+   *  (interest-request admin note, contact-request admin note/revocation reason) —
+   *  these aren't master-data catalog values, so they always go live. */
+  private async translateNotes(): Promise<void> {
+    const lang = this.translate.currentLang || 'en';
+    if (lang === 'en') return;
+
+    const fields: Record<string, string> = {};
+    if (this.interestRequest?.admin_note) fields['interest_admin_note'] = this.interestRequest.admin_note;
+    if (this.contactRequest?.admin_note) fields['contact_admin_note'] = this.contactRequest.admin_note;
+    if (this.contactRequest?.revocation_reason) fields['revocation_reason'] = this.contactRequest.revocation_reason;
+
+    if (Object.keys(fields).length === 0) return;
+
+    try {
+      const translated = await this.bulkTranslation.translateSection(fields, lang);
+      this.translatedNotes.set(translated);
+    } catch (error) {
+      console.error('Error translating admin notes:', error);
+    }
   }
 
   // ── Contact / shortlist actions ──────────────────────────────────────────────
