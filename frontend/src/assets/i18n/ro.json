@@ -111,7 +111,13 @@
     "resend_credentials": "Retrimiteți datele de autentificare",
     "restore": "Restabiliți",
     "verified": "Verificat",
-    "options": "opțiuni"
+    "options": "opțiuni",
+    "first_name": "Prenume",
+    "last_name": "Nume",
+    "date_of_birth": "Data nașterii",
+    "gender": "Gen",
+    "whatsapp": "WhatsApp",
+    "same_as_phone": "La fel ca numărul de telefon"
   },
   "NAV": {
     "dashboard": "Tablou de Bord",
@@ -432,7 +438,28 @@
       "no_resume": "Fără CV",
       "no_video": "Fără video",
       "no_certificates": "Fără certificate",
-      "new_certificate": "Certificat nou"
+      "new_certificate": "Certificat nou",
+      "first_name": "Prenume",
+      "last_name": "Nume",
+      "date_of_birth": "Data nașterii",
+      "gender": "Gen",
+      "email_address": "Adresă de email",
+      "phone": "Număr de telefon",
+      "whatsapp": "Număr WhatsApp",
+      "employment_status": "Stare de angajare",
+      "job_title": "Titlul postului",
+      "occupation": "Ocupația",
+      "industry": "Industria",
+      "skills": "Abilități",
+      "linkedin_url": "URL LinkedIn",
+      "cv_format": "Format CV",
+      "visa_status": "Stare viză",
+      "languages": "Limbi străine",
+      "current_country": "Țara actuală",
+      "current_city": "Orașul actual",
+      "work_experience": "Experiență de muncă",
+      "company_name": "Numele companiei",
+      "certificates": "Certificate"
     }
   },
   "CANDIDATE_LIST": {
@@ -625,7 +652,11 @@
     "reference_id": "ID de referință",
     "login_id": "ID de autentificare",
     "candidate_use_login_id": "Candidatul trebuie să își folosească ID-ul de autentificare (nu e-mailul) pentru a se conecta la portal.",
-    "step_of": "Pasul {{current}} din {{total}}"
+    "step_of": "Pasul {{current}} din {{total}}",
+    "job_title_required": "Titlul postului este obligatoriu.",
+    "occupation_required": "Ocupația este obligatorie.",
+    "industry_required": "Industria este obligatorie.",
+    "marital_status": "Stare civilă"
   },
   "RECRUITER_LIST": {
     "title": "Recrutori",
@@ -2341,7 +2372,8 @@
     "replace": "Înlocuiți",
     "upload": "Încărcați",
     "photo_guidelines": "Vă rugăm să încărcați o fotografie clară, profesională. Fața trebuie să fie clar vizibilă. Se preferă un fundal simplu.",
-    "resume_cv": "CV"
+    "resume_cv": "CV",
+    "intro_video": "Video de prezentare"
   },
   "CONTACT_REQUESTS": {
     "candidate": "Candidat",

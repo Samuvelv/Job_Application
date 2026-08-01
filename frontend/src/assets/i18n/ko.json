@@ -111,7 +111,13 @@
     "resend_credentials": "자격 증명 재전송",
     "restore": "복원",
     "verified": "인증됨",
-    "options": "옵션"
+    "options": "옵션",
+    "first_name": "이름",
+    "last_name": "성",
+    "date_of_birth": "생년월일",
+    "gender": "성별",
+    "whatsapp": "WhatsApp",
+    "same_as_phone": "전화번호와 동일"
   },
   "NAV": {
     "dashboard": "대시보드",
@@ -432,7 +438,28 @@
       "no_resume": "이력서 없음",
       "no_video": "영상 없음",
       "no_certificates": "자격증 없음",
-      "new_certificate": "새 자격증"
+      "new_certificate": "새 자격증",
+      "first_name": "이름",
+      "last_name": "성",
+      "date_of_birth": "생년월일",
+      "gender": "성별",
+      "email_address": "이메일 주소",
+      "phone": "전화번호",
+      "whatsapp": "WhatsApp 번호",
+      "employment_status": "고용 상태",
+      "job_title": "직책",
+      "occupation": "직업",
+      "industry": "산업",
+      "skills": "기술",
+      "linkedin_url": "LinkedIn URL",
+      "cv_format": "이력서 형식",
+      "visa_status": "비자 상태",
+      "languages": "언어",
+      "current_country": "현재 국가",
+      "current_city": "현재 도시",
+      "work_experience": "근무 경력",
+      "company_name": "회사명",
+      "certificates": "자격증"
     }
   },
   "CANDIDATE_LIST": {
@@ -625,7 +652,11 @@
     "reference_id": "참조 ID",
     "login_id": "로그인 ID",
     "candidate_use_login_id": "후보자는 포털에 로그인할 때 이메일이 아닌 로그인 ID를 사용해야 합니다.",
-    "step_of": "{{total}} 단계 중 {{current}} 단계"
+    "step_of": "{{total}} 단계 중 {{current}} 단계",
+    "job_title_required": "직책을 입력하세요.",
+    "occupation_required": "직업을 입력하세요.",
+    "industry_required": "산업을 입력하세요.",
+    "marital_status": "결혼 여부"
   },
   "RECRUITER_LIST": {
     "title": "채용 담당자",
@@ -2341,7 +2372,8 @@
     "replace": "교체",
     "upload": "업로드",
     "photo_guidelines": "선명하고 전문적인 사진을 업로드하세요. 얼굴이 명확하게 보여야 합니다. 단색 배경을 권장합니다.",
-    "resume_cv": "이력서"
+    "resume_cv": "이력서",
+    "intro_video": "자기소개 영상"
   },
   "CONTACT_REQUESTS": {
     "candidate": "지원자",

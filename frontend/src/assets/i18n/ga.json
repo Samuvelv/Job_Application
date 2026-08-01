@@ -111,7 +111,13 @@
     "resend_credentials": "Athsheol dintiúir logála isteach",
     "restore": "Athchóirigh",
     "verified": "Fíoraithe",
-    "options": "roghanna"
+    "options": "roghanna",
+    "first_name": "Céadainm",
+    "last_name": "Sloinne",
+    "date_of_birth": "Dáta Breithe",
+    "gender": "Gnéas",
+    "whatsapp": "WhatsApp",
+    "same_as_phone": "Anon le huimhir theileafóin"
   },
   "NAV": {
     "dashboard": "Deasc",
@@ -432,7 +438,28 @@
       "no_resume": "Gan CV",
       "no_video": "Gan físeán",
       "no_certificates": "Gan teastais",
-      "new_certificate": "Teastas Nua"
+      "new_certificate": "Teastas Nua",
+      "first_name": "Céadainm",
+      "last_name": "Sloinne",
+      "date_of_birth": "Dáta Breithe",
+      "gender": "Gnéas",
+      "email_address": "Seoladh Email",
+      "phone": "Uimhir Theileafóin",
+      "whatsapp": "Uimhir WhatsApp",
+      "employment_status": "Stádas Fostaíochta",
+      "job_title": "Teideal Post",
+      "occupation": "Gnéas",
+      "industry": "Tionscal",
+      "skills": "Scileanna",
+      "linkedin_url": "URL LinkedIn",
+      "cv_format": "Formáid CV",
+      "visa_status": "Stádas Víosa",
+      "languages": "Teangacha",
+      "current_country": "Tír Reatha",
+      "current_city": "Cathair Reatha",
+      "work_experience": "Taithí Oibre",
+      "company_name": "Ainm an Fhirme",
+      "certificates": "Teastais"
     }
   },
   "CANDIDATE_LIST": {
@@ -625,7 +652,11 @@
     "reference_id": "Aitheantas Tagartha",
     "login_id": "Aitheantas Logála Isteach",
     "candidate_use_login_id": "Ní mór don iarrthóir a Aitheantas Logála Isteach (ní ríomhphost) a úsáid chun logáil isteach sa tairseach.",
-    "step_of": "Céim {{current}} de {{total}}"
+    "step_of": "Céim {{current}} de {{total}}",
+    "job_title_required": "Tá sé de dhíth an teideal post.",
+    "occupation_required": "Tá sé de dhíth an ghnéas.",
+    "industry_required": "Tá sé de dhíth an tionscal.",
+    "marital_status": "Stádas Pósta"
   },
   "RECRUITER_LIST": {
     "title": "Earcaitheoirí",
@@ -2341,7 +2372,8 @@
     "replace": "Cuir in ionad",
     "upload": "Uaslódáil",
     "photo_guidelines": "Uaslódáil grianghraf soiléir gairmiúil, le do thoil. Ba chóir go mbeadh an t-aghaidh le feiceáil go soiléir. Is fearr cúlra simplí.",
-    "resume_cv": "CV"
+    "resume_cv": "CV",
+    "intro_video": "Físeán Réamhráite"
   },
   "CONTACT_REQUESTS": {
     "candidate": "Iarrthóir",

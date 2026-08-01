@@ -111,7 +111,13 @@
     "resend_credentials": "Inloggegevens opnieuw verzenden",
     "restore": "Herstellen",
     "verified": "Geverifieerd",
-    "options": "opties"
+    "options": "opties",
+    "first_name": "Voornaam",
+    "last_name": "Achternaam",
+    "date_of_birth": "Geboortedatum",
+    "gender": "Geslacht",
+    "whatsapp": "WhatsApp",
+    "same_as_phone": "Hetzelfde als telefoonnummer"
   },
   "NAV": {
     "dashboard": "Dashboard",
@@ -432,7 +438,28 @@
       "no_resume": "Geen cv",
       "no_video": "Geen video",
       "no_certificates": "Geen certificaten",
-      "new_certificate": "Nieuw certificaat"
+      "new_certificate": "Nieuw certificaat",
+      "first_name": "Voornaam",
+      "last_name": "Achternaam",
+      "date_of_birth": "Geboortedatum",
+      "gender": "Geslacht",
+      "email_address": "E-mailadres",
+      "phone": "Telefoonnummer",
+      "whatsapp": "WhatsApp-nummer",
+      "employment_status": "Werkstatus",
+      "job_title": "Functietitel",
+      "occupation": "Beroep",
+      "industry": "Industrie",
+      "skills": "Vaardigheden",
+      "linkedin_url": "LinkedIn URL",
+      "cv_format": "CV-formaat",
+      "visa_status": "Visumstatus",
+      "languages": "Talen",
+      "current_country": "Huidig land",
+      "current_city": "Huidige stad",
+      "work_experience": "Werkervaring",
+      "company_name": "Bedrijfsnaam",
+      "certificates": "Certificaten"
     }
   },
   "CANDIDATE_LIST": {
@@ -625,7 +652,11 @@
     "reference_id": "Referentie-ID",
     "login_id": "Login-ID",
     "candidate_use_login_id": "De kandidaat moet zijn login-ID (niet e-mail) gebruiken om in te loggen op het portaal.",
-    "step_of": "Stap {{current}} van {{total}}"
+    "step_of": "Stap {{current}} van {{total}}",
+    "job_title_required": "Functietitel is verplicht.",
+    "occupation_required": "Beroep is verplicht.",
+    "industry_required": "Industrie is verplicht.",
+    "marital_status": "Burgerlijke staat"
   },
   "RECRUITER_LIST": {
     "title": "Recruiters",
@@ -2341,7 +2372,8 @@
     "replace": "Vervangen",
     "upload": "Uploaden",
     "photo_guidelines": "Upload een duidelijke, professionele foto. Het gezicht moet duidelijk zichtbaar zijn. Een effen achtergrond heeft de voorkeur.",
-    "resume_cv": "Cv"
+    "resume_cv": "Cv",
+    "intro_video": "Introductievideo"
   },
   "CONTACT_REQUESTS": {
     "candidate": "Kandidaat",

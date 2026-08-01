@@ -111,7 +111,13 @@
     "previous": "Previous",
     "profile_photo": "Profile Photo",
     "restore": "Restore",
-    "options": "options"
+    "options": "options",
+    "first_name": "First Name",
+    "last_name": "Last Name",
+    "date_of_birth": "Date of Birth",
+    "gender": "Gender",
+    "whatsapp": "WhatsApp",
+    "same_as_phone": "Same as phone number"
   },
   "NAV": {
     "dashboard": "Dashboard",
@@ -432,7 +438,28 @@
       "no_resume": "No CV / Resume",
       "no_video": "No video",
       "no_certificates": "No certificates",
-      "new_certificate": "New Certificate"
+      "new_certificate": "New Certificate",
+      "first_name": "First Name",
+      "last_name": "Last Name",
+      "date_of_birth": "Date of Birth",
+      "gender": "Gender",
+      "email_address": "Email Address",
+      "phone": "Phone Number",
+      "whatsapp": "WhatsApp Number",
+      "employment_status": "Employment Status",
+      "job_title": "Job Title",
+      "occupation": "Occupation",
+      "industry": "Industry",
+      "skills": "Skills",
+      "linkedin_url": "LinkedIn URL",
+      "cv_format": "CV Format",
+      "visa_status": "Visa Status",
+      "languages": "Languages",
+      "current_country": "Current Country",
+      "current_city": "Current City",
+      "work_experience": "Work Experience",
+      "company_name": "Company Name",
+      "certificates": "Certificates"
     }
   },
   "CANDIDATE_LIST": {
@@ -604,7 +631,14 @@
     "login_id": "Login ID",
     "candidate_use_login_id": "Candidate must use their Login ID (not email) to sign in to the portal.",
     "step_of": "Step {{current}} of {{total}}",
-    "register_btn": "Register"
+    "register_btn": "Register",
+    "job_title": "Job Title",
+    "job_title_required": "Job title is required.",
+    "occupation": "Occupation",
+    "occupation_required": "Occupation is required.",
+    "industry_required": "Industry is required.",
+    "employment_status": "Employment Status",
+    "marital_status": "Marital Status"
   },
   "RECRUITER_LIST": {
     "title": "Recruiters",
@@ -2113,7 +2147,8 @@
     "volunteer_create_failed": "Failed to create volunteer.",
     "volunteer_created": "Volunteer created! Please complete their profile.",
     "volunteer_reactivated": "Volunteer profile reactivated.",
-    "preview": "Preview"
+    "preview": "Preview",
+    "intro_video": "Intro Video"
   },
   "VOLUNTEER_PROFILE": {
     "back_to_volunteers": "Back to Volunteers",

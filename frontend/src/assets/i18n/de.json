@@ -111,7 +111,13 @@
     "resend_credentials": "Zugangsdaten erneut senden",
     "restore": "Wiederherstellen",
     "verified": "Verifiziert",
-    "options": "Optionen"
+    "options": "Optionen",
+    "first_name": "Vorname",
+    "last_name": "Nachname",
+    "date_of_birth": "Geburtsdatum",
+    "gender": "Geschlecht",
+    "whatsapp": "WhatsApp",
+    "same_as_phone": "Wie Telefonnummer"
   },
   "NAV": {
     "dashboard": "Dashboard",
@@ -432,7 +438,28 @@
       "no_resume": "Kein Lebenslauf",
       "no_video": "Kein Video",
       "no_certificates": "Keine Zertifikate",
-      "new_certificate": "Neues Zertifikat"
+      "new_certificate": "Neues Zertifikat",
+      "first_name": "Vorname",
+      "last_name": "Nachname",
+      "date_of_birth": "Geburtsdatum",
+      "gender": "Geschlecht",
+      "email_address": "E-Mail-Adresse",
+      "phone": "Telefonnummer",
+      "whatsapp": "WhatsApp-Nummer",
+      "employment_status": "Beschäftigungsstatus",
+      "job_title": "Berufsbezeichnung",
+      "occupation": "Beruf",
+      "industry": "Branche",
+      "skills": "Fähigkeiten",
+      "linkedin_url": "LinkedIn-URL",
+      "cv_format": "Lebenslaufformat",
+      "visa_status": "Visumstatus",
+      "languages": "Sprachen",
+      "current_country": "Aktuelles Land",
+      "current_city": "Aktuelle Stadt",
+      "work_experience": "Berufserfahrung",
+      "company_name": "Firmenname",
+      "certificates": "Zertifikate"
     }
   },
   "CANDIDATE_LIST": {
@@ -625,7 +652,11 @@
     "reference_id": "Referenz-ID",
     "login_id": "Anmelde-ID",
     "candidate_use_login_id": "Der Kandidat muss seine Anmelde-ID (nicht die E-Mail) verwenden, um sich beim Portal anzumelden.",
-    "step_of": "Schritt {{current}} von {{total}}"
+    "step_of": "Schritt {{current}} von {{total}}",
+    "job_title_required": "Berufsbezeichnung erforderlich.",
+    "occupation_required": "Beruf ist erforderlich.",
+    "industry_required": "Branche ist erforderlich.",
+    "marital_status": "Familienstand"
   },
   "RECRUITER_LIST": {
     "title": "Recruiter",
@@ -2341,7 +2372,8 @@
     "replace": "Ersetzen",
     "upload": "Hochladen",
     "photo_guidelines": "Bitte laden Sie ein klares, professionelles Foto hoch. Das Gesicht sollte deutlich sichtbar sein. Ein neutraler Hintergrund wird bevorzugt.",
-    "resume_cv": "Lebenslauf"
+    "resume_cv": "Lebenslauf",
+    "intro_video": "Einführungsvideo"
   },
   "CONTACT_REQUESTS": {
     "candidate": "Kandidat",

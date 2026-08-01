@@ -111,7 +111,13 @@
     "resend_credentials": "إعادة إرسال بيانات الاعتماد",
     "restore": "استعادة",
     "verified": "موثّق",
-    "options": "الخيارات"
+    "options": "الخيارات",
+    "first_name": "الاسم الأول",
+    "last_name": "الاسم الأخير",
+    "date_of_birth": "تاريخ الميلاد",
+    "gender": "الجنس",
+    "whatsapp": "واتساب",
+    "same_as_phone": "نفس رقم الهاتف"
   },
   "NAV": {
     "dashboard": "لوحة التحكم",
@@ -432,7 +438,28 @@
       "no_resume": "لا يوجد سيرة ذاتية / سيرة شخصية",
       "no_video": "لا يوجد فيديو",
       "no_certificates": "لا توجد شهادات",
-      "new_certificate": "شهادة جديدة"
+      "new_certificate": "شهادة جديدة",
+      "first_name": "الاسم الأول",
+      "last_name": "الاسم الأخير",
+      "date_of_birth": "تاريخ الميلاد",
+      "gender": "الجنس",
+      "email_address": "عنوان البريد الإلكتروني",
+      "phone": "رقم الهاتف",
+      "whatsapp": "رقم الواتساب",
+      "employment_status": "حالة التوظيف",
+      "job_title": "اسم الوظيفة",
+      "occupation": "المهنة",
+      "industry": "الصناعة",
+      "skills": "المهارات",
+      "linkedin_url": "رابط LinkedIn",
+      "cv_format": "تنسيق السيرة الذاتية",
+      "visa_status": "حالة التأشيرة",
+      "languages": "اللغات",
+      "current_country": "البلد الحالي",
+      "current_city": "المدينة الحالية",
+      "work_experience": "خبرة العمل",
+      "company_name": "اسم الشركة",
+      "certificates": "الشهادات"
     }
   },
   "CANDIDATE_LIST": {
@@ -625,7 +652,11 @@
     "reference_id": "رقم المرجع",
     "login_id": "معرّف تسجيل الدخول",
     "candidate_use_login_id": "يجب على المرشح استخدام معرّف تسجيل الدخول الخاص به (وليس البريد الإلكتروني) لتسجيل الدخول إلى البوابة.",
-    "step_of": "الخطوة {{current}} من {{total}}"
+    "step_of": "الخطوة {{current}} من {{total}}",
+    "job_title_required": "اسم الوظيفة مطلوب.",
+    "occupation_required": "المهنة مطلوبة.",
+    "industry_required": "الصناعة مطلوبة.",
+    "marital_status": "الحالة الاجتماعية"
   },
   "RECRUITER_LIST": {
     "title": "المجندون",
@@ -2341,7 +2372,8 @@
     "replace": "استبدال",
     "upload": "رفع",
     "photo_guidelines": "يرجى رفع صورة واضحة واحترافية. يجب أن يكون الوجه مرئيًا بوضوح. يُفضل خلفية بسيطة.",
-    "resume_cv": "السيرة الذاتية"
+    "resume_cv": "السيرة الذاتية",
+    "intro_video": "فيديو تعريفي"
   },
   "CONTACT_REQUESTS": {
     "candidate": "مرشح",

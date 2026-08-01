@@ -111,7 +111,13 @@
     "resend_credentials": "Znova pošlji prijavne podatke",
     "restore": "Obnovi",
     "verified": "Potrjeno",
-    "options": "možnosti"
+    "options": "možnosti",
+    "first_name": "Ime",
+    "last_name": "Priimek",
+    "date_of_birth": "Datum rojstva",
+    "gender": "Spol",
+    "whatsapp": "WhatsApp",
+    "same_as_phone": "Enako kot telefonska številka"
   },
   "NAV": {
     "dashboard": "Nadzorna plošča",
@@ -432,7 +438,28 @@
       "no_resume": "Brez življenjepisa",
       "no_video": "Brez videa",
       "no_certificates": "Brez potrdil",
-      "new_certificate": "Novo potrdilo"
+      "new_certificate": "Novo potrdilo",
+      "first_name": "Ime",
+      "last_name": "Priimek",
+      "date_of_birth": "Datum rojstva",
+      "gender": "Spol",
+      "email_address": "E-poštni naslov",
+      "phone": "Telefonska številka",
+      "whatsapp": "WhatsApp številka",
+      "employment_status": "Zaposlitveni status",
+      "job_title": "Naziv delovnega mesta",
+      "occupation": "Poklic",
+      "industry": "Panoga",
+      "skills": "Veščine",
+      "linkedin_url": "LinkedIn URL",
+      "cv_format": "Format življenjepisa",
+      "visa_status": "Status vizuma",
+      "languages": "Jeziki",
+      "current_country": "Trenutna država",
+      "current_city": "Trenutno mesto",
+      "work_experience": "Delovne izkušnje",
+      "company_name": "Ime podjetja",
+      "certificates": "Certifikati"
     }
   },
   "CANDIDATE_LIST": {
@@ -625,7 +652,11 @@
     "reference_id": "Referenčna oznaka",
     "login_id": "Prijavna oznaka",
     "candidate_use_login_id": "Kandidat mora za prijavo v portal uporabiti svojo prijavno oznako (ne e-pošte).",
-    "step_of": "Korak {{current}} od {{total}}"
+    "step_of": "Korak {{current}} od {{total}}",
+    "job_title_required": "Naziv delovnega mesta je obvezen.",
+    "occupation_required": "Poklic je obvezen.",
+    "industry_required": "Panoga je obvezna.",
+    "marital_status": "Zakonski stan"
   },
   "RECRUITER_LIST": {
     "title": "Recruiterji",
@@ -2341,7 +2372,8 @@
     "replace": "Zamenjaj",
     "upload": "Naloži",
     "photo_guidelines": "Naložite jasno, profesionalno fotografijo. Obraz mora biti jasno viden. Priporočljivo je enobarvno ozadje.",
-    "resume_cv": "Življenjepis"
+    "resume_cv": "Življenjepis",
+    "intro_video": "Uvodni video"
   },
   "CONTACT_REQUESTS": {
     "candidate": "Kandidat",

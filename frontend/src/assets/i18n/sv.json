@@ -111,7 +111,13 @@
     "resend_credentials": "Skicka inloggningsuppgifter igen",
     "restore": "Återställ",
     "verified": "Verifierad",
-    "options": "alternativ"
+    "options": "alternativ",
+    "first_name": "Förnamn",
+    "last_name": "Efternamn",
+    "date_of_birth": "Födelsedatum",
+    "gender": "Kön",
+    "whatsapp": "WhatsApp",
+    "same_as_phone": "Samma som telefonnummer"
   },
   "NAV": {
     "dashboard": "Instrumentpanel",
@@ -432,7 +438,28 @@
       "no_resume": "Inget CV",
       "no_video": "Ingen video",
       "no_certificates": "Inga certifikat",
-      "new_certificate": "Nytt certifikat"
+      "new_certificate": "Nytt certifikat",
+      "first_name": "Förnamn",
+      "last_name": "Efternamn",
+      "date_of_birth": "Födelsedatum",
+      "gender": "Kön",
+      "email_address": "E-postadress",
+      "phone": "Telefonnummer",
+      "whatsapp": "WhatsApp-nummer",
+      "employment_status": "Anställningsstatus",
+      "job_title": "Yrkestitel",
+      "occupation": "Yrke",
+      "industry": "Bransch",
+      "skills": "Kompetenser",
+      "linkedin_url": "LinkedIn URL",
+      "cv_format": "CV-format",
+      "visa_status": "Visumstatus",
+      "languages": "Språk",
+      "current_country": "Nuvarande land",
+      "current_city": "Nuvarande stad",
+      "work_experience": "Arbetslivserfarenhet",
+      "company_name": "Företagsnamn",
+      "certificates": "Certifikat"
     }
   },
   "CANDIDATE_LIST": {
@@ -625,7 +652,11 @@
     "reference_id": "Referens-ID",
     "login_id": "Inloggnings-ID",
     "candidate_use_login_id": "Kandidaten måste använda sitt inloggnings-ID (inte e-post) för att logga in på portalen.",
-    "step_of": "Steg {{current}} av {{total}}"
+    "step_of": "Steg {{current}} av {{total}}",
+    "job_title_required": "Yrkestitel krävs.",
+    "occupation_required": "Yrke är obligatoriskt.",
+    "industry_required": "Bransch är obligatorisk.",
+    "marital_status": "Civilstånd"
   },
   "RECRUITER_LIST": {
     "title": "Rekryterare",
@@ -2341,7 +2372,8 @@
     "replace": "Ersätt",
     "upload": "Ladda upp",
     "photo_guidelines": "Ladda upp ett tydligt, professionellt foto. Ansiktet ska vara tydligt synligt. Enfärgad bakgrund föredras.",
-    "resume_cv": "CV"
+    "resume_cv": "CV",
+    "intro_video": "Introduktionsvideo"
   },
   "CONTACT_REQUESTS": {
     "candidate": "Kandidat",

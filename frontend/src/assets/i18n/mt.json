@@ -111,7 +111,13 @@
     "resend_credentials": "Ibgħat mill-ġdid il-kredenzjali tal-login",
     "restore": "Irrestawra",
     "verified": "Ivverifikat",
-    "options": "għażliet"
+    "options": "għażliet",
+    "first_name": "Isem",
+    "last_name": "Isem ta' Kunjom",
+    "date_of_birth": "Data tal-Ġenerazzjoni",
+    "gender": "Sess",
+    "whatsapp": "WhatsApp",
+    "same_as_phone": "Isem il-numru tal-telefon"
   },
   "NAV": {
     "dashboard": "Pannell tal-Kontroll",
@@ -432,7 +438,28 @@
       "no_resume": "L-ebda CV",
       "no_video": "L-ebda vidjow",
       "no_certificates": "L-ebda ċertifikat",
-      "new_certificate": "Ċertifikat Ġdid"
+      "new_certificate": "Ċertifikat Ġdid",
+      "first_name": "Isem",
+      "last_name": "Isem ta' Kunjom",
+      "date_of_birth": "Data tal-Ġenerazzjoni",
+      "gender": "Sess",
+      "email_address": "Indirizz Elettroniku",
+      "phone": "Numru tal-Telefon",
+      "whatsapp": "Numru ta' WhatsApp",
+      "employment_status": "Stat ta' Ħidma",
+      "job_title": "Titlu tax-Xogħol",
+      "occupation": "Okkupazzjoni",
+      "industry": "Industrija",
+      "skills": "Ħiliet",
+      "linkedin_url": "URL tal-LinkedIn",
+      "cv_format": "Format tal-CV",
+      "visa_status": "Stat tal-Visa",
+      "languages": "Lingwi",
+      "current_country": "Pajjiż Attwali",
+      "current_city": "Belt Attwali",
+      "work_experience": "Esperjenza tax-Xogħol",
+      "company_name": "Isem tal-Kumpanija",
+      "certificates": "Ċertifikati"
     }
   },
   "CANDIDATE_LIST": {
@@ -625,7 +652,11 @@
     "reference_id": "ID ta' Referenza",
     "login_id": "ID ta' Login",
     "candidate_use_login_id": "Il-kandidat irid juża l-ID tal-Login tiegħu (mhux email) biex jidħol fil-portal.",
-    "step_of": "Pass {{current}} minn {{total}}"
+    "step_of": "Pass {{current}} minn {{total}}",
+    "job_title_required": "Titlu tax-xogħol meħtieġ.",
+    "occupation_required": "Okkupazzjoni meħtieġa.",
+    "industry_required": "Industrija meħtieġa.",
+    "marital_status": "Stat ta' Żwieġ"
   },
   "RECRUITER_LIST": {
     "title": "Reklutaġġin",
@@ -2341,7 +2372,8 @@
     "replace": "Issostitwixxi",
     "upload": "Ittella'",
     "photo_guidelines": "Jekk jogħġbok ittella' ritratt ċar u professjonali. Il-wiċċ għandu jkun viżibbli b'mod ċar. Sfond sempliċi huwa preferut.",
-    "resume_cv": "CV"
+    "resume_cv": "CV",
+    "intro_video": "Vidjo ta' Introduzzjoni"
   },
   "CONTACT_REQUESTS": {
     "candidate": "Kandidat",

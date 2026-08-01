@@ -111,7 +111,13 @@
     "resend_credentials": "Znovu odeslat přihlašovací údaje",
     "restore": "Obnovit",
     "verified": "Ověřeno",
-    "options": "možnosti"
+    "options": "možnosti",
+    "first_name": "Křestní jméno",
+    "last_name": "Příjmení",
+    "date_of_birth": "Datum narození",
+    "gender": "Pohlaví",
+    "whatsapp": "WhatsApp",
+    "same_as_phone": "Stejné jako telefonní číslo"
   },
   "NAV": {
     "dashboard": "Přehled",
@@ -432,7 +438,28 @@
       "no_resume": "Žádný životopis",
       "no_video": "Žádné video",
       "no_certificates": "Žádné certifikáty",
-      "new_certificate": "Nový certifikát"
+      "new_certificate": "Nový certifikát",
+      "first_name": "Křestní jméno",
+      "last_name": "Příjmení",
+      "date_of_birth": "Datum narození",
+      "gender": "Pohlaví",
+      "email_address": "Emailová adresa",
+      "phone": "Telefonní číslo",
+      "whatsapp": "WhatsApp číslo",
+      "employment_status": "Zaměstnanecký status",
+      "job_title": "Název pozice",
+      "occupation": "Povolání",
+      "industry": "Odvětví",
+      "skills": "Dovednosti",
+      "linkedin_url": "LinkedIn URL",
+      "cv_format": "Formát životopisu",
+      "visa_status": "Stav víza",
+      "languages": "Jazyky",
+      "current_country": "Současná země",
+      "current_city": "Současné město",
+      "work_experience": "Pracovní zkušenosti",
+      "company_name": "Název společnosti",
+      "certificates": "Certifikáty"
     }
   },
   "CANDIDATE_LIST": {
@@ -625,7 +652,11 @@
     "reference_id": "Referenční ID",
     "login_id": "Přihlašovací ID",
     "candidate_use_login_id": "Kandidát se musí přihlásit do portálu pomocí svého přihlašovacího ID (nikoli e-mailu).",
-    "step_of": "Krok {{current}} z {{total}}"
+    "step_of": "Krok {{current}} z {{total}}",
+    "job_title_required": "Název pozice je povinný.",
+    "occupation_required": "Povolání je povinné.",
+    "industry_required": "Odvětví je povinné.",
+    "marital_status": "Rodinný stav"
   },
   "RECRUITER_LIST": {
     "title": "Náboráři",
@@ -2341,7 +2372,8 @@
     "replace": "Nahradit",
     "upload": "Nahrát",
     "photo_guidelines": "Nahrajte prosím jasnou, profesionální fotografii. Obličej musí být jasně viditelný. Preferováno jednobarevné pozadí.",
-    "resume_cv": "Životopis"
+    "resume_cv": "Životopis",
+    "intro_video": "Úvodní video"
   },
   "CONTACT_REQUESTS": {
     "candidate": "Kandidát",

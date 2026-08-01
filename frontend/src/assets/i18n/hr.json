@@ -111,7 +111,13 @@
     "resend_credentials": "Ponovno pošalji podatke za prijavu",
     "restore": "Vrati",
     "verified": "Potvrđeno",
-    "options": "opcije"
+    "options": "opcije",
+    "first_name": "Ime",
+    "last_name": "Prezime",
+    "date_of_birth": "Datum rođenja",
+    "gender": "Spol",
+    "whatsapp": "WhatsApp",
+    "same_as_phone": "Isto kao broj telefona"
   },
   "NAV": {
     "dashboard": "Nadzorna ploča",
@@ -432,7 +438,28 @@
       "no_resume": "Nema životopisa",
       "no_video": "Nema videa",
       "no_certificates": "Nema certifikata",
-      "new_certificate": "Novi certifikat"
+      "new_certificate": "Novi certifikat",
+      "first_name": "Ime",
+      "last_name": "Prezime",
+      "date_of_birth": "Datum rođenja",
+      "gender": "Spol",
+      "email_address": "Adresa e-pošte",
+      "phone": "Broj telefona",
+      "whatsapp": "Broj WhatsApp-a",
+      "employment_status": "Status zaposlenja",
+      "job_title": "Naziv posla",
+      "occupation": "Zanimanje",
+      "industry": "Industrija",
+      "skills": "Vještine",
+      "linkedin_url": "LinkedIn URL",
+      "cv_format": "Format životopisa",
+      "visa_status": "Status vize",
+      "languages": "Jezici",
+      "current_country": "Trenutna država",
+      "current_city": "Trenutni grad",
+      "work_experience": "Radno iskustvo",
+      "company_name": "Naziv tvrtke",
+      "certificates": "Certifikati"
     }
   },
   "CANDIDATE_LIST": {
@@ -625,7 +652,11 @@
     "reference_id": "Referentni ID",
     "login_id": "ID za prijavu",
     "candidate_use_login_id": "Kandidat mora koristiti svoj ID za prijavu (ne e-poštu) za prijavu na portal.",
-    "step_of": "Korak {{current}} od {{total}}"
+    "step_of": "Korak {{current}} od {{total}}",
+    "job_title_required": "Naziv posla je obavezan.",
+    "occupation_required": "Zanimanje je obavezno.",
+    "industry_required": "Industrija je obavezna.",
+    "marital_status": "Bračni status"
   },
   "RECRUITER_LIST": {
     "title": "Regrutatori",
@@ -2341,7 +2372,8 @@
     "replace": "Zamijeni",
     "upload": "Prenesi",
     "photo_guidelines": "Prenesite jasnu, profesionalnu fotografiju. Lice mora biti jasno vidljivo. Poželjna je jednobojna pozadina.",
-    "resume_cv": "Životopis"
+    "resume_cv": "Životopis",
+    "intro_video": "Uvodni video"
   },
   "CONTACT_REQUESTS": {
     "candidate": "Kandidat",

@@ -111,7 +111,13 @@
     "resend_credentials": "Trametter danovamain las datas d'annunzia",
     "restore": "Restaurar",
     "verified": "Verifitgà",
-    "options": "optschuns"
+    "options": "optschuns",
+    "first_name": "Prüm num",
+    "last_name": "Nev",
+    "date_of_birth": "Data da naissenza",
+    "gender": "Gener",
+    "whatsapp": "WhatsApp",
+    "same_as_phone": "Medem sco il numer da telefon"
   },
   "NAV": {
     "dashboard": "Tavla da Cumbatida",
@@ -432,7 +438,28 @@
       "no_resume": "Nagin CV",
       "no_video": "Nagin video",
       "no_certificates": "Nagins certificats",
-      "new_certificate": "Nov certificat"
+      "new_certificate": "Nov certificat",
+      "first_name": "Prüm num",
+      "last_name": "Nev",
+      "date_of_birth": "Data da naissenza",
+      "gender": "Gener",
+      "email_address": "Adretga email",
+      "phone": "Numer da telefon",
+      "whatsapp": "Numer WhatsApp",
+      "employment_status": "Status da lavur",
+      "job_title": "Titel da lavur",
+      "occupation": "Occupaziun",
+      "industry": "Industria",
+      "skills": "Competenzas",
+      "linkedin_url": "URL LinkedIn",
+      "cv_format": "Format CV",
+      "visa_status": "Status da visa",
+      "languages": "Linguatgs",
+      "current_country": "Patria actuala",
+      "current_city": "Citad actuala",
+      "work_experience": "Experientscha lavurativa",
+      "company_name": "Num da l'entira",
+      "certificates": "Certificats"
     }
   },
   "CANDIDATE_LIST": {
@@ -625,7 +652,11 @@
     "reference_id": "ID da referenza",
     "login_id": "ID d'annunzia",
     "candidate_use_login_id": "Il candidat sto duvrar ses ID d'annunzia (betg e-mail) per s'annunziar al portal.",
-    "step_of": "Pass {{current}} da {{total}}"
+    "step_of": "Pass {{current}} da {{total}}",
+    "job_title_required": "Titel da lavur necessari.",
+    "occupation_required": "Occupaziun necessaria.",
+    "industry_required": "Industria necessaria.",
+    "marital_status": "Status maridal"
   },
   "RECRUITER_LIST": {
     "title": "Recruturs",
@@ -2341,7 +2372,8 @@
     "replace": "Remplazzar",
     "upload": "Chargiar si",
     "photo_guidelines": "Chargiai si per plaschair ina fotografia clara e professiunala. La fatscha sto esser bain visibla. In fund simpel è preferì.",
-    "resume_cv": "CV"
+    "resume_cv": "CV",
+    "intro_video": "Video d'introducziun"
   },
   "CONTACT_REQUESTS": {
     "candidate": "Candidat",

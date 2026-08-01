@@ -111,7 +111,13 @@
     "resend_credentials": "Endursenda innskráningarupplýsingar",
     "restore": "Endurheimta",
     "verified": "Staðfest",
-    "options": "valkostir"
+    "options": "valkostir",
+    "first_name": "Fornafn",
+    "last_name": "Eftirnafn",
+    "date_of_birth": "Fæðingardagur",
+    "gender": "Kyn",
+    "whatsapp": "WhatsApp",
+    "same_as_phone": "Sama og símanúmer"
   },
   "NAV": {
     "dashboard": "Stjórnborð",
@@ -432,7 +438,28 @@
       "no_resume": "Engin ferilskrá",
       "no_video": "Ekkert myndband",
       "no_certificates": "Engin vottorð",
-      "new_certificate": "Nýtt vottorð"
+      "new_certificate": "Nýtt vottorð",
+      "first_name": "Fornafn",
+      "last_name": "Eftirnafn",
+      "date_of_birth": "Fæðingardagur",
+      "gender": "Kyn",
+      "email_address": "Netfang",
+      "phone": "Símanúmer",
+      "whatsapp": "WhatsApp númer",
+      "employment_status": "Starfsstaða",
+      "job_title": "Starfsheiti",
+      "occupation": "Atvinna",
+      "industry": "Atvinnugrein",
+      "skills": "Færni",
+      "linkedin_url": "LinkedIn vefslóð",
+      "cv_format": "Öryggisupplýsingar",
+      "visa_status": "Vísumstaða",
+      "languages": "Tungumál",
+      "current_country": "Núverandi land",
+      "current_city": "Núverandi bær",
+      "work_experience": "Vinnuáreynsla",
+      "company_name": "Fyrirtæki",
+      "certificates": "Vottorð"
     }
   },
   "CANDIDATE_LIST": {
@@ -625,7 +652,11 @@
     "reference_id": "Tilvísunarauðkenni",
     "login_id": "Innskráningarauðkenni",
     "candidate_use_login_id": "Umsækjandi verður að nota innskráningarauðkenni sitt (ekki tölvupóst) til að skrá sig inn á gáttina.",
-    "step_of": "Skref {{current}} af {{total}}"
+    "step_of": "Skref {{current}} af {{total}}",
+    "job_title_required": "Starfsheiti er áskilið.",
+    "occupation_required": "Atvinna er áskilið.",
+    "industry_required": "Atvinnugrein er áskilið.",
+    "marital_status": "Hjúskaparstaða"
   },
   "RECRUITER_LIST": {
     "title": "Ráðningamenn",
@@ -2341,7 +2372,8 @@
     "replace": "Skipta út",
     "upload": "Hlaða upp",
     "photo_guidelines": "Vinsamlegast hladdu upp skýrri, faglegri mynd. Andlit ætti að vera greinilega sýnilegt. Einfaldur bakgrunnur er æskilegur.",
-    "resume_cv": "Ferilskrá"
+    "resume_cv": "Ferilskrá",
+    "intro_video": "Inngangsvídeó"
   },
   "CONTACT_REQUESTS": {
     "candidate": "Umsækjandi",

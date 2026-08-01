@@ -111,7 +111,13 @@
     "resend_credentials": "Повторно изпращане на данни за вход",
     "restore": "Възстановяване",
     "verified": "Потвърдено",
-    "options": "опции"
+    "options": "опции",
+    "first_name": "Име",
+    "last_name": "Фамилия",
+    "date_of_birth": "Дата на раждане",
+    "gender": "Пол",
+    "whatsapp": "WhatsApp",
+    "same_as_phone": "Същото като телефонен номер"
   },
   "NAV": {
     "dashboard": "Управления табла",
@@ -432,7 +438,28 @@
       "no_resume": "Няма автобиография",
       "no_video": "Няма видео",
       "no_certificates": "Няма сертификати",
-      "new_certificate": "Нов сертификат"
+      "new_certificate": "Нов сертификат",
+      "first_name": "Име",
+      "last_name": "Фамилия",
+      "date_of_birth": "Дата на раждане",
+      "gender": "Пол",
+      "email_address": "Имейл адрес",
+      "phone": "Телефонен номер",
+      "whatsapp": "WhatsApp номер",
+      "employment_status": "Статус на заетост",
+      "job_title": "Заглавие на работата",
+      "occupation": "Заетост",
+      "industry": "Индустрия",
+      "skills": "Умения",
+      "linkedin_url": "LinkedIn URL",
+      "cv_format": "Формат на CV",
+      "visa_status": "Статус на визата",
+      "languages": "Езици",
+      "current_country": "Текуща държава",
+      "current_city": "Текущ град",
+      "work_experience": "Трудов опит",
+      "company_name": "Име на компания",
+      "certificates": "Сертификати"
     }
   },
   "CANDIDATE_LIST": {
@@ -625,7 +652,11 @@
     "reference_id": "Референтен номер",
     "login_id": "ID за вход",
     "candidate_use_login_id": "Кандидатът трябва да използва своето ID за вход (не имейл), за да влезе в портала.",
-    "step_of": "Стъпка {{current}} от {{total}}"
+    "step_of": "Стъпка {{current}} от {{total}}",
+    "job_title_required": "Заглавието на работата е задължително.",
+    "occupation_required": "Заетостта е задължителна.",
+    "industry_required": "Индустрията е задължителна.",
+    "marital_status": "Семейно положение"
   },
   "RECRUITER_LIST": {
     "title": "Рекрутери",
@@ -2341,7 +2372,8 @@
     "replace": "Замяна",
     "upload": "Качване",
     "photo_guidelines": "Моля, качете ясна, професионална снимка. Лицето трябва да е ясно видимо. Предпочита се обикновен фон.",
-    "resume_cv": "Автобиография"
+    "resume_cv": "Автобиография",
+    "intro_video": "Въведение Видео"
   },
   "CONTACT_REQUESTS": {
     "candidate": "Кандидат",

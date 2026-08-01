@@ -111,7 +111,13 @@
     "resend_credentials": "Επαναποστολή διαπιστευτηρίων",
     "restore": "Επαναφορά",
     "verified": "Επαληθευμένο",
-    "options": "επιλογές"
+    "options": "επιλογές",
+    "first_name": "Όνομα",
+    "last_name": "Επώνυμο",
+    "date_of_birth": "Ημερομηνία Γέννησης",
+    "gender": "Φύλο",
+    "whatsapp": "WhatsApp",
+    "same_as_phone": "Ίδιο με τον αριθμό τηλεφώνου"
   },
   "NAV": {
     "dashboard": "Πίνακας ελέγχου",
@@ -432,7 +438,28 @@
       "no_resume": "Χωρίς Βιογραφικό / Βιντεογραφία",
       "no_video": "Χωρίς βίντεο",
       "no_certificates": "Χωρίς πιστοποιητικά",
-      "new_certificate": "Νέο Πιστοποιητικό"
+      "new_certificate": "Νέο Πιστοποιητικό",
+      "first_name": "Όνομα",
+      "last_name": "Επώνυμο",
+      "date_of_birth": "Ημερομηνία Γέννησης",
+      "gender": "Φύλο",
+      "email_address": "Διεύθυνση Email",
+      "phone": "Αριθμός Τηλεφώνου",
+      "whatsapp": "Αριθμός WhatsApp",
+      "employment_status": "Κατάσταση Απασχόλησης",
+      "job_title": "Τίτλος Θέσης",
+      "occupation": "Επάγγελμα",
+      "industry": "Κλάδος",
+      "skills": "Δεξιότητες",
+      "linkedin_url": "Διεύθυνση LinkedIn",
+      "cv_format": "Μορφή Βιογραφικού",
+      "visa_status": "Κατάσταση Βίζας",
+      "languages": "Γλώσσες",
+      "current_country": "Τρέχουσα Χώρα",
+      "current_city": "Τρέχουσα Πόλη",
+      "work_experience": "Εργασιακή Εμπειρία",
+      "company_name": "Όνομα Εταιρείας",
+      "certificates": "Πιστοποιητικά"
     }
   },
   "CANDIDATE_LIST": {
@@ -625,7 +652,11 @@
     "reference_id": "Αναγνωριστικό αναφοράς",
     "login_id": "ID σύνδεσης",
     "candidate_use_login_id": "Ο υποψήφιος πρέπει να χρησιμοποιεί το ID σύνδεσής του (όχι το email) για να συνδεθεί στην πύλη.",
-    "step_of": "Βήμα {{current}} από {{total}}"
+    "step_of": "Βήμα {{current}} από {{total}}",
+    "job_title_required": "Απαιτείται Τίτλος Θέσης",
+    "occupation_required": "Απαιτείται Επάγγελμα",
+    "industry_required": "Απαιτείται Κλάδος",
+    "marital_status": "Οικογενειακή Κατάσταση"
   },
   "RECRUITER_LIST": {
     "title": "Συνεργάτες Πρόσληψης",
@@ -2341,7 +2372,8 @@
     "replace": "Αντικατάσταση",
     "upload": "Μεταφόρτωση",
     "photo_guidelines": "Παρακαλώ ανεβάστε μια καθαρή, επαγγελματική φωτογραφία. Το πρόσωπο πρέπει να είναι ευδιάκριτο. Προτιμάται απλό φόντο.",
-    "resume_cv": "Βιογραφικό"
+    "resume_cv": "Βιογραφικό",
+    "intro_video": "Εισαγωγικό Βίντεο"
   },
   "CONTACT_REQUESTS": {
     "candidate": "Υποψήφιος",

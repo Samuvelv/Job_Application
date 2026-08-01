@@ -111,7 +111,13 @@
     "resend_credentials": "Belépési adatok újraküldése",
     "restore": "Visszaállítás",
     "verified": "Ellenőrizve",
-    "options": "beállítások"
+    "options": "beállítások",
+    "first_name": "Keresztnév",
+    "last_name": "Vezetéknév",
+    "date_of_birth": "Születési dátum",
+    "gender": "Nem",
+    "whatsapp": "WhatsApp",
+    "same_as_phone": "Ugyanaz, mint a telefonszám"
   },
   "NAV": {
     "dashboard": "Irányítópult",
@@ -432,7 +438,28 @@
       "no_resume": "Nincs önéletrajz",
       "no_video": "Nincs videó",
       "no_certificates": "Nincsenek tanúsítványok",
-      "new_certificate": "Új tanúsítvány"
+      "new_certificate": "Új tanúsítvány",
+      "first_name": "Keresztnév",
+      "last_name": "Vezetéknév",
+      "date_of_birth": "Születési dátum",
+      "gender": "Nem",
+      "email_address": "Email cím",
+      "phone": "Telefonszám",
+      "whatsapp": "WhatsApp szám",
+      "employment_status": "Munkaviszony állapota",
+      "job_title": "Állás megnevezése",
+      "occupation": "Foglalkozás",
+      "industry": "Ágazat",
+      "skills": "Képességek",
+      "linkedin_url": "LinkedIn URL",
+      "cv_format": "Önéletrajz formátuma",
+      "visa_status": "Vízum állapota",
+      "languages": "Nyelvek",
+      "current_country": "Jelenlegi ország",
+      "current_city": "Jelenlegi város",
+      "work_experience": "Munkatapasztalat",
+      "company_name": "Cégnév",
+      "certificates": "Tanúsítványok"
     }
   },
   "CANDIDATE_LIST": {
@@ -625,7 +652,11 @@
     "reference_id": "Referenciaazonosító",
     "login_id": "Bejelentkezési azonosító",
     "candidate_use_login_id": "A jelöltnek a bejelentkezési azonosítóját (nem az e-mail címét) kell használnia a portálra való bejelentkezéshez.",
-    "step_of": "{{current}}. lépés / {{total}}"
+    "step_of": "{{current}}. lépés / {{total}}",
+    "job_title_required": "Állás megnevezése kötelező.",
+    "occupation_required": "Foglalkozás kötelező.",
+    "industry_required": "Ágazat kötelező.",
+    "marital_status": "Családi állapot"
   },
   "RECRUITER_LIST": {
     "title": "Toborzók",
@@ -2341,7 +2372,8 @@
     "replace": "Csere",
     "upload": "Feltöltés",
     "photo_guidelines": "Kérjük, töltsön fel egy tiszta, professzionális fényképet. Az arcnak jól láthatónak kell lennie. Egyszínű háttér ajánlott.",
-    "resume_cv": "Önéletrajz"
+    "resume_cv": "Önéletrajz",
+    "intro_video": "Bemutatkozó videó"
   },
   "CONTACT_REQUESTS": {
     "candidate": "Jelölt",

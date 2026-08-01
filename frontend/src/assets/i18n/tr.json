@@ -111,7 +111,13 @@
     "resend_credentials": "Kimlik Bilgilerini Yeniden Gönder",
     "restore": "Geri Yükle",
     "verified": "Doğrulandı",
-    "options": "seçenekler"
+    "options": "seçenekler",
+    "first_name": "Adı",
+    "last_name": "Soyadı",
+    "date_of_birth": "Doğum Tarihi",
+    "gender": "Cinsiyet",
+    "whatsapp": "WhatsApp",
+    "same_as_phone": "Telefon numarasıyla aynı"
   },
   "NAV": {
     "dashboard": "Gösterge Paneli",
@@ -432,7 +438,28 @@
       "no_resume": "Özgeçmiş yok",
       "no_video": "Video yok",
       "no_certificates": "Sertifika yok",
-      "new_certificate": "Yeni Sertifika"
+      "new_certificate": "Yeni Sertifika",
+      "first_name": "Adı",
+      "last_name": "Soyadı",
+      "date_of_birth": "Doğum Tarihi",
+      "gender": "Cinsiyet",
+      "email_address": "E-posta Adresi",
+      "phone": "Telefon Numarası",
+      "whatsapp": "WhatsApp Numarası",
+      "employment_status": "İstihdam Durumu",
+      "job_title": "İş Unvanı",
+      "occupation": "Meslek",
+      "industry": "Endüstri",
+      "skills": "Yetenekler",
+      "linkedin_url": "LinkedIn URL",
+      "cv_format": "CV Formatı",
+      "visa_status": "Vize Durumu",
+      "languages": "Diller",
+      "current_country": "Mevcut Ülke",
+      "current_city": "Mevcut Şehir",
+      "work_experience": "İş Deneyimi",
+      "company_name": "Şirket Adı",
+      "certificates": "Sertifikalar"
     }
   },
   "CANDIDATE_LIST": {
@@ -625,7 +652,11 @@
     "reference_id": "Referans Kimliği",
     "login_id": "Giriş Kimliği",
     "candidate_use_login_id": "Aday, portala giriş yapmak için e-posta yerine Giriş Kimliğini kullanmalıdır.",
-    "step_of": "Adım {{current}} / {{total}}"
+    "step_of": "Adım {{current}} / {{total}}",
+    "job_title_required": "İş unvanı zorunludur.",
+    "occupation_required": "Meslek zorunludur.",
+    "industry_required": "Endüstri zorunludur.",
+    "marital_status": "Medeni Durum"
   },
   "RECRUITER_LIST": {
     "title": "İşe Alanlar",
@@ -2341,7 +2372,8 @@
     "replace": "Değiştir",
     "upload": "Yükle",
     "photo_guidelines": "Lütfen net, profesyonel bir fotoğraf yükleyin. Yüz açıkça görünür olmalıdır. Düz arka plan tercih edilir.",
-    "resume_cv": "Özgeçmiş"
+    "resume_cv": "Özgeçmiş",
+    "intro_video": "Tanıtım Videosu"
   },
   "CONTACT_REQUESTS": {
     "candidate": "Aday",

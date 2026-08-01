@@ -111,7 +111,13 @@
     "resend_credentials": "Login-Donnéeë nach eng Kéier schécken",
     "restore": "Restauréieren",
     "verified": "Verifizéiert",
-    "options": "Optiounen"
+    "options": "Optiounen",
+    "first_name": "Virnumm",
+    "last_name": "Numm",
+    "date_of_birth": "Gebuertsdatum",
+    "gender": "Geschlecht",
+    "whatsapp": "WhatsApp",
+    "same_as_phone": "Glech wéi Telefonnummer"
   },
   "NAV": {
     "dashboard": "Dashboard",
@@ -432,7 +438,28 @@
       "no_resume": "Kee CV",
       "no_video": "Kee Video",
       "no_certificates": "Keng Zertifikater",
-      "new_certificate": "Neit Zertifikat"
+      "new_certificate": "Neit Zertifikat",
+      "first_name": "Virnumm",
+      "last_name": "Numm",
+      "date_of_birth": "Gebuertsdatum",
+      "gender": "Geschlecht",
+      "email_address": "E-Mail-Adress",
+      "phone": "Telefonnummer",
+      "whatsapp": "WhatsApp-Nummer",
+      "employment_status": "Beschäftegungsstatus",
+      "job_title": "Job-Titel",
+      "occupation": "Beschäftegung",
+      "industry": "Industrie",
+      "skills": "Fäegkeeten",
+      "linkedin_url": "LinkedIn-URL",
+      "cv_format": "CV-Format",
+      "visa_status": "Visa-Status",
+      "languages": "Sproochen",
+      "current_country": "Aktuellt Land",
+      "current_city": "Aktuell Stad",
+      "work_experience": "Aarbechtservarung",
+      "company_name": "Firma Numm",
+      "certificates": "Zertifikater"
     }
   },
   "CANDIDATE_LIST": {
@@ -625,7 +652,11 @@
     "reference_id": "Referenz-ID",
     "login_id": "Login-ID",
     "candidate_use_login_id": "De Kandidat muss seng Login-ID (net E-Mail) benotzen fir sech am Portal unzeloggen.",
-    "step_of": "Schrëtt {{current}} vun {{total}}"
+    "step_of": "Schrëtt {{current}} vun {{total}}",
+    "job_title_required": "Job-Titel ass erfuerderlech.",
+    "occupation_required": "Beschäftegung ass erfuerderlech.",
+    "industry_required": "Industrie ass erfuerderlech.",
+    "marital_status": "Zivilstand"
   },
   "RECRUITER_LIST": {
     "title": "Rekrütérer",
@@ -2341,7 +2372,8 @@
     "replace": "Ersetzen",
     "upload": "Eroplueden",
     "photo_guidelines": "Lued w.e.g. en kloert, professionellt Bild erop. D'Gesiicht muss kloer siichtbar sinn. En einfache Hannergrond ass ze bevirzugen.",
-    "resume_cv": "CV"
+    "resume_cv": "CV",
+    "intro_video": "Intro-Video"
   },
   "CONTACT_REQUESTS": {
     "candidate": "Kandidat",

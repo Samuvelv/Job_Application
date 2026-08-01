@@ -111,7 +111,13 @@
     "resend_credentials": "Lähetä kirjautumistiedot uudelleen",
     "restore": "Palauta",
     "verified": "Vahvistettu",
-    "options": "vaihtoehdot"
+    "options": "vaihtoehdot",
+    "first_name": "Etunimi",
+    "last_name": "Sukunimi",
+    "date_of_birth": "Syntymäaika",
+    "gender": "Sukupuoli",
+    "whatsapp": "WhatsApp",
+    "same_as_phone": "Sama kuin puhelinnumero"
   },
   "NAV": {
     "dashboard": "Kojelauta",
@@ -432,7 +438,28 @@
       "no_resume": "Ei CV:tä / Ansioluetteloa",
       "no_video": "Ei videota",
       "no_certificates": "Ei sertifikaatteja",
-      "new_certificate": "Uusi sertifikaatti"
+      "new_certificate": "Uusi sertifikaatti",
+      "first_name": "Etunimi",
+      "last_name": "Sukunimi",
+      "date_of_birth": "Syntymäaika",
+      "gender": "Sukupuoli",
+      "email_address": "Sähköpostiosoite",
+      "phone": "Puhelinnumero",
+      "whatsapp": "WhatsApp-numero",
+      "employment_status": "Työllisyystilanne",
+      "job_title": "Työnimike",
+      "occupation": "Ammatti",
+      "industry": "Toimiala",
+      "skills": "Taidot",
+      "linkedin_url": "LinkedIn URL",
+      "cv_format": "CV-muoto",
+      "visa_status": "Viisumitilanne",
+      "languages": "Kielet",
+      "current_country": "Nykyinen maa",
+      "current_city": "Nykyinen kaupunki",
+      "work_experience": "Työkokemus",
+      "company_name": "Yrityksen nimi",
+      "certificates": "Sertifikaatit"
     }
   },
   "CANDIDATE_LIST": {
@@ -625,7 +652,11 @@
     "reference_id": "Viitetunnus",
     "login_id": "Kirjautumistunnus",
     "candidate_use_login_id": "Hakijan on käytettävä kirjautumistunnustaan (ei sähköpostia) kirjautuakseen portaaliin.",
-    "step_of": "Vaihe {{current}} / {{total}}"
+    "step_of": "Vaihe {{current}} / {{total}}",
+    "job_title_required": "Työnimike vaaditaan.",
+    "occupation_required": "Ammatti vaaditaan.",
+    "industry_required": "Toimiala vaaditaan.",
+    "marital_status": "Siviilisääty"
   },
   "RECRUITER_LIST": {
     "title": "Rekrytoijat",
@@ -2341,7 +2372,8 @@
     "replace": "Korvaa",
     "upload": "Lataa",
     "photo_guidelines": "Lataa selkeä, ammattimainen valokuva. Kasvojen tulee näkyä selkeästi. Yksivärinen tausta on suositeltava.",
-    "resume_cv": "Ansioluettelo"
+    "resume_cv": "Ansioluettelo",
+    "intro_video": "Esittelyvideo"
   },
   "CONTACT_REQUESTS": {
     "candidate": "Hakija",

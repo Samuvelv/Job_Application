@@ -111,7 +111,13 @@
     "resend_credentials": "Saada sisselogimisandmed uuesti",
     "restore": "Taasta",
     "verified": "Kinnitatud",
-    "options": "valikud"
+    "options": "valikud",
+    "first_name": "Eesnimi",
+    "last_name": "Perekonnanimi",
+    "date_of_birth": "Sünnikuupäev",
+    "gender": "Sugu",
+    "whatsapp": "WhatsApp",
+    "same_as_phone": "Sama nagu telefoninumber"
   },
   "NAV": {
     "dashboard": "Juhtpaneel",
@@ -432,7 +438,28 @@
       "no_resume": "CV puudub",
       "no_video": "Video puudub",
       "no_certificates": "Sertifikaate pole",
-      "new_certificate": "Uus sertifikaat"
+      "new_certificate": "Uus sertifikaat",
+      "first_name": "Eesnimi",
+      "last_name": "Perekonnanimi",
+      "date_of_birth": "Sünnikuupäev",
+      "gender": "Sugu",
+      "email_address": "E-posti aadress",
+      "phone": "Telefoninumber",
+      "whatsapp": "WhatsAppi number",
+      "employment_status": "Töösuhte staatus",
+      "job_title": "Ametinimetus",
+      "occupation": "Amet",
+      "industry": "Tööstusharu",
+      "skills": "Oskused",
+      "linkedin_url": "LinkedIni URL",
+      "cv_format": "CV vorming",
+      "visa_status": "Viisa staatus",
+      "languages": "Keeled",
+      "current_country": "Praegune riik",
+      "current_city": "Praegune linn",
+      "work_experience": "Töökogemus",
+      "company_name": "Ettevõtte nimi",
+      "certificates": "Tunnistused"
     }
   },
   "CANDIDATE_LIST": {
@@ -625,7 +652,11 @@
     "reference_id": "Viite-ID",
     "login_id": "Sisselogimis-ID",
     "candidate_use_login_id": "Kandidaat peab portaali sisselogimiseks kasutama oma sisselogimis-ID-d (mitte e-posti).",
-    "step_of": "Samm {{current}} / {{total}}"
+    "step_of": "Samm {{current}} / {{total}}",
+    "job_title_required": "Ametinimetus on nõutud.",
+    "occupation_required": "Amet on nõutud.",
+    "industry_required": "Tööstusharu on nõutud.",
+    "marital_status": "Perekonnaseis"
   },
   "RECRUITER_LIST": {
     "title": "Värbajad",
@@ -2341,7 +2372,8 @@
     "replace": "Asenda",
     "upload": "Laadi üles",
     "photo_guidelines": "Palun laadige üles selge, professionaalne foto. Nägu peab olema selgelt nähtav. Eelistatud on ühevärviline taust.",
-    "resume_cv": "CV"
+    "resume_cv": "CV",
+    "intro_video": "Sissejuhatav video"
   },
   "CONTACT_REQUESTS": {
     "candidate": "Kandidaat",

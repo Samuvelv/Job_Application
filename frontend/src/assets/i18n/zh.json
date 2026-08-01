@@ -111,7 +111,13 @@
     "resend_credentials": "重新发送凭据",
     "restore": "恢复",
     "verified": "已验证",
-    "options": "选项"
+    "options": "选项",
+    "first_name": "名字",
+    "last_name": "姓氏",
+    "date_of_birth": "出生日期",
+    "gender": "性别",
+    "whatsapp": "WhatsApp",
+    "same_as_phone": "与手机号相同"
   },
   "NAV": {
     "dashboard": "仪表板",
@@ -432,7 +438,28 @@
       "no_resume": "无简历",
       "no_video": "无视频",
       "no_certificates": "无证书",
-      "new_certificate": "新证书"
+      "new_certificate": "新证书",
+      "first_name": "名字",
+      "last_name": "姓氏",
+      "date_of_birth": "出生日期",
+      "gender": "性别",
+      "email_address": "邮箱地址",
+      "phone": "手机号码",
+      "whatsapp": "WhatsApp号码",
+      "employment_status": "就业状态",
+      "job_title": "职位标题",
+      "occupation": "职业",
+      "industry": "行业",
+      "skills": "技能",
+      "linkedin_url": "LinkedIn链接",
+      "cv_format": "简历格式",
+      "visa_status": "签证状态",
+      "languages": "语言",
+      "current_country": "当前国家",
+      "current_city": "当前城市",
+      "work_experience": "工作经验",
+      "company_name": "公司名称",
+      "certificates": "证书"
     }
   },
   "CANDIDATE_LIST": {
@@ -625,7 +652,11 @@
     "reference_id": "参考编号",
     "login_id": "登录ID",
     "candidate_use_login_id": "候选人必须使用其登录ID（而非电子邮件）登录门户。",
-    "step_of": "第{{current}}步，共{{total}}步"
+    "step_of": "第{{current}}步，共{{total}}步",
+    "job_title_required": "职位标题是必填项。",
+    "occupation_required": "职业是必填项。",
+    "industry_required": "行业是必填项。",
+    "marital_status": "婚姻状况"
   },
   "RECRUITER_LIST": {
     "title": "招聘人员",
@@ -2341,7 +2372,8 @@
     "replace": "替换",
     "upload": "上传",
     "photo_guidelines": "请上传一张清晰、专业的照片。面部应清晰可见。建议使用纯色背景。",
-    "resume_cv": "简历"
+    "resume_cv": "简历",
+    "intro_video": "自我介绍视频"
   },
   "CONTACT_REQUESTS": {
     "candidate": "候选人",

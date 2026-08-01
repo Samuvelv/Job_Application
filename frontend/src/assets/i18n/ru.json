@@ -111,7 +111,13 @@
     "resend_credentials": "Повторно отправить учётные данные",
     "restore": "Восстановить",
     "verified": "Подтверждено",
-    "options": "опции"
+    "options": "опции",
+    "first_name": "Имя",
+    "last_name": "Фамилия",
+    "date_of_birth": "Дата рождения",
+    "gender": "Пол",
+    "whatsapp": "WhatsApp",
+    "same_as_phone": "То же, что и номер телефона"
   },
   "NAV": {
     "dashboard": "Панель управления",
@@ -432,7 +438,28 @@
       "no_resume": "Нет резюме",
       "no_video": "Нет видео",
       "no_certificates": "Нет сертификатов",
-      "new_certificate": "Новый сертификат"
+      "new_certificate": "Новый сертификат",
+      "first_name": "Имя",
+      "last_name": "Фамилия",
+      "date_of_birth": "Дата рождения",
+      "gender": "Пол",
+      "email_address": "Адрес электронной почты",
+      "phone": "Номер телефона",
+      "whatsapp": "Номер WhatsApp",
+      "employment_status": "Статус занятости",
+      "job_title": "Должность",
+      "occupation": "Род занятий",
+      "industry": "Отрасль",
+      "skills": "Навыки",
+      "linkedin_url": "Ссылка на LinkedIn",
+      "cv_format": "Формат резюме",
+      "visa_status": "Статус визы",
+      "languages": "Языки",
+      "current_country": "Текущая страна",
+      "current_city": "Текущий город",
+      "work_experience": "Опыт работы",
+      "company_name": "Название компании",
+      "certificates": "Сертификаты"
     }
   },
   "CANDIDATE_LIST": {
@@ -625,7 +652,11 @@
     "reference_id": "Идентификатор ссылки",
     "login_id": "Логин",
     "candidate_use_login_id": "Кандидат должен использовать свой логин (не электронную почту) для входа на портал.",
-    "step_of": "Шаг {{current}} из {{total}}"
+    "step_of": "Шаг {{current}} из {{total}}",
+    "job_title_required": "Требуется указать должность",
+    "occupation_required": "Требуется указать род занятий",
+    "industry_required": "Требуется указать отрасль",
+    "marital_status": "Семейное положение"
   },
   "RECRUITER_LIST": {
     "title": "Рекрутеры",
@@ -2341,7 +2372,8 @@
     "replace": "Заменить",
     "upload": "Загрузить",
     "photo_guidelines": "Загрузите чёткое профессиональное фото. Лицо должно быть чётко видно. Предпочтителен однотонный фон.",
-    "resume_cv": "Резюме"
+    "resume_cv": "Резюме",
+    "intro_video": "Видео-презентация"
   },
   "CONTACT_REQUESTS": {
     "candidate": "Кандидат",

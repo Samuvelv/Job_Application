@@ -111,7 +111,13 @@
     "resend_credentials": "Send innloggingsinformasjon på nytt",
     "restore": "Gjenopprett",
     "verified": "Bekreftet",
-    "options": "alternativer"
+    "options": "alternativer",
+    "first_name": "Fornavn",
+    "last_name": "Etternavn",
+    "date_of_birth": "Fødselsdato",
+    "gender": "Kjønn",
+    "whatsapp": "WhatsApp",
+    "same_as_phone": "Samme som telefonnummer"
   },
   "NAV": {
     "dashboard": "Instrumentbord",
@@ -432,7 +438,28 @@
       "no_resume": "Ingen CV",
       "no_video": "Ingen video",
       "no_certificates": "Ingen sertifikater",
-      "new_certificate": "Nytt sertifikat"
+      "new_certificate": "Nytt sertifikat",
+      "first_name": "Fornavn",
+      "last_name": "Etternavn",
+      "date_of_birth": "Fødselsdato",
+      "gender": "Kjønn",
+      "email_address": "E-postadresse",
+      "phone": "Telefonnummer",
+      "whatsapp": "WhatsApp-nummer",
+      "employment_status": "Ansettelsesstatus",
+      "job_title": "Jobbtittel",
+      "occupation": "Yrke",
+      "industry": "Bransje",
+      "skills": "Ferdigheter",
+      "linkedin_url": "LinkedIn URL",
+      "cv_format": "CV-format",
+      "visa_status": "Visumstatus",
+      "languages": "Språk",
+      "current_country": "Nåværende land",
+      "current_city": "Nåværende by",
+      "work_experience": "Arbeidserfaring",
+      "company_name": "Firmanavn",
+      "certificates": "Sertifikater"
     }
   },
   "CANDIDATE_LIST": {
@@ -625,7 +652,11 @@
     "reference_id": "Referanse-ID",
     "login_id": "Innloggings-ID",
     "candidate_use_login_id": "Kandidaten må bruke sin innloggings-ID (ikke e-post) for å logge inn på portalen.",
-    "step_of": "Trinn {{current}} av {{total}}"
+    "step_of": "Trinn {{current}} av {{total}}",
+    "job_title_required": "Jobbtittel er påkrevd.",
+    "occupation_required": "Yrke er påkrevd.",
+    "industry_required": "Bransje er påkrevd.",
+    "marital_status": "Sivilstatus"
   },
   "RECRUITER_LIST": {
     "title": "Rekrutterere",
@@ -2341,7 +2372,8 @@
     "replace": "Erstatt",
     "upload": "Last opp",
     "photo_guidelines": "Last opp et klart, profesjonelt bilde. Ansiktet skal være tydelig synlig. Enkel bakgrunn foretrekkes.",
-    "resume_cv": "CV"
+    "resume_cv": "CV",
+    "intro_video": "Introduksjonsvideo"
   },
   "CONTACT_REQUESTS": {
     "candidate": "Kandidat",

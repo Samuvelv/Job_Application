@@ -111,7 +111,13 @@
     "resend_credentials": "認証情報を再送信",
     "restore": "復元",
     "verified": "確認済み",
-    "options": "オプション"
+    "options": "オプション",
+    "first_name": "名",
+    "last_name": "姓",
+    "date_of_birth": "生年月日",
+    "gender": "性別",
+    "whatsapp": "WhatsApp",
+    "same_as_phone": "電話番号と同じ"
   },
   "NAV": {
     "dashboard": "ダッシュボード",
@@ -432,7 +438,28 @@
       "no_resume": "履歴書なし",
       "no_video": "動画なし",
       "no_certificates": "資格・証明書なし",
-      "new_certificate": "新しい資格・証明書"
+      "new_certificate": "新しい資格・証明書",
+      "first_name": "名",
+      "last_name": "姓",
+      "date_of_birth": "生年月日",
+      "gender": "性別",
+      "email_address": "メールアドレス",
+      "phone": "電話番号",
+      "whatsapp": "WhatsApp番号",
+      "employment_status": "雇用形態",
+      "job_title": "職種",
+      "occupation": "職種",
+      "industry": "業種",
+      "skills": "スキル",
+      "linkedin_url": "LinkedIn URL",
+      "cv_format": "CV形式",
+      "visa_status": "ビザの状況",
+      "languages": "言語",
+      "current_country": "現在の国",
+      "current_city": "現在の都市",
+      "work_experience": "職務経験",
+      "company_name": "会社名",
+      "certificates": "資格"
     }
   },
   "CANDIDATE_LIST": {
@@ -625,7 +652,11 @@
     "reference_id": "参照ID",
     "login_id": "ログインID",
     "candidate_use_login_id": "候補者はポータルにサインインする際、メールアドレスではなくログインIDを使用する必要があります。",
-    "step_of": "ステップ {{current}} / {{total}}"
+    "step_of": "ステップ {{current}} / {{total}}",
+    "job_title_required": "職種は必須です。",
+    "occupation_required": "職種は必須です。",
+    "industry_required": "業種は必須です。",
+    "marital_status": "配偶者の有無"
   },
   "RECRUITER_LIST": {
     "title": "採用担当者",
@@ -2341,7 +2372,8 @@
     "replace": "置き換え",
     "upload": "アップロード",
     "photo_guidelines": "鮮明でプロフェッショナルな写真をアップロードしてください。顔がはっきりと見える必要があります。無地の背景が望ましいです。",
-    "resume_cv": "履歴書"
+    "resume_cv": "履歴書",
+    "intro_video": "自己紹介ビデオ"
   },
   "CONTACT_REQUESTS": {
     "candidate": "候補者",

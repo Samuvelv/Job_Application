@@ -111,7 +111,13 @@
     "resend_credentials": "Renvoyer les identifiants",
     "restore": "Restaurer",
     "verified": "Vérifié",
-    "options": "options"
+    "options": "options",
+    "first_name": "Prénom",
+    "last_name": "Nom de famille",
+    "date_of_birth": "Date de naissance",
+    "gender": "Genre",
+    "whatsapp": "WhatsApp",
+    "same_as_phone": "Identique au numéro de téléphone"
   },
   "NAV": {
     "dashboard": "Tableau de bord",
@@ -432,7 +438,28 @@
       "no_resume": "Pas de CV",
       "no_video": "Pas de vidéo",
       "no_certificates": "Pas de certificats",
-      "new_certificate": "Nouveau certificat"
+      "new_certificate": "Nouveau certificat",
+      "first_name": "Prénom",
+      "last_name": "Nom de famille",
+      "date_of_birth": "Date de naissance",
+      "gender": "Genre",
+      "email_address": "Adresse e-mail",
+      "phone": "Numéro de téléphone",
+      "whatsapp": "Numéro WhatsApp",
+      "employment_status": "Statut d'emploi",
+      "job_title": "Titre du poste",
+      "occupation": "Profession",
+      "industry": "Secteur d'activité",
+      "skills": "Compétences",
+      "linkedin_url": "URL LinkedIn",
+      "cv_format": "Format du CV",
+      "visa_status": "Statut de visa",
+      "languages": "Langues",
+      "current_country": "Pays actuel",
+      "current_city": "Ville actuelle",
+      "work_experience": "Expérience professionnelle",
+      "company_name": "Nom de l'entreprise",
+      "certificates": "Certificats"
     }
   },
   "CANDIDATE_LIST": {
@@ -625,7 +652,11 @@
     "reference_id": "ID de référence",
     "login_id": "ID de connexion",
     "candidate_use_login_id": "Le candidat doit utiliser son ID de connexion (et non son e-mail) pour se connecter au portail.",
-    "step_of": "Étape {{current}} sur {{total}}"
+    "step_of": "Étape {{current}} sur {{total}}",
+    "job_title_required": "Le titre du poste est requis.",
+    "occupation_required": "La profession est requise.",
+    "industry_required": "Le secteur d'activité est requis.",
+    "marital_status": "État civil"
   },
   "RECRUITER_LIST": {
     "title": "Recruteurs",
@@ -2341,7 +2372,8 @@
     "replace": "Remplacer",
     "upload": "Téléverser",
     "photo_guidelines": "Veuillez téléverser une photo claire et professionnelle. Le visage doit être clairement visible. Un fond uni est préférable.",
-    "resume_cv": "CV"
+    "resume_cv": "CV",
+    "intro_video": "Vidéo d'introduction"
   },
   "CONTACT_REQUESTS": {
     "candidate": "Candidat",

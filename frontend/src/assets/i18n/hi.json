@@ -111,7 +111,13 @@
     "resend_credentials": "क्रेडेंशियल पुनः भेजें",
     "restore": "पुनर्स्थापित करें",
     "verified": "सत्यापित",
-    "options": "विकल्प"
+    "options": "विकल्प",
+    "first_name": "पहला नाम",
+    "last_name": "उपनाम",
+    "date_of_birth": "जन्म तिथि",
+    "gender": "लिंग",
+    "whatsapp": "WhatsApp",
+    "same_as_phone": "फ़ोन नंबर के समान"
   },
   "NAV": {
     "dashboard": "डैशबोर्ड",
@@ -432,7 +438,28 @@
       "no_resume": "कोई सीवी / रिज्यूम नहीं",
       "no_video": "कोई वीडियो नहीं",
       "no_certificates": "कोई प्रमाणपत्र नहीं",
-      "new_certificate": "नया प्रमाणपत्र"
+      "new_certificate": "नया प्रमाणपत्र",
+      "first_name": "पहला नाम",
+      "last_name": "उपनाम",
+      "date_of_birth": "जन्म तिथि",
+      "gender": "लिंग",
+      "email_address": "ईमेल पता",
+      "phone": "फ़ोन नंबर",
+      "whatsapp": "WhatsApp नंबर",
+      "employment_status": "रोजगार स्थिति",
+      "job_title": "नौकरी का शीर्षक",
+      "occupation": "व्यवसाय",
+      "industry": "उद्योग",
+      "skills": "कौशल",
+      "linkedin_url": "LinkedIn URL",
+      "cv_format": "CV प्रारूप",
+      "visa_status": "वीजा स्थिति",
+      "languages": "भाषाएँ",
+      "current_country": "वर्तमान देश",
+      "current_city": "वर्तमान शहर",
+      "work_experience": "काम का अनुभव",
+      "company_name": "कंपनी का नाम",
+      "certificates": "प्रमाणपत्र"
     }
   },
   "CANDIDATE_LIST": {
@@ -625,7 +652,11 @@
     "reference_id": "संदर्भ आईडी",
     "login_id": "लॉगिन आईडी",
     "candidate_use_login_id": "पोर्टल में साइन इन करने के लिए उम्मीदवार को अपने लॉगिन आईडी (ईमेल नहीं) का उपयोग करना होगा।",
-    "step_of": "चरण {{current}} / {{total}}"
+    "step_of": "चरण {{current}} / {{total}}",
+    "job_title_required": "नौकरी का शीर्षक आवश्यक है।",
+    "occupation_required": "व्यवसाय आवश्यक है।",
+    "industry_required": "उद्योग आवश्यक है।",
+    "marital_status": "वैवाहिक स्थिति"
   },
   "RECRUITER_LIST": {
     "title": "भर्तीकर्ता",
@@ -2341,7 +2372,8 @@
     "replace": "बदलें",
     "upload": "अपलोड करें",
     "photo_guidelines": "कृपया एक स्पष्ट, पेशेवर फ़ोटो अपलोड करें। चेहरा स्पष्ट रूप से दिखाई देना चाहिए। सादा पृष्ठभूमि बेहतर है।",
-    "resume_cv": "रिज़्यूमे"
+    "resume_cv": "रिज़्यूमे",
+    "intro_video": "परिचय वीडियो"
   },
   "CONTACT_REQUESTS": {
     "candidate": "उम्मीदवार",

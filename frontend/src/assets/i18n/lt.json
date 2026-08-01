@@ -111,7 +111,13 @@
     "resend_credentials": "Iš naujo siųsti prisijungimo duomenis",
     "restore": "Atkurti",
     "verified": "Patvirtinta",
-    "options": "parinktys"
+    "options": "parinktys",
+    "first_name": "Vardas",
+    "last_name": "Pavardė",
+    "date_of_birth": "Gimimo data",
+    "gender": "Lytis",
+    "whatsapp": "WhatsApp",
+    "same_as_phone": "Toks pat kaip telefono numeris"
   },
   "NAV": {
     "dashboard": "Prietaisų sritis",
@@ -432,7 +438,28 @@
       "no_resume": "Nėra gyvenimo aprašymo",
       "no_video": "Nėra vaizdo įrašo",
       "no_certificates": "Nėra sertifikatų",
-      "new_certificate": "Naujas sertifikatas"
+      "new_certificate": "Naujas sertifikatas",
+      "first_name": "Vardas",
+      "last_name": "Pavardė",
+      "date_of_birth": "Gimimo data",
+      "gender": "Lytis",
+      "email_address": "El. pašto adresas",
+      "phone": "Telefono numeris",
+      "whatsapp": "WhatsApp numeris",
+      "employment_status": "Darbo santykiai",
+      "job_title": "Darbo pavadinimas",
+      "occupation": "Profesija",
+      "industry": "Pramonė",
+      "skills": "Įgūdžiai",
+      "linkedin_url": "LinkedIn nuoroda",
+      "cv_format": "CV formatas",
+      "visa_status": "Vizos statusas",
+      "languages": "Kalbos",
+      "current_country": "Dabartinė šalis",
+      "current_city": "Dabartinis miestas",
+      "work_experience": "Darbo patirtis",
+      "company_name": "Įmonės pavadinimas",
+      "certificates": "Sertifikatai"
     }
   },
   "CANDIDATE_LIST": {
@@ -625,7 +652,11 @@
     "reference_id": "Nuorodos ID",
     "login_id": "Prisijungimo ID",
     "candidate_use_login_id": "Kandidatas turi naudoti savo prisijungimo ID (o ne el. paštą), kad prisijungtų prie portalo.",
-    "step_of": "Žingsnis {{current}} iš {{total}}"
+    "step_of": "Žingsnis {{current}} iš {{total}}",
+    "job_title_required": "Pareikšti darbo pavadinimą privaloma.",
+    "occupation_required": "Pareikšti profesiją privaloma.",
+    "industry_required": "Pareikšti pramonę privaloma.",
+    "marital_status": "Šeimyninė padėtis"
   },
   "RECRUITER_LIST": {
     "title": "Personalinės paieškos specialistai",
@@ -2341,7 +2372,8 @@
     "replace": "Pakeisti",
     "upload": "Įkelti",
     "photo_guidelines": "Įkelkite aiškią, profesionalią nuotrauką. Veidas turi būti aiškiai matomas. Pageidautina vienspalvė fonas.",
-    "resume_cv": "Gyvenimo aprašymas"
+    "resume_cv": "Gyvenimo aprašymas",
+    "intro_video": "Įvadinis vaizdo įrašas"
   },
   "CONTACT_REQUESTS": {
     "candidate": "Kandidatas",

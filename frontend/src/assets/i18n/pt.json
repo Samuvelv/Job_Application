@@ -111,7 +111,13 @@
     "resend_credentials": "Reenviar credenciais",
     "restore": "Restaurar",
     "verified": "Verificado",
-    "options": "opções"
+    "options": "opções",
+    "first_name": "Nome",
+    "last_name": "Sobrenome",
+    "date_of_birth": "Data de Nascimento",
+    "gender": "Gênero",
+    "whatsapp": "WhatsApp",
+    "same_as_phone": "Mesmo que o número de telefone"
   },
   "NAV": {
     "dashboard": "Painel",
@@ -432,7 +438,28 @@
       "no_resume": "Sem currículo",
       "no_video": "Sem vídeo",
       "no_certificates": "Sem certificados",
-      "new_certificate": "Novo certificado"
+      "new_certificate": "Novo certificado",
+      "first_name": "Nome",
+      "last_name": "Sobrenome",
+      "date_of_birth": "Data de Nascimento",
+      "gender": "Gênero",
+      "email_address": "Endereço de E-mail",
+      "phone": "Número de Telefone",
+      "whatsapp": "Número do WhatsApp",
+      "employment_status": "Status de Emprego",
+      "job_title": "Título do Cargo",
+      "occupation": "Ocupação",
+      "industry": "Indústria",
+      "skills": "Habilidades",
+      "linkedin_url": "URL do LinkedIn",
+      "cv_format": "Formato do CV",
+      "visa_status": "Status do Visto",
+      "languages": "Idiomas",
+      "current_country": "País Atual",
+      "current_city": "Cidade Atual",
+      "work_experience": "Experiência Profissional",
+      "company_name": "Nome da Empresa",
+      "certificates": "Certificados"
     }
   },
   "CANDIDATE_LIST": {
@@ -625,7 +652,11 @@
     "reference_id": "ID de referência",
     "login_id": "ID de login",
     "candidate_use_login_id": "O candidato deve usar seu ID de login (não o e-mail) para acessar o portal.",
-    "step_of": "Etapa {{current}} de {{total}}"
+    "step_of": "Etapa {{current}} de {{total}}",
+    "job_title_required": "O título do cargo é obrigatório.",
+    "occupation_required": "A ocupação é obrigatória.",
+    "industry_required": "A indústria é obrigatória.",
+    "marital_status": "Estado Civil"
   },
   "RECRUITER_LIST": {
     "title": "Recrutadores",
@@ -2341,7 +2372,8 @@
     "replace": "Substituir",
     "upload": "Enviar",
     "photo_guidelines": "Envie uma foto clara e profissional. O rosto deve estar claramente visível. Fundo neutro é preferível.",
-    "resume_cv": "Currículo"
+    "resume_cv": "Currículo",
+    "intro_video": "Vídeo de Introdução"
   },
   "CONTACT_REQUESTS": {
     "candidate": "Candidato",

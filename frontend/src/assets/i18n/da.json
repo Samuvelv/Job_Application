@@ -111,7 +111,13 @@
     "resend_credentials": "Gensend loginoplysninger",
     "restore": "Gendan",
     "verified": "Bekræftet",
-    "options": "indstillinger"
+    "options": "indstillinger",
+    "first_name": "Fornavn",
+    "last_name": "Efternavn",
+    "date_of_birth": "Fødselsdato",
+    "gender": "Køn",
+    "whatsapp": "WhatsApp",
+    "same_as_phone": "Samme som telefonnummer"
   },
   "NAV": {
     "dashboard": "Instrumentbræt",
@@ -432,7 +438,28 @@
       "no_resume": "Intet CV",
       "no_video": "Ingen video",
       "no_certificates": "Ingen certifikater",
-      "new_certificate": "Nyt certifikat"
+      "new_certificate": "Nyt certifikat",
+      "first_name": "Fornavn",
+      "last_name": "Efternavn",
+      "date_of_birth": "Fødselsdato",
+      "gender": "Køn",
+      "email_address": "Email-adresse",
+      "phone": "Telefonnummer",
+      "whatsapp": "WhatsApp-nummer",
+      "employment_status": "Beskæftigelsesstatus",
+      "job_title": "Jobtitel",
+      "occupation": "Beskæftigelse",
+      "industry": "Branchen",
+      "skills": "Kompetencer",
+      "linkedin_url": "LinkedIn URL",
+      "cv_format": "CV-format",
+      "visa_status": "Visumstatus",
+      "languages": "Sprog",
+      "current_country": "Nuværende land",
+      "current_city": "Nuværende by",
+      "work_experience": "Arbejdserfaring",
+      "company_name": "Firmanavn",
+      "certificates": "Certifikater"
     }
   },
   "CANDIDATE_LIST": {
@@ -625,7 +652,11 @@
     "reference_id": "Reference-ID",
     "login_id": "Login-ID",
     "candidate_use_login_id": "Kandidaten skal bruge sit login-ID (ikke e-mail) for at logge ind på portalen.",
-    "step_of": "Trin {{current}} af {{total}}"
+    "step_of": "Trin {{current}} af {{total}}",
+    "job_title_required": "Jobtitel er påkrævet.",
+    "occupation_required": "Beskæftigelse er påkrævet.",
+    "industry_required": "Branchen er påkrævet.",
+    "marital_status": "Civilstand"
   },
   "RECRUITER_LIST": {
     "title": "Rekrutterere",
@@ -2341,7 +2372,8 @@
     "replace": "Erstat",
     "upload": "Upload",
     "photo_guidelines": "Upload venligst et klart, professionelt foto. Ansigtet skal være tydeligt synligt. Ensfarvet baggrund foretrækkes.",
-    "resume_cv": "CV"
+    "resume_cv": "CV",
+    "intro_video": "Introduktionsvideo"
   },
   "CONTACT_REQUESTS": {
     "candidate": "Kandidat",

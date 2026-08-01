@@ -111,7 +111,13 @@
     "resend_credentials": "Znova odoslať prihlasovacie údaje",
     "restore": "Obnoviť",
     "verified": "Overené",
-    "options": "možnosti"
+    "options": "možnosti",
+    "first_name": "Krstné meno",
+    "last_name": "Priezvisko",
+    "date_of_birth": "Dátum narodenia",
+    "gender": "Pohlavie",
+    "whatsapp": "WhatsApp",
+    "same_as_phone": "Rovnaké ako telefónne číslo"
   },
   "NAV": {
     "dashboard": "Prístrojová doska",
@@ -432,7 +438,28 @@
       "no_resume": "Žiadny životopis",
       "no_video": "Žiadne video",
       "no_certificates": "Žiadne certifikáty",
-      "new_certificate": "Nový certifikát"
+      "new_certificate": "Nový certifikát",
+      "first_name": "Krstné meno",
+      "last_name": "Priezvisko",
+      "date_of_birth": "Dátum narodenia",
+      "gender": "Pohlavie",
+      "email_address": "Emailová adresa",
+      "phone": "Telefónne číslo",
+      "whatsapp": "WhatsApp číslo",
+      "employment_status": "Zamestnanecký status",
+      "job_title": "Názov pracovnej pozície",
+      "occupation": "Povolanie",
+      "industry": "Odvetvie",
+      "skills": "Zručnosti",
+      "linkedin_url": "LinkedIn URL",
+      "cv_format": "Formát životopisu",
+      "visa_status": "Stav víz",
+      "languages": "Jazyky",
+      "current_country": "Súčasná krajina",
+      "current_city": "Súčasné mesto",
+      "work_experience": "Pracovná skúsenosť",
+      "company_name": "Názov spoločnosti",
+      "certificates": "Certifikáty"
     }
   },
   "CANDIDATE_LIST": {
@@ -625,7 +652,11 @@
     "reference_id": "Referenčné ID",
     "login_id": "Prihlasovacie ID",
     "candidate_use_login_id": "Kandidát musí na prihlásenie do portálu použiť svoje prihlasovacie ID (nie e-mail).",
-    "step_of": "Krok {{current}} z {{total}}"
+    "step_of": "Krok {{current}} z {{total}}",
+    "job_title_required": "Názov pracovnej pozície je povinný.",
+    "occupation_required": "Povolanie je povinné.",
+    "industry_required": "Odvetvie je povinné.",
+    "marital_status": "Rodinný stav"
   },
   "RECRUITER_LIST": {
     "title": "Recruiterji",
@@ -2341,7 +2372,8 @@
     "replace": "Nahradiť",
     "upload": "Nahrať",
     "photo_guidelines": "Nahrajte jasnú, profesionálnu fotografiu. Tvár musí byť jasne viditeľná. Uprednostňuje sa jednoduché pozadie.",
-    "resume_cv": "Životopis"
+    "resume_cv": "Životopis",
+    "intro_video": "Úvodné video"
   },
   "CONTACT_REQUESTS": {
     "candidate": "Kandidát",

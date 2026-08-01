@@ -111,7 +111,13 @@
     "resend_credentials": "Atkārtoti nosūtīt pieteikšanās datus",
     "restore": "Atjaunot",
     "verified": "Verificēts",
-    "options": "opcijas"
+    "options": "opcijas",
+    "first_name": "Vārds",
+    "last_name": "Uzvārds",
+    "date_of_birth": "Dzimšanas datums",
+    "gender": "Dzimums",
+    "whatsapp": "WhatsApp",
+    "same_as_phone": "Tāds pats kā telefona numurs"
   },
   "NAV": {
     "dashboard": "Informācijas panelis",
@@ -432,7 +438,28 @@
       "no_resume": "Nav CV",
       "no_video": "Nav video",
       "no_certificates": "Nav sertifikātu",
-      "new_certificate": "Jauns sertifikāts"
+      "new_certificate": "Jauns sertifikāts",
+      "first_name": "Vārds",
+      "last_name": "Uzvārds",
+      "date_of_birth": "Dzimšanas datums",
+      "gender": "Dzimums",
+      "email_address": "E-pasta adrese",
+      "phone": "Telefona numurs",
+      "whatsapp": "WhatsApp numurs",
+      "employment_status": "Nodarbinātības statuss",
+      "job_title": "Darba nosaukums",
+      "occupation": "Nodarbošanās",
+      "industry": "Nozare",
+      "skills": "Prasmes",
+      "linkedin_url": "LinkedIn saite",
+      "cv_format": "CV formāts",
+      "visa_status": "Vīzas statuss",
+      "languages": "Valodas",
+      "current_country": "Pašreizējā valsts",
+      "current_city": "Pašreizējā pilsēta",
+      "work_experience": "Darba pieredze",
+      "company_name": "Uzņēmuma nosaukums",
+      "certificates": "Sertifikāti"
     }
   },
   "CANDIDATE_LIST": {
@@ -625,7 +652,11 @@
     "reference_id": "Atsauces ID",
     "login_id": "Pieteikšanās ID",
     "candidate_use_login_id": "Kandidātam jāizmanto savs pieteikšanās ID (nevis e-pasts), lai pieteiktos portālā.",
-    "step_of": "Solis {{current}} no {{total}}"
+    "step_of": "Solis {{current}} no {{total}}",
+    "job_title_required": "Darba nosaukums ir obligāts.",
+    "occupation_required": "Nodarbošanās ir obligāta.",
+    "industry_required": "Nozare ir obligāta.",
+    "marital_status": "Ģimenes stāvoklis"
   },
   "RECRUITER_LIST": {
     "title": "Personāla atlases speciālisti",
@@ -2341,7 +2372,8 @@
     "replace": "Aizstāt",
     "upload": "Augšupielādēt",
     "photo_guidelines": "Lūdzu, augšupielādējiet skaidru, profesionālu fotoattēlu. Sejai jābūt skaidri redzamai. Ieteicams vienkrāsains fons.",
-    "resume_cv": "CV"
+    "resume_cv": "CV",
+    "intro_video": "Ievadvideo"
   },
   "CONTACT_REQUESTS": {
     "candidate": "Kandidāts",
