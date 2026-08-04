@@ -639,7 +639,7 @@ export class CandidateRegisterComponent implements OnInit, OnDestroy, HasUnsaved
         while (this.skills.length) this.skills.removeAt(0);
         for (const s of draft.skills) {
           this.skills.push(this.fb.group(
-            { skill_name: [s.skill_name ?? ''], proficiency: [s.proficiency ?? ''] },
+            { skill_name: [s.skill_name ?? ''], proficiency: [s.proficiency ?? ''], description: [s.description ?? '', Validators.maxLength(2000)] },
             { validators: skillGroupValidator }
           ));
         }
@@ -707,7 +707,7 @@ export class CandidateRegisterComponent implements OnInit, OnDestroy, HasUnsaved
   get education():  FormArray { return this.form.get('education')  as FormArray; }
 
   addSkill(): void {
-    this.skills.push(this.fb.group({ skill_name: ['', Validators.required], proficiency: [''] }, { validators: skillGroupValidator }));
+    this.skills.push(this.fb.group({ skill_name: ['', Validators.required], proficiency: [''], description: ['', Validators.maxLength(2000)] }, { validators: skillGroupValidator }));
   }
   removeSkill(i: number): void { this.skills.removeAt(i); }
 

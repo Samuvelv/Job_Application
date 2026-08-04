@@ -7,7 +7,11 @@
       "Bash(grep -v \"//\")",
       "Bash(npx tsc *)",
       "Bash(npx ng *)",
-      "Bash(Get-Content *)"
+      "Bash(Get-Content *)",
+      "Bash(npm run *)",
+      "Bash(PGPASSWORD='samuvelV15&k' psql -h localhost -p 5432 -U postgres -d talentdb -c \"\\\\d candidate_skills\")",
+      "Bash(npx ts-node -e ' *)",
+      "Bash(npx ts-node *)"
     ]
   }
 }

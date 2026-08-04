@@ -5,6 +5,7 @@ export interface Skill {
   id?: number;
   skill_name: string;
   proficiency?: string;
+  description?: string;
 }
 
 export interface Language {

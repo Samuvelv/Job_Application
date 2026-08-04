@@ -538,15 +538,22 @@ type Tab = 'overview' | 'experience' | 'education' | 'documents' | 'activity';
                       {{ 'CANDIDATE_PROFILE.translating_skills' | translate }}
                     </div>
                   } @else {
-                    <div class="d-flex flex-wrap gap-2">
+                    <div class="d-flex flex-column" style="gap:.85rem">
                       @for (skill of candidate.skills; track $index) {
-                        <span class="skill-pill">
-                          <span class="skill-pill__dot"></span>
-                          {{ translatedSkills()[$index] || skill.skill_name }}
-                          @if (skill.proficiency) {
-                            <span style="opacity:.6;font-size:.7rem">· {{ skill.proficiency }}</span>
+                        <div>
+                          <span class="skill-pill">
+                            <span class="skill-pill__dot"></span>
+                            {{ translatedSkills()[$index] || skill.skill_name }}
+                            @if (skill.proficiency) {
+                              <span style="opacity:.6;font-size:.7rem">· {{ skill.proficiency }}</span>
+                            }
+                          </span>
+                          @if (skill.description) {
+                            <div style="margin-top:.35rem;margin-left:.5rem;padding-left:.6rem;
+                              border-left:2px solid rgba(80,70,229,.25);font-size:.8rem;line-height:1.4;
+                              color:var(--th-muted);white-space:pre-wrap">{{ skill.description }}</div>
                           }
-                        </span>
+                        </div>
                       }
                     </div>
                   }

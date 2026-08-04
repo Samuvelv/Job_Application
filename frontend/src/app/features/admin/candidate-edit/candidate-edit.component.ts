@@ -546,7 +546,7 @@ export class CandidateEditComponent implements OnInit, OnDestroy {
     return !!(c && c.invalid && c.touched);
   }
 
-  addSkill(): void    { this.skills.push(this.fb.group({ skill_name: ['', Validators.required], proficiency: [''] }, { validators: skillGroupValidator })); }
+  addSkill(): void    { this.skills.push(this.fb.group({ skill_name: ['', Validators.required], proficiency: [''], description: ['', Validators.maxLength(2000)] }, { validators: skillGroupValidator })); }
   removeSkill(i: number): void { this.skills.removeAt(i); }
 
   addLanguage(): void    { this.languages.push(this.fb.group({ language: ['', Validators.required], proficiency: [''] }, { validators: langGroupValidator })); }
@@ -879,7 +879,7 @@ export class CandidateEditComponent implements OnInit, OnDestroy {
 
       skills: this.fb.array(
         emp.skills?.length
-          ? emp.skills.map(s => this.fb.group({ skill_name: [s.skill_name ?? '', Validators.required], proficiency: [s.proficiency ?? ''] }, { validators: skillGroupValidator }))
+          ? emp.skills.map(s => this.fb.group({ skill_name: [s.skill_name ?? '', Validators.required], proficiency: [s.proficiency ?? ''], description: [s.description ?? '', Validators.maxLength(2000)] }, { validators: skillGroupValidator }))
           : []
       ),
       languages: this.fb.array(

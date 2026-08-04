@@ -1792,7 +1792,7 @@ export class EditRequestsComponent implements OnInit, OnDestroy {
       if (typeof value[0] === 'object' && value[0] !== null) {
         const first = value[0] as Record<string, unknown>;
         if ('skill_name' in first && 'proficiency' in first)
-          return value.map((s: any) => `${s.skill_name} (${s.proficiency})`).join(', ');
+          return value.map((s: any) => `${s.skill_name} (${s.proficiency})${s.description ? ' — ' + s.description : ''}`).join(', ');
         if ('language' in first && 'proficiency' in first)
           return value.map((l: any) => `${l.language} (${l.proficiency})`).join(', ');
         if ('degree' in first && 'institution' in first)
