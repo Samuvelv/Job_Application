@@ -90,7 +90,7 @@ import { MasterDataService } from '../../../core/services/master-data.service';
         }
       </div>
 
-      <!-- ── Flags: fee + video + CV format ── -->
+      <!-- ── Flags: fee + video ── -->
       <div class="cl-card__flags">
         <span class="cl-card__flag"
           [class.cl-card__flag--paid]="candidate.registration_fee_status === 'paid'"
@@ -113,11 +113,6 @@ import { MasterDataService } from '../../../core/services/master-data.service';
              <i class="bi bi-camera-video-off"></i> {{ 'EDIT_REQUEST.media_changes' | translate }}
            }
          </span>
-        @if (cvFormatLabel) {
-          <span class="cl-card__flag cl-card__flag--cv">
-            <i class="bi bi-file-earmark-text"></i> {{ cvFormatLabel }}
-          </span>
-        }
       </div>
 
        <!-- ── Profile completion bar ── -->
@@ -219,16 +214,6 @@ export class CandidateCardComponent {
     const key = this.candidate.registration_fee_status
       ? (map[this.candidate.registration_fee_status] ?? '—') : '—';
     return key !== '—' ? this.translateKey(key) : '—';
-  }
-
-  get cvFormatLabel(): string {
-    const map: Record<string, string> = {
-      uk_format: 'UK', european_format: 'EU', canadian_format: 'CA',
-      australian_format: 'AU', gulf_format: 'Gulf', asian_format: 'Asia',
-      others: 'Others',
-    };
-    const fmt = this.candidate.cv_format;
-    return fmt && fmt !== 'not_yet_created' ? (map[fmt] ?? fmt) : '';
   }
 
   get completionPercent(): number {

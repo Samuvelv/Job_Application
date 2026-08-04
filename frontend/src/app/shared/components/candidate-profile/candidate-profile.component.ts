@@ -501,16 +501,6 @@ type Tab = 'overview' | 'experience' | 'education' | 'documents' | 'activity';
                         </div>
                      </div>
                    </div>
-                  <div class="col-sm-6">
-                    <div style="padding:.75rem;background:var(--th-surface-raised);border-radius:var(--th-radius);
-                      border:1px solid var(--th-border)">
-                      <div style="font-size:.7rem;text-transform:uppercase;letter-spacing:.06em;
-                        color:var(--th-muted);font-weight:600;margin-bottom:.3rem">{{ 'CANDIDATE_PROFILE.cv_format' | translate }}</div>
-                      <div style="font-size:.875rem;font-weight:600;color:var(--th-text)">
-                        {{ candidate.cv_format ? cvFormatLabel(candidate.cv_format) : '—' }}
-                      </div>
-                    </div>
-                  </div>
                   @if (candidate.visa_status) {
                     <div class="col-sm-6">
                       <div style="padding:.75rem;background:var(--th-surface-raised);border-radius:var(--th-radius);
@@ -1042,22 +1032,6 @@ export class CandidateProfileComponent implements OnInit, OnDestroy {
   isTranslatingEducations = signal(false);
   isTranslatingCertificates = signal(false);
   isTranslatingHobbies = signal(false);
-
-  readonly cvFormatLabelKeys: Record<string, string> = {
-    uk_format:         'CANDIDATE_PROFILE.cv_format_uk',
-    european_format:   'CANDIDATE_PROFILE.cv_format_european',
-    canadian_format:   'CANDIDATE_PROFILE.cv_format_canadian',
-    australian_format: 'CANDIDATE_PROFILE.cv_format_australian',
-    gulf_format:       'CANDIDATE_PROFILE.cv_format_gulf',
-    asian_format:      'CANDIDATE_PROFILE.cv_format_asian',
-    not_yet_created:   'CANDIDATE_PROFILE.cv_format_not_yet_created',
-    others:            'CANDIDATE_PROFILE.cv_format_others',
-  };
-
-  cvFormatLabel(format: string): string {
-    const key = this.cvFormatLabelKeys[format];
-    return key ? this.translate.instant(key) : format;
-  }
 
   tabs: { id: Tab; labelKey: string; icon: string }[] = [
     { id: 'overview',    labelKey: 'CANDIDATE_PROFILE.tab_overview',    icon: 'bi-person-fill'       },

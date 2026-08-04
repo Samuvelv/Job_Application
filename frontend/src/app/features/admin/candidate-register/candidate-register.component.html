@@ -351,7 +351,7 @@
         </div>
 
         <!-- Years of Experience -->
-        <div class="col-md-3">
+        <div class="col-md-6">
           <label class="form-label">Years of Experience
             <span class="badge bg-primary ms-2">{{ form.get('years_experience')?.value ?? 0 }} yrs</span>
           </label>
@@ -363,7 +363,7 @@
         </div>
 
          <!-- LinkedIn URL -->
-         <div class="col-md-3">
+         <div class="col-md-6">
            <label class="form-label">{{ 'ADMIN.CANDIDATE_FORM.linkedin_url' | translate }}</label>
           <input type="url" class="form-control" formControlName="linkedin_url"
             placeholder="https://linkedin.com/in/username"
@@ -373,17 +373,6 @@
               Enter a valid LinkedIn URL (e.g. https://linkedin.com/in/username).
             </div>
           }
-        </div>
-
-         <!-- CV Format -->
-         <div class="col-md-6">
-           <label class="form-label">{{ 'ADMIN.CANDIDATE_FORM.cv_format' | translate }}</label>
-          <app-searchable-select
-            formControlName="cv_format"
-            [options]="cvFormatOptions"
-            placeholder="Select format…"
-            [allowClear]="false">
-          </app-searchable-select>
         </div>
 
          <!-- Visa / Work Permit Status -->

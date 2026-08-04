@@ -225,7 +225,6 @@ import { SORT_OPTIONS, PROFILE_STATUS_OPTIONS, PROFILE_STATUS_WITH_COLOR } from 
                      <th>{{ 'TABLE.experience' | translate }}</th>
                      <th>{{ 'TABLE.status' | translate }}</th>
                      <th>{{ 'TABLE.fee' | translate }}</th>
-                     <th>{{ 'TABLE.cv_format' | translate }}</th>
                      <th style="width:48px;text-align:center">{{ 'TABLE.video' | translate }}</th>
                      <th style="width:80px;text-align:center">{{ 'TABLE.profile' | translate }}</th>
                      <th>{{ 'TABLE.actions' | translate }}</th>
@@ -293,16 +292,6 @@ import { SORT_OPTIONS, PROFILE_STATUS_OPTIONS, PROFILE_STATUS_WITH_COLOR } from 
                           [class.badge-status-inactive]="emp.registration_fee_status === 'waived'">
                           {{ registrationFeeLabel(emp.registration_fee_status) }}
                         </span>
-                      </td>
-                      <td class="small">
-                        @if (emp.cv_format && emp.cv_format !== 'not_yet_created') {
-                          <span class="badge rounded-pill"
-                            style="background:var(--th-primary-soft);color:var(--th-primary);font-size:.65rem">
-                            {{ cvFormatLabel(emp.cv_format) }}
-                          </span>
-                        } @else {
-                          <span class="text-muted">—</span>
-                        }
                       </td>
                       <td style="text-align:center">
                          @if (emp.intro_video_url) {
@@ -402,12 +391,6 @@ import { SORT_OPTIONS, PROFILE_STATUS_OPTIONS, PROFILE_STATUS_WITH_COLOR } from 
                         [class.badge-status-inactive]="emp.registration_fee_status === 'waived'">
                         {{ registrationFeeLabel(emp.registration_fee_status) }}
                       </span>
-                      @if (emp.cv_format && emp.cv_format !== 'not_yet_created') {
-                        <span class="badge rounded-pill"
-                          style="background:var(--th-primary-soft);color:var(--th-primary);font-size:.65rem">
-                          {{ cvFormatLabel(emp.cv_format) }}
-                        </span>
-                      }
                     </div>
                   </div>
                   <div class="d-flex flex-wrap gap-2 small text-muted mb-2">
@@ -770,16 +753,10 @@ export class CandidateListComponent implements OnInit {
       return (s.includes('"') || s.includes(',') || s.includes('\n'))
         ? `"${s.replace(/"/g, '""')}"` : s;
     };
-    const CV_LABELS: Record<string, string> = {
-      uk_format: 'UK Format', european_format: 'European Format',
-      canadian_format: 'Canadian Format', australian_format: 'Australian Format',
-      gulf_format: 'Gulf Format', asian_format: 'Asian Format',
-      not_yet_created: 'Not Yet Created',
-    };
     const headers = [
       'Login ID', 'Reference No', 'First Name', 'Last Name', 'Email', 'Phone',
       'Current Country', 'Target Countries', 'Profile Status',
-      'Registration Fee Status', 'CV Format', 'Created Date',
+      'Registration Fee Status', 'Created Date',
     ];
     const rows = selected.map(c => [
       esc(c.login_id != null ? String(c.login_id) : ''),
@@ -792,7 +769,6 @@ export class CandidateListComponent implements OnInit {
       esc(Array.isArray(c.target_locations) ? c.target_locations.join('; ') : c.target_locations),
       esc(c.profile_status),
       esc(c.registration_fee_status),
-      esc(c.cv_format ? (CV_LABELS[c.cv_format] ?? c.cv_format) : ''),
       esc(c.created_at ? new Date(c.created_at).toISOString().slice(0, 10) : ''),
     ].join(','));
     const csv = [headers.join(','), ...rows].join('\r\n');
@@ -866,21 +842,6 @@ export class CandidateListComponent implements OnInit {
   }
 
   // ── Label helpers ────────────────────────────────────────────────────────────
-  private readonly cvFormatLabels: Record<string, string> = {
-    uk_format:         'UK',
-    european_format:   'EU',
-    canadian_format:   'CA',
-    australian_format: 'AU',
-    gulf_format:       'Gulf',
-    asian_format:      'Asia',
-    not_yet_created:   '—',
-    others:            'Others',
-  };
-
-  cvFormatLabel(val?: string): string {
-    return val ? (this.cvFormatLabels[val] ?? val) : '—';
-  }
-
   registrationFeeLabel(status?: string): string {
     const map: Record<string, string> = { paid: 'Paid', pending_payment: 'Pending', waived: 'Waived' };
     return status ? (map[status] ?? '—') : '—';

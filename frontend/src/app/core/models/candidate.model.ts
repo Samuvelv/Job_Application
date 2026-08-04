@@ -93,7 +93,6 @@ export interface Candidate {
   // Status
   profile_status?: string;
   registration_fee_status?: string;
-  cv_format?: string;
   plain_password?: string;
   contact_locked?: boolean;
   is_volunteer?: boolean;
@@ -145,7 +144,6 @@ export interface CandidateFilters {
   source?: string;          // comma-sep
   profileStatus?: string;
   registrationFeeStatus?: string;
-  cvFormat?: string;
   // Sort
   sortBy?: string;
   // Pagination

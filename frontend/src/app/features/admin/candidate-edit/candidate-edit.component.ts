@@ -18,7 +18,7 @@ import { SearchableSelectComponent, SelectOption } from '../../../shared/compone
 import { ChipMultiSelectComponent, ChipOption } from '../../../shared/components/chip-multi-select/chip-multi-select.component';
 import { Candidate, Certificate } from '../../../core/models/candidate.model';
 import { Volunteer } from '../../../core/models/volunteer.model';
-import { REGISTRATION_FEE_STATUS_OPTIONS, CV_FORMAT_OPTIONS, SOURCE_OPTIONS, EMPLOYMENT_STATUS_OPTIONS, VISA_STATUS_OPTIONS, REASON_FOR_LEAVING_OPTIONS, PROFILE_STATUS_OPTIONS } from '../../../core/constants/candidate-options';
+import { REGISTRATION_FEE_STATUS_OPTIONS, SOURCE_OPTIONS, EMPLOYMENT_STATUS_OPTIONS, VISA_STATUS_OPTIONS, REASON_FOR_LEAVING_OPTIONS, PROFILE_STATUS_OPTIONS } from '../../../core/constants/candidate-options';
 
 // ── Email validator ────────────────────────────────────────────────────────
 function emailValidator(): ValidatorFn {
@@ -358,7 +358,6 @@ export class CandidateEditComponent implements OnInit, OnDestroy {
   ];
   readonly statusOptions: SelectOption[] = PROFILE_STATUS_OPTIONS;
   readonly registrationFeeStatusOptions = REGISTRATION_FEE_STATUS_OPTIONS;
-  readonly cvFormatOptions             = CV_FORMAT_OPTIONS;
   readonly sourceOptions               = SOURCE_OPTIONS;
   readonly maritalStatusOptions: SelectOption[] = [
     { value: 'single',   label: 'Single'   },
@@ -857,7 +856,6 @@ export class CandidateEditComponent implements OnInit, OnDestroy {
       bio:           [emp.bio ?? '', this.bioWordLimitValidator(this.BIO_WORD_LIMIT)],
       profile_status:          [emp.profile_status          ?? 'active'],
       registration_fee_status: [emp.registration_fee_status ?? 'pending_payment'],
-      cv_format:               [emp.cv_format               ?? 'not_yet_created'],
       source:                  [emp.source                  ?? 'Other'],
 
       visa_status_select: [visaSelect],
@@ -996,7 +994,6 @@ export class CandidateEditComponent implements OnInit, OnDestroy {
       bio:           raw.bio             || undefined,
       profile_status:          raw.profile_status          || undefined,
       registration_fee_status: raw.registration_fee_status || undefined,
-      cv_format:               raw.cv_format               || undefined,
       source:                  raw.source                  || undefined,
       visa_status: raw.visa_status_select === 'other'
         ? (raw.visa_status_other?.trim() ? `Other: ${raw.visa_status_other.trim()}` : 'Other — specify')
