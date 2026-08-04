@@ -8,6 +8,7 @@ export const SkillSchema = z.object({
   proficiency: z.enum(['beginner', 'intermediate', 'expert'])
     .optional()
     .or(z.literal('').transform(() => undefined)),
+  description: z.string().max(2000).optional(),
 });
 
 export const LanguageSchema = z.object({

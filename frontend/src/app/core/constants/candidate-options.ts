@@ -30,17 +30,6 @@ export const REGISTRATION_FEE_STATUS_OPTIONS: SelectOption[] = [
   { value: 'waived',          label: 'OPTIONS.fee_waived'  },
 ];
 
-export const CV_FORMAT_OPTIONS: SelectOption[] = [
-  { value: 'uk_format',         label: 'OPTIONS.cv_uk'          },
-  { value: 'european_format',   label: 'OPTIONS.cv_european'    },
-  { value: 'canadian_format',   label: 'OPTIONS.cv_canadian'    },
-  { value: 'australian_format', label: 'OPTIONS.cv_australian'  },
-  { value: 'gulf_format',       label: 'OPTIONS.cv_gulf'        },
-  { value: 'asian_format',      label: 'OPTIONS.cv_asian'       },
-  { value: 'others',            label: 'OPTIONS.cv_others'      },
-  { value: 'not_yet_created',   label: 'OPTIONS.cv_not_created' },
-];
-
 export const SOURCE_OPTIONS: SelectOption[] = [
   { value: 'Instagram',       label: 'OPTIONS.source_instagram' },
   { value: 'YouTube',         label: 'OPTIONS.source_youtube'   },
@@ -58,11 +47,11 @@ export const EMPLOYMENT_STATUS_OPTIONS: SelectOption[] = [
 ];
 
 export const VISA_STATUS_OPTIONS: SelectOption[] = [
-  { value: 'No visa — need full sponsorship',    label: 'OPTIONS.visa_need_sponsorship' },
-  { value: 'Have valid visa in current country', label: 'OPTIONS.visa_have_valid'       },
-  { value: 'Have UK/EU visa already',            label: 'OPTIONS.visa_have_ukeu'        },
-  { value: 'Asylum seeker',                      label: 'OPTIONS.visa_asylum'           },
-  { value: 'other',                              label: 'OPTIONS.visa_other'            },
+  { value: 'No Visa - Requires full visa sponsorship',    label: 'OPTIONS.visa_need_sponsorship' },
+  { value: 'Have valid visa in current country',          label: 'OPTIONS.visa_have_valid'       },
+  { value: 'Have UK/EU visa already',                     label: 'OPTIONS.visa_have_ukeu'        },
+  { value: 'Asylum seeker',                               label: 'OPTIONS.visa_asylum'           },
+  { value: 'other',                                       label: 'OPTIONS.visa_other'            },
 ];
 
 export const REASON_FOR_LEAVING_OPTIONS: SelectOption[] = [

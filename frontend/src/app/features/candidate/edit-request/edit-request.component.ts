@@ -832,30 +832,47 @@ function makePostalCodeGroupValidator(countryCtrl: string, postalCtrl: string): 
             </div>
           }
           @for (ctrl of skillsArray.controls; track $index) {
-            <div [formGroup]="asGroup(ctrl)" class="row g-2 mb-2 align-items-center">
-              <div class="col">
-                <input formControlName="skill_name" class="form-control form-control-sm"
-                  [placeholder]="'CANDIDATE_EDIT_REQUEST.eg_skill' | translate"
-                  [class.is-invalid]="asGroup(ctrl).get('skill_name')!.invalid && asGroup(ctrl).get('skill_name')!.touched">
-                @if (asGroup(ctrl).get('skill_name')!.invalid && asGroup(ctrl).get('skill_name')!.touched) {
-                  <div class="invalid-feedback">{{ 'CANDIDATE_EDIT_REQUEST.skill_name_required' | translate }}</div>
-                }
+            <div [formGroup]="asGroup(ctrl)" class="mb-2">
+              <div class="row g-2 align-items-center">
+                <div class="col">
+                  <input formControlName="skill_name" class="form-control form-control-sm"
+                    [placeholder]="'CANDIDATE_EDIT_REQUEST.eg_skill' | translate"
+                    [class.is-invalid]="asGroup(ctrl).get('skill_name')!.invalid && asGroup(ctrl).get('skill_name')!.touched">
+                  @if (asGroup(ctrl).get('skill_name')!.invalid && asGroup(ctrl).get('skill_name')!.touched) {
+                    <div class="invalid-feedback">{{ 'CANDIDATE_EDIT_REQUEST.skill_name_required' | translate }}</div>
+                  }
+                </div>
+                <div class="col">
+                  <app-searchable-select
+                    formControlName="proficiency"
+                    [options]="proficiencySkillOptions"
+                    [placeholder]="'CANDIDATE_EDIT_REQUEST.select_placeholder' | translate"
+                    [allowClear]="false"
+                    [invalid]="asGroup(ctrl).get('proficiency')!.invalid && asGroup(ctrl).get('proficiency')!.touched">
+                  </app-searchable-select>
+                  @if (asGroup(ctrl).get('proficiency')!.invalid && asGroup(ctrl).get('proficiency')!.touched) {
+                    <div class="text-danger" style="font-size:.875em;margin-top:.25rem">{{ 'CANDIDATE_EDIT_REQUEST.select_proficiency_level' | translate }}</div>
+                  }
+                </div>
+                <div class="col-auto" style="width:5rem">
+                  <button type="button" class="btn btn-sm btn-outline-danger w-100"
+                    (click)="removeSkill($index)"><i class="bi bi-trash"></i></button>
+                </div>
               </div>
-              <div class="col">
-                <app-searchable-select
-                  formControlName="proficiency"
-                  [options]="proficiencySkillOptions"
-                  [placeholder]="'CANDIDATE_EDIT_REQUEST.select_placeholder' | translate"
-                  [allowClear]="false"
-                  [invalid]="asGroup(ctrl).get('proficiency')!.invalid && asGroup(ctrl).get('proficiency')!.touched">
-                </app-searchable-select>
-                @if (asGroup(ctrl).get('proficiency')!.invalid && asGroup(ctrl).get('proficiency')!.touched) {
-                  <div class="text-danger" style="font-size:.875em;margin-top:.25rem">{{ 'CANDIDATE_EDIT_REQUEST.select_proficiency_level' | translate }}</div>
-                }
-              </div>
-              <div class="col-auto" style="width:5rem">
-                <button type="button" class="btn btn-sm btn-outline-danger w-100"
-                  (click)="removeSkill($index)"><i class="bi bi-trash"></i></button>
+              <div class="row g-2 mt-1">
+                <div class="col-12">
+                  <label class="form-label form-label-sm mb-1">{{ 'CANDIDATE_EDIT_REQUEST.skill_description' | translate }}</label>
+                  <textarea formControlName="description" class="form-control form-control-sm" rows="2"
+                    maxlength="2000"
+                    [placeholder]="'CANDIDATE_EDIT_REQUEST.skill_description_placeholder' | translate"
+                    [class.is-invalid]="asGroup(ctrl).get('description')!.invalid && asGroup(ctrl).get('description')!.touched"></textarea>
+                  @if (asGroup(ctrl).get('description')!.invalid && asGroup(ctrl).get('description')!.touched) {
+                    <div class="invalid-feedback">{{ 'CANDIDATE_EDIT_REQUEST.skill_description_max' | translate }}</div>
+                  }
+                  <small class="d-block text-end mt-1 text-muted" style="font-size:.75rem">
+                    {{ (asGroup(ctrl).get('description')!.value || '').length }} / 2000 characters
+                  </small>
+                </div>
               </div>
             </div>
           }
@@ -1730,7 +1747,7 @@ export class EditRequestComponent implements OnInit, OnDestroy {
 
       // Dynamic arrays
       skills: this.fb.array((emp.skills ?? []).map(s =>
-        this.fb.group({ skill_name: [s.skill_name ?? '', Validators.required], proficiency: [s.proficiency ?? ''] }, { validators: skillGroupValidator }))),
+        this.fb.group({ skill_name: [s.skill_name ?? '', Validators.required], proficiency: [s.proficiency ?? ''], description: [s.description ?? '', Validators.maxLength(2000)] }, { validators: skillGroupValidator }))),
 
       languages: this.fb.array((emp.languages ?? []).map(l =>
         this.fb.group({ language: [l.language ?? '', Validators.required], proficiency: [l.proficiency ?? ''] }, { validators: langGroupValidator }))),
@@ -2018,7 +2035,7 @@ export class EditRequestComponent implements OnInit, OnDestroy {
 
   asGroup(c: AbstractControl): FormGroup { return c as FormGroup; }
 
-  addSkill():              void { this.skillsArray.push(this.fb.group({ skill_name: ['', Validators.required], proficiency: [''] }, { validators: skillGroupValidator })); }
+  addSkill():              void { this.skillsArray.push(this.fb.group({ skill_name: ['', Validators.required], proficiency: [''], description: ['', Validators.maxLength(2000)] }, { validators: skillGroupValidator })); }
   removeSkill(i: number):  void { this.skillsArray.removeAt(i); }
   addLanguage():             void { this.languagesArray.push(this.fb.group({ language: ['', Validators.required], proficiency: [''] }, { validators: langGroupValidator })); }
   removeLanguage(i: number): void { this.languagesArray.removeAt(i); }

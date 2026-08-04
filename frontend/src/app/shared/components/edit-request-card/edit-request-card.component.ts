@@ -914,7 +914,7 @@ export class EditRequestCardComponent implements OnInit {
           return value
             .map(item => {
               const skill = item as any;
-              return `${skill.skill_name} (${skill.proficiency})`;
+              return `${skill.skill_name} (${skill.proficiency})${skill.description ? ' — ' + skill.description : ''}`;
             })
             .join(', ');
         }

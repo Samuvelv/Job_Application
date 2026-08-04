@@ -242,17 +242,6 @@ export async function bulkActionHandler(req: Request, res: Response, next: NextF
   } catch (err) { next(err); }
 }
 
-const CV_FORMAT_LABELS: Record<string, string> = {
-  uk_format:         'UK Format',
-  european_format:   'European Format',
-  canadian_format:   'Canadian Format',
-  australian_format: 'Australian Format',
-  gulf_format:       'Gulf Format',
-  asian_format:      'Asian Format',
-  not_yet_created:   'Not Yet Created',
-  others:            'CV Format - Others',
-};
-
 function csvEscape(val: unknown): string {
   if (val == null) return '';
   const str = String(val);
@@ -270,7 +259,7 @@ export async function exportCsv(req: Request, res: Response, next: NextFunction)
     const headers = [
       'Login ID', 'Reference No', 'First Name', 'Last Name', 'Email', 'Phone',
       'Current Country', 'Target Countries', 'Profile Status',
-      'Registration Fee Status', 'CV Format', 'Created Date',
+      'Registration Fee Status', 'Created Date',
     ];
 
     const lines = [
@@ -286,7 +275,6 @@ export async function exportCsv(req: Request, res: Response, next: NextFunction)
         csvEscape(Array.isArray(r.target_locations) ? r.target_locations.join('; ') : r.target_locations),
         csvEscape(r.profile_status),
         csvEscape(r.registration_fee_status),
-        csvEscape(r.cv_format ? (CV_FORMAT_LABELS[r.cv_format] ?? r.cv_format) : ''),
         csvEscape(r.created_at ? new Date(r.created_at).toISOString().slice(0, 10) : ''),
       ].join(',')),
     ];

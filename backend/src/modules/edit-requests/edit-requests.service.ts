@@ -53,7 +53,7 @@ export async function submitEditRequest(
   if (relationKeys.has('skills')) {
     const rows = await db('candidate_skills')
       .where({ candidate_id: candidate.id })
-      .select('skill_name', 'proficiency')
+      .select('skill_name', 'proficiency', 'description')
       .orderBy('skill_name');
     oldValues['skills'] = rows;
   }

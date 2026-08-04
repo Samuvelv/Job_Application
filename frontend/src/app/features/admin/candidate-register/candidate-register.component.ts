@@ -15,7 +15,7 @@ import { MasterDataService } from '../../../core/services/master-data.service';
 import { AuthService } from '../../../core/services/auth.service';
 import { SearchableSelectComponent, SelectOption } from '../../../shared/components/searchable-select/searchable-select.component';
 import { ChipMultiSelectComponent, ChipOption } from '../../../shared/components/chip-multi-select/chip-multi-select.component';
-import { REGISTRATION_FEE_STATUS_OPTIONS, CV_FORMAT_OPTIONS, SOURCE_OPTIONS, EMPLOYMENT_STATUS_OPTIONS, VISA_STATUS_OPTIONS, REASON_FOR_LEAVING_OPTIONS } from '../../../core/constants/candidate-options';
+import { REGISTRATION_FEE_STATUS_OPTIONS, SOURCE_OPTIONS, EMPLOYMENT_STATUS_OPTIONS, VISA_STATUS_OPTIONS, REASON_FOR_LEAVING_OPTIONS } from '../../../core/constants/candidate-options';
 import { HasUnsavedChanges } from '../../../core/guards/unsaved-changes.guard';
 
 function draftKey(userId: string): string {
@@ -381,7 +381,6 @@ export class CandidateRegisterComponent implements OnInit, OnDestroy, HasUnsaved
     { value: 'widowed',  label: 'Widowed'  },
   ];
   readonly registrationFeeStatusOptions = REGISTRATION_FEE_STATUS_OPTIONS;
-  readonly cvFormatOptions             = CV_FORMAT_OPTIONS;
   readonly sourceOptions               = SOURCE_OPTIONS;
   readonly employmentStatusOptions     = EMPLOYMENT_STATUS_OPTIONS;
   readonly visaStatusOptions           = VISA_STATUS_OPTIONS;
@@ -482,7 +481,6 @@ export class CandidateRegisterComponent implements OnInit, OnDestroy, HasUnsaved
       password: ['', [Validators.required, Validators.minLength(8), Validators.pattern(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,}$/)]],
 
       registration_fee_status: ['pending_payment'],
-      cv_format:               ['not_yet_created'],
       source:                  ['Other'],
       visa_status_select:      [''],
       visa_status_other:       [''],
@@ -605,7 +603,7 @@ export class CandidateRegisterComponent implements OnInit, OnDestroy, HasUnsaved
           current_city: raw.current_city, nationality: raw.nationality, postal_code: raw.postal_code,
           has_passport: raw.has_passport, target_locations: raw.target_locations,
           email: raw.email, password: raw.password, registration_fee_status: raw.registration_fee_status,
-          cv_format: raw.cv_format, source: raw.source, visa_status_select: raw.visa_status_select,
+          source: raw.source, visa_status_select: raw.visa_status_select,
           visa_status_other: raw.visa_status_other,
         },
         skills:     raw.skills,
@@ -641,7 +639,7 @@ export class CandidateRegisterComponent implements OnInit, OnDestroy, HasUnsaved
         while (this.skills.length) this.skills.removeAt(0);
         for (const s of draft.skills) {
           this.skills.push(this.fb.group(
-            { skill_name: [s.skill_name ?? ''], proficiency: [s.proficiency ?? ''] },
+            { skill_name: [s.skill_name ?? ''], proficiency: [s.proficiency ?? ''], description: [s.description ?? '', Validators.maxLength(2000)] },
             { validators: skillGroupValidator }
           ));
         }
@@ -709,7 +707,7 @@ export class CandidateRegisterComponent implements OnInit, OnDestroy, HasUnsaved
   get education():  FormArray { return this.form.get('education')  as FormArray; }
 
   addSkill(): void {
-    this.skills.push(this.fb.group({ skill_name: ['', Validators.required], proficiency: [''] }, { validators: skillGroupValidator }));
+    this.skills.push(this.fb.group({ skill_name: ['', Validators.required], proficiency: [''], description: ['', Validators.maxLength(2000)] }, { validators: skillGroupValidator }));
   }
   removeSkill(i: number): void { this.skills.removeAt(i); }
 
@@ -1095,7 +1093,6 @@ export class CandidateRegisterComponent implements OnInit, OnDestroy, HasUnsaved
       target_locations: Array.isArray(raw.target_locations) ? raw.target_locations : [],
       hobbies: Array.isArray(raw.hobbies) ? raw.hobbies : [],
       registration_fee_status: raw.registration_fee_status || 'pending_payment',
-      cv_format:               raw.cv_format               || 'not_yet_created',
       source:                  raw.source                  || 'Other',
       visa_status: raw.visa_status_select === 'other'
         ? (raw.visa_status_other?.trim() ? `Other: ${raw.visa_status_other.trim()}` : 'Other — specify')

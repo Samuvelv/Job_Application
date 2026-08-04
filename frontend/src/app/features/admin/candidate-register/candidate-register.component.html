@@ -351,7 +351,7 @@
         </div>
 
         <!-- Years of Experience -->
-        <div class="col-md-3">
+        <div class="col-md-6">
           <label class="form-label">Years of Experience
             <span class="badge bg-primary ms-2">{{ form.get('years_experience')?.value ?? 0 }} yrs</span>
           </label>
@@ -363,7 +363,7 @@
         </div>
 
          <!-- LinkedIn URL -->
-         <div class="col-md-3">
+         <div class="col-md-6">
            <label class="form-label">{{ 'ADMIN.CANDIDATE_FORM.linkedin_url' | translate }}</label>
           <input type="url" class="form-control" formControlName="linkedin_url"
             placeholder="https://linkedin.com/in/username"
@@ -373,17 +373,6 @@
               Enter a valid LinkedIn URL (e.g. https://linkedin.com/in/username).
             </div>
           }
-        </div>
-
-         <!-- CV Format -->
-         <div class="col-md-6">
-           <label class="form-label">{{ 'ADMIN.CANDIDATE_FORM.cv_format' | translate }}</label>
-          <app-searchable-select
-            formControlName="cv_format"
-            [options]="cvFormatOptions"
-            placeholder="Select format…"
-            [allowClear]="false">
-          </app-searchable-select>
         </div>
 
          <!-- Visa / Work Permit Status -->
@@ -420,32 +409,48 @@
               </div>
             }
             @for (skill of skills.controls; track $index) {
-              <div [formGroupName]="$index" class="row g-2 mb-2 align-items-center">
-                <div class="col">
-                  <input type="text" class="form-control form-control-sm" formControlName="skill_name"
-                    placeholder="e.g. Angular"
-                    [class.is-invalid]="skills.at($index).get('skill_name')!.invalid && skills.at($index).get('skill_name')!.touched">
-                  @if (skills.at($index).get('skill_name')!.invalid && skills.at($index).get('skill_name')!.touched) {
-                    <div class="invalid-feedback">Skill name is required.</div>
-                  }
+              <div [formGroupName]="$index" class="mb-2">
+                <div class="row g-2 align-items-center">
+                  <div class="col">
+                    <input type="text" class="form-control form-control-sm" formControlName="skill_name"
+                      placeholder="e.g. Angular"
+                      [class.is-invalid]="skills.at($index).get('skill_name')!.invalid && skills.at($index).get('skill_name')!.touched">
+                    @if (skills.at($index).get('skill_name')!.invalid && skills.at($index).get('skill_name')!.touched) {
+                      <div class="invalid-feedback">Skill name is required.</div>
+                    }
+                  </div>
+                  <div class="col">
+                    <app-searchable-select
+                      formControlName="proficiency"
+                      [options]="proficiencySkillOptions"
+                      placeholder="— Select —"
+                      [allowClear]="false"
+                      [invalid]="skills.at($index).get('proficiency')!.invalid && skills.at($index).get('proficiency')!.touched">
+                    </app-searchable-select>
+                    @if (skills.at($index).get('proficiency')!.invalid && skills.at($index).get('proficiency')!.touched) {
+                      <div class="text-danger" style="font-size:.875em;margin-top:.25rem">Select a proficiency level.</div>
+                    }
+                  </div>
+                  <div class="col-auto" style="width:6rem">
+                    <button type="button" class="btn btn-sm btn-outline-danger w-100"
+                      (click)="removeSkill($index)" [disabled]="skills.length === 1">
+                      <i class="bi bi-trash me-1"></i>Remove
+                    </button>
+                  </div>
                 </div>
-                <div class="col">
-                  <app-searchable-select
-                    formControlName="proficiency"
-                    [options]="proficiencySkillOptions"
-                    placeholder="— Select —"
-                    [allowClear]="false"
-                    [invalid]="skills.at($index).get('proficiency')!.invalid && skills.at($index).get('proficiency')!.touched">
-                  </app-searchable-select>
-                  @if (skills.at($index).get('proficiency')!.invalid && skills.at($index).get('proficiency')!.touched) {
-                    <div class="text-danger" style="font-size:.875em;margin-top:.25rem">Select a proficiency level.</div>
-                  }
-                </div>
-                <div class="col-auto" style="width:6rem">
-                  <button type="button" class="btn btn-sm btn-outline-danger w-100"
-                    (click)="removeSkill($index)" [disabled]="skills.length === 1">
-                    <i class="bi bi-trash me-1"></i>Remove
-                  </button>
+                <div class="row g-2 mt-1">
+                  <div class="col-12">
+                    <label class="form-label form-label-sm mb-1">Description</label>
+                    <textarea class="form-control form-control-sm" formControlName="description" rows="2"
+                      maxlength="2000" placeholder="Optional details about this skill…"
+                      [class.is-invalid]="skills.at($index).get('description')!.invalid && skills.at($index).get('description')!.touched"></textarea>
+                    @if (skills.at($index).get('description')!.invalid && skills.at($index).get('description')!.touched) {
+                      <div class="invalid-feedback">Description cannot exceed 2000 characters.</div>
+                    }
+                    <small class="d-block text-end mt-1 text-muted" style="font-size:.75rem">
+                      {{ (skills.at($index).get('description')!.value || '').length }} / 2000 characters
+                    </small>
+                  </div>
                 </div>
               </div>
             }
