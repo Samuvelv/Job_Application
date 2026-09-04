@@ -11,7 +11,13 @@
       "Bash(npm run *)",
       "Bash(PGPASSWORD='samuvelV15&k' psql -h localhost -p 5432 -U postgres -d talentdb -c \"\\\\d candidate_skills\")",
       "Bash(npx ts-node -e ' *)",
-      "Bash(npx ts-node *)"
+      "Bash(npx ts-node *)",
+      "Bash(node -e \"const f=require\\('./frontend/src/assets/master-data-i18n/en.json'\\); for\\(const k of Object.keys\\(f\\)\\) console.log\\(k, Object.keys\\(f[k]\\).length\\);\")",
+      "Bash(node *)",
+      "Bash(echo \"exit:$?\")",
+      "Bash(echo \"backend tsc exit: $?\")",
+      "Bash(OPENAI_MODEL=gpt-4.1-mini node scripts/translate-missing-i18n-keys.js sr)",
+      "Bash(OPENAI_MODEL=gpt-4.1-mini node scripts/translate-master-data-i18n.js sr bs)"
     ]
   }
 }

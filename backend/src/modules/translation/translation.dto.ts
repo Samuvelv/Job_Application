@@ -1,7 +1,7 @@
 // src/modules/translation/translation.dto.ts
 import { z } from 'zod';
 
-/** ISO codes that match the 34 UI languages supported by the platform (frontend/src/app/core/services/language.service.ts). */
+/** ISO codes that match the 37 UI languages supported by the platform (frontend/src/app/core/services/language.service.ts). */
 const SUPPORTED_LANG_CODES = [
   'en', 'fr', 'de', 'es', 'pt', 'it',
   'nl', 'ru', 'zh', 'ja', 'ko', 'ar',
@@ -9,6 +9,7 @@ const SUPPORTED_LANG_CODES = [
   'cs', 'da', 'et', 'fi', 'sv', 'hu',
   'ga', 'lv', 'lt', 'lb', 'mt', 'ro',
   'sk', 'sl', 'no', 'rm', 'is',
+  'sr', 'bs',
 ] as const;
 
 export const TranslateSchema = z.object({

@@ -35,7 +35,7 @@ export class UserDataTranslationService {
   private readonly CACHE_TTL = 3600000; // 1 hour
 
   // Language name mappings for API — must match backend SUPPORTED_LANG_CODES
-  // and frontend LanguageService.SUPPORTED_LANGUAGES (34 UI languages).
+  // and frontend LanguageService.SUPPORTED_LANGUAGES (37 UI languages).
   private readonly langNameMap: Record<string, string> = {
     'en': 'English',
     'fr': 'French',
@@ -72,6 +72,10 @@ export class UserDataTranslationService {
     'no': 'Norwegian',
     'rm': 'Romansh',
     'is': 'Icelandic',
+    // Script is pinned explicitly: GPT otherwise picks Cyrillic or Latin
+    // inconsistently for these two, which would mix scripts within a profile.
+    'sr': 'Serbian (Cyrillic script)',
+    'bs': 'Bosnian (Latin script)',
   };
 
   constructor(private http: HttpClient) {}
