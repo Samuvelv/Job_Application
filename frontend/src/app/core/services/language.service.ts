@@ -47,6 +47,8 @@ export const SUPPORTED_LANGUAGES: Language[] = [
    { code: 'no', name: 'Norsk',        flag: '🇳🇴', dir: 'ltr' },
    { code: 'rm', name: 'Rumantsch',    flag: '🇨🇭', dir: 'ltr' },
    { code: 'is', name: 'Íslenska',     flag: '🇮🇸', dir: 'ltr' },
+   { code: 'sr', name: 'Српски',       flag: '🇷🇸', dir: 'ltr' },
+   { code: 'bs', name: 'Bosanski',     flag: '🇧🇦', dir: 'ltr' },
 ];
 
 const STORAGE_KEY = 'preferred_lang';
@@ -127,6 +129,10 @@ export class LanguageService {
     no: () => import('@angular/common/locales/no'),
     rm: () => import('@angular/common/locales/rm'),
     is: () => import('@angular/common/locales/is'),
+    // `sr` is Cyrillic in CLDR and `bs` is Latin, which matches the script each
+    // language's translation files are written in.
+    sr: () => import('@angular/common/locales/sr'),
+    bs: () => import('@angular/common/locales/bs'),
   };
 
   /**

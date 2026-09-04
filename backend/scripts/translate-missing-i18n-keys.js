@@ -1,26 +1,26 @@
 // backend/scripts/translate-missing-i18n-keys.js
-// One-off script: translates any en.json keys missing from the other 34
+// One-off script: translates any en.json keys missing from the other 36
 // frontend i18n locale files, using the same OpenAI setup as the app's
-// runtime translation feature. Run with: node scripts/translate-missing-i18n-keys.js
+// runtime translation feature.
+//
+// Run with:  node scripts/translate-missing-i18n-keys.js            (all languages)
+//            node scripts/translate-missing-i18n-keys.js sr bs      (only these)
+//
+// For languages written in a non-Latin script, override the model:
+//   OPENAI_MODEL=gpt-4.1-mini node scripts/translate-missing-i18n-keys.js sr
+// gpt-3.5-turbo (the app's runtime default) answers Serbian in Latin no matter
+// how the prompt is worded, and Cyrillic costs it enough extra tokens that
+// large chunks get truncated into unparseable JSON.
 require('dotenv').config();
 const fs = require('fs');
 const path = require('path');
 const OpenAI = require('openai');
+const LANG_NAMES = require('./lang-names');
 
 const I18N_DIR = path.join(__dirname, '..', '..', 'frontend', 'src', 'assets', 'i18n');
 const MODEL = process.env.OPENAI_MODEL || 'gpt-3.5-turbo';
 const MAX_CHUNK_CHARS = 4000;
 const CONCURRENCY = 4;
-
-const LANG_NAMES = {
-  fr: 'French', de: 'German', es: 'Spanish', pt: 'Portuguese', it: 'Italian',
-  nl: 'Dutch', ru: 'Russian', zh: 'Chinese (Simplified)', ja: 'Japanese', ko: 'Korean',
-  ar: 'Arabic', hi: 'Hindi', tr: 'Turkish', pl: 'Polish', bg: 'Bulgarian',
-  hr: 'Croatian', el: 'Greek', cs: 'Czech', da: 'Danish', et: 'Estonian',
-  fi: 'Finnish', sv: 'Swedish', hu: 'Hungarian', ga: 'Irish', lv: 'Latvian',
-  lt: 'Lithuanian', lb: 'Luxembourgish', mt: 'Maltese', ro: 'Romanian', sk: 'Slovak',
-  sl: 'Slovenian', no: 'Norwegian', rm: 'Romansh', is: 'Icelandic',
-};
 
 const client = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
@@ -63,10 +63,32 @@ function chunkEntries(entries) {
   return chunks;
 }
 
-async function translateChunk(fields, langName) {
+/** Script a language must be written in, parsed from names like "Serbian (Cyrillic script)". */
+function requiredScript(langName) {
+  const m = /\(([A-Za-z]+) script\)/.exec(langName);
+  return m ? m[1] : null;
+}
+
+/** True when the chunk came back in the wrong alphabet (see the retry in translateChunk). */
+function wrongScript(values, script) {
+  if (script !== 'Cyrillic') return false;
+  const withLetters = values.filter((v) => /\p{L}/u.test(v));
+  if (withLetters.length === 0) return false;
+  const cyrillic = withLetters.filter((v) => /[Ѐ-ӿ]/.test(v));
+  // Some Latin values are legitimate (brand names, placeholders), so only a
+  // chunk that is mostly Latin counts as drift.
+  return cyrillic.length < withLetters.length / 2;
+}
+
+async function translateChunk(fields, langName, attempt = 1) {
+  const script = requiredScript(langName);
+  const scriptRule = script
+    ? `\n- Write every translated value in the ${script} script. Output in any other alphabet is incorrect, even where the other alphabet is also used for this language.`
+    : '';
+
   const systemPrompt = `You are a professional UI translation assistant for a recruitment platform called "NTL Career Nexus". Translate the English UI text values in the JSON input into ${langName}.
 
-Rules:
+Rules:${scriptRule}
 - Input: a JSON object where each key is a UI string identifier and each value is the English text to translate.
 - Output: a JSON object with the IDENTICAL set of keys, values translated into ${langName}.
 - Preserve ICU/interpolation placeholders exactly as-is, e.g. {{name}}, {{count}}, {{email}} — do not translate or alter their contents, spacing, or braces.
@@ -97,6 +119,15 @@ Rules:
     const val = parsed[key];
     result[key] = typeof val === 'string' && val.trim().length > 0 ? val : fields[key];
   }
+
+  // The model occasionally answers a whole chunk in the language's other
+  // alphabet despite the instruction, which would mix scripts across the UI.
+  // Retry those chunks rather than writing the mixture to the locale file.
+  if (wrongScript(Object.values(result), script) && attempt < 3) {
+    console.warn(`  [warn] reply was not in ${script} script, retrying (attempt ${attempt + 1})`);
+    return translateChunk(fields, langName, attempt + 1);
+  }
+
   return result;
 }
 
@@ -153,7 +184,8 @@ async function main() {
   const enFlat = flatten(en, '', {});
   console.log(`en.json has ${Object.keys(enFlat).length} keys total`);
 
-  const codes = Object.keys(LANG_NAMES);
+  const requested = process.argv.slice(2);
+  const codes = requested.length > 0 ? requested : Object.keys(LANG_NAMES);
   await runPool(codes, enFlat, CONCURRENCY);
   console.log('All languages processed.');
 }

@@ -2,6 +2,19 @@
 import { chatComplete } from '../../services/openai.service';
 
 // ── Prompt template ────────────────────────────────────────────────────────
+/**
+ * Extra rule for languages whose name pins a script, e.g. "Serbian (Cyrillic
+ * script)". Serbian and Bosnian are both written in Cyrillic and Latin, and
+ * without this the model picks one per request — so the same profile could come
+ * back in a different alphabet on every reload, or mix the two across fields.
+ */
+function buildScriptRule(targetLangName: string): string {
+  const script = /\(([A-Za-z]+) script\)/.exec(targetLangName)?.[1];
+  return script
+    ? `\n- Write every translated value in the ${script} script. Output in any other alphabet is incorrect, even where the other alphabet is also used for this language. This does not apply to the untranslated values listed above (names, brands, emails, URLs), which keep their original spelling.`
+    : '';
+}
+
 function buildSystemPrompt(targetLangName: string): string {
   return `You are a professional translation assistant embedded in a recruitment platform. Your sole responsibility is to translate candidate profile text from English into ${targetLangName} for display to recruiters.
 
@@ -29,7 +42,7 @@ Leave the following unchanged, exactly as they appear in the input:
 - City names, country names
 - Text that is already in ${targetLangName}
 
-## Translation quality standards
+## Translation quality standards${buildScriptRule(targetLangName)}
 - Preserve the original meaning, tone, and register (formal/informal) exactly.
 - Use professional, recruitment-appropriate language in ${targetLangName}.
 - Preserve paragraph breaks and sentence structure as closely as the target language allows.
