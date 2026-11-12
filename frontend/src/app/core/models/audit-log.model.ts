@@ -13,6 +13,13 @@ export interface AuditLog {
   created_at:  string;
 }
 
+export interface AuditLogAdminUser {
+  id:    string;
+  email: string;
+  name:  string | null;
+  role:  'admin' | 'super_admin';
+}
+
 export interface AuditLogFilters {
   page?:       number;
   limit?:      number;

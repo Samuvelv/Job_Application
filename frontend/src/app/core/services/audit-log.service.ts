@@ -3,7 +3,7 @@ import { Injectable } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from '../../../environments/environment';
-import { AuditLog, AuditLogFilters } from '../models/audit-log.model';
+import { AuditLog, AuditLogAdminUser, AuditLogFilters } from '../models/audit-log.model';
 
 export interface PaginatedAuditLogs {
   data: AuditLog[];
@@ -35,5 +35,10 @@ export class AuditLogService {
 
   getDistinctActions(): Observable<{ actions: string[] }> {
     return this.http.get<{ actions: string[] }>(`${this.api}/actions`);
+  }
+
+  /** Super-admin only — backs the "filter by admin" picker. */
+  getAdminUsers(): Observable<{ adminUsers: AuditLogAdminUser[] }> {
+    return this.http.get<{ adminUsers: AuditLogAdminUser[] }>(`${this.api}/admin-users`);
   }
 }

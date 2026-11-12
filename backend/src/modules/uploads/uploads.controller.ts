@@ -301,7 +301,7 @@ export async function patchCandidateCertificate(
     const id     = p(req.params['id']);
     const certId = Number(p(req.params['certId']));
 
-    if (req.user?.role !== 'admin') throw new AppError(403, 'Access denied');
+    if (req.user?.role !== 'admin' && req.user?.role !== 'super_admin') throw new AppError(403, 'Access denied');
 
     const { name, issuer, issue_date, expiry_date, no_expiry } = req.body as {
       name?:        string;

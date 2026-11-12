@@ -8,21 +8,21 @@ const router = Router();
 router.use(authenticate);
 
 // Admin: counts (before /:id to avoid param clash)
-router.get('/counts', authorize('admin'), ctrl.getCounts);
+router.get('/counts', authorize('admin', 'super_admin'), ctrl.getCounts);
 
 // Candidate: get own requests
 router.get('/me', authorize('candidate'), ctrl.getMine);
 
 // Admin: export CSV (before GET / to avoid param clash)
-router.get('/export', authorize('admin'), ctrl.exportCsv);
+router.get('/export', authorize('admin', 'super_admin'), ctrl.exportCsv);
 
 // Admin: list all
-router.get('/', authorize('admin'), ctrl.list);
+router.get('/', authorize('admin', 'super_admin'), ctrl.list);
 
 // Candidate: submit a request for a volunteer
 router.post('/:volunteerId', authorize('candidate'), ctrl.create);
 
 // Admin: review (mark connected or closed)
-router.put('/:id/review', authorize('admin'), ctrl.review);
+router.put('/:id/review', authorize('admin', 'super_admin'), ctrl.review);
 
 export default router;

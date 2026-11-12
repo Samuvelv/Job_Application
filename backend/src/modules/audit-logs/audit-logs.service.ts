@@ -6,6 +6,7 @@ import type { AuditLogFilterDto, AuditLogExportDto } from './audit-logs.dto';
 function baseQuery() {
   return db('audit_logs as al')
     .leftJoin('users as u',      'u.id',        'al.user_id')
+    .leftJoin('roles as rl',     'rl.id',       'u.role_id')
     .leftJoin('admins as adm',   'adm.user_id', 'al.user_id')
     .leftJoin('candidates as c', 'c.user_id',   'al.user_id')
     .leftJoin('recruiters as r', 'r.user_id',   'al.user_id')
@@ -18,10 +19,14 @@ function baseQuery() {
         r.contact_name
       ) AS user_name`),
       db.raw(`u.email AS user_email`),
+      // user_role is derived from the roles table (not table-presence) so that
+      // admin and super_admin — both of whom have an `admins` profile row —
+      // are labeled distinctly rather than both showing as "Admin".
       db.raw(`CASE
-        WHEN adm.user_id IS NOT NULL THEN 'Admin'
-        WHEN c.user_id   IS NOT NULL THEN 'Candidate'
-        WHEN r.user_id   IS NOT NULL THEN 'Recruiter'
+        WHEN rl.name = 'admin'       THEN 'Admin'
+        WHEN rl.name = 'super_admin' THEN 'Super Admin'
+        WHEN rl.name = 'candidate'   THEN 'Candidate'
+        WHEN rl.name = 'recruiter'   THEN 'Recruiter'
         ELSE 'System'
       END AS user_role`),
       'al.action',
@@ -78,4 +83,19 @@ export async function exportAuditLogs(filters: AuditLogExportDto) {
 export async function getDistinctActions(): Promise<string[]> {
   const rows = await db('audit_logs').distinct('action').orderBy('action').select('action');
   return rows.map((r: any) => r.action as string);
+}
+
+/** Admin + super_admin users, for the super-admin audit-log "filter by admin" picker. */
+export async function listAdminAndSuperAdminUsers() {
+  return db('users as u')
+    .join('roles as rl', 'rl.id', 'u.role_id')
+    .leftJoin('admins as adm', 'adm.user_id', 'u.id')
+    .whereIn('rl.name', ['admin', 'super_admin'])
+    .select(
+      'u.id',
+      'u.email',
+      db.raw(`TRIM(adm.first_name || ' ' || COALESCE(adm.last_name, '')) AS name`),
+      db.raw(`rl.name AS role`),
+    )
+    .orderBy('name', 'asc');
 }

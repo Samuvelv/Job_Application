@@ -10,9 +10,9 @@ router.get('/public', ctrl.publicStats);
 
 router.use(authenticate);
 
-router.get('/admin',                  authorize('admin'),     ctrl.adminStats);
+router.get('/admin',                  authorize('admin', 'super_admin'),     ctrl.adminStats);
 router.get('/candidate',              authorize('candidate'), ctrl.candidateStats);
 router.get('/recruiter',              authorize('recruiter'), ctrl.recruiterStats);
-router.get('/notifications/counts',   authorize('admin'),     ctrl.notificationCounts);
+router.get('/notifications/counts',   authorize('admin', 'super_admin'),     ctrl.notificationCounts);
 
 export default router;

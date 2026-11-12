@@ -91,4 +91,11 @@ export const adminRoutes: Routes = [
     loadComponent: () =>
       import('./master/master-management.component').then((m) => m.MasterManagementComponent),
   },
+  // ── Admin Account Management (Super Admin only) ──────────────────────────────
+  {
+    path: 'manage-admins',
+    data: { roles: ['super_admin'] },
+    loadComponent: () =>
+      import('./admin-management/admin-management-list.component').then((m) => m.AdminManagementListComponent),
+  },
 ];

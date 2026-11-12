@@ -73,7 +73,7 @@ export class TopbarComponent {
   dashboardRoute = computed(() => this.auth.getDashboardRoute());
 
   roleBadgeClass = computed(() => ({
-    'badge-role-admin':     this.role() === 'admin',
+    'badge-role-admin':     this.role() === 'admin' || this.role() === 'super_admin',
     'badge-role-candidate':  this.role() === 'candidate',
     'badge-role-recruiter': this.role() === 'recruiter',
   }));

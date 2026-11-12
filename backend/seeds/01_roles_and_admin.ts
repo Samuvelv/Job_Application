@@ -26,7 +26,7 @@ export async function seed(knex: Knex): Promise<void> {
   // ON CONFLICT DO NOTHING: if the role already exists the row is skipped;
   // if it is new it is inserted. No existing FK references are disturbed.
   await knex('roles')
-    .insert([{ name: 'admin' }, { name: 'candidate' }, { name: 'recruiter' }])
+    .insert([{ name: 'admin' }, { name: 'candidate' }, { name: 'recruiter' }, { name: 'super_admin' }])
     .onConflict('name')
     .ignore();
 
@@ -63,5 +63,37 @@ export async function seed(knex: Knex): Promise<void> {
   } else {
     await knex('admins').where({ user_id: adminUserId }).update({ first_name: 'Dinesh' });
     console.log('[SEED] Admin profile already exists — first_name updated.');
+  }
+
+  // ── Super Admin user — distinct account for the client, separate from the
+  //    employee admin accounts created via the admin-management module ───────
+  const superAdminRole = await knex('roles').where({ name: 'super_admin' }).first();
+  if (!superAdminRole) throw new Error('[SEED] super_admin role not found — roles table may be empty or migration has not run.');
+
+  let superAdminUserId: string;
+
+  const existingSuperAdmin = await knex('users').where({ email: 'superadmin@ntlcareernexus.com' }).first();
+  if (!existingSuperAdmin) {
+    const passwordHash = await bcrypt.hash('SuperAdmin@1234', 12);
+    superAdminUserId = uuidv4();
+    await knex('users').insert({
+      id: superAdminUserId,
+      email: 'superadmin@ntlcareernexus.com',
+      password_hash: passwordHash,
+      role_id: superAdminRole.id,
+      is_active: true,
+    });
+    console.log('[SEED] Super Admin user created → superadmin@ntlcareernexus.com / SuperAdmin@1234');
+  } else {
+    superAdminUserId = existingSuperAdmin.id;
+    console.log('[SEED] Super Admin user already exists, skipping insert.');
+  }
+
+  const existingSuperAdminProfile = await knex('admins').where({ user_id: superAdminUserId }).first();
+  if (!existingSuperAdminProfile) {
+    await knex('admins').insert({ user_id: superAdminUserId, first_name: 'Client', last_name: 'Owner' });
+    console.log('[SEED] Super Admin profile created → first_name: Client');
+  } else {
+    console.log('[SEED] Super Admin profile already exists, skipping insert.');
   }
 }

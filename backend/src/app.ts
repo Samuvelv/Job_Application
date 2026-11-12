@@ -27,6 +27,7 @@ import agencyReferralsRouter         from './modules/agency-referrals/agency-ref
 import agencyInterestRequestsRouter  from './modules/agency-interest-requests/agency-interest-requests.router';
 import recruiterAccessRequestsRouter from './modules/recruiter-access-requests/recruiter-access-requests.router';
 import translationRouter             from './modules/translation/translation.router';
+import adminManagementRouter         from './modules/admin-management/admin-management.router';
 
 const app = express();
 
@@ -96,6 +97,7 @@ app.use('/api/v1/candidates/:candidateId/referrals', agencyReferralsRouter);
 app.use('/api/v1/interest-requests',                 agencyInterestRequestsRouter);
 app.use('/api/v1/recruiter-access-requests',         recruiterAccessRequestsRouter);
 app.use('/api/v1/translate',                         translationRouter);
+app.use('/api/v1/admin-management',                  adminManagementRouter);
 // Generic /api/v1 mount LAST — never shadows any specific router above
 app.use('/api/v1',                                   uploadsRouter);
 

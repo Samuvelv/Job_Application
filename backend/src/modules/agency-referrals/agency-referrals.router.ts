@@ -6,7 +6,7 @@ import * as ctrl from './agency-referrals.controller';
 
 const router = Router({ mergeParams: true });
 router.use(authenticate);
-router.use(authorize('admin'));
+router.use(authorize('admin', 'super_admin'));
 
 // GET    /api/v1/candidates/:candidateId/referrals
 router.get('/',    ctrl.list);

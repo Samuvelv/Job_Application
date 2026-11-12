@@ -6,9 +6,10 @@ import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { LocaleDatePipe } from '../../../core/pipes/locale-date.pipe';
 import { debounceTime, distinctUntilChanged } from 'rxjs';
 import { AuditLogService } from '../../../core/services/audit-log.service';
-import { AuditLog } from '../../../core/models/audit-log.model';
+import { AuditLog, AuditLogAdminUser } from '../../../core/models/audit-log.model';
 import { PageHeaderComponent } from '../../../shared/components/page-header/page-header.component';
 import { ToastService } from '../../../core/services/toast.service';
+import { AuthService } from '../../../core/services/auth.service';
 
 @Component({
   selector: 'app-audit-logs',
@@ -53,8 +54,17 @@ import { ToastService } from '../../../core/services/toast.service';
         </div>
         <div class="col-md-3">
           <label class="form-label small mb-1">{{ 'AUDIT_LOGS.user' | translate }}</label>
-          <input type="text" class="form-control form-control-sm"
-            formControlName="userSearch" [placeholder]="'AUDIT_LOGS.search_by_user_id' | translate">
+          @if (isSuperAdmin && adminUsers.length > 0) {
+            <select class="form-select form-select-sm" formControlName="userSearch">
+              <option value="">{{ 'AUDIT_LOGS.all_actions' | translate }}</option>
+              @for (u of adminUsers; track u.id) {
+                <option [value]="u.id">{{ u.name || u.email }} ({{ u.role === 'super_admin' ? 'Super Admin' : 'Admin' }})</option>
+              }
+            </select>
+          } @else {
+            <input type="text" class="form-control form-control-sm"
+              formControlName="userSearch" [placeholder]="'AUDIT_LOGS.search_by_user_id' | translate">
+          }
         </div>
         <div class="col-md-2">
           <label class="form-label small mb-1">{{ 'AUDIT_LOGS.from' | translate }}</label>
@@ -300,6 +310,8 @@ export class AuditLogsComponent implements OnInit {
   loading    = true;
   exporting  = false;
   expandedId: string | null = null;
+  isSuperAdmin = false;
+  adminUsers: AuditLogAdminUser[] = [];
 
   filterForm!: FormGroup;
 
@@ -309,6 +321,7 @@ export class AuditLogsComponent implements OnInit {
     private datePipe: DatePipe,
     private toast: ToastService,
     private translate: TranslateService,
+    private auth: AuthService,
   ) {}
 
   ngOnInit(): void {
@@ -319,6 +332,13 @@ export class AuditLogsComponent implements OnInit {
       from:       [''],
       to:         [''],
     });
+
+    this.isSuperAdmin = this.auth.hasRole('super_admin');
+    if (this.isSuperAdmin) {
+      this.auditSvc.getAdminUsers().subscribe({
+        next: (res) => (this.adminUsers = res.adminUsers),
+      });
+    }
 
     this.auditSvc.getDistinctActions().subscribe({
       next: (res) => (this.knownActions = res.actions),
@@ -505,6 +525,10 @@ export class AuditLogsComponent implements OnInit {
       OTP_FAILED:                      'Incorrect OTP entered during admin login',
       OTP_RESENT:                      'One-time passcode resent to admin',
       OTP_LOCKED:                      'Admin OTP verification locked after too many attempts',
+      CREATE_ADMIN:                    'Super admin created a new admin account',
+      DEACTIVATE_ADMIN:                'Super admin deactivated an admin account',
+      REACTIVATE_ADMIN:                'Super admin reactivated an admin account',
+      RESET_ADMIN_PASSWORD:            'Super admin reset an admin account password',
     };
     if (map[action]) return map[action];
     // Fallback: convert SNAKE_CASE → Title Case

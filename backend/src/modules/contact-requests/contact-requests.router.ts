@@ -11,7 +11,7 @@ router.use(authenticate);
 
 // Admin: get counts by status (must be before /:candidateId)
 router.get('/counts',
-  authorize('admin'),
+  authorize('admin', 'super_admin'),
   async (req: Request, res: Response, next: NextFunction) => {
     try {
       const result = await svc.getContactRequestCounts();
@@ -22,7 +22,7 @@ router.get('/counts',
 
 // Admin: bulk approve or reject (must be before /:candidateId to avoid param clash)
 router.post('/bulk-review',
-  authorize('admin'),
+  authorize('admin', 'super_admin'),
   async (req: Request, res: Response, next: NextFunction) => {
     try {
       const dto    = BulkReviewContactRequestSchema.parse(req.body);
@@ -64,7 +64,7 @@ router.get('/me',
 
 // Admin: export CSV (must be before /:candidateId to avoid param clash)
 router.get('/export',
-  authorize('admin'),
+  authorize('admin', 'super_admin'),
   async (req: Request, res: Response, next: NextFunction) => {
     try {
       const { page: _p, limit: _l, ...filters } = ContactRequestFilterSchema.parse({ ...req.query, page: 1, limit: 20 });
@@ -79,7 +79,7 @@ router.get('/export',
 
 // Admin: list all contact requests
 router.get('/',
-  authorize('admin'),
+  authorize('admin', 'super_admin'),
   async (req: Request, res: Response, next: NextFunction) => {
     try {
       const filters = ContactRequestFilterSchema.parse(req.query);
@@ -91,7 +91,7 @@ router.get('/',
 
 // Admin: revoke an approved request
 router.post('/:id/revoke',
-  authorize('admin'),
+  authorize('admin', 'super_admin'),
   async (req: Request, res: Response, next: NextFunction) => {
     try {
       const dto     = RevokeContactRequestSchema.parse(req.body);
@@ -103,7 +103,7 @@ router.post('/:id/revoke',
 
 // Admin: approve or reject a request
 router.put('/:id/review',
-  authorize('admin'),
+  authorize('admin', 'super_admin'),
   async (req: Request, res: Response, next: NextFunction) => {
     try {
       const dto     = ReviewContactRequestSchema.parse(req.body);

@@ -128,8 +128,8 @@ export async function login(req: Request, res: Response, next: NextFunction): Pr
     const result = await authService.login(body.email, body.password);
     const { browser, os } = parseUserAgent(req.headers['user-agent']);
 
-    // ── Admin → 2FA required ─────────────────────────────────────────────────
-    if (result.user.role === 'admin') {
+    // ── Admin / Super Admin → 2FA required ───────────────────────────────────
+    if (result.user.role === 'admin' || result.user.role === 'super_admin') {
       const adminId = result.user.id as string;
 
       // Issue OTP (hashed, stored in admin_otps; plaintext returned in dev mode only)

@@ -11,47 +11,47 @@ router.use(authenticate);
 
 // ── Admin-only ────────────────────────────────────────────────────────────────
 router.post('/',
-  authorize('admin'),
+  authorize('admin', 'super_admin'),
   ctrl.create,
 );
 
 router.post('/bulk-action',
-  authorize('admin'),
+  authorize('admin', 'super_admin'),
   ctrl.bulkActionHandler,
 );
 
 router.get('/',
-  authorize('admin', 'recruiter'),
+  authorize('admin', 'super_admin', 'recruiter'),
   ctrl.list,
 );
 
 router.delete('/:id',
-  authorize('admin'),
+  authorize('admin', 'super_admin'),
   ctrl.remove,
 );
 
 router.post('/:id/resend-credentials',
-  authorize('admin'),
+  authorize('admin', 'super_admin'),
   ctrl.resendCreds,
 );
 
 router.post('/:id/invite-volunteer',
-  authorize('admin'),
+  authorize('admin', 'super_admin'),
   ctrl.inviteVolunteer,
 );
 
 router.post('/:id/reactivate-volunteer',
-  authorize('admin'),
+  authorize('admin', 'super_admin'),
   ctrl.reactivateVolunteer,
 );
 
 router.put('/:id',
-  authorize('admin'),
+  authorize('admin', 'super_admin'),
   ctrl.update,
 );
 
 router.get('/export',
-  authorize('admin'),
+  authorize('admin', 'super_admin'),
   ctrl.exportCsv,
 );
 
@@ -63,12 +63,12 @@ router.get('/me',
 
 // ── Shared: admin, recruiter, candidate (own) ──────────────────────────────────
 router.get('/:id/activity',
-  authorize('admin'),
+  authorize('admin', 'super_admin'),
   ctrl.getActivity,
 );
 
 router.get('/:id',
-  authorize('admin', 'recruiter', 'candidate'),
+  authorize('admin', 'super_admin', 'recruiter', 'candidate'),
   ctrl.getOne,
 );
 

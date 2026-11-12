@@ -17,7 +17,7 @@ import {
 const router = Router();
 
 // All routes require admin auth
-router.use(authenticate, authorize('admin'));
+router.use(authenticate, authorize('admin', 'super_admin'));
 
 // ── CRUD endpoints ────────────────────────────────────────────────────────────
 // :table is validated against ALLOWED_TABLES whitelist inside the controller
