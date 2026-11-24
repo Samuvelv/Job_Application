@@ -1,7 +1,7 @@
 // src/modules/audit-logs/audit-logs.controller.ts
 import { Request, Response, NextFunction } from 'express';
 import { AuditLogFilterSchema, AuditLogExportSchema } from './audit-logs.dto';
-import { listAuditLogs, exportAuditLogs, getDistinctActions } from './audit-logs.service';
+import { listAuditLogs, exportAuditLogs, getDistinctActions, listAdminAndSuperAdminUsers } from './audit-logs.service';
 
 /** Escape a value for safe CSV inclusion */
 function csvEscape(value: unknown): string {
@@ -47,6 +47,10 @@ function describeAction(action: string): string {
     OTP_FAILED:                      'Incorrect OTP entered during admin login',
     OTP_RESENT:                      'One-time passcode resent to admin',
     OTP_LOCKED:                      'Admin OTP verification locked after too many attempts',
+    CREATE_ADMIN:                    'Super admin created a new admin account',
+    DEACTIVATE_ADMIN:                'Super admin deactivated an admin account',
+    REACTIVATE_ADMIN:                'Super admin reactivated an admin account',
+    RESET_ADMIN_PASSWORD:            'Super admin reset an admin account password',
   };
   if (map[action]) return map[action];
   return action
@@ -125,6 +129,15 @@ export async function actions(req: Request, res: Response, next: NextFunction): 
   try {
     const result = await getDistinctActions();
     res.json({ actions: result });
+  } catch (err) {
+    next(err);
+  }
+}
+
+export async function adminUsers(req: Request, res: Response, next: NextFunction): Promise<void> {
+  try {
+    const result = await listAdminAndSuperAdminUsers();
+    res.json({ adminUsers: result });
   } catch (err) {
     next(err);
   }

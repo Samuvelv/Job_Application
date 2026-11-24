@@ -55,7 +55,7 @@ async function deleteLocalFile(storedUrl: string | null | undefined): Promise<vo
 
 // List — admin and candidate
 router.get('/',
-  authorize('admin', 'candidate'),
+  authorize('admin', 'super_admin', 'candidate'),
   async (req: Request, res: Response, next: NextFunction) => {
     try {
       const page           = Math.max(1, Number(req.query['page'])  || 1);
@@ -75,7 +75,7 @@ router.get('/',
 
 // Export CSV — admin only
 router.get('/export',
-  authorize('admin'),
+  authorize('admin', 'super_admin'),
   async (req: Request, res: Response, next: NextFunction) => {
     try {
       const search         = (req.query['search']         as string) || undefined;
@@ -96,7 +96,7 @@ router.get('/export',
 
 // Create — admin only
 router.post('/',
-  authorize('admin'),
+  authorize('admin', 'super_admin'),
   async (req: Request, res: Response, next: NextFunction) => {
     try {
       const dto       = CreateVolunteerSchema.parse(req.body);
@@ -116,7 +116,7 @@ router.post('/',
 
 // Get single volunteer — admin and candidate
 router.get('/:id',
-  authorize('admin', 'candidate'),
+  authorize('admin', 'super_admin', 'candidate'),
   async (req: Request, res: Response, next: NextFunction) => {
     try {
       const volunteer = await svc.getVolunteerById(req.params['id'] as string);
@@ -135,7 +135,7 @@ router.get('/:id',
  *   /var/www/ntlcareernexus/uploads/profiles/<uuid>.jpg
  */
 router.post('/:id/photo',
-  authorize('admin'),
+  authorize('admin', 'super_admin'),
 
   // Inject synthetic :type so multer diskStorage uses the right sub-folder
   (req: Request, _res: Response, next: NextFunction) => {
@@ -191,7 +191,7 @@ router.post('/:id/photo',
 
 // Update — admin only
 router.put('/:id',
-  authorize('admin'),
+  authorize('admin', 'super_admin'),
   async (req: Request, res: Response, next: NextFunction) => {
     try {
       const id        = req.params['id'] as string;
@@ -225,7 +225,7 @@ router.put('/:id',
 
 // Delete — admin only
 router.delete('/:id',
-  authorize('admin'),
+  authorize('admin', 'super_admin'),
   async (req: Request, res: Response, next: NextFunction) => {
     try {
       await svc.deleteVolunteer(req.params['id'] as string);

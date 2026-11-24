@@ -10,7 +10,7 @@ router.post('/', ctrl.submit);
 
 // Admin only
 router.use(authenticate);
-router.get('/',           authorize('admin'), ctrl.list);
-router.put('/:id/read',   authorize('admin'), ctrl.markRead);
+router.get('/',           authorize('admin', 'super_admin'), ctrl.list);
+router.put('/:id/read',   authorize('admin', 'super_admin'), ctrl.markRead);
 
 export default router;

@@ -1,5 +1,5 @@
 // src/app/core/models/user.model.ts
-export type UserRole = 'admin' | 'candidate' | 'recruiter';
+export type UserRole = 'admin' | 'candidate' | 'recruiter' | 'super_admin';
 
 export interface User {
   id: string;
