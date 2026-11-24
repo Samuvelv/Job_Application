@@ -57,9 +57,9 @@ export class NotificationService implements OnDestroy {
   private readonly POLLING_INTERVAL_MS = 30000; // 30 seconds
 
   constructor() {
-    // Only set up for admin users
+    // Only set up for admin / super admin users
     const currentUser = this.auth.currentUser();
-    if (currentUser?.role === 'admin') {
+    if (currentUser?.role === 'admin' || currentUser?.role === 'super_admin') {
       // Initial load
       this.refreshCounts();
 

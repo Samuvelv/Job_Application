@@ -35,7 +35,7 @@ router.post(
 router.post(
   '/candidates/:id/files/:type',
   authenticate,
-  authorize('admin', 'candidate'),
+  authorize('admin', 'super_admin', 'candidate'),
   upload.single('file'),
   uploadCandidateFile,
 );
@@ -47,7 +47,7 @@ router.post(
 router.delete(
   '/candidates/:id/files/:type',
   authenticate,
-  authorize('admin', 'candidate'),
+  authorize('admin', 'super_admin', 'candidate'),
   deleteCandidateFile,
 );
 
@@ -57,7 +57,7 @@ router.delete(
 router.delete(
   '/candidates/:id/certificates/:certId',
   authenticate,
-  authorize('admin', 'candidate'),
+  authorize('admin', 'super_admin', 'candidate'),
   deleteCandidateCertificate,
 );
 
@@ -68,7 +68,7 @@ router.delete(
 router.patch(
   '/candidates/:id/certificates/:certId',
   authenticate,
-  authorize('admin'),
+  authorize('admin', 'super_admin'),
   patchCandidateCertificate,
 );
 

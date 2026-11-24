@@ -262,10 +262,11 @@ export class AuthService {
   getDashboardRoute(): string {
     const role = this.getRole();
     switch (role) {
-      case 'admin':     return '/admin/dashboard';
-      case 'candidate':  return '/candidate/dashboard';
-      case 'recruiter': return '/recruiter/dashboard';
-      default:          return '/login';
+      case 'admin':       return '/admin/dashboard';
+      case 'super_admin': return '/admin/dashboard';
+      case 'candidate':   return '/candidate/dashboard';
+      case 'recruiter':   return '/recruiter/dashboard';
+      default:            return '/login';
     }
   }
 

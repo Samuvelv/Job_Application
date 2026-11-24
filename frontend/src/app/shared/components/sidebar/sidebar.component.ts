@@ -63,19 +63,28 @@ interface NavItem {
 export class SidebarComponent implements OnDestroy {
   private role = computed(() => this.auth.currentUser()?.role ?? '');
 
+  private adminNavItems(): NavItem[] {
+    return [
+      { labelKey: 'NAV.dashboard',         icon: 'bi-grid-1x2-fill',    route: '/admin/dashboard' },
+      { labelKey: 'NAV.candidates',         icon: 'bi-people-fill',       route: '/admin/candidates' },
+      { labelKey: 'NAV.recruiters',         icon: 'bi-person-badge-fill', route: '/admin/recruiters' },
+      { labelKey: 'NAV.edit_requests',      icon: 'bi-pencil-square',     route: '/admin/edit-requests',       badge: () => this.notifications.totalEditRequestsPending() },
+      { labelKey: 'NAV.contact_requests',   icon: 'bi-envelope-fill',     route: '/admin/contact-submissions', badge: () => this.notifications.pendingContactRequests() },
+      { labelKey: 'NAV.interest_requests',  icon: 'bi-briefcase-fill',    route: '/admin/interest-requests',   badge: () => this.notifications.pendingInterestRequests() },
+      { labelKey: 'NAV.volunteers',         icon: 'bi-mortarboard-fill',  route: '/admin/volunteers' },
+      { labelKey: 'NAV.master_data',        icon: 'bi-database-fill',     route: '/admin/master' },
+      { labelKey: 'NAV.audit_logs',         icon: 'bi-journal-text',      route: '/admin/audit-logs' },
+    ];
+  }
+
   navEntries = computed<NavItem[]>(() => {
     switch (this.role()) {
       case 'admin':
+        return this.adminNavItems();
+      case 'super_admin':
         return [
-          { labelKey: 'NAV.dashboard',         icon: 'bi-grid-1x2-fill',    route: '/admin/dashboard' },
-          { labelKey: 'NAV.candidates',         icon: 'bi-people-fill',       route: '/admin/candidates' },
-          { labelKey: 'NAV.recruiters',         icon: 'bi-person-badge-fill', route: '/admin/recruiters' },
-          { labelKey: 'NAV.edit_requests',      icon: 'bi-pencil-square',     route: '/admin/edit-requests',       badge: () => this.notifications.totalEditRequestsPending() },
-          { labelKey: 'NAV.contact_requests',   icon: 'bi-envelope-fill',     route: '/admin/contact-submissions', badge: () => this.notifications.pendingContactRequests() },
-          { labelKey: 'NAV.interest_requests',  icon: 'bi-briefcase-fill',    route: '/admin/interest-requests',   badge: () => this.notifications.pendingInterestRequests() },
-          { labelKey: 'NAV.volunteers',         icon: 'bi-mortarboard-fill',  route: '/admin/volunteers' },
-          { labelKey: 'NAV.master_data',        icon: 'bi-database-fill',     route: '/admin/master' },
-          { labelKey: 'NAV.audit_logs',         icon: 'bi-journal-text',      route: '/admin/audit-logs' },
+          ...this.adminNavItems(),
+          { labelKey: 'NAV.manage_admins', icon: 'bi-person-gear', route: '/admin/manage-admins' },
         ];
       case 'candidate': {
         const placed = this.auth.candidateStatus() === 'placed';

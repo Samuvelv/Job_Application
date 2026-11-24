@@ -303,6 +303,47 @@ export async function sendRecruiterCredentials(
   });
 }
 
+export async function sendAdminCredentials(
+  email: string,
+  firstName: string,
+  password: string,
+): Promise<void> {
+  await sendMail({
+    to: email,
+    subject: 'Your NTL Career Nexus Admin Account Credentials',
+    html: `
+      <h2>Welcome to NTL Career Nexus, ${firstName}!</h2>
+      <p>An admin account has been created for you. Below are your login credentials:</p>
+      <table style="border-collapse:collapse;">
+        <tr><td style="padding:8px;font-weight:bold;">Email:</td><td style="padding:8px;">${email}</td></tr>
+        <tr><td style="padding:8px;font-weight:bold;">Password:</td><td style="padding:8px;">${password}</td></tr>
+      </table>
+      <p>Please log in at <a href="${env.FRONTEND_URL}/login">${env.FRONTEND_URL}/login</a></p>
+      <p style="color:#888;font-size:12px;">You will be asked to complete a one-time code sent via the login screen (2FA) on every sign-in.</p>
+    `,
+  });
+}
+
+export async function sendAdminPasswordReset(
+  email: string,
+  firstName: string,
+  newPassword: string,
+): Promise<void> {
+  await sendMail({
+    to: email,
+    subject: 'Your NTL Career Nexus Admin Password Has Been Reset',
+    html: `
+      <h2>Hi ${firstName},</h2>
+      <p>Your admin account password has been reset by the super admin. Your new temporary password is below:</p>
+      <table style="border-collapse:collapse;">
+        <tr><td style="padding:8px;font-weight:bold;">Email:</td><td style="padding:8px;">${email}</td></tr>
+        <tr><td style="padding:8px;font-weight:bold;">New Password:</td><td style="padding:8px;">${newPassword}</td></tr>
+      </table>
+      <p>Please log in at <a href="${env.FRONTEND_URL}/login">${env.FRONTEND_URL}/login</a></p>
+    `,
+  });
+}
+
 export async function sendRecruiterAccessLink(
   email: string,
   contactName: string,

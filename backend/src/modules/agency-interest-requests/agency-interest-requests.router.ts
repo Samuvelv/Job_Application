@@ -8,27 +8,27 @@ const router = Router();
 router.use(authenticate);
 
 // Admin: status counts (before /:id to avoid param clash)
-router.get('/counts',       authorize('admin'), ctrl.counts);
+router.get('/counts',       authorize('admin', 'super_admin'), ctrl.counts);
 
 // Admin: pending count (before /:id to avoid param clash)
-router.get('/pending-count', authorize('admin'), ctrl.pendingCount);
+router.get('/pending-count', authorize('admin', 'super_admin'), ctrl.pendingCount);
 
 // Recruiter: get own requests
 router.get('/me', authorize('recruiter'), ctrl.getMyRequests);
 
 // Admin: export CSV (before GET / to avoid param clash)
-router.get('/export', authorize('admin'), ctrl.exportCsv);
+router.get('/export', authorize('admin', 'super_admin'), ctrl.exportCsv);
 
 // Admin: list all
-router.get('/', authorize('admin'), ctrl.list);
+router.get('/', authorize('admin', 'super_admin'), ctrl.list);
 
 // Recruiter: submit new interest request
 router.post('/', authorize('recruiter'), ctrl.create);
 
 // Admin: approve / reject
-router.patch('/:id/review', authorize('admin'), ctrl.review);
+router.patch('/:id/review', authorize('admin', 'super_admin'), ctrl.review);
 
 // Admin: revoke an approved request
-router.post('/:id/revoke',  authorize('admin'), ctrl.revoke);
+router.post('/:id/revoke',  authorize('admin', 'super_admin'), ctrl.revoke);
 
 export default router;

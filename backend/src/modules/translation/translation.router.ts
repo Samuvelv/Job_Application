@@ -34,7 +34,7 @@ const router = Router();
 router.post(
   '/',
   authenticate,
-  authorize('admin', 'recruiter', 'candidate'),
+  authorize('admin', 'super_admin', 'recruiter', 'candidate'),
   translationLimiter,
   translate,
 );
@@ -44,7 +44,7 @@ router.post(
 router.post(
   '/recruiter',
   authenticate,
-  authorize('admin', 'recruiter', 'candidate'),
+  authorize('admin', 'super_admin', 'recruiter', 'candidate'),
   translationLimiter,
   translate,
 );
